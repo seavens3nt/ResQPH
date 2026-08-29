@@ -97,7 +97,7 @@ The project document currently specifies:
 - Markdown for project documentation
 - Feature branches and pull requests for collaborative development
 
-Specific frontend and backend frameworks will be documented after the team confirms them.
+The approved development baseline uses React, TypeScript, and Vite for the frontend; Python and FastAPI for the backend; Leaflet for map interaction; PyMongo for MongoDB; Python geospatial libraries for routing; scikit-learn for manageable AI/ML experiments; and IndexedDB for limited offline client storage.
 
 ## Official project phases
 
@@ -148,8 +148,9 @@ ResQPH/
 ## Documentation
 
 - [Team responsibilities](docs/TEAM.md)
+- [Development setup](docs/SETUP.md)
+- [Architecture](docs/ARCHITECTURE.md)
 - Requirements — to be added
-- Architecture — to be added
 - API contracts — to be added
 - Database schema — to be added
 - Dataset register — to be added
