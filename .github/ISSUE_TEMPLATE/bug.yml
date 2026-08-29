@@ -1,0 +1,140 @@
+name: Bug report
+description: Report incorrect or unexpected behavior in ResQPH.
+title: "[Bug] "
+labels:
+  - "type:bug"
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for reproducible problems. Do not include passwords, access tokens, private contact information, or real emergency data.
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Project phase
+      options:
+        - Phase 1 — Requirements and Data Validation
+        - Phase 2 — Core Application
+        - Phase 3 — Mapping and Geospatial Pipeline
+        - Phase 4 — Routing
+        - Phase 5 — AI/ML
+        - Phase 6 — Offline Simulation
+        - Phase 7 — Integration and Testing
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected component
+      options:
+        - UI/UX and Frontend
+        - Backend API
+        - MongoDB and Database
+        - Geospatial Data
+        - Routing
+        - AI/ML
+        - Offline Synchronization
+        - Integration
+        - Testing
+        - Documentation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Select the effect of this problem.
+      options:
+        - Critical — Blocks the main rescue workflow or demonstration
+        - High — Breaks a major feature
+        - Medium — Feature works with significant limitations
+        - Low — Minor or cosmetic problem
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem summary
+      description: Describe the incorrect behavior clearly.
+      placeholder: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide the exact actions needed to reproduce the problem.
+      placeholder: |
+        1. Open...
+        2. Select...
+        3. Enter...
+        4. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: Explain what should have happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: Explain what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the branch, commit, browser, operating system, and relevant service versions.
+      placeholder: |
+        Branch:
+        Commit:
+        Browser:
+        Operating system:
+        Frontend version:
+        Backend version:
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add screenshots, logs, API responses, or test results after removing sensitive information.
+      placeholder: Drag files here or paste sanitized output.
+
+  - type: textarea
+    id: regression_test
+    attributes:
+      label: Verification requirements
+      description: Explain how the team can verify that the eventual fix works.
+      placeholder: |
+        - [ ] Original reproduction steps no longer fail.
+        - [ ] Related functionality still works.
+        - [ ] A regression test is added when practical.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed passwords, tokens, private contact information, and real emergency data.
+          required: true
+        - label: I searched the existing Issues to check that this is not a duplicate.
+          required: true

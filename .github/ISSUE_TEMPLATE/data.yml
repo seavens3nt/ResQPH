@@ -1,0 +1,162 @@
+name: Dataset task
+description: Acquire, validate, process, or document a ResQPH dataset.
+title: "[Data] "
+labels:
+  - "type:data"
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for road, flood, elevation, location, rainfall, and AI/ML data work. Do not upload large datasets or restricted personal information directly to GitHub.
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Project phase
+      options:
+        - Phase 1 — Requirements and Data Validation
+        - Phase 3 — Mapping and Geospatial Pipeline
+        - Phase 4 — Routing
+        - Phase 5 — AI/ML
+        - Phase 7 — Integration and Testing
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Dataset category
+      options:
+        - Road Network
+        - Flood Hazard
+        - Simulated Flood Depth
+        - Elevation
+        - Evacuation Centers
+        - Rainfall
+        - Road Characteristics
+        - Reported Road or Flood Conditions
+        - Rescue Scenario Sample Data
+        - AI/ML Training or Evaluation Data
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: dataset_name
+    attributes:
+      label: Dataset name
+      placeholder: Official or descriptive dataset name
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Provide the official source or download page.
+      placeholder: https://example.gov/dataset
+    validations:
+      required: true
+
+  - type: input
+    id: owner
+    attributes:
+      label: Proposed primary owner
+      placeholder: "@username"
+    validations:
+      required: true
+
+  - type: textarea
+    id: license
+    attributes:
+      label: License and usage conditions
+      description: Explain whether the dataset can be downloaded, modified, and included in an academic prototype.
+      placeholder: State the license and any attribution or redistribution requirements.
+    validations:
+      required: true
+
+  - type: textarea
+    id: coverage
+    attributes:
+      label: Geographic and temporal coverage
+      placeholder: |
+        Study area:
+        Geographic extent:
+        Data date or period:
+        Update frequency:
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical_details
+    attributes:
+      label: Technical details
+      placeholder: |
+        File format:
+        Coordinate reference system:
+        Resolution or scale:
+        Important fields:
+        Approximate file size:
+    validations:
+      required: true
+
+  - type: textarea
+    id: quality
+    attributes:
+      label: Quality and limitations
+      description: Record missing values, age, coverage gaps, uncertainty, bias, or other limitations.
+      placeholder: Describe known or suspected quality limitations.
+    validations:
+      required: true
+
+  - type: textarea
+    id: processing
+    attributes:
+      label: Required processing
+      placeholder: |
+        - Download or acquire the source data.
+        - Preserve source metadata.
+        - Reproject to the agreed coordinate system.
+        - Clean invalid or missing records.
+        - Clip to the selected study area.
+        - Produce a small sample for tests.
+        - Document every transformation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation method
+      description: Explain how another member can check the processed output.
+      placeholder: Describe coordinate, coverage, schema, and data-quality checks.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_output
+    attributes:
+      label: Expected output
+      placeholder: |
+        Output location:
+        Output format:
+        Required metadata:
+        Downstream component:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: data_safety
+    attributes:
+      label: Data safety
+      options:
+        - label: The source and license will be documented.
+          required: true
+        - label: Large raw or processed data will not be committed directly to ordinary Git history.
+          required: true
+        - label: The dataset does not contain undisclosed private personal information.
+          required: true
+        - label: Limitations and uncertainty will be documented.
+          required: true
