@@ -9,10 +9,19 @@ This guide establishes a consistent Windows development environment for ResQPH.
 - Node.js 22.12 or newer supported LTS release
 - npm, included with Node.js
 - Python 3.12, 64-bit
+- WSL 2 with the Virtual Machine Platform Windows feature enabled
 - Docker Desktop with Docker Compose
 - Visual Studio Code or another suitable editor
 
 Optional tools include MongoDB Compass, an API client such as Bruno or Postman, and QGIS for geographic data inspection.
+
+On Windows 11, install the WSL 2 components from an Administrator PowerShell window, then restart the computer:
+
+```powershell
+wsl --install --no-distribution
+```
+
+After restarting, verify that `wsl --status` reports `Default Version: 2` before starting Docker Desktop.
 
 ## Clone the repository
 
