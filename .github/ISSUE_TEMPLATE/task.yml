@@ -1,0 +1,128 @@
+name: Feature or implementation task
+description: Create a ResQPH feature, implementation, integration, or documentation task.
+title: "[Task] "
+labels:
+  - "type:feature"
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for planned ResQPH implementation work. The project manager will assign the milestone, assignee, priority, and supporting labels after reviewing the ticket.
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Project phase
+      description: Select the official ResQPH phase for this work.
+      options:
+        - Phase 1 — Requirements and Data Validation
+        - Phase 2 — Core Application
+        - Phase 3 — Mapping and Geospatial Pipeline
+        - Phase 4 — Routing
+        - Phase 5 — AI/ML
+        - Phase 6 — Offline Simulation
+        - Phase 7 — Integration and Testing
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Primary component
+      description: Select the main component affected by this ticket.
+      options:
+        - Project Management
+        - UI/UX and Frontend
+        - Backend API
+        - MongoDB and Database
+        - Geospatial Data
+        - Routing
+        - AI/ML
+        - Offline Synchronization
+        - Integration
+        - Testing
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Clearly describe the result this ticket must achieve.
+      placeholder: Describe the required outcome.
+    validations:
+      required: true
+
+  - type: input
+    id: primary_owner
+    attributes:
+      label: Proposed primary owner
+      description: Enter the GitHub username of the person accountable for completing this ticket.
+      placeholder: "@username"
+    validations:
+      required: true
+
+  - type: input
+    id: supporting_contributors
+    attributes:
+      label: Supporting contributors
+      description: Enter any members who will support the primary owner.
+      placeholder: "@username, @username"
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: List the behavior, data, interface, or documentation requirements.
+      placeholder: |
+        - Requirement 1
+        - Requirement 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: Provide testable conditions that must be satisfied before this ticket can be closed.
+      placeholder: |
+        - [ ] Required behavior is implemented.
+        - [ ] Error cases are handled.
+        - [ ] Integration is completed.
+        - [ ] Tests are completed.
+        - [ ] Documentation is updated.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Link Issues that must be completed first or Issues blocked by this work.
+      placeholder: |
+        Depends on #
+        Blocks #
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing instructions
+      description: Explain how another member can verify the completed work.
+      placeholder: Describe the test steps and expected result.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Ticket readiness
+      options:
+        - label: The objective is specific and within the approved ResQPH scope.
+          required: true
+        - label: The acceptance criteria are testable.
+          required: true
+        - label: Known dependencies are listed.
+          required: true
