@@ -158,6 +158,7 @@ ResQPH/
 - [Team responsibilities](docs/TEAM.md)
 - [Development setup](docs/SETUP.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Backend workspace guide](backend/README.md)
 - Requirements — to be added
 - API contracts — to be added
 - Database schema — to be added
