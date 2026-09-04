@@ -98,7 +98,9 @@ temp/
 # ==================================================
 # IDE and operating-system files
 # ==================================================
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
 .idea/
 *.code-workspace
 .DS_Store

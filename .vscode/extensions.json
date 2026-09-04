@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    "oxc.oxc-vscode",
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-docker",
+    "github.vscode-pull-request-github",
+    "davidanson.vscode-markdownlint"
+  ]
+}

@@ -147,6 +147,14 @@ ResQPH/
 
 ## Documentation
 
+- [Project dashboard](docs/DASHBOARD.md)
+- [Current status](docs/STATUS.md)
+- [Project context](docs/PROJECT_CONTEXT.md)
+- [Seven-phase roadmap](docs/ROADMAP.md)
+- [Phase guides](docs/phases/README.md)
+- [Phase 1 — Requirements and Data Validation](docs/phases/PHASE-01.md)
+- [Sprint process](docs/sprints/README.md)
+- [Sprint 01 plan](docs/sprints/SPRINT-01.md)
 - [Team responsibilities](docs/TEAM.md)
 - [Development setup](docs/SETUP.md)
 - [Architecture](docs/ARCHITECTURE.md)
