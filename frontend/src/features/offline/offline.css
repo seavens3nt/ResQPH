@@ -1,0 +1,65 @@
+.offline-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 24px;
+  background: var(--surface-overlay);
+  border-bottom: 1px solid var(--border-subtle);
+  animation: fadeIn 0.2s ease-out;
+  z-index: 20;
+}
+
+.offline-bar.is-offline {
+  background: rgb(245 158 11 / 15%);
+  border-bottom: 1px solid rgb(245 158 11 / 35%);
+  color: var(--color-warning);
+}
+
+.offline-bar.is-syncing {
+  background: rgb(34 197 94 / 15%);
+  border-bottom: 1px solid rgb(34 197 94 / 35%);
+  color: var(--color-success);
+}
+
+.offline-bar__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.offline-bar__content > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.offline-bar__title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  font-weight: 400;
+}
+
+.offline-bar__desc {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.offline-bar__btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.16s ease;
+}
+
+.offline-bar__btn:hover {
+  background: rgb(255 255 255 / 15%);
+}
