@@ -1,0 +1,597 @@
+/* ==========================================================================
+   ResQPH Dashboard — Modern, Clean, Intentional Field-Operations UI
+   ========================================================================== */
+
+/* ── 1. Shell Layout ─────────────────────────────────────────────────────── */
+.dash {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: #f8fafc;
+  overflow: hidden;
+  position: relative;
+  font-family: var(--font-body);
+  color: #0f172a;
+}
+
+.dash__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
+  height: 100vh;
+  width: 100%;
+}
+
+.dash__content {
+  flex: 1;
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.75rem 2rem 3rem;
+  box-sizing: border-box;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+}
+
+/* ── 2. Sidebar ──────────────────────────────────────────────────────────── */
+.modern-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100dvh;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 100;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.08);
+}
+
+.modern-sidebar.is-open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-image-container {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.mobile-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.mobile-close-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  padding: 1rem 0.85rem;
+  overflow-y: auto;
+}
+
+.user-role-container {
+  background: #f8fafc;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.role-label {
+  font-size: 0.68rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.role-value {
+  font-size: 0.88rem;
+  color: #0f172a;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.modern-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.modern-nav-item svg {
+  color: #64748b;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.modern-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.modern-nav-item:hover svg {
+  color: #0f172a;
+}
+
+.modern-nav-item.is-active {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.modern-nav-item.is-active svg {
+  color: #dc2626;
+}
+
+.active-red-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #dc2626;
+  margin-left: auto;
+}
+
+.sidebar-footer {
+  padding: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.modern-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.88rem;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+
+.modern-logout-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.modern-logout-btn:hover svg {
+  color: #dc2626;
+}
+
+/* ── 3. Header ───────────────────────────────────────────────────────────── */
+.dash-header {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.btn-burger {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px;
+  cursor: pointer;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-burger:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.header-subtitle {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.header-page-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-brand-badge {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-role-switch {
+  background: #f8fafc;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-role-switch:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.role-divider {
+  color: #cbd5e1;
+  font-size: 0.75rem;
+}
+
+.role-option.is-active {
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.role-option.is-inactive {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.avatar-badge:hover {
+  transform: scale(1.05);
+}
+
+.avatar-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── 4. Clean Structural Cards & Action Buttons ───────────────────────────── */
+/* Clean card container without card-in-card nesting */
+.neu-red-action-card,
+.modern-clean-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.neu-red-card {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.neu-red-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* SOS Hero Trigger */
+.sos-button-neat {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+  border: 4px solid #ffffff;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sos-button-neat:hover {
+  background: #b91c1c;
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45);
+}
+
+.sos-button-neat:active {
+  transform: scale(0.97);
+}
+
+.glowing-emergency-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.glowing-red-dot-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #dc2626;
+}
+
+/* Profile form */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-avatar-editor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.profile-avatar-editor__preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-avatar-editor__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-editor strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.profile-avatar-editor p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 2px 0 8px 0;
+}
+
+.profile-avatar-editor__input {
+  display: none;
+}
+
+.profile-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-form__field span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.profile-form__field input {
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.profile-form__field input:focus {
+  border-color: #dc2626;
+}
+
+.profile-form__section-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+.profile-form__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.profile-form__error {
+  color: #dc2626;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+/* ── 5. Responsive Breakpoints ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .dash-header {
+    padding: 0 1rem;
+    height: 56px;
+  }
+
+  .dash__content {
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .header-brand-badge {
+    display: none;
+  }
+
+  .header-page-title {
+    font-size: 0.95rem;
+  }
+
+  .header-subtitle {
+    display: none;
+  }
+}

@@ -1,0 +1,744 @@
+/* ==========================================================================
+   ResQPH Shared Dashboard Styles — Modern, Clean, Intentional Field Ops
+   ========================================================================== */
+
+/* ── Layout & Sections ───────────────────────────────────────────────────── */
+.dash-section {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.dash-section__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.dash-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.dash-section__head p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .dash-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Stat Cards ──────────────────────────────────────────────────────────── */
+.dash-metrics,
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  width: 100%;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 1.1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.stat-card--accent {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: #ffffff;
+}
+
+.stat-card__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.stat-card--accent .stat-card__icon {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.stat-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stat-card__val {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.stat-card__label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.stat-card__subtext {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+/* ── Status Badges & Severity Tags ───────────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.severity-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.severity-low {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.severity-moderate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.severity-high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.severity-severe {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.badge-profile-pulled {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Vulnerability Badges ────────────────────────────────────────────────── */
+.vuln-badges-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.vuln-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.vuln-none {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ── Item Lists & Cards (Coordinator & Rescuer) ─────────────────────────── */
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0.9rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.item-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.item-card.is-selected {
+  border-color: #dc2626;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+.item-card__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.item-card.is-selected .item-card__icon {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.item-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-card__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.item-card__title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.item-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.item-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Inspector Panel ─────────────────────────────────────────────────────── */
+.inspector-panel {
+  padding: 1.4rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.inspector-header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.inspector-phone {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.inspector-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.inspector-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inspector-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inspector-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.inspector-value {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.inspector-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.fast-track-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #1e40af;
+  font-size: 0.8rem;
+}
+
+.alert-banner-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.85rem;
+}
+
+/* ── En Route Delay Advisory & Real-Time Log ─────────────────────────────── */
+.enroute-reroute-explanation-card {
+  padding: 1.1rem 1.25rem;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #dc2626;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reroute-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+}
+
+.live-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+}
+
+.reroute-title {
+  font-weight: 700;
+  color: #dc2626;
+  letter-spacing: 0.03em;
+}
+
+.reroute-source {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.reroute-message {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #0f172a;
+  margin: 0;
+}
+
+.reroute-eta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748b;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 6px;
+}
+
+.live-updates-timeline {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timeline-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+
+.timeline-item .upd-time {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.timeline-item .upd-author {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.timeline-item .upd-msg {
+  color: #334155;
+  flex: 1;
+}
+
+/* Dispatcher route updater in missions tab */
+.dispatcher-delay-updater {
+  padding: 1.1rem 1.25rem;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dispatcher-delay-updater h5 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.dispatcher-delay-updater p {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.delay-presets-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.preset-btn {
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-btn:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+/* ── Weather Alert Banner & Preparedness Guide ───────────────────────────── */
+.weather-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #fee2e2;
+  border-left: 3px solid #dc2626;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.weather-alert-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.weather-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.weather-alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.weather-alert-headline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.weather-tag.red-warning {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.weather-station,
+.weather-storm-name {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.weather-alert-sub {
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.weather-alert-actions {
+  flex-shrink: 0;
+}
+
+.weather-hotline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.weather-hotline-btn:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* Emergency hotlines modal */
+.hotline-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.hotline-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.hotline-item__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.hotline-item__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.hotline-item__agency {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.hotline-item__call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #dc2626;
+  text-decoration: none;
+}
+
+.hotline-note {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 1rem;
+  line-height: 1.4;
+}
+
+/* Preparedness Guide */
+.preparedness-guide {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.guide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.guide-header__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+}
+
+.guide-header__left h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.guide-tag {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.guide-card {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #dc2626;
+}
+
+.guide-card__num {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.guide-card h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.guide-card p {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+}

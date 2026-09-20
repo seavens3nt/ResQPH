@@ -1,0 +1,77 @@
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 13px 6px 11px;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  background: var(--border-subtle);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-pill__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-disabled);
+  flex: 0 0 auto;
+}
+.status-pill__dot::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  opacity: 0;
+}
+
+.status-pill__label  { color: var(--text-secondary); }
+.status-pill__detail {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* online */
+.status-pill--online .status-pill__dot {
+  background: var(--color-success);
+  color: var(--color-success);
+}
+.status-pill--online .status-pill__dot::after {
+  animation: sp-pulse 2.4s var(--ease) infinite;
+}
+.status-pill--online .status-pill__label { color: var(--color-success); }
+
+/* offline */
+.status-pill--offline .status-pill__dot  { background: var(--color-danger); }
+.status-pill--offline .status-pill__label { color: var(--color-danger-text); }
+
+/* pending */
+.status-pill--pending .status-pill__dot {
+  background: var(--color-warning);
+  animation: sp-blink 1.4s ease-in-out infinite;
+}
+.status-pill--pending .status-pill__label { color: var(--color-warning); }
+
+/* stale */
+.status-pill--stale .status-pill__dot {
+  background: transparent;
+  border: 1.5px solid var(--color-warning);
+}
+.status-pill--stale .status-pill__label { color: var(--color-warning); }
+
+@keyframes sp-pulse {
+  0%   { opacity: 0.9; transform: scale(0.6); }
+  100% { opacity: 0;   transform: scale(2.6); }
+}
+@keyframes sp-blink {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.3; }
+}

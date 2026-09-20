@@ -1,0 +1,147 @@
+/* ── Flood animation keyframes & classes ─────────────────────────── */
+
+.flood-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.flood-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Atmospheric glow pulse ──────────────────────────────────────── */
+.flood-glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+.flood-glow-pulse--offset {
+  animation-delay: -2s;
+  animation-duration: 5.5s;
+}
+
+@keyframes glow-pulse {
+  from { opacity: 0.6; transform: scale(1);    }
+  to   { opacity: 1.0; transform: scale(1.12); }
+}
+
+/* ── Rain streaks ────────────────────────────────────────────────── */
+.flood-rain__streak {
+  animation: rain-fall 1.4s linear infinite;
+  transform-origin: top center;
+}
+
+@keyframes rain-fall {
+  0%   { transform: translateY(-40px); opacity: 0;   }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.8; }
+  100% { transform: translateY(420px); opacity: 0; }
+}
+
+/* ── Window flicker ─────────────────────────────────────────────── */
+.flood-window {
+  animation: win-flicker 3s ease-in-out infinite alternate;
+}
+
+@keyframes win-flicker {
+  0%   { fill-opacity: 0.7; }
+  40%  { fill-opacity: 0.2; }
+  60%  { fill-opacity: 0.8; }
+  80%  { fill-opacity: 0.1; }
+  100% { fill-opacity: 0.9; }
+}
+
+/* ── Water rise ─────────────────────────────────────────────────── */
+.flood-water-rise {
+  animation: water-rise 14s ease-in-out infinite alternate;
+  transform-origin: bottom;
+}
+
+@keyframes water-rise {
+  0%   { transform: translateY(0);   }
+  100% { transform: translateY(-28px); }
+}
+
+/* ── Waves ───────────────────────────────────────────────────────── */
+
+/* Front wave — fast */
+.flood-wave--a {
+  animation:
+    wave-scroll-a 5s linear infinite,
+    wave-bob      4s ease-in-out infinite alternate;
+}
+
+/* Mid wave — medium */
+.flood-wave--b {
+  animation:
+    wave-scroll-b 8s linear infinite,
+    wave-bob      5s ease-in-out infinite alternate-reverse;
+}
+
+/* Back wave — slow */
+.flood-wave--c {
+  animation:
+    wave-scroll-c 12s linear infinite,
+    wave-bob       6s ease-in-out infinite alternate;
+}
+
+@keyframes wave-scroll-a {
+  from { transform: translateX(0); }
+  to   { transform: translateX(200px); }
+}
+@keyframes wave-scroll-b {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-200px); }
+}
+@keyframes wave-scroll-c {
+  from { transform: translateX(0); }
+  to   { transform: translateX(200px); }
+}
+
+@keyframes wave-bob {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-8px); }
+}
+
+/* ── Shimmer line ────────────────────────────────────────────────── */
+.flood-shimmer {
+  animation: shimmer-scroll 7s linear infinite;
+}
+
+@keyframes shimmer-scroll {
+  from { transform: translateX(0);     opacity: 0.5; }
+  50%  { opacity: 1; }
+  to   { transform: translateX(200px); opacity: 0.5; }
+}
+
+/* ── Debris float ────────────────────────────────────────────────── */
+.flood-debris {
+  animation:
+    debris-drift   10s ease-in-out infinite alternate,
+    debris-bob     3.5s ease-in-out infinite alternate;
+}
+
+@keyframes debris-drift {
+  from { transform: translateX(0);    }
+  to   { transform: translateX(60px); }
+}
+
+@keyframes debris-bob {
+  from { transform: translateY(0);   }
+  to   { transform: translateY(4px); }
+}
+
+/* ── Ripple rings ────────────────────────────────────────────────── */
+.flood-ripple {
+  animation: ripple-expand 2.8s ease-out infinite;
+  transform-origin: center;
+}
+
+@keyframes ripple-expand {
+  0%   { transform: scale(0.3); opacity: 0.8; }
+  70%  { transform: scale(2.2); opacity: 0.1; }
+  100% { transform: scale(2.8); opacity: 0;   }
+}
