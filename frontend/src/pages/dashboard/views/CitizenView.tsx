@@ -11,6 +11,7 @@ import {
   EmergencyPreparednessGuide,
   Section,
   LocalizedForecastWidget,
+  LocationStatusCard,
   SEVERITY_CONFIG,
 } from './shared'
 import type { NavSection } from './navTypes'
@@ -92,26 +93,11 @@ export function CitizenView({
         {navSection === 'overview' && (
           <div className="citizen-overview-layout" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
             {/* Location & GPS Status Bar */}
-            <div className="modern-clean-card" style={{ padding: '0.9rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center' }}>
-                  <Icon name="navigation" size={18} />
-                </span>
-                <div>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                    Brgy. Tumana, Marikina City
-                  </h3>
-                  <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    14.6532 N · 121.0912 E
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ padding: '3px 9px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>GPS Lock</span>
-              </div>
-            </div>
+            <LocationStatusCard
+              title="Brgy. Tumana, Marikina City"
+              coordinates="14.6532 N · 121.0912 E"
+              statusLabel="GPS Lock"
+            />
 
             {/* Main SOS Trigger Hero */}
             <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>

@@ -12,6 +12,7 @@ import { CitizenView } from './views/CitizenView'
 import { CoordinatorView } from './views/CoordinatorView'
 import { RescuerView } from './views/RescuerView'
 import { VolunteerView } from './views/VolunteerView'
+import { SidebarNavItem } from './components/SidebarNavItem'
 import type { NavSection } from './views/navTypes'
 import './dashboard.css'
 
@@ -57,6 +58,11 @@ export function DashboardPage() {
 
   function toggleRoleSwitch() {
     setActiveRole((prev) => (prev === 'citizen' ? 'volunteer' : 'citizen'))
+  }
+
+  function handleNavSelect(section: NavSection) {
+    setActiveNav(section)
+    setMenuOpen(false)
   }
 
   function openProfile() {
@@ -156,36 +162,33 @@ export function DashboardPage() {
           </div>
 
           <nav className="sidebar-nav-list">
-            <button
-              type="button"
-              className={`modern-nav-item ${activeNav === 'overview' ? 'is-active' : ''}`}
-              onClick={() => { setActiveNav('overview'); setMenuOpen(false) }}
-            >
-              <Icon name="pin" size={18} />
-              <span>Overview</span>
-            </button>
+            <SidebarNavItem
+              section="overview"
+              activeSection={activeNav}
+              icon="pin"
+              label="Overview"
+              onSelect={handleNavSelect}
+            />
 
             {/* NAV ITEM: "Track SOS" FOR VOLUNTEER, "Inquiries" FOR CITIZEN */}
-            <button
-              type="button"
-              className={`modern-nav-item ${activeNav === 'inquiries' ? 'is-active' : ''}`}
-              onClick={() => { setActiveNav('inquiries'); setMenuOpen(false) }}
-            >
-              <Icon name="alert" size={18} />
-              <span>{activeRole === 'volunteer' ? 'Track SOS' : 'Inquiries'}</span>
-              {activeRole === 'volunteer' && (
+            <SidebarNavItem
+              section="inquiries"
+              activeSection={activeNav}
+              icon="alert"
+              label={activeRole === 'volunteer' ? 'Track SOS' : 'Inquiries'}
+              onSelect={handleNavSelect}
+              indicator={activeRole === 'volunteer' ? (
                 <span className="active-red-dot" title="Live SOS Activity" />
-              )}
-            </button>
+              ) : undefined}
+            />
 
-            <button
-              type="button"
-              className={`modern-nav-item ${activeNav === 'map' ? 'is-active' : ''}`}
-              onClick={() => { setActiveNav('map'); setMenuOpen(false) }}
-            >
-              <Icon name="shield" size={18} />
-              <span>Hazard Map</span>
-            </button>
+            <SidebarNavItem
+              section="map"
+              activeSection={activeNav}
+              icon="shield"
+              label="Hazard Map"
+              onSelect={handleNavSelect}
+            />
           </nav>
         </div>
 
