@@ -38,13 +38,20 @@ This phase protects the core application under the project's time constraint. Ex
 - `backend/app/main.py`
 - `backend/app/core/`
 - `backend/app/db/`
-- `backend/app/models/`
-- `backend/app/repositories/`
+- `backend/app/api/dependencies/demo_role.py`
+- `backend/app/models/rescue_request.py`
+- `backend/app/models/rescuer.py`
+- `backend/app/repositories/rescue_requests.py`
+- `backend/app/repositories/rescuers.py`
+- `backend/app/repositories/assignments.py`
 - `backend/app/services/rescue_requests.py`
 - `backend/app/services/assignments.py`
+- `backend/app/schemas/common.py`
+- `backend/app/schemas/rescue_requests.py`
+- `backend/app/schemas/assignments.py`
 - `backend/app/api/routes/rescue_requests.py`
 - `backend/app/api/routes/assignments.py`
-- corresponding `backend/tests/` files
+- corresponding request/assignment `backend/tests/test_*.py` files
 
 **Required output**
 
@@ -65,7 +72,11 @@ Do not implement routing, ML training, or frontend presentation inside backend m
 
 - `backend/app/services/missions.py`
 - `backend/app/api/routes/missions.py`
-- `backend/app/schemas/` shared with Ranee only through reviewed contract changes
+- `backend/app/models/mission.py`
+- `backend/app/models/mission_status_event.py`
+- `backend/app/repositories/missions.py`
+- `backend/app/repositories/mission_status_events.py`
+- `backend/app/schemas/missions.py`
 - `backend/tests/test_missions.py`
 - `backend/tests/test_role_simulation.py`
 
@@ -80,15 +91,17 @@ Do not implement routing, ML training, or frontend presentation inside backend m
 
 **Boundary**
 
-Do not edit frontend, routing, or ML directories. Contract changes require Ranee's decision before implementation.
+Do not edit frontend, routing, or ML directories, `backend/app/main.py`, or the Ranee-owned request/assignment files. Contract changes require Ranee's decision before implementation.
 
 ### Elle — Citizen request and tracking flow
 
 **Owned files**
 
 - `frontend/src/features/requests/`
+- `frontend/src/api/rescueRequests.ts`
+- `frontend/src/pages/dashboard/views/CitizenView.tsx`
 - citizen-specific files under `frontend/src/pages/dashboard/views/citizen/`
-- related frontend tests
+- `frontend/src/pages/dashboard/views/citizen/CitizenRequestFlow.test.tsx`
 
 **Required output**
 
@@ -100,7 +113,7 @@ Do not edit frontend, routing, or ML directories. Contract changes require Ranee
 
 **Boundary**
 
-Do not edit backend, routing, or ML files. Do not add live-data, guaranteed-safety, or official-dispatch claims.
+Do not edit backend, routing, ML, coordinator/rescuer, or `frontend/src/features/missions/` files. Do not add live-data, guaranteed-safety, or official-dispatch claims.
 
 ### Clarence — Coordinator and rescuer core views
 
@@ -108,8 +121,14 @@ Do not edit backend, routing, or ML files. Do not add live-data, guaranteed-safe
 
 - coordinator-specific files under `frontend/src/pages/dashboard/views/coordinator/`
 - rescuer-specific files under `frontend/src/pages/dashboard/views/rescuer/`
+- `frontend/src/pages/dashboard/views/CoordinatorView.tsx`
+- `frontend/src/pages/dashboard/views/RescuerView.tsx`
+- `frontend/src/api/assignments.ts`
+- `frontend/src/api/missions.ts`
+- `frontend/src/features/missions/`
 - reusable components needed only by these flows under `frontend/src/components/ui/`
-- related frontend tests
+- `frontend/src/pages/dashboard/views/coordinator/CoordinatorAssignmentFlow.test.tsx`
+- `frontend/src/pages/dashboard/views/rescuer/RescuerMissionFlow.test.tsx`
 
 **Required output**
 
@@ -121,7 +140,7 @@ Do not edit backend, routing, or ML files. Do not add live-data, guaranteed-safe
 
 **Boundary**
 
-Do not implement route algorithms in the frontend and do not edit backend or ML files. Route presentation remains fixture-based until Team Phase 2 provides the accepted adapter.
+Do not implement route algorithms in the frontend and do not edit backend, ML, `CitizenView.tsx`, or `frontend/src/features/requests/` files. Route presentation remains fixture-based until Team Phase 2 provides the accepted adapter.
 
 ### Matthew — Contract review only during this phase
 
