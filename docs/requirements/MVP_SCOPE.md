@@ -52,6 +52,39 @@ This rectangle is a project-controlled scope boundary. It is not an official adm
 - Use synthetic or sanitized people, contact details, locations, missions, and incidents.
 - Keep raw datasets and generated model artifacts outside ordinary Git history.
 
+## Time-constrained delivery priorities
+
+The MVP is implemented in the following order. A lower tier must not delay a higher tier.
+
+### Tier 1 — Required demonstration path
+
+- Basic role simulation with a visible non-production notice
+- One sanitized rescue request created and stored
+- Coordinator review and atomic mission assignment
+- Rescuer mission retrieval and valid status transitions
+- One bounded U-Belt OpenStreetMap graph
+- Deterministic A* routing with rule-based flood/passability penalties
+- Impassable-edge exclusion, no-route behavior, and route explanation
+- Citizen, coordinator, and rescuer views needed for the demonstration
+- Automated tests for the core lifecycle and known routing graph
+
+### Tier 2 — Required experiment and limited resilience
+
+- Logistic Regression and Random Forest experiment with the approved split, metrics, and error analysis
+- Rule-based routing fallback demonstrated with ML disabled or rejected
+- Runtime ML penalty integration only if the evidence threshold passes and Ranee accepts it
+- One cached assigned mission and one queued next-valid mission-status update
+
+### Tier 3 — Defer first when time is insufficient
+
+- External historical flood-layer enrichment beyond the committed controlled scenario
+- Elevation-derived features or routing penalties
+- Dijkstra beyond a small comparison or diagnostic
+- Additional dashboards, analytics, map layers, visual effects, and optional workflow variations
+- More offline capability than the locked single-mission/single-update contract
+
+The team must finish and verify Tier 1 before expanding Tier 3. An unfinished optional feature is removed from the demonstration rather than represented as complete.
+
 ## Explicit exclusions
 
 - Nationwide or complete Metro Manila routing
@@ -77,8 +110,8 @@ The MVP succeeds when a reviewer can complete this sanitized demonstration:
 5. A* calculates an initial route.
 6. A controlled scenario marks one road risky or impassable.
 7. The engine returns an alternative route and a human-readable explanation.
-8. An accepted ML result contributes a bounded risk penalty.
-9. The same route workflow still operates with ML disabled.
+8. Logistic Regression and Random Forest results are reported honestly; if the evidence gate passes, the accepted result contributes a bounded risk penalty.
+9. The same route workflow operates with ML disabled, rejected, missing, or malformed.
 10. The rescuer submits a status update and the citizen sees the new status.
 11. The rescuer can view the cached mission and synchronize one queued valid status update after reconnecting.
 

@@ -36,14 +36,14 @@ export function CitizenView({
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [stepA_severity, setStepA_severity] = useState<SeverityLevel>('moderate')
-  const [locationAddress, setLocationAddress] = useState('Brgy. Tumana, Marikina City')
+  const [locationAddress, setLocationAddress] = useState('Sanitized address, Jhocson St., U-Belt pilot')
   const [locationError, setLocationError] = useState('')
 
   const activeReq = activeCitizenRequest
   const activeMission = missions.find((m) => m.requestId === activeReq?.id) || missions[0]
   const currentRouteExplanation =
     activeMission?.routeDelayExplanation ||
-    'All possible shortcuts are flooded. Rescue team is en route via safe corridor.'
+    'The controlled scenario marks the direct shortcut impassable. The team is using the recommended corridor.'
   const currentEtaMinutes = activeMission?.etaMinutes || 6
 
   function handleStartRequest(serviceName?: string) {
@@ -99,17 +99,17 @@ export function CitizenView({
                 </span>
                 <div>
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                    Brgy. Tumana, Marikina City
+                    Sanitized address, Jhocson St., U-Belt pilot
                   </h3>
                   <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    14.6532 N · 121.0912 E
+                    14.6042 N · 120.9946 E
                   </span>
                 </div>
               </div>
 
               <div style={{ padding: '3px 9px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>GPS Lock</span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>Demo Location</span>
               </div>
             </div>
 
@@ -131,7 +131,7 @@ export function CitizenView({
               </button>
 
               <p style={{ fontSize: '0.88rem', color: '#64748b', maxWidth: '380px', margin: 0 }}>
-                Transmits your GPS location and household details to the nearest rescue team.
+                Submits sanitized location and household details to the prototype coordinator workflow.
               </p>
 
               <button
@@ -217,13 +217,13 @@ export function CitizenView({
               </div>
             </div>
 
-            {/* Live Alerts */}
+            {/* Controlled scenario notices */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Live Alerts
+                  Scenario Notices
                 </h3>
-                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Auto-updating</span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Simulated data</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -232,8 +232,8 @@ export function CitizenView({
                     <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#b91c1c', background: '#fee2e2', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Critical</span>
                     <span className="font-mono" style={{ fontSize: '0.7rem', color: '#64748b' }}>2 MIN AGO</span>
                   </div>
-                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Marikina River past 2nd alarm</strong>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Barangay Tumana · rising 0.4 m/hr</span>
+                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Controlled flood scenario active</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>U-Belt pilot · synthetic scenario values</span>
                 </div>
 
                 <div className="neu-red-card" style={{ padding: '0.85rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -241,8 +241,8 @@ export function CitizenView({
                     <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#92400e', background: '#fef3c7', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Warning</span>
                     <span className="font-mono" style={{ fontSize: '0.7rem', color: '#64748b' }}>18 MIN AGO</span>
                   </div>
-                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Typhoon Signal No. 2 raised</strong>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Metro Manila · sustained 95 km/h</span>
+                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Heavy-rain demonstration condition</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Not a live or official weather warning</span>
                 </div>
 
                 <div className="neu-red-card" style={{ padding: '0.85rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -280,7 +280,7 @@ export function CitizenView({
             {activeReq ? (
               <Section
                 title={`Active Rescue Tracking: ${activeReq.id}`}
-                subtitle="Real-time multi-stage status and automated flood-aware tracking."
+                subtitle="Prototype status sequence using controlled scenario data."
                 action={
                   activeReq.status === 'pending' ? (
                     <Button
@@ -364,20 +364,20 @@ export function CitizenView({
                   <div className="enroute-reroute-explanation-card">
                     <div className="reroute-header">
                       <span className="live-indicator-dot" />
-                      <span className="reroute-title">REAL-TIME ROUTE & DELAY ADVISORY</span>
-                      <span className="reroute-source">Central Dispatch & Routing Engine</span>
+                      <span className="reroute-title">SIMULATED ROUTE & DELAY ADVISORY</span>
+                      <span className="reroute-source">Prototype Coordinator & Routing Engine</span>
                     </div>
                     <p className="reroute-message">"{currentRouteExplanation}"</p>
                     <div className="reroute-eta-row">
                       <span>Arrival Target: <strong>{currentEtaMinutes} minutes</strong></span>
-                      <span>Corridor: <strong>{activeMission?.activeRouteName || 'Jhocson St. Safe Corridor'}</strong></span>
+                      <span>Corridor: <strong>{activeMission?.activeRouteName || 'Jhocson St. Recommended Corridor'}</strong></span>
                     </div>
                   </div>
 
-                  {/* Live Updates Timeline */}
+                  {/* Prototype status-update timeline */}
                   {activeMission?.liveStatusUpdates && activeMission.liveStatusUpdates.length > 0 && (
                     <div className="live-updates-timeline">
-                      <span className="timeline-title">Live Dispatch Log</span>
+                      <span className="timeline-title">Prototype Status Log</span>
                       <ul className="timeline-list">
                         {activeMission.liveStatusUpdates.slice(0, 4).map((upd) => (
                           <li key={upd.id} className="timeline-item">
@@ -393,7 +393,7 @@ export function CitizenView({
                 </div>
               </Section>
             ) : (
-              <Section title="Rescue Tracking" subtitle="Real-time status tracking for your rescue request.">
+              <Section title="Rescue Tracking" subtitle="Prototype status tracking for your rescue request.">
                 <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
                   <p style={{ color: '#64748b', fontWeight: 600, margin: 0 }}>No active rescue requests.</p>
                 </div>
@@ -405,7 +405,7 @@ export function CitizenView({
         {/* ── MAP TAB ─────────────────────────────────────────────────── */}
         {navSection === 'map' && (
           <div style={{ width: '100%' }}>
-            <Section title="Flood-Aware Rescue Map" subtitle="Live visualization of active mission route and hazard updates.">
+            <Section title="Flood-Aware Rescue Map" subtitle="Controlled-scenario visualization; not live navigation data.">
               <InteractiveFloodMap
                 activeStage={activeReq ? (activeReq.status as any) : 'en-route'}
                 showAlternatives

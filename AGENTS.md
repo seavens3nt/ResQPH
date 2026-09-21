@@ -1,5 +1,7 @@
 # ResQPH repository guidance
 
+For verified scope, contracts, architecture, active status, and context-sync guidance, use the repository-local `resqph-project-context` skill in `.agents/skills/resqph-project-context/`.
+
 ## Purpose and scope
 
 ResQPH is a flood-aware emergency rescue coordination and routing system for COM243 and CCSFEN1L. It is an academic engineering prototype for the project-defined U-Belt pilot area in the City of Manila and controlled or historical flood scenarios. It is not a certified emergency-dispatch, flood-forecasting, or road-safety system.
@@ -17,6 +19,15 @@ Work must align with these phases in order:
 5. Team Phase 3 — AI/ML Road-Risk Component
 6. Team Phase 4 — Limited Offline Support
 7. Team Phase 5 — Integration, Testing, and Presentation
+
+## Time-constrained delivery order
+
+1. Protect the end-to-end deterministic demonstration: role simulation, rescue request, assignment, mission status, bounded U-Belt graph, A*, rule penalties, fallback, and tests.
+2. Complete the Logistic Regression and Random Forest experiment, but integrate model output only after the documented evidence gate and Ranee's acceptance.
+3. Implement the locked one-mission/one-update offline behavior.
+4. Defer optional historical/elevation enrichment, extra map layers, analytics, and visual polish before delaying the core path.
+
+Runtime copy and test fixtures must say when data are controlled, simulated, historical, cached, or stale. Never claim live PAGASA data, official dispatch, nationwide coverage, guaranteed safe navigation, or secure production authentication.
 
 ## Approved stack
 

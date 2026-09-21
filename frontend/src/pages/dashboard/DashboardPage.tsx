@@ -174,7 +174,7 @@ export function DashboardPage() {
               <Icon name="alert" size={18} />
               <span>{activeRole === 'volunteer' ? 'Track SOS' : 'Inquiries'}</span>
               {activeRole === 'volunteer' && (
-                <span className="active-red-dot" title="Live SOS Activity" />
+                <span className="active-red-dot" title="Simulated SOS activity" />
               )}
             </button>
 
@@ -211,7 +211,7 @@ export function DashboardPage() {
             </button>
             <div className="header-title-group">
               <span className="header-subtitle">
-                {ROLE_LABELS[user.role]} Console · Metro Manila
+                {ROLE_LABELS[user.role]} Console · U-Belt Pilot · Academic Prototype
               </span>
               <h1 className="header-page-title">
                 {user.role === 'citizen' && 'Citizen Distress & Volunteer Portal'}
