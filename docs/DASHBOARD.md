@@ -1,24 +1,24 @@
 # ResQPH project dashboard
 
-**Last updated:** 2026-09-05
+**Last updated:** 2026-09-22
 **Source of truth for ticket status:** GitHub Issues and the GitHub Project
 
 | Current phase | Current sprint | Health | Current goal |
 |---|---|---|---|
-| Phase 1 — Requirements and Data Validation | Sprint 01 planned; dates TBD | Green: setup; Amber: decisions/data | Approve scope, study area, workflows, data feasibility, contracts, and fallbacks. |
+| Project Foundation Phase 1 — Requirements and Data Validation | Completed and verified on PR #13 | On track; publication to `main` pending merge | Merge the locked foundation, then open Project Foundation Phase 2. |
 
 ## Immediate next actions
 
-1. Team-review [Phase 1](phases/PHASE-01.md).
-2. Approve the study area, MVP boundaries, terminology, and authentication decision.
-3. Convert approved candidate work into GitHub Issues and select the Sprint 01 scope.
-4. Begin reviewed workflow, wireframe, contract, and data-validation artifacts.
+1. Ranee reviews and merges PR #13.
+2. Verify the merge on `main` and close Issue #12.
+3. Prepare Foundation Phase 2 work packages using the locked scope, workflow, API, schema, and wireframes.
+4. Open only Phase 2 issues; later team phases remain planned.
 
 ## Blockers and risks
 
 | Type | Item | Status/response |
 |---|---|---|
-| Blocker | No confirmed blocker | Monitor open Phase 1 decisions. |
+| Blocker | No foundation decision blocker | PR #13 must merge before the team uses the files from `main`. |
 | Risk | Study area or datasets may be unsuitable | Validate coverage, CRS, resolution, age, and license before implementation. |
 | Risk | Scope expansion | Enforce the approved MVP and non-goals. |
 | Risk | Component contract mismatch | Review API, schema, route, and ML interfaces together. |
@@ -32,20 +32,20 @@
 | Ranee (`@seavens3nt`) | Project management and backend | AI/ML and UI/UX |
 | Jared Noel (`@AshenDary`) | Secondary backend and integration | AI/ML |
 | Elle (`@Qiuyuan26`) | UI/UX and frontend | Testing and documentation |
-| Matthew Trinitaria (`@matthew-sudo2`) | AI/ML and data evaluation | Data validation and routing |
-| Clarence (`@ClarenceArillo`) | Geospatial data and routing | UI/UX |
+| Matthew Trinitaria (`@matthew-sudo2`) | AI/ML, data evaluation, geospatial pipeline, and routing | Jared supports backend integration |
+| Clarence (`@ClarenceArillo`) | UI/UX and frontend | Testing and map-interface presentation |
 
 ## Phase progress
 
 | Phase | Status | Exit focus |
 |---|---|---|
-| 1 — Requirements and Data Validation | Ready to begin | Approved MVP, workflows, study area, datasets, schema, contracts, and fallback |
-| 2 — Core Application | Not started | Complete testable rescue-request and mission lifecycle |
-| 3 — Mapping and Geospatial Pipeline | Not started | Reproducible map/data pipeline for the study area |
-| 4 — Routing | Not started | Deterministic then flood-aware explainable routing |
-| 5 — AI/ML | Not started | Evaluated model or documented fallback-only decision |
-| 6 — Offline Simulation | Not started | Cached mission and validated queued synchronization |
-| 7 — Integration and Testing | Not started | Demonstrable end-to-end scenarios and documented limitations |
+| Project Foundation 1 — Requirements and Data Validation | Completed and verified on PR #13 | Merge the locked foundation into `main` |
+| Project Foundation 2 — Core Application | Ready to start after PR #13 merge | Complete persistent rescue-request and mission lifecycle |
+| Team 1 — Mapping and Geospatial Pipeline | Planned | Reproducible map/data pipeline for the study area |
+| Team 2 — Flood-Aware Routing | Planned | Deterministic flood-aware explainable routing |
+| Team 3 — AI/ML Road-Risk Component | Planned | Evaluated Logistic Regression and Random Forest experiment plus fallback |
+| Team 4 — Limited Offline Support | Planned | Cached mission and one validated queued update |
+| Team 5 — Integration, Testing, and Presentation | Planned | Verified end-to-end scenarios and reconciled deliverables |
 
 ## GitHub workspace
 
@@ -66,6 +66,8 @@ Recommended fields: Phase, Sprint, Area, Priority, Owner, Support, Effort, and S
 - [Current status](STATUS.md)
 - [Phase guides](phases/README.md)
 - [Phase 1 guide](phases/PHASE-01.md)
+- [Phase 1 gate](phases/PHASE-01-GATE.md)
+- [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
 - [Sprint process](sprints/README.md)
 - [Sprint 01](sprints/SPRINT-01.md)
 - [Development setup](SETUP.md)

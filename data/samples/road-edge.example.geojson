@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "name": "synthetic_resqph_road_edge_fixture",
+  "fixture_notice": "Synthetic contract fixture; not validated real-world road or flood data.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "edge_id": "edge-demo-001",
+        "from_node": "node-demo-a",
+        "to_node": "node-demo-b",
+        "length_m": 125.0,
+        "travel_time_s": 30.0,
+        "road_class": "residential",
+        "flood_level": "moderate",
+        "passability": "restricted",
+        "observed_at": "2026-09-21T04:00:00Z",
+        "source_type": "controlled"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.9940, 14.6035],
+          [120.9946, 14.6042]
+        ]
+      }
+    }
+  ]
+}

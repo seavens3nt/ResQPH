@@ -1,0 +1,56 @@
+{
+  "fixture_notice": "Synthetic schema examples only; not a training dataset or real-world accuracy evidence.",
+  "target": {
+    "name": "high_risk_edge",
+    "type": "binary",
+    "positive_definition": "Verified historical or controlled outcome is high, severe, restricted, or impassable.",
+    "negative_definition": "Verified historical or controlled outcome is none, low, or moderate and passable."
+  },
+  "allowed_features": [
+    "road_class",
+    "length_m",
+    "baseline_travel_time_s",
+    "historical_flood_frequency",
+    "max_prior_flood_depth_cm",
+    "distance_to_documented_waterway_m",
+    "elevation_context_m",
+    "rainfall_band_before_outcome"
+  ],
+  "prohibited_features": [
+    "edge_id",
+    "current_outcome_flood_level",
+    "current_outcome_passability",
+    "post_outcome_observation",
+    "duplicate_location_identifier"
+  ],
+  "example_records": [
+    {
+      "edge_id": "edge-demo-001",
+      "scenario_group": "controlled-001",
+      "spatial_group": "tile-demo-a",
+      "road_class": "residential",
+      "length_m": 125.0,
+      "baseline_travel_time_s": 30.0,
+      "historical_flood_frequency": 0.4,
+      "max_prior_flood_depth_cm": 25.0,
+      "distance_to_documented_waterway_m": 300.0,
+      "elevation_context_m": null,
+      "rainfall_band_before_outcome": "heavy",
+      "high_risk_edge": 1
+    },
+    {
+      "edge_id": "edge-demo-002",
+      "scenario_group": "controlled-001",
+      "spatial_group": "tile-demo-b",
+      "road_class": "tertiary",
+      "length_m": 180.0,
+      "baseline_travel_time_s": 45.0,
+      "historical_flood_frequency": 0.1,
+      "max_prior_flood_depth_cm": 5.0,
+      "distance_to_documented_waterway_m": 900.0,
+      "elevation_context_m": null,
+      "rainfall_band_before_outcome": "moderate",
+      "high_risk_edge": 0
+    }
+  ]
+}

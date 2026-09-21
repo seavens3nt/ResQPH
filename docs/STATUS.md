@@ -1,13 +1,13 @@
 # ResQPH project status
 
-**Last updated:** 2026-09-05
+**Last updated:** 2026-09-22
 
 | Field | Current value |
 |---|---|
-| Current phase | Phase 1 — Requirements and Data Validation |
-| Current sprint | Sprint 01 — planned; dates TBD |
-| Overall health | Green for repository readiness; Amber for unresolved scope/data decisions |
-| Current goal | Approve the MVP, study area, data feasibility, workflows, contracts, and fallbacks before feature implementation. |
+| Current phase | Project Foundation Phase 1 — Completed and verified on PR #13 |
+| Current sprint | Foundation Phase 1 — gate decision: Approve |
+| Overall health | On track; locked foundation is ready, with PR merge required before team use from `main` |
+| Current goal | Merge the completed Phase 1 foundation, then open Project Foundation Phase 2 work packages. |
 
 ## Completed setup
 
@@ -21,33 +21,30 @@
 - [x] Team responsibilities documented
 - [x] Project-management, phase, sprint, status, and editor documentation prepared on the current branch
 
-## Work in progress
+## Completed and verified foundation
 
-- Phase 1 planning and team approval.
-- No application feature is considered complete based on the current repository evidence.
+- U-Belt scope, boundary, source/fallback decisions, role simulation, ownership, and exclusions.
+- Lifecycle, API, MongoDB, routing, ML, offline, UI-state, accessibility, testing, and acceptance contracts.
+- Reproducible OSM feasibility evidence, controlled flood and stable-join fixture, known routing graph, ML schema, and role wireframes.
+- Final Phase 1 decision log, risk register, evidence record, roadmap, and gate approval.
+- No later application feature is considered complete merely because its foundation is locked.
 
 ## Immediate next actions
 
-1. Review and approve the Phase 1 guide with all five members.
-2. Decide the exact study-area boundary and MVP authentication requirement.
-3. Convert approved Phase 1 candidate work into small GitHub Issues.
-4. Add Issues to the GitHub Project and select the Sprint 01 scope.
-5. Begin workflows, wireframes, contracts, and dataset validation in parallel where dependencies allow.
+1. Ranee reviews and merges PR #13.
+2. Mark Issue #12 complete after the merge is verified on `main`.
+3. Create Project Foundation Phase 2 work packages from the locked contracts.
+4. Keep future implementation work within the authoritative file and role boundaries.
 
-## Decisions needed
+## Project administration notes
 
-| Decision | Owner | Needed by |
-|---|---|---|
-| Exact Metro Manila study-area boundary | Ranee with Clarence | TBD |
-| Coordinator versus dispatcher terminology | Ranee with Elle and Jared | TBD |
-| Authentication required for the prototype or deferred | Ranee with Jared | TBD |
-| Approved road, flood, elevation, and boundary datasets | Clarence with Matthew | TBD |
-| Phase/sprint schedule and final deadline | Ranee with team/instructor | TBD |
-| GitHub Project URL and Sprint 01 milestone | Ranee | TBD |
+- The Phase 1 completion date is 2026-09-22; its start date was not recorded.
+- Future phase dates must be set when Ranee has the actual course deadline and team availability; no date is invented in this foundation.
+- GitHub Issues, pull requests, and milestones are the current ticketing source of truth. A GitHub Project board is optional and not required for Phase 1 completion.
 
 ## Active blockers
 
-No confirmed technical blocker is recorded. Study-area, dataset, and scheduling decisions remain open and may block later implementation.
+No foundation decision blocks Phase 2. PR #13 must be merged before members treat the new documents as authoritative on `main`.
 
 ## Major risks
 
@@ -59,7 +56,7 @@ No confirmed technical blocker is recorded. Study-area, dataset, and scheduling 
 
 ## Latest demonstration
 
-Development foundation: the frontend and backend scaffolds run locally, the API health check is testable, and MongoDB runs through Docker Compose. The Phase 1 artifact demonstration is pending.
+Phase 1 foundation: the project can trace the sanitized rescue lifecycle through UI states, API/domain/schema behavior, controlled hazard joining, deterministic routing expectations, ML/fallback boundaries, offline behavior, and acceptance evidence. Runtime feature implementation remains assigned to later phases.
 
 ## Links
 
@@ -71,4 +68,6 @@ Development foundation: the frontend and backend scaffolds run locally, the API 
 - [Dashboard](DASHBOARD.md)
 - [Roadmap](ROADMAP.md)
 - [Phase 1 guide](phases/PHASE-01.md)
+- [Phase 1 gate](phases/PHASE-01-GATE.md)
+- [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
 - [Sprint 01](sprints/SPRINT-01.md)

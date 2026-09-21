@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "name": "resqph-controlled-flood-scenario-v1",
+  "fixture_notice": "Synthetic academic scenario; not live or historical flood evidence.",
+  "scenario": {
+    "scenario_id": "scenario-controlled-001",
+    "scenario_timestamp": "2026-09-22T00:00:00Z",
+    "source_type": "controlled",
+    "study_area_id": "ubelt-pilot-v1"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-001",
+        "edge_id": "edge-demo-001",
+        "flood_level": "moderate",
+        "flood_depth_cm": 30,
+        "passability": "restricted",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-09-22T00:00:00Z",
+        "reason": "Synthetic contract example for stable edge joining."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.994, 14.6035],
+          [120.9946, 14.6042]
+        ]
+      }
+    }
+  ]
+}

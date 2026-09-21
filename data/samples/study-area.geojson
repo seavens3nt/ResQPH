@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "name": "resqph-ubelt-pilot-boundary",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "study_area_id": "ubelt-pilot-v1",
+        "name": "U-Belt pilot area, City of Manila",
+        "status": "project-defined academic prototype boundary",
+        "crs": "EPSG:4326",
+        "approved_on": "2026-09-22",
+        "live_operational_boundary": false
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [120.982, 14.596],
+            [121.004, 14.596],
+            [121.004, 14.6175],
+            [120.982, 14.6175],
+            [120.982, 14.596]
+          ]
+        ]
+      }
+    }
+  ]
+}
