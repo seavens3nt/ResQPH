@@ -25,7 +25,7 @@ During severe flooding, rescue teams must locate stranded people, prioritize req
 
 ResQPH is an academic engineering prototype limited to the project-defined U-Belt pilot area in the City of Manila. Its WGS 84 bounding box is west `120.982000`, south `14.596000`, east `121.004000`, and north `14.617500`. It uses public or open datasets plus controlled and historical low, moderate, high, and severe flood scenarios. The team will document data age, coverage, accuracy, licensing, coordinate systems, and transformations.
 
-The project does not build a hydrological forecasting model. It may use existing hazard information and simulated flood conditions to demonstrate routing decisions. The approved machine-readable boundary is [`../data/samples/study-area.geojson`](../data/samples/study-area.geojson). Accepted hazard datasets, final routing weights, and performance targets remain conditional on the evidence listed in the [Phase 1 gate](phases/PHASE-01-GATE.md).
+The project does not build a hydrological forecasting model. It may use existing hazard information and simulated flood conditions to demonstrate routing decisions. The approved machine-readable boundary is [`../data/samples/study-area.geojson`](../data/samples/study-area.geojson). The controlled scenario fixture is the guaranteed hazard source; fixed prototype routing weights, ML evidence thresholds, and implementation obligations are recorded in the [Phase 1 gate](phases/PHASE-01-GATE.md).
 
 ## MVP boundary
 

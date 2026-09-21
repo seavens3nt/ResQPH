@@ -1,7 +1,7 @@
 # ResQPH test strategy
 
-**Status:** Draft for Phase 1 review
-**Last updated:** 2026-09-21
+**Status:** Completed and verified Phase 1 test baseline
+**Last updated:** 2026-09-22
 
 ## Verification principle
 
@@ -46,7 +46,7 @@ A task is complete only when its acceptance criteria are supported by inspected 
 
 ### Project Foundation Phase 1
 
-Inspect contract consistency, sanitized examples, dataset metadata, acceptance traceability, open decisions, and affected-member reviews. No application feature is considered complete.
+Inspect contract consistency, sanitized examples, dataset metadata, acceptance traceability, wireframes, known-graph expectations, and recorded PM decisions. Phase 1 completion locks the foundation; it does not claim that later application features are implemented.
 
 ### Project Foundation Phase 2
 

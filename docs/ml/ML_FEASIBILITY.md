@@ -1,31 +1,44 @@
 # Road-risk ML feasibility and evaluation plan
 
-**Status:** Required experiment; data feasibility still under validation
+**Status:** Completed Phase 1 experiment contract; later training evidence required
 **Approved models:** Logistic Regression and Random Forest
 **Excluded model:** XGBoost
-**Last updated:** 2026-09-21
+**Last updated:** 2026-09-22
 
 ## Intended use
 
 The ML component estimates a bounded road-risk probability or category for a road edge. An accepted result may add a non-negative penalty to the deterministic routing cost. It cannot mark an impassable edge passable, override a controlled rule, dispatch a team, or make an autonomous safety decision.
 
-## Proposed target
+## Approved target
 
-Preferred target: a documented road-edge risk label such as `low`, `moderate`, or `high`, or a binary `passable_under_scenario` label when the source data support it.
+The Phase 1 target is binary `high_risk_edge` for one road edge under one labeled scenario or historical observation:
 
-The target is not approved until the team verifies its source, meaning, class balance, geographic coverage, timestamp, and join to a stable `edge_id`. Controlled labels may be used to demonstrate the pipeline but must not be presented as evidence of real-world predictive accuracy.
+- `1`: the verified outcome is `high`, `severe`, `restricted`, or `impassable`;
+- `0`: the verified outcome is `none`, `low`, or `moderate` and `passable`.
+
+Each record must include a stable `edge_id`, scenario/time group, spatial group, source type, and label provenance. The contract fixture is [`../../data/samples/ml-road-risk-contract.example.json`](../../data/samples/ml-road-risk-contract.example.json).
+
+Controlled labels are approved for demonstrating preprocessing, training, comparison, inference, and fallback. They are not evidence of real-world predictive accuracy. Application integration remains optional and requires an honest held-out evaluation.
 
 ## Candidate features
 
-- Historical or controlled flood-hazard category
-- Reported or scenario flood depth
-- Elevation or relative elevation when resolution is suitable
 - Road class
-- Distance to a documented hazard feature when methodologically justified
-- Verified reported road condition
-- Rainfall category only when its source period aligns with the label
+- Edge length and baseline travel time
+- Historical flood frequency calculated only from records before the labeled outcome
+- Maximum prior flood depth calculated only from records before the labeled outcome
+- Distance to a documented waterway when the method and CRS are recorded
+- Optional contextual elevation with missingness handling
+- Rainfall band before the outcome when its source period aligns with the label
 
-Identifiers, post-outcome information, duplicate location proxies, and information collected after the target event require leakage review.
+Do not train on `edge_id`, current outcome flood level, current outcome passability, post-outcome observations, or duplicate location identifiers. These leak the answer or memorize location rather than learning a defensible relationship.
+
+## Data sufficiency and split decision
+
+- Use grouped train/validation/test partitions by `scenario_group` and `spatial_group`; the same edge/scenario group must not cross partitions.
+- Prefer a temporal test set when multiple historical periods exist.
+- Report missingness and class balance before fitting.
+- If fewer than 200 labeled records exist, either class has fewer than 40 examples, or grouped splitting cannot create all partitions, the experiment may still demonstrate the pipeline but its output is not integrated into routing.
+- Synthetic controlled records are always labeled as synthetic and are never mixed with historical records without a source indicator and separate result reporting.
 
 ## Required experiments
 
@@ -63,6 +76,16 @@ The experiment is a required deliverable. Model output is integrated into the de
 - Ranee accepts the evidence.
 
 If these conditions are not met, the completed academic output is the evaluated experiment and error analysis, while the application demonstration uses the rule-based fallback. This is not cancellation of ML; it is a controlled integration decision.
+
+## Approved model-to-routing mapping
+
+An accepted probability becomes a non-negative bounded cost:
+
+```text
+ml_penalty = round(clamp(risk_probability, 0, 1) * 60)
+```
+
+The maximum ML contribution is therefore `60` seconds-equivalent prototype cost units per edge. It cannot reduce deterministic penalties, restore an excluded edge, or replace the rule-based score. Invalid, incompatible, or stale output is rejected and produces a visible fallback indicator.
 
 ## Inference contract
 

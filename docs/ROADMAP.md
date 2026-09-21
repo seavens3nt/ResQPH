@@ -1,6 +1,6 @@
 # ResQPH project roadmap
 
-**Status:** Project Foundation Phase 1 ready for review; gate decision is Approve with conditions
+**Status:** Project Foundation Phase 1 completed and verified; Phase 2 ready after foundation PR merge
 **Decision owner:** Ranee
 **Last updated:** 2026-09-22
 
@@ -43,7 +43,7 @@ Team Phase 5 — Integration, Testing, and Presentation
 
 ## Project Foundation Phase 1 — Requirements and Data Validation
 
-**Status:** Ready for review — `Approve with conditions` recorded
+**Status:** Completed and verified
 **Lead:** Ranee
 
 ### Goal
@@ -66,11 +66,11 @@ Lock a coherent MVP, exact boundary, workflows, datasets, API/database/routing/M
 
 ### Gate
 
-Ranee recorded `Approve with conditions` on 2026-09-22. The conditions and their blocking effects are recorded in [`PHASE-01-GATE.md`](phases/PHASE-01-GATE.md). Project Foundation Phase 2 may become `Ready to start` after the Phase 1 documentation PR is merged; unverified data, routing, ML, UI, and review conditions remain open.
+Ranee recorded `Approve` on 2026-09-22 after verifying the locked foundation and evidence in [`PHASE-01-GATE.md`](phases/PHASE-01-GATE.md). Project Foundation Phase 2 becomes `Ready to start` after the Phase 1 documentation PR is merged. Later implementation tests are exit criteria for their own phases, not unfinished Phase 1 decisions.
 
 ## Project Foundation Phase 2 — Core Application
 
-**Status:** Planned — eligible to become Ready to start after the Phase 1 documentation PR is merged
+**Status:** Ready to start after the Phase 1 documentation PR is merged
 **Lead:** Ranee
 **Backend review/support:** Jared
 **Frontend contract review/support:** Elle and Clarence

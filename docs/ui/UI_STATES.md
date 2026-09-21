@@ -1,9 +1,11 @@
 # Required UI states
 
-**Status:** Draft for Phase 1 review
-**Last updated:** 2026-09-21
+**Status:** Completed and verified Phase 1 UI-state baseline
+**Last updated:** 2026-09-22
 
 Every main role flow must define observable states rather than showing only successful mock data.
+
+The approved low-fidelity layouts and reusable-component boundaries are in [`WIREFRAMES.md`](WIREFRAMES.md).
 
 | State | Required behavior |
 |---|---|

@@ -1,7 +1,7 @@
 # ResQPH acceptance scenarios
 
-**Status:** Draft for Phase 1 review
-**Last updated:** 2026-09-21
+**Status:** Completed and verified Phase 1 acceptance baseline
+**Last updated:** 2026-09-22
 
 ## AC-001 Complete rescue lifecycle
 
@@ -54,3 +54,5 @@ Every route or hazard demonstration identifies its controlled or historical sour
 ## Required evidence
 
 Each scenario requires a repeatable test, sanitized fixture, or inspected demonstration record. A screenshot, issue closure, placeholder, or member statement alone does not satisfy acceptance.
+
+Phase 1 locks these scenarios and their fixtures; later implementation phases must automate or demonstrate the behavior before claiming the corresponding feature complete.

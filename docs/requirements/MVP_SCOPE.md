@@ -1,6 +1,6 @@
 # ResQPH MVP scope
 
-**Status:** Approved baseline with Phase 1 conditions
+**Status:** Completed and verified Phase 1 scope baseline
 **Decision owner:** Ranee
 **Last updated:** 2026-09-22
 
@@ -84,4 +84,4 @@ The MVP succeeds when a reviewer can complete this sanitized demonstration:
 
 ## Approval gate
 
-Ranee approved this scope baseline on 2026-09-22. Phase completion remains conditional on the evidence and reviews named in the [Phase 1 gate](../phases/PHASE-01-GATE.md); approval must not be interpreted as verification of uninspected datasets, routing weights, ML labels, or UI evidence.
+Ranee approved and verified this Phase 1 scope baseline on 2026-09-22. Later implementation phases must still produce working code, automated tests, trained-model evidence when applicable, and Ranee's acceptance; Phase 1 completion does not claim those features already exist.

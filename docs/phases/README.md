@@ -4,8 +4,8 @@ Ranee completes the two Project Foundation phases before the team’s newly numb
 
 | Phase | Guide | Status |
 |---|---|---|
-| Project Foundation 1 — Requirements and Data Validation | [PHASE-01.md](PHASE-01.md) and [gate](PHASE-01-GATE.md) | Ready for review — Approve with conditions |
-| Project Foundation 2 — Core Application | Created after the Foundation 1 documentation PR merges | Planned; then eligible to become Ready to start |
+| Project Foundation 1 — Requirements and Data Validation | [PHASE-01.md](PHASE-01.md) and [gate](PHASE-01-GATE.md) | Completed and verified on PR #13 |
+| Project Foundation 2 — Core Application | Created after the Foundation 1 documentation PR merges | Ready to start after merge |
 | Team 1 — Mapping and Geospatial Pipeline | Created only after Foundation completion | Planned |
 | Team 2 — Flood-Aware Routing | Created after Team 1 approval | Planned |
 | Team 3 — AI/ML Road-Risk Component | Created after Team 2 approval | Planned |

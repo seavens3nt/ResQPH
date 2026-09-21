@@ -1,7 +1,7 @@
 # MongoDB schema and consistency contract
 
-**Status:** Draft for Phase 1 review
-**Last updated:** 2026-09-21
+**Status:** Completed and verified Phase 1 contract baseline
+**Last updated:** 2026-09-22
 
 ## Shared rules
 
@@ -89,6 +89,16 @@ Required: client event ID, device/demo user ID, mission ID, action type, payload
 
 Indexes: unique client event ID; mission plus received time.
 
+### `route_results`
+
+Versioned route-evaluation record referenced by a mission rather than embedded as an unbounded history array.
+
+Required: `id`, mission ID, scenario ID/version, algorithm, route geometry, edge IDs, distance, estimated time, total cost, cost breakdown, fallback flag, warnings, explanation, source/scenario timestamp, and creation time.
+
+Optional: accepted model name/version and bounded model contribution.
+
+Indexes: unique `id`; mission plus creation time; scenario ID/version. Route records use the same retention policy as their mission unless a later storage decision explicitly changes it.
+
 ## Assignment consistency boundary
 
 The following changes must succeed together or have no effect:
@@ -106,9 +116,9 @@ MongoDB transaction support is available through the local replica-set configura
 
 Completing a mission must update the mission, request, team availability, and history consistently. A duplicate completion event with the same idempotency key returns the original result rather than creating another transition.
 
-## Open schema decisions
+## Locked Phase 1 schema decisions
 
-- Final retention period for location updates
-- Whether route results are embedded in missions or referenced from a separate collection
-- Exact study-boundary validation method
-- Whether cancellation after assignment creates a dedicated mission-cancelled state
+- High-frequency `location_updates` use a 30-day TTL in the academic prototype. Mission/request history, status events, and final route evidence are not deleted by that TTL.
+- Route evaluations are stored in `route_results`; `missions` reference the latest accepted route and may keep small summary fields.
+- Rescue and hazard points are validated against the `ubelt-pilot-v1` polygon loaded from the versioned boundary fixture. Outside-boundary input returns the common `422` error and is not stored.
+- Coordinator cancellation while a mission is still `assigned` changes both request and mission to `cancelled`, restores team availability, and appends history in one transaction. Cancellation after `en-route` is not part of the MVP workflow.

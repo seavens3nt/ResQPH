@@ -1,8 +1,8 @@
 # ResQPH API contract
 
-**Status:** Draft for Phase 1 review
+**Status:** Completed and verified Phase 1 contract baseline
 **Base path:** `/api/v1`
-**Last updated:** 2026-09-21
+**Last updated:** 2026-09-22
 
 ## Contract rules
 
@@ -16,7 +16,7 @@
 
 ## Prototype role simulation
 
-Until the rubric requires another mechanism, protected demo operations accept:
+Protected demo operations accept:
 
 - `X-Demo-User-Id`
 - `X-Demo-Role`: `citizen`, `volunteer`, `rescuer`, or `coordinator`

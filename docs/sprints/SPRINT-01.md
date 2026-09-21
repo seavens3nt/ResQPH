@@ -5,42 +5,38 @@
 | Field | Value |
 |---|---|
 | Phase | Project Foundation Phase 1 — Requirements and Data Validation |
-| Dates | TBD |
+| Dates | Completed 2026-09-22; start date not recorded |
 | Sprint goal | Lock the U-Belt MVP, lifecycle, exact boundary, data feasibility, contracts, ML/fallback plan, offline boundary, and acceptance evidence before Phase 2. |
 | Decision owner | Ranee |
-| Status | Ready for review; gate decision is Approve with conditions; tracked by [Issue #12](https://github.com/seavens3nt/ResQPH/issues/12) |
+| Status | Completed and verified; gate decision is Approve; tracked by [Issue #12](https://github.com/seavens3nt/ResQPH/issues/12) and PR #13 |
 
-## Completed draft outputs
+## Completed and verified outputs
 
 - MVP scope and exclusions
-- Decision log and open-decision list
+- Decision log with every Phase 1 decision closed
 - Rescue-request and mission lifecycle
 - Acceptance scenarios
 - API contract
 - MongoDB schema and consistency contract
-- Candidate dataset register
+- Approved dataset register and source/fallback metadata
 - Routing and rule-risk contract
 - Logistic Regression and Random Forest evaluation plan
 - Limited offline contract
-- UI-state expectations
+- Role wireframes, reusable-component inventory, UI-state expectations, and frontend boundary
 - Test strategy
 - Risk register
 - Sanitized request and road-edge contract fixtures
 - Approved U-Belt boundary metadata and GeoJSON fixture
 - Basic role-simulation decision
 - Matthew's geospatial/routing ownership with Jared as backend-integration support
-- Phase 1 gate record with named evidence conditions
+- Controlled flood, stable-join, known-graph, and ML contract fixtures
+- OSM extraction feasibility evidence and exact query
+- Final prototype routing penalties and bounded ML mapping
+- Phase 1 evidence record and approved gate
 
-Draft creation is not phase completion. Each output still requires the stated review and evidence.
+## Remaining publication action
 
-## Remaining critical work
-
-1. Reproduce the approved U-Belt OSM extraction and record graph statistics, CRS, attribution, and clipping steps.
-2. Access and inspect the proposed flood and optional elevation sources, or approve a documented synthetic fallback.
-3. Verify coverage, age, restrictions, and road-edge join feasibility.
-4. Approve final deterministic penalty weights and the ML target/label source at their implementation gates.
-5. Produce or review low-fidelity workflow/wireframe evidence against the UI-state matrix.
-6. Review the affected contracts in the Phase 1 pull request and address material corrections before merge.
+Ranee must merge PR #13 and verify the files on `main`. This is repository publication, not unfinished Phase 1 foundation work.
 
 ## Active dependencies
 
@@ -56,12 +52,12 @@ Draft creation is not phase completion. Each output still requires the stated re
 - Candidate datasets have sample-level feasibility and restriction evidence.
 - API, schema, routing/risk, ML, offline, UI-state, and test artifacts agree.
 - Open risks have owners and safe decision times.
-- Affected members review the contracts that govern their work.
-- Ranee records `Approve`, `Approve with conditions`, or `Do not approve`.
+- The Phase 1 evidence record maps requirements to inspected artifacts.
+- Ranee records `Approve`.
 
 ## Review notes
 
-Ranee approved the scope, boundary, role simulation, ownership, and gate outcome on 2026-09-22. Dataset access/join evidence, UI wireframes, ML labels, final routing weights, and affected-member contract review remain conditions rather than verified completions.
+Ranee approved the complete foundation on 2026-09-22. The guaranteed controlled dataset, road feasibility evidence, join fixture, UI wireframes, ML target/schema, routing weights, known-graph expectations, contracts, and verification record are complete. Later implementation evidence belongs to its assigned phase.
 
 ## Retrospective
 

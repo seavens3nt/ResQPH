@@ -16,13 +16,12 @@
 | D-009 | Use new team phase numbering after the Project Foundation. | Approved | Team Phase 1 begins with Mapping and Geospatial Pipeline. The PM Foundation contains requirements/data validation and core application work. |
 | D-010 | Treat all project data and UI claims as academic-prototype information. | Approved | No official emergency response, live forecast, guaranteed route safety, or government integration may be claimed. |
 | D-011 | Assign Matthew as accountable geospatial-pipeline and deterministic-routing owner, with Jared supporting backend integration. | Approved | Resolves ownership while keeping routing/data work aligned with Matthew's AI/ML and data responsibility. Ranee remains the gate owner. |
-| D-012 | Finalize Phase 1 asynchronously through repository documentation and PR review; no separate Phase 1 meeting is required. | Approved | Ranee made the outstanding scope decisions directly. Affected members still review the contracts in the PR. |
-| D-013 | Approve the Project Foundation Phase 1 gate with conditions. | Approved with conditions | Core Application preparation may proceed after the documentation PR merges; unverified data, UI, ML, routing-weight, and contract-review evidence remains explicitly gated. |
+| D-012 | Finalize Phase 1 asynchronously through repository documentation and verification; no separate Phase 1 meeting is required. | Approved | Ranee made and accepted the foundation decisions directly so members receive locked inputs. |
+| D-013 | Approve the Project Foundation Phase 1 gate. | Approved | Boundary, sources/fallbacks, contracts, fixtures, wireframes, routing weights, ML target, tests, risks, and ownership are locked and verified as a foundation. |
+| D-014 | Use the committed controlled flood scenario as the guaranteed MVP hazard source; treat external historical layers as optional enrichment. | Approved | Removes access/licensing uncertainty from the required demonstration while preserving transparent limitations. |
+| D-015 | Exclude elevation from required routing cost and permit it only as contextual/experimental input. | Approved | Approximately 30 m SRTM data do not justify precise street-level safety claims. |
+| D-016 | Use fixed seconds-equivalent rule penalties and cap ML contribution at 60 per edge. | Approved | The known-graph fixture produces deterministic, inspectable baseline, reroute, exclusion, no-route, and ML-cap outcomes. |
 
-## Open decisions
+## Phase 1 decision closure
 
-| ID | Decision needed | Evidence required | Owner | Gate impact |
-|---|---|---|---|---|
-| O-003 | Accepted flood-hazard source and redistribution terms | Metadata, coverage inspection, access test, and license/restriction review | Matthew; Ranee decides fallback | Blocks hazard-data integration |
-| O-004 | ML target and label availability | Dataset sample, join-key check, label definition, and leakage review | Matthew; Ranee reviews | Blocks model training |
-| O-005 | Final numeric routing penalties and bounded ML cap | Small known-graph tests and scenario review | Matthew; Ranee approves | Blocks routing acceptance |
+None. Later implementation evidence may trigger a formal change request, but members must not silently revise the locked foundation.

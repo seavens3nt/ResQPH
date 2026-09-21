@@ -96,7 +96,7 @@ Responsibilities define ownership and accountability, but they are not strict bo
 
 | Project phase | Accountable owner | Main support |
 |---|---|---|
-| Project Foundation 1 — Requirements and Data Validation | Ranee | All members review affected contracts |
+| Project Foundation 1 — Requirements and Data Validation | Ranee | Completed foundation becomes authoritative after merge |
 | Project Foundation 2 — Core Application | Ranee | Jared, Elle, and Clarence |
 | Team 1 — Mapping and Geospatial Pipeline | Matthew | Jared for backend integration; Elle and Clarence for map presentation |
 | Team 2 — Flood-Aware Routing | Matthew | Jared for backend integration; Ranee for gate approval; Elle and Clarence for route presentation |

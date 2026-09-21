@@ -6,8 +6,8 @@
 |---|---|
 | Phase lead | Ranee (`@seavens3nt`) |
 | Members | Ranee, Jared Noel, Elle, Matthew Trinitaria, Clarence |
-| Dates | TBD |
-| Current status | Ready for review — Approve with conditions |
+| Dates | Completed 2026-09-22; start date not recorded |
+| Current status | Completed and verified — Approve |
 | Phase theme | Decide and validate before building |
 
 ## 1. Phase goal
@@ -20,41 +20,41 @@ Phase 1 is complete only when the outputs agree with one another. A polished wir
 
 Ranee finalized the outstanding Phase 1 decisions asynchronously on 2026-09-22. A separate meeting is not required. The checklist remains the review structure for Issue #12 and its pull request.
 
-### Opening — 10 minutes
+### Opening
 
 - Restate the problem and academic-prototype disclaimer.
 - Confirm all five members' primary and supporting responsibilities.
 - Confirm that GitHub Issues and the GitHub Project are the ticketing and status sources of truth.
 - Review the Project Foundation and new team-phase structure.
 
-### Scope and users — 25 minutes
+### Scope and users
 
 - Approve citizen, coordinator, and rescuer roles.
 - Choose consistent terminology: coordinator or dispatcher.
 - Confirm basic role simulation is used and is never described as production authentication.
 - Agree on MVP outcomes, non-goals, success criteria, and final demonstration boundary.
 
-### Main workflows — 30 minutes
+### Main workflows
 
 - Walk through request submission, review, assignment, route request, mission updates, rerouting, completion, and history.
 - Agree on allowed request and mission statuses and invalid transitions.
 - Identify validation, error, empty, no-route, stale, offline, conflict, and success states.
 
-### Study area and data — 30 minutes
+### Study area and data
 
 - Inspect the approved `ubelt-pilot-v1` GeoJSON and confirm processing stays within its project-defined WGS 84 boundary.
 - Review road, flood, elevation, administrative boundary, facility, and possible ML data sources.
 - Record license, coverage, date, resolution, CRS, format, size, accessibility, quality, and intended use.
 - Decide which sources are accepted, need testing, need replacement, or are unavailable.
 
-### Architecture and contracts — 30 minutes
+### Architecture and contracts
 
 - Align UI actions with API operations, domain records, MongoDB collections, and status history.
 - Agree on GeoJSON longitude/latitude order, timestamps, identifiers, errors, and versioned API paths.
 - Agree on the routing and risk input/output contracts and non-ML fallback.
 - Identify transaction boundaries and cross-component dependencies.
 
-### Planning and close — 20 minutes
+### Planning and close
 
 - Convert only approved outputs into small GitHub Issues.
 - Set primary owner, support, dependencies, priority, acceptance criteria, and verification for Sprint 01 candidates.
@@ -201,7 +201,8 @@ ResQPH/
 │   ├── ml/
 │   │   └── ML_FEASIBILITY.md
 │   ├── testing/
-│   │   └── TEST_STRATEGY.md
+│   │   ├── TEST_STRATEGY.md
+│   │   └── PHASE-01-EVIDENCE.md
 │   ├── decisions/
 │   │   └── DECISION_LOG.md
 │   ├── risks/
@@ -216,7 +217,11 @@ ResQPH/
 │   │   └── study-area.md
 │   └── samples/
 │       ├── rescue-request.example.json
-│       └── road-edge.example.geojson
+│       ├── road-edge.example.geojson
+│       ├── study-area.geojson
+│       ├── flood-scenario.example.geojson
+│       ├── routing-known-graph.example.json
+│       └── ml-road-risk-contract.example.json
 └── tests/
     └── integration/
         └── scenarios/
@@ -440,46 +445,46 @@ Ranee assigned Matthew as accountable owner for dataset acquisition/processing, 
 - [x] User roles and coordinator/dispatcher terminology are approved.
 - [x] Authentication scope is decided: basic role simulation only.
 - [x] Success criteria and final U-Belt demonstration boundary are recorded.
-- [x] Open decisions have owners and evidence conditions.
+- [x] No Phase 1 decision remains open.
 
 ### Workflows and UI/UX
 
-- [ ] Citizen, coordinator, and rescuer workflows are reviewed.
-- [ ] Low-fidelity wireframes cover the main lifecycle.
-- [ ] Page/component and UI-state inventories are reviewed.
-- [ ] Mobile, accessibility, map, stale, offline, and no-route needs are recorded.
+- [x] Citizen, coordinator, and rescuer workflows are reviewed.
+- [x] Low-fidelity wireframes cover the main lifecycle.
+- [x] Page/component and UI-state inventories are reviewed.
+- [x] Mobile, accessibility, map, stale, offline, and no-route needs are recorded.
 
 ### Backend and database
 
-- [ ] Domain terms and status transitions are consistent.
-- [ ] API outline includes representative success and failure examples.
-- [ ] MongoDB collection/document/index proposal supports the workflows.
-- [ ] Assignment transaction and history/retention behavior are documented.
-- [ ] Integration and common error conventions are approved.
+- [x] Domain terms and status transitions are consistent.
+- [x] API outline includes representative success and failure examples.
+- [x] MongoDB collection/document/index proposal supports the workflows.
+- [x] Assignment transaction and history/retention behavior are documented.
+- [x] Integration and common error conventions are approved.
 
 ### Data, routing, and AI/ML
 
 - [x] Study-area boundary is approved and available as GeoJSON.
-- [ ] Required dataset sources, licenses, coverage, CRS, formats, age, quality, and limitations are recorded.
-- [ ] A small sample-fixture plan is approved.
-- [ ] Routing input/output and deterministic baseline assumptions are approved.
-- [ ] Rule-based risk fallback is documented.
-- [ ] ML feasibility and train/defer/fallback-only recommendation are reviewed.
+- [x] Required source/fallback decisions, licenses, coverage, CRS, formats, age, quality, and limitations are recorded.
+- [x] Small boundary, road, controlled-flood, routing, and ML fixtures are approved.
+- [x] Routing input/output, fixed penalties, ML cap, and deterministic baseline assumptions are approved.
+- [x] Rule-based risk fallback is documented.
+- [x] ML target, features, split, evaluation, integration, and fallback decisions are reviewed.
 
 ### Planning, testing, and documentation
 
 - [x] Main and failure acceptance scenarios are written.
 - [x] Risks, dependencies, and blockers are current.
 - [x] Documents contain sources, owners, limitations, and explicit conditional items.
-- [ ] Approved Sprint 01 work is represented by ready GitHub Issues.
-- [ ] A cross-component walkthrough finds no unresolved critical contradiction.
-- [ ] Phase 1 outputs are reviewed in pull requests and linked from project documentation.
+- [x] Sprint 01 foundation work is represented by Issue #12 and PR #13.
+- [x] A cross-component walkthrough finds no unresolved critical contradiction.
+- [x] Phase 1 outputs are verified, linked from project documentation, and submitted through PR #13.
 
 ## 13. Phase 1 Definition of Done
 
-An artifact is done when its acceptance criteria are satisfied, sources and assumptions are recorded, terminology matches related artifacts, affected component owners review it, unresolved items are explicit, local links and diagrams work, sensitive/large data are absent, and the result can be used to create an implementation Issue without guessing.
+An artifact is done when its acceptance criteria are satisfied, sources and assumptions are recorded, terminology matches related artifacts, Ranee accepts it, unresolved implementation obligations are explicit, local links and diagrams work, sensitive/large data are absent, and the result can be used to create an implementation Issue without guessing.
 
-The Phase 1 gate is `Approve with conditions`. The approved decisions may guide eligible Core Application preparation after the documentation PR merges, but Phase 1 is not labeled `Completed and verified` until the unchecked evidence and review conditions in [`PHASE-01-GATE.md`](PHASE-01-GATE.md) pass.
+The Phase 1 gate is `Approve`, and the foundation status is `Completed and verified`. Project Foundation Phase 2 becomes `Ready to start` after PR #13 merges so the locked files are available on `main`.
 
 ## 14. End-of-phase demonstration
 
@@ -493,6 +498,6 @@ Use one synthetic scenario, for example a citizen requesting help for several pe
 6. Trace origin, destination, road/flood/elevation attributes, and the deterministic route contract.
 7. Explain the rule-based road-risk fallback and the ML train/defer decision criteria.
 8. Show error, no-route, stale, offline, and Pending Sync expectations.
-9. End with known constraints, decisions still marked `TBD`, approved Sprint 01 Issues, and the next review point.
+9. End with known constraints, future-phase implementation obligations, Issue #12, PR #13, and the next phase.
 
 The Phase 1 demonstration validates the design and evidence. It does not imply that Project Foundation Phase 2 or Team Phases 1–5 are already implemented.

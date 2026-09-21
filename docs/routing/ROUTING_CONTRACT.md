@@ -1,6 +1,6 @@
 # Flood-aware routing and risk contract
 
-**Status:** Phase 1 baseline approved with conditions
+**Status:** Completed and verified Phase 1 routing baseline
 **Primary algorithm:** A*
 **Last updated:** 2026-09-22
 
@@ -38,21 +38,24 @@ edge_cost = base_travel_cost
 
 An impassable edge is excluded before A* evaluates route cost. ML cannot restore an excluded edge or lower a deterministic safety penalty.
 
-## Provisional relative rule table
+## Approved prototype rule table
 
-These values are test weights, not scientifically validated safety thresholds. Final values require known-graph tests and Ranee’s approval.
+These are seconds-equivalent prototype cost units for controlled academic scenarios. They are approved because the committed known-graph fixture produces the required baseline, reroute, exclusion, no-route, and bounded-ML outcomes. They are not scientifically validated safety thresholds.
 
 | Scenario state | Provisional effect |
 |---|---|
 | `none` | No flood penalty |
-| `low` | `+10` relative cost units |
-| `moderate` | `+30` relative cost units |
-| `high` | `+70` relative cost units and warning |
+| `low` | `+30` cost units |
+| `moderate` | `+90` cost units |
+| `high` | `+240` cost units and warning |
 | `severe` or `impassable` | Exclude edge |
-| Verified recent obstacle | `+20` relative cost units unless impassable |
-| Stale or uncertain scenario data | `+10` relative cost units and warning |
+| `restricted` passability | `+180` cost units in addition to flood level |
+| Verified recent obstacle | `+120` cost units unless impassable |
+| Stale, unknown, or uncertain scenario data | `+60` cost units and warning |
 
-The ML contribution must be non-negative and capped so it cannot dominate deterministic exclusion. The final cap remains a required routing-acceptance decision under Phase 1 gate condition C-06.
+The ML contribution is `round(clamp(risk_probability, 0, 1) * 60)`, so it is non-negative and capped at `60` cost units per edge. ML cannot dominate deterministic exclusion, remove a warning, or reduce a rule penalty.
+
+The authoritative verification input is [`../../data/samples/routing-known-graph.example.json`](../../data/samples/routing-known-graph.example.json). Implementation tests must reproduce every expected case exactly before Team Phase 2 is accepted.
 
 ## Route request
 

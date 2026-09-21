@@ -1,7 +1,7 @@
 # Limited offline contract
 
-**Status:** Draft for Phase 1 review
-**Last updated:** 2026-09-21
+**Status:** Completed and verified Phase 1 contract baseline
+**Last updated:** 2026-09-22
 
 ## Supported behavior
 

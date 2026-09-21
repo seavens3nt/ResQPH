@@ -1,0 +1,53 @@
+{
+  "fixture_notice": "Synthetic known graph for contract verification; not a real road network.",
+  "cost_unit": "seconds-equivalent prototype units",
+  "nodes": [
+    {"node_id": "A", "coordinates": [120.9900, 14.6040]},
+    {"node_id": "B", "coordinates": [120.9910, 14.6045]},
+    {"node_id": "C", "coordinates": [120.9905, 14.6050]},
+    {"node_id": "D", "coordinates": [120.9915, 14.6055]}
+  ],
+  "edges": [
+    {"edge_id": "AB", "from": "A", "to": "B", "base_cost": 60},
+    {"edge_id": "BD", "from": "B", "to": "D", "base_cost": 60},
+    {"edge_id": "AC", "from": "A", "to": "C", "base_cost": 80},
+    {"edge_id": "CD", "from": "C", "to": "D", "base_cost": 80},
+    {"edge_id": "BC", "from": "B", "to": "C", "base_cost": 50}
+  ],
+  "expected_cases": [
+    {
+      "case_id": "baseline",
+      "scenario": {},
+      "expected_route": ["AB", "BD"],
+      "expected_cost": 120
+    },
+    {
+      "case_id": "moderate-flood-reroute",
+      "scenario": {"BD": {"flood_level": "moderate", "passability": "passable"}},
+      "expected_route": ["AC", "CD"],
+      "expected_cost": 160,
+      "rejected_route_cost": 210
+    },
+    {
+      "case_id": "impassable-edge-exclusion",
+      "scenario": {"BD": {"flood_level": "severe", "passability": "impassable"}},
+      "expected_route": ["AC", "CD"],
+      "expected_cost": 160
+    },
+    {
+      "case_id": "no-route",
+      "scenario": {
+        "BD": {"flood_level": "severe", "passability": "impassable"},
+        "CD": {"flood_level": "severe", "passability": "impassable"}
+      },
+      "expected_status": "no-route"
+    },
+    {
+      "case_id": "bounded-ml-penalty",
+      "scenario": {"BD": {"ml_probability": 1.0}},
+      "expected_route": ["AC", "CD"],
+      "expected_cost": 160,
+      "rejected_route_cost": 180
+    }
+  ]
+}

@@ -4,10 +4,10 @@
 
 | Field | Current value |
 |---|---|
-| Current phase | Project Foundation Phase 1 — Ready for review |
-| Current sprint | Foundation Phase 1 — gate decision: Approve with conditions; dates TBD |
-| Overall health | On track for Core Application; At risk for unverified flood-data, routing, ML-label, UI-evidence, and review conditions |
-| Current goal | Merge the approved U-Belt scope and contract baseline, then open only eligible Core Application work. |
+| Current phase | Project Foundation Phase 1 — Completed and verified on PR #13 |
+| Current sprint | Foundation Phase 1 — gate decision: Approve |
+| Overall health | On track; locked foundation is ready, with PR merge required before team use from `main` |
+| Current goal | Merge the completed Phase 1 foundation, then open Project Foundation Phase 2 work packages. |
 
 ## Completed setup
 
@@ -21,33 +21,30 @@
 - [x] Team responsibilities documented
 - [x] Project-management, phase, sprint, status, and editor documentation prepared on the current branch
 
-## Ready for review
+## Completed and verified foundation
 
-- Phase 1 scope, decision, lifecycle, acceptance, and contract artifacts.
-- U-Belt boundary, basic role simulation, and Matthew's geospatial/routing ownership are decided.
-- The gate is `Approve with conditions`; dataset feasibility and affected-member review remain under validation.
-- No application feature is considered complete based on the current repository evidence.
+- U-Belt scope, boundary, source/fallback decisions, role simulation, ownership, and exclusions.
+- Lifecycle, API, MongoDB, routing, ML, offline, UI-state, accessibility, testing, and acceptance contracts.
+- Reproducible OSM feasibility evidence, controlled flood and stable-join fixture, known routing graph, ML schema, and role wireframes.
+- Final Phase 1 decision log, risk register, evidence record, roadmap, and gate approval.
+- No later application feature is considered complete merely because its foundation is locked.
 
 ## Immediate next actions
 
-1. Review and merge the Phase 1 documentation PR after affected-member comments are addressed.
-2. Prepare Project Foundation Phase 2 work packages against the approved API, schema, workflow, and basic role-simulation baseline.
-3. Validate candidate flood-data access, coverage, CRS, restrictions, and sample compatibility.
-4. Reproduce the U-Belt OSM extraction and road-edge fixture before Team Phase 1 acceptance.
-5. Keep ML training and final routing weights blocked until their evidence conditions pass.
+1. Ranee reviews and merges PR #13.
+2. Mark Issue #12 complete after the merge is verified on `main`.
+3. Create Project Foundation Phase 2 work packages from the locked contracts.
+4. Keep future implementation work within the authoritative file and role boundaries.
 
-## Decisions needed
+## Project administration notes
 
-| Decision | Owner | Needed by |
-|---|---|---|
-| Approved flood/elevation sources or explicit synthetic fallback | Matthew; Ranee decides | Before hazard-data integration |
-| Final rule penalties and ML target/labels | Matthew; Ranee approves | Before routing acceptance/model training |
-| Phase/sprint schedule and final deadline | Ranee with team/instructor | TBD |
-| GitHub Project URL and Sprint 01 milestone | Ranee | TBD |
+- The Phase 1 completion date is 2026-09-22; its start date was not recorded.
+- Future phase dates must be set when Ranee has the actual course deadline and team availability; no date is invented in this foundation.
+- GitHub Issues, pull requests, and milestones are the current ticketing source of truth. A GitHub Project board is optional and not required for Phase 1 completion.
 
 ## Active blockers
 
-No confirmed blocker prevents eligible Core Application preparation after the Phase 1 documentation PR merges. Flood-data integration, model training, and routing acceptance remain conditionally blocked by the [Phase 1 gate](phases/PHASE-01-GATE.md).
+No foundation decision blocks Phase 2. PR #13 must be merged before members treat the new documents as authoritative on `main`.
 
 ## Major risks
 
@@ -59,7 +56,7 @@ No confirmed blocker prevents eligible Core Application preparation after the Ph
 
 ## Latest demonstration
 
-Development foundation: the frontend and backend scaffolds run locally, the API health check is testable, and MongoDB runs through Docker Compose. The Phase 1 artifact demonstration is pending.
+Phase 1 foundation: the project can trace the sanitized rescue lifecycle through UI states, API/domain/schema behavior, controlled hazard joining, deterministic routing expectations, ML/fallback boundaries, offline behavior, and acceptance evidence. Runtime feature implementation remains assigned to later phases.
 
 ## Links
 
@@ -71,4 +68,6 @@ Development foundation: the frontend and backend scaffolds run locally, the API 
 - [Dashboard](DASHBOARD.md)
 - [Roadmap](ROADMAP.md)
 - [Phase 1 guide](phases/PHASE-01.md)
+- [Phase 1 gate](phases/PHASE-01-GATE.md)
+- [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
 - [Sprint 01](sprints/SPRINT-01.md)

@@ -1,8 +1,8 @@
 # Rescue request and mission lifecycle
 
-**Status:** Draft for Phase 1 review
+**Status:** Completed and verified Phase 1 lifecycle baseline
 **Decision owner:** Ranee
-**Last updated:** 2026-09-21
+**Last updated:** 2026-09-22
 
 ## Authoritative terms
 
@@ -56,10 +56,13 @@ Request: completed + Mission: completed
 |---|---|---|
 | Created | `assigned` | Coordinator |
 | `assigned` | `en-route` | Assigned rescuer |
+| `assigned` | `cancelled` | Coordinator |
 | `en-route` | `arrived` | Assigned rescuer |
 | `arrived` | `completed` | Assigned rescuer or coordinator |
 
 Every accepted transition appends an immutable history item containing event ID, prior state, new state, actor ID, actor role, source (`online` or `offline-sync`), client timestamp when supplied, server timestamp, and optional sanitized note.
+
+`completed` and `cancelled` are terminal mission states. Coordinator cancellation from `assigned` updates request, mission, team availability, and history in one transaction. Cancellation after travel begins is excluded from the MVP.
 
 ## Invalid and conflicting behavior
 
