@@ -45,13 +45,26 @@ The primary owner is accountable for moving the Issue forward and communicating 
 
 Use the following milestones:
 
-1. Phase 1 — Requirements and Data Validation
-2. Phase 2 — Core Application
-3. Phase 3 — Mapping and Geospatial Pipeline
-4. Phase 4 — Routing
-5. Phase 5 — AI/ML
-6. Phase 6 — Offline Simulation
-7. Phase 7 — Integration and Testing
+1. Project Foundation Phase 1 — Requirements and Data Validation
+2. Project Foundation Phase 2 — Core Application
+3. Team Phase 1 — Mapping and Geospatial Pipeline
+4. Team Phase 2 — Flood-Aware Routing
+5. Team Phase 3 — AI/ML Road-Risk Component
+6. Team Phase 4 — Limited Offline Support
+7. Team Phase 5 — Integration, Testing, and Presentation
+
+The team-facing phase numbering starts at **Team Phase 1** after Ranee completes the two Project Foundation phases. Do not use the former generic Phase 1–7 names in new Issues, milestones, pull requests, or status reports.
+
+## Time-constrained MVP priority
+
+When time or capacity is limited, prioritize work in this order:
+
+1. A demonstrable rescue-request, assignment, mission-status, deterministic A*, and rule-based fallback workflow.
+2. The required Logistic Regression and Random Forest experiment with honest evaluation; integrate its output only if the evidence gate passes.
+3. One cached assigned mission and one queued next-valid status update.
+4. Optional historical-data enrichment, elevation context, visual polish, and extra analytics.
+
+Never delay the deterministic end-to-end workflow to add optional enrichment. Scope reductions require Ranee's decision and an update to the decision log.
 
 ## Branches
 

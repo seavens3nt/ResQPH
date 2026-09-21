@@ -484,7 +484,7 @@ Ranee assigned Matthew as accountable owner for dataset acquisition/processing, 
 
 An artifact is done when its acceptance criteria are satisfied, sources and assumptions are recorded, terminology matches related artifacts, Ranee accepts it, unresolved implementation obligations are explicit, local links and diagrams work, sensitive/large data are absent, and the result can be used to create an implementation Issue without guessing.
 
-The Phase 1 gate is `Approve`, and the foundation status is `Completed and verified`. Project Foundation Phase 2 becomes `Ready to start` after PR #13 merges so the locked files are available on `main`.
+The Phase 1 gate is `Approve`, and the foundation status is `Completed and verified`. PR #13 has merged, the locked files are available on `main`, and Project Foundation Phase 2 is `Ready to start`.
 
 ## 14. End-of-phase demonstration
 

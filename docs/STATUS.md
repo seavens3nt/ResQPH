@@ -4,10 +4,10 @@
 
 | Field | Current value |
 |---|---|
-| Current phase | Project Foundation Phase 1 — Completed and verified on PR #13 |
-| Current sprint | Foundation Phase 1 — gate decision: Approve |
-| Overall health | On track; locked foundation is ready, with PR merge required before team use from `main` |
-| Current goal | Merge the completed Phase 1 foundation, then open Project Foundation Phase 2 work packages. |
+| Current phase | Project Foundation Phase 2 — Core Application |
+| Current sprint | Foundation Phase 2 — ready to start |
+| Overall health | Foundation is merged and verified; implementation remains early and must follow the time-constrained priority order |
+| Current goal | Build one persistent rescue-request-to-mission vertical slice before optional enrichment. |
 
 ## Completed setup
 
@@ -31,10 +31,11 @@
 
 ## Immediate next actions
 
-1. Ranee reviews and merges PR #13.
-2. Mark Issue #12 complete after the merge is verified on `main`.
-3. Create Project Foundation Phase 2 work packages from the locked contracts.
-4. Keep future implementation work within the authoritative file and role boundaries.
+1. Create Project Foundation Phase 2 work packages from the locked API, schema, lifecycle, UI, and test contracts.
+2. Implement one sanitized rescue request through coordinator assignment and rescuer status update.
+3. Connect the core lifecycle to MongoDB and add conflict/transaction tests.
+4. Replace remaining prototype-only mocks only when their backing API is ready; do not widen scope.
+5. Keep Team Phases 1–5 planned until Ranee accepts the active gate.
 
 ## Project administration notes
 
@@ -44,7 +45,7 @@
 
 ## Active blockers
 
-No foundation decision blocks Phase 2. PR #13 must be merged before members treat the new documents as authoritative on `main`.
+No foundation decision blocks Phase 2. The exact course deadline and member availability are still not recorded, so the roadmap uses dependency and priority gates rather than invented calendar dates.
 
 ## Major risks
 
@@ -53,6 +54,7 @@ No foundation decision blocks Phase 2. PR #13 must be merged before members trea
 - Frontend, backend, routing, and ML can diverge without early contract approval.
 - ML labels may be insufficient; the rule-based fallback must remain demonstrable.
 - Offline synchronization and changing route conditions create conflict and stale-data risks.
+- Existing frontend behavior is largely prototype/local state; UI completeness must not be reported as backend integration.
 
 ## Latest demonstration
 
@@ -68,6 +70,7 @@ Phase 1 foundation: the project can trace the sanitized rescue lifecycle through
 - [Dashboard](DASHBOARD.md)
 - [Roadmap](ROADMAP.md)
 - [Phase 1 guide](phases/PHASE-01.md)
+- [Phase 2 guide](phases/PHASE-02.md)
 - [Phase 1 gate](phases/PHASE-01-GATE.md)
 - [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
 - [Sprint 01](sprints/SPRINT-01.md)

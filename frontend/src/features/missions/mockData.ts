@@ -62,13 +62,13 @@ export const INITIAL_TEAMS: RescueTeam[] = [
 ]
 
 export const DEFAULT_PRIMARY_ROUTE: RouteOption = {
-  name: 'Jhocson St. Safe Corridor',
+  name: 'Jhocson St. Recommended Corridor',
   estimatedMinutes: 9,
   floodRisk: 'Low',
   waterDepth: '0.12 m (Ankle)',
   elevation: '4.2 m',
   safetyScore: 94,
-  explanation: 'High ground elevation + clear drainage. ML Risk score 0.06. Meets strict rescue craft safety criteria.',
+  explanation: 'Lowest eligible rule-based cost in the controlled scenario. No impassable edge is included.',
 }
 
 export const DEFAULT_ALTERNATIVE_ROUTE: RouteOption = {
@@ -99,8 +99,8 @@ export const INITIAL_MISSION_UPDATES: MissionStatusUpdate[] = [
   {
     id: 'upd-2',
     time: '10:22 AM',
-    author: 'Routing AI Engine',
-    message: 'Direct shortcut via Loyola St. flagged IMPASSABLE (water depth 1.4m exceeds safe threshold). Automated reroute triggered.',
+    author: 'Rule-Based Routing Engine',
+    message: 'Direct shortcut via Loyola St. is IMPASSABLE in the controlled scenario. Deterministic reroute triggered.',
     type: 'reroute',
   },
   {

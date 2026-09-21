@@ -35,7 +35,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       title="Login"
-      subtitle="Hey enter your details to sign in to your account"
+      subtitle="Prototype role simulation only — this is not secure production authentication"
       footer={
         <div className="auth-sub-links-col">
           <button

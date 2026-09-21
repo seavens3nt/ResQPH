@@ -243,7 +243,7 @@ export function MissionProvider({ children }: { children: ReactNode }) {
             id: `upd-${Date.now() + 1}`,
             time: nowTime,
             author: 'Route Engine',
-            message: 'Loyola St. water depth (1.4m) exceeds safe limit. Rerouting via safe corridor.',
+            message: 'Loyola St. is impassable in the controlled scenario. Using the recommended eligible corridor.',
             type: 'reroute',
           },
         ],
@@ -331,7 +331,7 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     [missions, isOffline],
   )
 
-  // System/Dispatcher constant real-time route update explanation
+  // Shared prototype route-advisory state for the role views
   const updateRouteDelayExplanation = useCallback(
     (missionId: string, etaMinutes: number, explanation: string, author: string = 'Central Dispatch') => {
       const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

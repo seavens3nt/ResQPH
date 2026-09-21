@@ -173,13 +173,13 @@ export function WeatherAlertBanner() {
           <div className="weather-pulse-dot" aria-hidden="true" />
           <div className="weather-alert-text">
             <div className="weather-alert-headline">
-              <span className="weather-tag red-warning">RED RAINFALL WARNING</span>
-              <span className="weather-station">Metro Manila · PAGASA Warning No. 04</span>
-              <span className="weather-storm-name">Habagat (Southwest Monsoon)</span>
+              <span className="weather-tag red-warning">CONTROLLED FLOOD SCENARIO</span>
+              <span className="weather-station">U-Belt Pilot · Controlled Scenario</span>
+              <span className="weather-storm-name">Synthetic Heavy-Rain Demonstration</span>
             </div>
             <p className="weather-alert-sub">
-              Rainfall intensity: <strong>28.4 mm/hr (Heavy to Torrential)</strong>. High flood risk in
-              low-lying areas of Sampaloc, España, and Loyola St. Road passability dynamically monitored.
+              Scenario rainfall: <strong>28.4 mm/hr (Heavy to Torrential)</strong>. Synthetic high-flood
+              conditions apply to selected U-Belt edges; these are not current observations.
             </p>
           </div>
         </div>
@@ -227,7 +227,7 @@ export function EmergencyHotlinesModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Official Emergency Hotlines"
-      subtitle="Direct response coordination numbers for Metro Manila emergency units."
+      subtitle="Public emergency numbers shown for reference; ResQPH is not connected to these agencies."
     >
       <div className="hotline-grid">
         {hotlines.map((h) => (
@@ -276,7 +276,7 @@ export function EmergencyPreparednessGuide() {
     {
       num: '04',
       title: 'Keep Distress Tracking Active',
-      desc: 'Keep this app open or cached on your device. Conserve battery life by lowering screen brightness; dispatchers monitor your live GPS coordinates even through storm connection drops.',
+      desc: 'Keep the latest assigned mission cached when available. Conserve battery and remember that the prototype does not provide continuous GPS monitoring during connection loss.',
       icon: 'boat' as IconName,
     },
     {

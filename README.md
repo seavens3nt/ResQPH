@@ -12,7 +12,7 @@ The project combines:
 
 - A transactional rescue workflow
 - An interactive map
-- Public geographic and flood-hazard data
+- A bounded OpenStreetMap extract and controlled or historical flood scenarios
 - Flood-aware routing
 - A limited and explainable machine-learning component
 - Basic offline synchronization
@@ -44,9 +44,9 @@ A rescuer can:
 - Update location and mission status.
 - Submit road or flood observations.
 
-### Administrator or dispatcher
+### Coordinator
 
-A dispatcher can:
+A coordinator can:
 
 - Monitor rescue requests and teams.
 - Assign missions.
@@ -84,7 +84,7 @@ The system uses a modular architecture so that the user interface, application l
 
 ## Proposed technical components
 
-The project document currently specifies:
+The approved project baseline specifies:
 
 - MongoDB for operational and geospatial data
 - A* or Dijkstra's algorithm for routing
@@ -119,7 +119,7 @@ Implement basic routing first, then add flood and risk penalties and dynamic rer
 
 ### Team Phase 3 — AI/ML Road-Risk Component
 
-Build and evaluate the road-risk or passability component. Integrate its output only if it is reliable enough for the prototype.
+Build and evaluate Logistic Regression and Random Forest road-risk experiments. Keep the experiment in the project, but integrate its output into routing only if the locked evidence gate passes; deterministic rule-based routing remains mandatory.
 
 ### Team Phase 4 — Limited Offline Support
 
@@ -153,6 +153,7 @@ ResQPH/
 - [Project roadmap](docs/ROADMAP.md)
 - [Phase guides](docs/phases/README.md)
 - [Phase 1 — Requirements and Data Validation](docs/phases/PHASE-01.md)
+- [Phase 2 — Core Application](docs/phases/PHASE-02.md)
 - [Sprint process](docs/sprints/README.md)
 - [Sprint 01 plan](docs/sprints/SPRINT-01.md)
 - [Team responsibilities](docs/TEAM.md)
@@ -191,6 +192,10 @@ The project will not provide:
 - Nationwide deployment
 - Direct integration with government emergency infrastructure
 - Real mesh, radio, or satellite communication
+
+## Time-constrained delivery rule
+
+The required demonstration is one complete vertical slice: simulated role selection, a sanitized rescue request, coordinator assignment, rescuer mission status, a controlled U-Belt flood scenario, deterministic A* rerouting with an explanation, and the rule-based fallback. The ML experiment remains required, but runtime integration is conditional on acceptable evaluation evidence. Historical-layer enrichment, elevation-derived routing, extra dashboards, and additional offline actions are deferred before any core workflow is delayed.
 
 ## Engineering principle
 

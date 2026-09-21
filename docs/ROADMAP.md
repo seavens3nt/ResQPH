@@ -1,12 +1,14 @@
 # ResQPH project roadmap
 
-**Status:** Project Foundation Phase 1 completed and verified; Phase 2 ready after foundation PR merge
+**Status:** Project Foundation Phase 1 is merged and verified; Project Foundation Phase 2 is ready to start
 **Decision owner:** Ranee
 **Last updated:** 2026-09-22
 
 ## Delivery structure
 
 Ranee completes the Project Foundation before team feature phases open. The team’s numbered roadmap begins with Mapping and Geospatial Pipeline as Team Phase 1. Only the active phase receives executable issues; later phases remain planned summaries until the preceding gate is approved.
+
+Because delivery time is constrained, every phase must protect the smallest end-to-end demonstration. Deterministic rescue coordination and rule-based A* routing are the critical path. ML experimentation remains required, while runtime ML integration and optional data enrichment are conditional and must not block that path.
 
 ```text
 Project Foundation Phase 1 — Requirements and Data Validation
@@ -40,6 +42,8 @@ Team Phase 5 — Integration, Testing, and Presentation
 8. Only synthetic or sanitized rescue records may be committed or demonstrated.
 9. No phase advances because of a calendar date or issue closure alone; Ranee approves inspected gate evidence.
 10. Basic role simulation is the approved MVP boundary; production authentication is excluded.
+11. Tier 1 in [`MVP_SCOPE.md`](requirements/MVP_SCOPE.md) is completed before optional Tier 3 work begins.
+12. Frontend labels must identify controlled/simulated data and may not claim live monitoring, official dispatch, nationwide coverage, or a guaranteed safe route.
 
 ## Project Foundation Phase 1 — Requirements and Data Validation
 
@@ -66,11 +70,11 @@ Lock a coherent MVP, exact boundary, workflows, datasets, API/database/routing/M
 
 ### Gate
 
-Ranee recorded `Approve` on 2026-09-22 after verifying the locked foundation and evidence in [`PHASE-01-GATE.md`](phases/PHASE-01-GATE.md). Project Foundation Phase 2 becomes `Ready to start` after the Phase 1 documentation PR is merged. Later implementation tests are exit criteria for their own phases, not unfinished Phase 1 decisions.
+Ranee recorded `Approve` on 2026-09-22 after verifying the locked foundation and evidence in [`PHASE-01-GATE.md`](phases/PHASE-01-GATE.md). PR #13 is merged into `main`, so Project Foundation Phase 2 is `Ready to start`. Later implementation tests are exit criteria for their own phases, not unfinished Phase 1 decisions.
 
 ## Project Foundation Phase 2 — Core Application
 
-**Status:** Ready to start after the Phase 1 documentation PR is merged
+**Status:** Ready to start
 **Lead:** Ranee
 **Backend review/support:** Jared
 **Frontend contract review/support:** Elle and Clarence
@@ -89,6 +93,10 @@ Deliver a persistent, testable rescue-request and mission lifecycle that works w
 - Sanitized seed scenario
 - Frontend API integration for the core lifecycle
 - OpenAPI and contract tests
+
+### Time-box fallback
+
+If capacity is lower than expected, complete one citizen request through coordinator assignment and rescuer status updates before adding extra CRUD variations, analytics, or visual polish. Routing, ML, and offline components may use their locked adapters and fixtures while the core lifecycle is implemented.
 
 ## Team Phase 1 — Mapping and Geospatial Pipeline
 
@@ -113,6 +121,8 @@ Implement A*, baseline known-graph tests, deterministic flood/passability penalt
 **Support:** Ranee and Jared
 
 Build the rule baseline, Logistic Regression and Random Forest experiments, reproducible preprocessing, spatial/temporal holdout when feasible, evaluation and error analysis, stable inference output, and missing/malformed-model fallback. Application integration requires Ranee’s evidence review.
+
+If the evidence threshold is not met, the experiment is still documented and demonstrated as a non-integrated result; the rule-based route remains the accepted application behavior.
 
 ## Team Phase 4 — Limited Offline Support
 

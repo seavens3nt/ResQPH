@@ -22,16 +22,16 @@ interface LocalizedForecastWidgetProps {
 
 export function LocalizedForecastWidget({ hourly = [] }: LocalizedForecastWidgetProps) {
   const currentWeather = {
-    location: 'Sampaloc / España District',
-    subLocation: 'PAGASA Doppler & Metro Manila River Basin',
+    location: 'U-Belt Pilot Area',
+    subLocation: 'Controlled rainfall scenario · demonstration data',
     temp: 29,
-    condition: 'Heavy Tropical Rain',
+    condition: 'Heavy Rain Scenario',
     high: 31,
     low: 25,
     humidity: '92%',
     wind: '24 km/h SW',
     precipitation: '18 mm/hr',
-    warning: 'Red Warning: High tide & heavy rainfall expected at 2:00 PM',
+    warning: 'Controlled Scenario: High tide & heavy rainfall at 2:00 PM',
   }
 
   const hours = hourly.length > 0 ? hourly : [

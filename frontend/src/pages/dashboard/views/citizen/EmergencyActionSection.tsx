@@ -55,8 +55,8 @@ export function EmergencyActionSection({
             </span>
             <span className="btn-desc">
               {isVolunteer
-                ? 'Track live response units and route advisories'
-                : 'Priority dispatch for trapped or flood-affected citizens'}
+                ? 'Review simulated missions and route advisories'
+                : 'Create a sanitized request in the prototype workflow'}
             </span>
           </div>
           <Icon name="arrow-right" size={16} className="btn-arrow" />
@@ -87,9 +87,9 @@ export function EmergencyActionSection({
         <div className="action-footer-note">
           <div className="note-left">
             <Icon name="clock" size={14} />
-            <span>Avg Response: <strong>8–12 mins (Sampaloc Zone)</strong></span>
+            <span>Scenario ETA: <strong>Demonstration estimate only</strong></span>
           </div>
-          <span className="live-status-pill">● Dispatchers Online</span>
+          <span className="live-status-pill">● Prototype Mode</span>
         </div>
       )}
     </div>

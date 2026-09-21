@@ -42,8 +42,8 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     renderWithProviders(<CitizenView />, 'citizen')
 
     // 1. Weather and flood warning
-    expect(screen.getByText(/Red Warning: High tide & heavy rainfall expected/i)).toBeInTheDocument()
-    expect(screen.getByText(/Heavy Tropical Rain/i)).toBeInTheDocument()
+    expect(screen.getByText(/Controlled Scenario: High tide & heavy rainfall/i)).toBeInTheDocument()
+    expect(screen.getByText(/Heavy Rain Scenario/i)).toBeInTheDocument()
 
     // 2. Primary emergency actions
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
@@ -63,10 +63,10 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText('Logged in as')).toBeInTheDocument()
     expect(screen.getByText('Maria Santos')).toBeInTheDocument()
 
-    // Location & GPS lock
-    expect(screen.getByText(/Brgy\. Tumana, Marikina City/i)).toBeInTheDocument()
-    expect(screen.getByText(/14\.6532 N · 121\.0912 E/i)).toBeInTheDocument()
-    expect(screen.getByText(/GPS Lock/i)).toBeInTheDocument()
+    // Sanitized U-Belt demonstration location
+    expect(screen.getByText(/Sanitized address, Jhocson St\., U-Belt pilot/i)).toBeInTheDocument()
+    expect(screen.getByText(/14\.6042 N · 120\.9946 E/i)).toBeInTheDocument()
+    expect(screen.getByText(/Demo Location/i)).toBeInTheDocument()
 
     // Emergency actions
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
@@ -87,10 +87,10 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText(/Coast Guard Boat 4/i)).toBeInTheDocument()
     expect(screen.getByText(/ETA 11 min/i)).toBeInTheDocument()
 
-    // Live Alerts
-    expect(screen.getByText(/Live Alerts/i)).toBeInTheDocument()
-    expect(screen.getByText(/Marikina River past 2nd alarm/i)).toBeInTheDocument()
-    expect(screen.getByText(/Typhoon Signal No\. 2 raised/i)).toBeInTheDocument()
+    // Controlled-scenario notices
+    expect(screen.getByText(/Scenario Notices/i)).toBeInTheDocument()
+    expect(screen.getByText(/Controlled flood scenario active/i)).toBeInTheDocument()
+    expect(screen.getByText(/Heavy-rain demonstration condition/i)).toBeInTheDocument()
     expect(screen.getByText(/Evacuation center at 70% capacity/i)).toBeInTheDocument()
 
     // Portal navigation
@@ -101,8 +101,8 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
   it('renders localized rainfall forecast widget', () => {
     renderWithProviders(<DashboardPage />, 'citizen')
-    expect(screen.getByText(/Sampaloc \/ España District/i)).toBeInTheDocument()
-    expect(screen.getByText(/PAGASA Doppler & Metro Manila River Basin/i)).toBeInTheDocument()
+    expect(screen.getByText(/U-Belt Pilot Area/i)).toBeInTheDocument()
+    expect(screen.getByText(/Controlled rainfall scenario · demonstration data/i)).toBeInTheDocument()
     expect(screen.getByText(/Hourly Intensity/i)).toBeInTheDocument()
   })
 
@@ -116,11 +116,11 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText(/Avoid Floodwater Contamination/i)).toBeInTheDocument()
   })
 
-  it('renders OpenStreetMap interactive hazard map with telemetry and routing rationale', () => {
+  it('renders OpenStreetMap controlled-scenario map and routing rationale', () => {
     renderWithProviders(<CitizenView navSection="map" />, 'citizen')
 
     // Verify OpenStreetMap HUD indicator and layer buttons
-    expect(screen.getByText(/OpenStreetMap Live GIS/i)).toBeInTheDocument()
+    expect(screen.getByText(/OpenStreetMap · U-Belt controlled scenario/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'OpenStreetMap' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Tactical Dark' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Satellite View' })).toBeInTheDocument()
@@ -128,10 +128,10 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     // Verify OpenStreetMap container element
     expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
 
-    // Verify Hydrodynamic rationale drawer
-    expect(screen.getByText(/Hydrodynamic Flood Routing Engine Rationale/i)).toBeInTheDocument()
+    // Verify controlled-scenario rationale drawer
+    expect(screen.getByText(/Controlled-Scenario Routing Rationale/i)).toBeInTheDocument()
     expect(screen.getByText(/AVOIDED SHORTCUT/i)).toBeInTheDocument()
-    expect(screen.getByText(/ACTIVE SAFE ROUTE/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
   })
 
 
@@ -171,7 +171,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByRole('button', { name: /SUBMIT EMERGENCY RESCUE REQUEST/i })).toBeInTheDocument()
   })
 
-  it('renders 5-stage live request tracking sequence when request is active', () => {
+  it('renders 5-stage prototype request tracking sequence when request is active', () => {
     renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
 
     // Tracking title
@@ -183,14 +183,14 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText('Rescued')).toBeInTheDocument()
   })
 
-  it('shows real-time route delay explanation card in En Route stage', () => {
+  it('shows simulated route delay explanation card in En Route stage', () => {
     renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
 
     // The default mission is en-route, so the advisory card should be visible
-    expect(screen.getByText(/REAL-TIME ROUTE & DELAY ADVISORY/i)).toBeInTheDocument()
+    expect(screen.getByText(/SIMULATED ROUTE & DELAY ADVISORY/i)).toBeInTheDocument()
     // The default route explanation message appears in both the advisory card and map telemetry banner
     expect(screen.getAllByText(/All possible shortcuts are flooded/i).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/Live Dispatch Log/i)).toBeInTheDocument()
+    expect(screen.getByText(/Prototype Status Log/i)).toBeInTheDocument()
   })
 })
 describe('Field Rescuer Mobile Dashboard Flows', () => {
@@ -205,21 +205,21 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
     expect(screen.getAllByText(/Chest-deep/i).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders flood-aware route engine with avoided Loyola St and safe Jhocson St', () => {
+  it('renders flood-aware route engine with avoided Loyola St and recommended Jhocson St', () => {
     renderWithProviders(<RescuerView />, 'rescuer')
 
     // Impassable warning
     expect(screen.getByText(/LOYOLA ST\. — IMPASSABLE/i)).toBeInTheDocument()
-    expect(screen.getByText(/RECOMMENDED SAFE ROUTE/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/Jhocson St\. Safe Corridor/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/Jhocson St\. Recommended Corridor/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Gerardo St\. Detour/i)).toBeInTheDocument()
   })
 
-  it('shows real-time active en route status advisory on rescuer view', () => {
+  it('shows active prototype en route status advisory on rescuer view', () => {
     renderWithProviders(<RescuerView />, 'rescuer')
 
     expect(screen.getByText(/ACTIVE EN ROUTE STATUS ADVISORY/i)).toBeInTheDocument()
-    expect(screen.getByText(/Synced with Citizen App & Central Dispatch/i)).toBeInTheDocument()
+    expect(screen.getByText(/Prototype status shared across role views/i)).toBeInTheDocument()
     // The default route delay explanation should appear
     expect(screen.getAllByText(/All possible shortcuts are flooded/i).length).toBeGreaterThanOrEqual(1)
   })
@@ -245,10 +245,10 @@ describe('Dispatcher / Coordinator Dashboard Flows', () => {
     expect(screen.getByText(/Mandatory Dispatch Justification/i)).toBeInTheDocument()
   })
 
-  it('shows real-time route delay broadcaster tool in missions tab', () => {
+  it('shows simulated route delay message tool in missions tab', () => {
     renderWithProviders(<CoordinatorView navSection="missions" />, 'coordinator')
 
-    expect(screen.getByText(/Real-Time Route Delay/i)).toBeInTheDocument()
+    expect(screen.getByText(/Simulated Route Delay/i)).toBeInTheDocument()
     expect(screen.getByText(/Push Route Advisory to All Screens/i)).toBeInTheDocument()
     // Quick preset buttons
     expect(screen.getByText(/Loyola impassable/i)).toBeInTheDocument()

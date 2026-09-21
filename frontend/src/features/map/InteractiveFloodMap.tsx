@@ -51,47 +51,47 @@ export function InteractiveFloodMap({
   const [mapLayerMode, setMapLayerMode] = useState<'osm' | 'dark' | 'satellite'>('osm')
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(true)
 
-  // Citizen distress target (Brgy. Tumana, Marikina City)
-  const citizenTarget: [number, number] = [14.6532, 121.0912]
+  // Sanitized citizen distress target inside the approved U-Belt pilot boundary
+  const citizenTarget: [number, number] = [14.6042, 120.9946]
 
-  // Safe corridor coordinates avoiding flooded lowlands
+  // Recommended corridor for the controlled scenario
   const safeCorridorCoords: [number, number][] = [
-    [14.6380, 121.0740], // Dispatch Hub
-    [14.6425, 121.0785], // High Ground Elevation
-    [14.6468, 121.0832], // Waypoint 2
-    [14.6502, 121.0875], // Approach Corridor
-    [14.6532, 121.0912], // Target Destination
+    [14.6005, 120.9875], // Simulated dispatch hub
+    [14.6018, 120.9892], // Waypoint 1
+    [14.6028, 120.9910], // Waypoint 2
+    [14.6036, 120.9930], // Approach corridor
+    [14.6042, 120.9946], // Sanitized destination
   ]
 
   // Alternative Detour coordinates
   const detourCoords: [number, number][] = [
-    [14.6380, 121.0740],
-    [14.6410, 121.0820],
-    [14.6480, 121.0930],
-    [14.6532, 121.0912],
+    [14.6005, 120.9875],
+    [14.6020, 120.9905],
+    [14.6050, 120.9930],
+    [14.6042, 120.9946],
   ]
 
   // Impassable Street Segment (Loyola St.)
   const impassableStreetCoords: [number, number][] = [
-    [14.6450, 121.0810],
-    [14.6485, 121.0865],
-    [14.6515, 121.0898],
+    [14.6015, 120.9890],
+    [14.6030, 120.9910],
+    [14.6040, 120.9930],
   ]
 
-  // Flood Inundation polygon zones (NOAH Hydrodynamic Model)
+  // Synthetic flood polygons for the controlled academic scenario
   const severeFloodPolygon: [number, number][] = [
-    [14.6565, 121.0875],
-    [14.6545, 121.0945],
-    [14.6495, 121.0935],
-    [14.6475, 121.0860],
-    [14.6515, 121.0845],
+    [14.6050, 120.9910],
+    [14.6055, 120.9950],
+    [14.6025, 120.9950],
+    [14.6015, 120.9915],
+    [14.6035, 120.9905],
   ]
 
   const moderateFloodPolygon: [number, number][] = [
-    [14.6460, 121.0790],
-    [14.6485, 121.0845],
-    [14.6440, 121.0860],
-    [14.6420, 121.0805],
+    [14.6000, 120.9865],
+    [14.6025, 120.9895],
+    [14.6005, 120.9920],
+    [14.5985, 120.9880],
   ]
 
   // Vehicle progress based on active stage
@@ -123,8 +123,8 @@ export function InteractiveFloodMap({
       })
 
       const map = L.map(mapContainerRef.current, {
-        center: [14.6485, 121.0860],
-        zoom: 14,
+        center: [14.6040, 120.9940],
+        zoom: 15,
         zoomControl: false,
       })
 
@@ -187,7 +187,7 @@ export function InteractiveFloodMap({
     try {
       overlayGroup.clearLayers()
 
-      // 1. NOAH Hydrodynamic Flood Inundation Zones
+      // 1. Synthetic controlled-scenario flood polygons
       if (showFloodDepthLayer) {
         const severePoly = L.polygon(severeFloodPolygon, {
           color: '#dc2626',
@@ -198,7 +198,7 @@ export function InteractiveFloodMap({
         }).bindPopup(`
           <div class="leaflet-popup-flood">
             <strong style="color:#ef4444;">CRITICAL FLOOD ZONE (>1.5m)</strong><br/>
-            <span>Marikina River Basin Overflow · Impassable to light vehicles</span>
+            <span>Controlled U-Belt flood scenario · Impassable in this demonstration</span>
           </div>
         `)
         overlayGroup.addLayer(severePoly)
@@ -217,7 +217,7 @@ export function InteractiveFloodMap({
         overlayGroup.addLayer(moderatePoly)
       }
 
-      // 2. Safe Corridor Polyline (Green glowing line)
+      // 2. Recommended eligible corridor polyline
       const safeLine = L.polyline(safeCorridorCoords, {
         color: selectedRoute === 'primary' ? '#22c55e' : '#16a34a',
         weight: selectedRoute === 'primary' ? 6 : 4,
@@ -225,8 +225,8 @@ export function InteractiveFloodMap({
         dashArray: '8, 6',
       }).bindPopup(`
         <div class="leaflet-popup-route">
-          <strong style="color:#22c55e;">RECOMMENDED SAFE ROUTE</strong><br/>
-          <span>Jhocson St. Safe Corridor · Avoids Loyola flood barrier</span><br/>
+          <strong style="color:#22c55e;">RECOMMENDED ROUTE</strong><br/>
+          <span>Jhocson St. corridor · Avoids an impassable controlled-scenario edge</span><br/>
           <span>ETA: ${etaMinutes} minutes</span>
         </div>
       `)
@@ -303,7 +303,7 @@ export function InteractiveFloodMap({
       const boatMarker = L.marker(boatCurrentPos, { icon: boatIcon }).bindPopup(`
         <div class="leaflet-popup-rescuer">
           <strong style="color:#38bdf8;">Rescue Team Alpha (Boat Unit)</strong><br/>
-          <span>Status: En Route · Safe Corridor</span><br/>
+          <span>Status: En Route · Recommended Corridor</span><br/>
           <span>ETA: ${etaMinutes} minutes</span>
         </div>
       `)
@@ -354,7 +354,7 @@ export function InteractiveFloodMap({
       <div className="flood-map-controls">
         <div className="flood-map-legend-items">
           <span className="legend-tag legend-study">
-            🗺️ OpenStreetMap Live GIS · 14.6532° N, 121.0912° E
+            🗺️ OpenStreetMap · U-Belt controlled scenario · 14.6042° N, 120.9946° E
           </span>
           <span className="legend-tag legend-safe">
             ● Safe Transit (Jhocson Corridor · {etaMinutes}m ETA)
@@ -393,9 +393,9 @@ export function InteractiveFloodMap({
             type="button"
             className={`map-toggle-btn ${showFloodDepthLayer ? 'is-active' : ''}`}
             onClick={() => setShowFloodDepthLayer((v) => !v)}
-            title="Toggle UP NOAH Hydrodynamic Inundation Contours"
+            title="Toggle synthetic controlled-scenario flood polygons"
           >
-            NOAH Flood Depth: {showFloodDepthLayer ? 'ON' : 'OFF'}
+            Scenario Flood Depth: {showFloodDepthLayer ? 'ON' : 'OFF'}
           </button>
           <button
             type="button"
@@ -408,19 +408,19 @@ export function InteractiveFloodMap({
         </div>
       </div>
 
-      {/* Dynamic Real-Time Route Update Banner over the Map */}
+      {/* Simulated route advisory over the map */}
       <div className="map-realtime-routing-banner">
         <div className="banner-pulse-icon">
           <Icon name="route" size={18} />
         </div>
         <div className="banner-text">
-          <strong>EN ROUTE REAL-TIME TELEMETRY:</strong>{' '}
+          <strong>SIMULATED EN ROUTE ADVISORY:</strong>{' '}
           <span>{routeExplanation}</span>
         </div>
         <span className="banner-eta-badge font-mono">ETA: {etaMinutes} MINS</span>
       </div>
 
-      {/* OpenStreetMap Live Leaflet Interactive Canvas */}
+      {/* OpenStreetMap Leaflet canvas with controlled scenario overlays */}
       <div className="flood-map-leaflet-wrapper">
         <div
           ref={mapContainerRef}
@@ -435,7 +435,7 @@ export function InteractiveFloodMap({
         <div className="explanation-head">
           <div className="explanation-title">
             <Icon name="shield" size={16} />
-            <span>Hydrodynamic Flood Routing Engine Rationale</span>
+            <span>Controlled-Scenario Routing Rationale</span>
           </div>
           <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--color-brand-hover)' }}>
             LiPAD Hazard & Elevation Matrix Active
@@ -450,9 +450,9 @@ export function InteractiveFloodMap({
             </span>
           </div>
           <div className="explanation-row">
-            <span className="exp-badge exp-selected">ACTIVE SAFE ROUTE</span>
+            <span className="exp-badge exp-selected">RECOMMENDED ROUTE</span>
             <span className="exp-text">
-              <strong>Jhocson St. Corridor:</strong> High elevation (4.2m AMSL). Minimal surface runoff (0.12m).
+              <strong>Jhocson St. Corridor:</strong> Lower controlled-scenario penalty and no impassable edge.
               Safety Score: <strong>94/100</strong>. Unit ETA: <strong>{etaMinutes} minutes</strong>.
             </span>
           </div>

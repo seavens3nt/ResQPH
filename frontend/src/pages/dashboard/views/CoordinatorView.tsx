@@ -269,7 +269,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
           {/* 2. Inquiry Review & Processing Pane */}
           <Section
             title="Inquiry Detail Inspector"
-            subtitle="Full telemetry, vulnerabilities breakdown, and situation analysis."
+            subtitle="Sanitized request details, vulnerabilities, and controlled-scenario context."
           >
             {selectedRequest ? (
               <div className="inspector-panel">
@@ -390,7 +390,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
         <div className="dash-grid-2">
           {/* Mission Tracking List */}
           <Section
-            title="Mission Telemetry & Status Oversight"
+            title="Mission Status Oversight"
             subtitle="Standard automated routing oversight with restricted manual override capability."
           >
             <div className="item-list">
@@ -420,8 +420,8 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
                         <div className="mission-enroute-advisory-strip">
                           <div className="advisory-strip-header">
                             <span className="live-indicator-dot" />
-                            <span className="advisory-strip-label">LIVE ROUTE ADVISORY</span>
-                            <span className="advisory-strip-source">Central Dispatch · Routing Engine</span>
+                            <span className="advisory-strip-label">SIMULATED ROUTE ADVISORY</span>
+                            <span className="advisory-strip-source">Prototype Coordinator · Routing Engine</span>
                           </div>
                           <p className="advisory-strip-message">
                             "{mis.routeDelayExplanation}"
@@ -477,11 +477,11 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
               })}
             </div>
 
-            {/* Dispatcher Real-Time Route Delay & ETA Broadcaster */}
+            {/* Prototype route-delay message */}
             <div className="dispatcher-delay-updater">
-              <h5>🛣️ Real-Time Route Delay &amp; ETA Broadcaster</h5>
+              <h5>🛣️ Simulated Route Delay &amp; ETA Message</h5>
               <p>
-                Push a live route delay explanation to both the Citizen App and the active Rescue Team. This message appears as a constant advisory on the En Route screen for both parties.
+                Share a controlled-scenario route explanation with the Citizen and Rescuer prototype views. This is demonstration state, not an official dispatch broadcast.
               </p>
 
               {delaySentAlert && (
@@ -494,7 +494,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
               <div className="delay-presets-grid">
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>QUICK PRESETS:</span>
                 {[
-                  { label: '9 min · Loyola impassable → Jhocson alt', eta: 9, msg: 'Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and needs to head another alternative routes "Loyola St.". Proceeding via Jhocson St. Safe Corridor.' },
+                  { label: '9 min · Loyola impassable → Jhocson alt', eta: 9, msg: 'Controlled scenario: Loyola St. is impassable. The prototype recommends the Jhocson St. corridor with an estimated 9-minute travel time.' },
                   { label: '12 min · España overflow, taking Gerardo detour', eta: 12, msg: 'Rescue Team arrival: 12 minutes. España Blvd overflow (0.9m depth) forces rerouting via Gerardo St. Detour. All shortcuts submerged — navigating carefully.' },
                   { label: '15 min · Multiple road blockages, alternate corridor found', eta: 15, msg: 'Rescue Team arrival: 15 minutes. Multiple road blockages detected on primary and secondary routes. Unit is navigating via España North Access corridor. Stay on 2nd floor and signal with flashlight.' },
                 ].map((preset) => (
@@ -557,7 +557,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
           {/* Interactive Routing Oversight Map */}
           <Section
             title="Flood-Aware Routing Oversight"
-            subtitle="Automated cost function excludes flooded streets (Loyola 1.4m) and maintains safe corridors."
+            subtitle="Rule-based costs exclude an impassable controlled-scenario edge and recommend an eligible corridor."
           >
             <InteractiveFloodMap
               activeStage="en-route"
@@ -646,7 +646,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
       {navSection === 'map' && (
         <Section
           title="Flood-Aware Routing Oversight"
-          subtitle="Automated cost function excludes flooded streets (Loyola 1.4m) and maintains safe corridors."
+          subtitle="Rule-based costs exclude an impassable controlled-scenario edge and recommend an eligible corridor."
         >
           <InteractiveFloodMap
             activeStage="en-route"
@@ -735,7 +735,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
             </div>
             <p>
               You are manually overriding the automated flood-aware routing engine. Automated routing
-              considers LiPAD/NOAH hydrodynamic flood models to avoid lethal water depths and currents.
+              uses controlled academic flood and passability values; it does not provide live or guaranteed-safe navigation.
             </p>
             <p>
               Dispatchers overriding this system must have verified ground observations and assume

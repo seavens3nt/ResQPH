@@ -21,6 +21,8 @@
 | D-014 | Use the committed controlled flood scenario as the guaranteed MVP hazard source; treat external historical layers as optional enrichment. | Approved | Removes access/licensing uncertainty from the required demonstration while preserving transparent limitations. |
 | D-015 | Exclude elevation from required routing cost and permit it only as contextual/experimental input. | Approved | Approximately 30 m SRTM data do not justify precise street-level safety claims. |
 | D-016 | Use fixed seconds-equivalent rule penalties and cap ML contribution at 60 per edge. | Approved | The known-graph fixture produces deterministic, inspectable baseline, reroute, exclusion, no-route, and ML-cap outcomes. |
+| D-017 | Apply a time-constrained three-tier delivery order: deterministic end-to-end workflow first, required ML experiment and limited offline behavior second, optional enrichment last. | Approved | Protects a demonstrable MVP without removing the agreed AI/ML experiment. Runtime ML integration remains evidence-gated; optional historical/elevation enrichment and extra interface features cannot delay the core workflow. |
+| D-018 | Reconcile all prototype UI claims with the locked academic scope. | Approved | Runtime text must identify the U-Belt controlled scenario and must not claim live PAGASA data, nationwide response, official dispatch, guaranteed safe routes, or production authentication. |
 
 ## Phase 1 decision closure
 

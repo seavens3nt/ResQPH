@@ -6,7 +6,7 @@ const PHRASES = [
   'Flooded Communities',
   'Every Filipino Family',
   'Disaster Response Teams',
-  'Real-Time Safe Routes',
+  'Controlled-Scenario Routes',
 ]
 
 export function LandingPage() {
@@ -66,9 +66,9 @@ export function LandingPage() {
 
         {/* Tagline */}
         <p className="lp-tagline lp-anim-tagline2">
-          Emergency rescue for every Filipino —<br />
-          one-tap SOS, live GPS, and direct lines<br />
-          to rescuers nationwide.
+          Academic rescue-coordination prototype —<br />
+          simulated requests, U-Belt map scenarios,<br />
+          and explainable flood-aware routes.
         </p>
 
         {/* CTAs */}

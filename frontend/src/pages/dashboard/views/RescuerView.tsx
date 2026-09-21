@@ -46,8 +46,8 @@ export function RescuerView(_props: { navSection?: NavSection }) {
         <div className="stat-row">
           <StatCard label="Unit Status" value="STANDBY" icon="shield" subtext="Available for dispatch" />
           <StatCard label="Missions Completed" value={3} icon="check" subtext="Today's operations" />
-          <StatCard label="Passable Study Roads" value="78%" icon="route" subtext="Jhocson safe corridor" />
-          <StatCard label="Flood Warning" value="CRITICAL" icon="alert" accent subtext="Habagat flood advisory" />
+          <StatCard label="Eligible Scenario Roads" value="78%" icon="route" subtext="Controlled U-Belt fixture" />
+          <StatCard label="Scenario Flood Level" value="CRITICAL" icon="alert" accent subtext="Synthetic demonstration" />
         </div>
 
         <Section title="Field Rescuer Console — Standby">
@@ -215,7 +215,7 @@ export function RescuerView(_props: { navSection?: NavSection }) {
             <div className="reroute-header">
               <span className="live-indicator-dot" />
               <span className="reroute-title">ACTIVE EN ROUTE STATUS ADVISORY</span>
-              <span className="reroute-source">Synced with Citizen App &amp; Central Dispatch</span>
+              <span className="reroute-source">Prototype status shared across role views</span>
             </div>
             <p className="reroute-message">
               "{mission.routeDelayExplanation}"
@@ -321,7 +321,7 @@ export function RescuerView(_props: { navSection?: NavSection }) {
       {/* 3. AUTOMATED REROUTING & NAVIGATION VIEW */}
       <Section
         title="Flood-Aware Navigation & Rerouting Engine"
-        subtitle="Automatic hazard avoidance balancing shortest path with hydrodynamic flood risk."
+        subtitle="Deterministic route costs using controlled flood and passability rules."
       >
         {/* Impassable Alert Box */}
         <div className="impassable-alert-box">
@@ -332,9 +332,9 @@ export function RescuerView(_props: { navSection?: NavSection }) {
             <div className="impassable-tag">HAZARD DETECTED · ROAD EXCLUDED</div>
             <h4>{impassableRoad.name} — IMPASSABLE TO RESCUE VEHICLES</h4>
             <p>
-              Water depth is <strong>{impassableRoad.waterDepth}</strong>, exceeding the craft safety limit
-              of <strong>{impassableRoad.threshold}</strong>. Rapid storm runoff reported. The system has
-              automatically rerouted your unit to safe corridors.
+              Controlled-scenario depth is <strong>{impassableRoad.waterDepth}</strong>, exceeding the configured
+              prototype threshold of <strong>{impassableRoad.threshold}</strong>. The deterministic engine excludes
+              this edge and selects another eligible corridor.
             </p>
           </div>
         </div>
@@ -350,8 +350,8 @@ export function RescuerView(_props: { navSection?: NavSection }) {
             }}
           >
             <div className="route-card-head">
-              <span className="route-badge-recommended">RECOMMENDED SAFE ROUTE</span>
-              <span className="route-score">Safety: {primaryRoute.safetyScore}/100</span>
+              <span className="route-badge-recommended">RECOMMENDED ROUTE</span>
+              <span className="route-score">Scenario score: {primaryRoute.safetyScore}/100</span>
             </div>
             <h4>{primaryRoute.name}</h4>
             <div className="route-metrics">
@@ -423,7 +423,7 @@ export function RescuerView(_props: { navSection?: NavSection }) {
           </div>
 
           <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-            Closing this mission will update Dispatcher monitoring in real time and reset your craft
+            Closing this prototype mission will update the shared demonstration state and reset your craft
             status to <strong>AVAILABLE</strong>.
           </p>
 

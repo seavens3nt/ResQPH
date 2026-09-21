@@ -116,7 +116,7 @@ export function VolunteerView({
           <div style={{ width: '100%' }}>
             <Section
               title="Active Citizen SOS Signals"
-              subtitle="Live telemetry for verified citizen distress calls in Sampaloc."
+              subtitle="Sanitized demonstration requests within the U-Belt pilot."
             >
               {activeReq ? (
                 <div className="modern-clean-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -145,7 +145,7 @@ export function VolunteerView({
                     <p className="reroute-message">"{currentRouteExplanation}"</p>
                     <div className="reroute-eta-row">
                       <span>Target ETA: <strong>{currentEtaMinutes} mins</strong></span>
-                      <span>Corridor: <strong>{activeMission?.activeRouteName || 'Jhocson St. Safe Corridor'}</strong></span>
+                      <span>Corridor: <strong>{activeMission?.activeRouteName || 'Jhocson St. Recommended Corridor'}</strong></span>
                     </div>
                   </div>
                 </div>
