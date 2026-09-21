@@ -1,6 +1,6 @@
 # ResQPH sprint process
 
-ResQPH uses lightweight Scrum ceremonies with a Kanban-style GitHub Project. The process provides short planning and feedback cycles without changing the seven official technical phases.
+ResQPH uses lightweight Scrum ceremonies with a Kanban-style GitHub Project. The Project Foundation is completed before the team’s newly numbered feature phases begin.
 
 ## Relationship between sprints and phases
 

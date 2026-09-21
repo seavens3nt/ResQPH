@@ -23,24 +23,25 @@ During severe flooding, rescue teams must locate stranded people, prioritize req
 
 ## Academic scope and operating assumptions
 
-ResQPH is an academic engineering prototype, initially limited to one team-approved Metro Manila study area. It uses public or open datasets and controlled low, moderate, and severe flood scenarios. The team will document data age, coverage, accuracy, licensing, coordinate systems, and transformations.
+ResQPH is an academic engineering prototype limited to the project-defined U-Belt pilot area in the City of Manila. Its WGS 84 bounding box is west `120.982000`, south `14.596000`, east `121.004000`, and north `14.617500`. It uses public or open datasets plus controlled and historical low, moderate, high, and severe flood scenarios. The team will document data age, coverage, accuracy, licensing, coordinate systems, and transformations.
 
-The project does not build a hydrological forecasting model. It may use existing hazard information and simulated flood conditions to demonstrate routing decisions. Dates, final study-area boundary, datasets, and performance targets remain **TBD** until Phase 1 approval.
+The project does not build a hydrological forecasting model. It may use existing hazard information and simulated flood conditions to demonstrate routing decisions. The approved machine-readable boundary is [`../data/samples/study-area.geojson`](../data/samples/study-area.geojson). Accepted hazard datasets, final routing weights, and performance targets remain conditional on the evidence listed in the [Phase 1 gate](phases/PHASE-01-GATE.md).
 
 ## MVP boundary
 
 ### In scope
 
 - Rescue-request creation, validation, viewing, updating, and history.
+- Basic role simulation for citizen, volunteer, coordinator, and rescuer workflows.
 - Coordinator review and mission assignment.
 - Rescuer mission view and status/location updates.
 - Interactive map for relevant people, missions, routes, and flood context.
 - MongoDB operational/geospatial storage and appropriate transaction boundaries.
 - Deterministic A* or Dijkstra baseline routing.
 - Explainable flood, elevation, passability, and risk penalties.
-- A manageable AI/ML road-risk experiment when defensible data are available.
+- A required Logistic Regression and Random Forest road-risk experiment, with application integration only when the evidence is accepted.
 - A mandatory rule-based risk fallback.
-- Limited caching, queued updates, stale-data indicators, and reconnection synchronization.
+- Cached viewing of one assigned mission, one queued mission-status update, stale-data indicators, and reconnection validation.
 - Synthetic or sanitized demonstrations and tests.
 
 ### Out of scope
@@ -50,6 +51,9 @@ The project does not build a hydrological forecasting model. It may use existing
 - Guaranteed road safety or autonomous rescue decisions.
 - Nationwide deployment or complete Metro Manila coverage in the initial prototype.
 - Direct integration with government emergency infrastructure.
+- XGBoost or deep-learning model development for the MVP.
+- Production authentication, identity verification, OAuth, or MFA.
+- More than one queued offline action or complete offline map packages.
 - Real mesh, radio, or satellite communication.
 - Unapproved collection or publication of real private emergency records.
 

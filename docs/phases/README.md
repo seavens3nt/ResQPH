@@ -1,15 +1,15 @@
 # Phase guides
 
-The project follows seven official phases. Phase guides translate the high-level [roadmap](../ROADMAP.md) into meeting decisions, expected artifacts, ownership, integration points, and exit criteria.
+Ranee completes the two Project Foundation phases before the team’s newly numbered feature phases begin. Detailed guides are created only when their phase is approved to open.
 
 | Phase | Guide | Status |
 |---|---|---|
-| 1 — Requirements and Data Validation | [PHASE-01.md](PHASE-01.md) | Ready to begin |
-| 2 — Core Application | To be added before Phase 2 planning | Not started |
-| 3 — Mapping and Geospatial Pipeline | To be added before Phase 3 planning | Not started |
-| 4 — Routing | To be added before Phase 4 planning | Not started |
-| 5 — AI/ML | To be added before Phase 5 planning | Not started |
-| 6 — Offline Simulation | To be added before Phase 6 planning | Not started |
-| 7 — Integration and Testing | To be added before Phase 7 planning | Not started |
+| Project Foundation 1 — Requirements and Data Validation | [PHASE-01.md](PHASE-01.md) and [gate](PHASE-01-GATE.md) | Ready for review — Approve with conditions |
+| Project Foundation 2 — Core Application | Created after the Foundation 1 documentation PR merges | Planned; then eligible to become Ready to start |
+| Team 1 — Mapping and Geospatial Pipeline | Created only after Foundation completion | Planned |
+| Team 2 — Flood-Aware Routing | Created after Team 1 approval | Planned |
+| Team 3 — AI/ML Road-Risk Component | Created after Team 2 approval | Planned |
+| Team 4 — Limited Offline Support | Created after Team 3 approval | Planned |
+| Team 5 — Integration, Testing, and Presentation | Created after Team 4 approval | Planned |
 
-A phase is not automatically one sprint. The team may use more than one sprint when the exit criteria cannot be met responsibly in a single iteration.
+A phase may span more than one sprint. It exits only when Ranee inspects the required artifacts and verification evidence and records a gate decision.

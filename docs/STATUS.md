@@ -1,13 +1,13 @@
 # ResQPH project status
 
-**Last updated:** 2026-09-05
+**Last updated:** 2026-09-22
 
 | Field | Current value |
 |---|---|
-| Current phase | Phase 1 — Requirements and Data Validation |
-| Current sprint | Sprint 01 — planned; dates TBD |
-| Overall health | Green for repository readiness; Amber for unresolved scope/data decisions |
-| Current goal | Approve the MVP, study area, data feasibility, workflows, contracts, and fallbacks before feature implementation. |
+| Current phase | Project Foundation Phase 1 — Ready for review |
+| Current sprint | Foundation Phase 1 — gate decision: Approve with conditions; dates TBD |
+| Overall health | On track for Core Application; At risk for unverified flood-data, routing, ML-label, UI-evidence, and review conditions |
+| Current goal | Merge the approved U-Belt scope and contract baseline, then open only eligible Core Application work. |
 
 ## Completed setup
 
@@ -21,33 +21,33 @@
 - [x] Team responsibilities documented
 - [x] Project-management, phase, sprint, status, and editor documentation prepared on the current branch
 
-## Work in progress
+## Ready for review
 
-- Phase 1 planning and team approval.
+- Phase 1 scope, decision, lifecycle, acceptance, and contract artifacts.
+- U-Belt boundary, basic role simulation, and Matthew's geospatial/routing ownership are decided.
+- The gate is `Approve with conditions`; dataset feasibility and affected-member review remain under validation.
 - No application feature is considered complete based on the current repository evidence.
 
 ## Immediate next actions
 
-1. Review and approve the Phase 1 guide with all five members.
-2. Decide the exact study-area boundary and MVP authentication requirement.
-3. Convert approved Phase 1 candidate work into small GitHub Issues.
-4. Add Issues to the GitHub Project and select the Sprint 01 scope.
-5. Begin workflows, wireframes, contracts, and dataset validation in parallel where dependencies allow.
+1. Review and merge the Phase 1 documentation PR after affected-member comments are addressed.
+2. Prepare Project Foundation Phase 2 work packages against the approved API, schema, workflow, and basic role-simulation baseline.
+3. Validate candidate flood-data access, coverage, CRS, restrictions, and sample compatibility.
+4. Reproduce the U-Belt OSM extraction and road-edge fixture before Team Phase 1 acceptance.
+5. Keep ML training and final routing weights blocked until their evidence conditions pass.
 
 ## Decisions needed
 
 | Decision | Owner | Needed by |
 |---|---|---|
-| Exact Metro Manila study-area boundary | Ranee with Clarence | TBD |
-| Coordinator versus dispatcher terminology | Ranee with Elle and Jared | TBD |
-| Authentication required for the prototype or deferred | Ranee with Jared | TBD |
-| Approved road, flood, elevation, and boundary datasets | Clarence with Matthew | TBD |
+| Approved flood/elevation sources or explicit synthetic fallback | Matthew; Ranee decides | Before hazard-data integration |
+| Final rule penalties and ML target/labels | Matthew; Ranee approves | Before routing acceptance/model training |
 | Phase/sprint schedule and final deadline | Ranee with team/instructor | TBD |
 | GitHub Project URL and Sprint 01 milestone | Ranee | TBD |
 
 ## Active blockers
 
-No confirmed technical blocker is recorded. Study-area, dataset, and scheduling decisions remain open and may block later implementation.
+No confirmed blocker prevents eligible Core Application preparation after the Phase 1 documentation PR merges. Flood-data integration, model training, and routing acceptance remain conditionally blocked by the [Phase 1 gate](phases/PHASE-01-GATE.md).
 
 ## Major risks
 

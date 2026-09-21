@@ -2,21 +2,21 @@
 
 ## Purpose and scope
 
-ResQPH is a flood-aware emergency rescue coordination and routing system for COM243 and CCSFEN1L. It is an academic engineering prototype for one selected Metro Manila study area and controlled flood scenarios. It is not a certified emergency-dispatch, flood-forecasting, or road-safety system.
+ResQPH is a flood-aware emergency rescue coordination and routing system for COM243 and CCSFEN1L. It is an academic engineering prototype for the project-defined U-Belt pilot area in the City of Manila and controlled or historical flood scenarios. It is not a certified emergency-dispatch, flood-forecasting, or road-safety system.
 
 The primary workflow is: citizen rescue request -> FastAPI validation -> MongoDB storage -> coordinator assignment -> flood-aware route -> rescuer status updates -> optional rerouting -> completion and history.
 
-## Official phases
+## Delivery phases
 
 Work must align with these phases in order:
 
-1. Requirements and Data Validation
-2. Core Application
-3. Mapping and Geospatial Pipeline
-4. Routing
-5. AI/ML
-6. Offline Simulation
-7. Integration and Testing
+1. Project Foundation Phase 1 — Requirements and Data Validation
+2. Project Foundation Phase 2 — Core Application
+3. Team Phase 1 — Mapping and Geospatial Pipeline
+4. Team Phase 2 — Flood-Aware Routing
+5. Team Phase 3 — AI/ML Road-Risk Component
+6. Team Phase 4 — Limited Offline Support
+7. Team Phase 5 — Integration, Testing, and Presentation
 
 ## Approved stack
 
@@ -42,10 +42,10 @@ Do not replace this stack without an approved, documented technical decision.
 ## Ownership
 
 - Ranee (`@seavens3nt`): project management, primary backend, secondary AI/ML, UI/UX support.
-- Jared Noel (`@AshenDary`): secondary backend and integration, AI/ML support.
+- Jared Noel (`@AshenDary`): primary backend and integration, secondary AI/ML support.
 - Elle (`@Qiuyuan26`): primary UI/UX and frontend, testing and documentation support.
-- Matthew Trinitaria (`@matthew-sudo2`): primary AI/ML and data evaluation, data and routing support.
-- Clarence (`@ClarenceArillo`): geospatial data and flood-aware routing, UI/UX support.
+- Matthew Trinitaria (`@matthew-sudo2`): primary AI/ML and data evaluation; accountable geospatial-pipeline and deterministic-routing owner.
+- Clarence (`@ClarenceArillo`): UI/UX and frontend, testing and map-interface support.
 
 Ownership is accountability, not an exclusive boundary. Coordinate changes at component interfaces with the relevant owners.
 
@@ -77,6 +77,7 @@ Ownership is accountability, not an exclusive boundary. Coordinate changes at co
 ## Engineering and safety rules
 
 - Implement and verify deterministic A* or Dijkstra routing before ML-assisted penalties.
+- Use basic role simulation for the MVP; do not represent it as secure production authentication.
 - Maintain a documented, testable rule-based risk fallback. The application must not require a trained model to perform its prototype workflow.
 - ML output may adjust an explainable routing cost; it must not silently override deterministic impassability rules or human decisions.
 - Use synthetic or sanitized rescue scenarios during development. Do not commit real contact details, precise private locations, credentials, or operational emergency records.

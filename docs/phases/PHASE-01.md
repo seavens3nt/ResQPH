@@ -1,13 +1,13 @@
 # Phase 1 — Requirements and Data Validation
 
-## Meeting and implementation guide
+## Decision and implementation guide
 
 | Field | Value |
 |---|---|
 | Phase lead | Ranee (`@seavens3nt`) |
 | Members | Ranee, Jared Noel, Elle, Matthew Trinitaria, Clarence |
 | Dates | TBD |
-| Current status | Ready to begin |
+| Current status | Ready for review — Approve with conditions |
 | Phase theme | Decide and validate before building |
 
 ## 1. Phase goal
@@ -16,20 +16,22 @@ Turn the proposal into an approved, testable, and technically realistic MVP. By 
 
 Phase 1 is complete only when the outputs agree with one another. A polished wireframe is not useful if the backend contract cannot support it; a dataset is not usable until its license, coverage, CRS, age, resolution, and limitations are recorded.
 
-## 2. Phase meeting agenda
+## 2. Phase review checklist
+
+Ranee finalized the outstanding Phase 1 decisions asynchronously on 2026-09-22. A separate meeting is not required. The checklist remains the review structure for Issue #12 and its pull request.
 
 ### Opening — 10 minutes
 
 - Restate the problem and academic-prototype disclaimer.
 - Confirm all five members' primary and supporting responsibilities.
 - Confirm that GitHub Issues and the GitHub Project are the ticketing and status sources of truth.
-- Review the seven official phases and the purpose of Phase 1.
+- Review the Project Foundation and new team-phase structure.
 
 ### Scope and users — 25 minutes
 
 - Approve citizen, coordinator, and rescuer roles.
 - Choose consistent terminology: coordinator or dispatcher.
-- Decide whether authentication is essential for the MVP or can be simplified/deferred.
+- Confirm basic role simulation is used and is never described as production authentication.
 - Agree on MVP outcomes, non-goals, success criteria, and final demonstration boundary.
 
 ### Main workflows — 30 minutes
@@ -40,7 +42,7 @@ Phase 1 is complete only when the outputs agree with one another. A polished wir
 
 ### Study area and data — 30 minutes
 
-- Compare candidate Metro Manila study boundaries.
+- Inspect the approved `ubelt-pilot-v1` GeoJSON and confirm processing stays within its project-defined WGS 84 boundary.
 - Review road, flood, elevation, administrative boundary, facility, and possible ML data sources.
 - Record license, coverage, date, resolution, CRS, format, size, accessibility, quality, and intended use.
 - Decide which sources are accepted, need testing, need replacement, or are unavailable.
@@ -69,7 +71,7 @@ Phase 1 mostly produces decisions, contracts, diagrams, metadata, and small vali
 | Backend | Python 3.12, FastAPI, Pydantic, async PyMongo | Define domain models, endpoints, validation, error shape, transactions, and integration adapters. |
 | Database | MongoDB 8 replica set through Docker Compose | Define collections, document examples, indexes, geospatial fields, history, and transaction candidates. |
 | Routing/geospatial | OSMnx, NetworkX, GeoPandas, Shapely, PyProj, Rasterio | Validate data compatibility and define graph/route contracts; no final routing implementation yet. |
-| AI/ML | pandas, NumPy, scikit-learn, joblib | Inspect data feasibility and define baseline/evaluation; training is optional and normally deferred. |
+| AI/ML | pandas, NumPy, scikit-learn, joblib | Define the required Logistic Regression and Random Forest experiment, rule fallback, and evidence gate; XGBoost is excluded. |
 | Documentation | Markdown, Mermaid or exported diagrams, GitHub | Keep reviewed decisions and evidence in version control. |
 | Ticketing | GitHub Issues and GitHub Project | Track ownership, dependencies, status, acceptance criteria, reviews, and blockers. |
 
@@ -260,11 +262,11 @@ If one artifact is small, it may be combined with a closely related document aft
 
 ## 8. Member delegation
 
-Assignments below define Phase 1 ownership. Final GitHub Issues are created and assigned only after the team approves the phase plan.
+Assignments below define Phase 1 ownership. The documentation baseline is tracked by Issue #12; future implementation work receives separate executable issues only after the applicable gate permits it.
 
 ### Member 1 — Ranee: project manager, primary backend, AI/ML and UI/UX support
 
-1. Facilitate the requirements and scope meeting.
+1. Finalize and record the requirements and scope decisions.
 2. Finalize the MVP, non-goals, terminology, success criteria, and approval record.
 3. Define citizen, coordinator, and rescuer workflows with Elle.
 4. Draft the initial backend domain model, request/mission statuses, and transition rules.
@@ -274,9 +276,9 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 8. Maintain the decision log, risk register, dependencies, blockers, status, and sprint readiness.
 9. Prevent feature work from starting when required scope or contract decisions remain unresolved.
 
-**Expected evidence:** approved scope; meeting decisions; domain/status draft; API outline; risk/decision updates; reviewed Phase 1 plan.
+**Expected evidence:** approved scope; recorded decisions; domain/status draft; API outline; risk/decision updates; reviewed Phase 1 plan.
 
-### Member 2 — Jared Noel: secondary backend and integration, AI/ML support
+### Member 2 — Jared Noel: primary backend and integration, secondary AI/ML
 
 1. Review backend architecture, module boundaries, and versioned API boundary.
 2. Define integration points among frontend, FastAPI, MongoDB, routing, and ML.
@@ -300,7 +302,7 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 
 **Expected evidence:** three reviewed workflows; wireframes; page/component list; UI-state matrix; accessibility and responsive notes.
 
-### Member 4 — Matthew Trinitaria: primary AI/ML and data evaluation, routing support
+### Member 4 — Matthew Trinitaria: primary AI/ML and data evaluation; geospatial/routing owner
 
 1. Identify possible AI/ML inputs, outputs, target/labels, features, and evaluation metrics.
 2. Evaluate whether proposed data are sufficient, representative, linkable, and legally usable.
@@ -309,20 +311,24 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 5. Propose spatial/temporal train-validation-test separation when supervised learning is defensible.
 6. Define how an approved model result could become a bounded, explainable routing penalty.
 7. Prevent premature training when validated data and a defensible target are unavailable.
+8. Own the bounded OSM extraction, stable road-edge identifiers, scenario-layer join, deterministic A*, and routing verification evidence.
 
-**Expected evidence:** ML feasibility report; data/feature/label table; rule baseline; evaluation plan; train/do-not-train criteria and recommendation.
+**Expected evidence:** ML feasibility report; data/feature/label table; rule baseline; evaluation plan; train/do-not-train criteria; reproducible road extraction; stable edge fixture; routing verification plan.
 
-### Member 5 — Clarence: geospatial data and flood-aware routing, UI/UX support
+### Member 5 — Clarence: UI/UX and frontend, testing and map-interface support
 
-1. Compare and confirm the proposed study-area boundary with the team.
-2. Inventory road, flood, elevation, boundary, and optional facility datasets.
-3. Review source authority, license, geographic/temporal coverage, CRS, format, resolution, size, fields, access, and quality.
-4. Define expected routing inputs, outputs, road-edge identifiers, cost attributes, coordinate rules, and no-route behavior.
-5. Identify data gaps, alignment problems, snapping risks, outdated layers, and geospatial uncertainties.
-6. Define small sample/fixture requirements without committing full datasets.
-7. Review map workflow and route-explanation needs with Elle.
+1. Review citizen, volunteer, rescuer, and coordinator workflows with Elle and Ranee.
+2. Review navigation, page boundaries, reusable components, responsive behavior, and accessibility.
+3. Define map-interface needs for layers, legends, warnings, route explanations, and non-map alternatives.
+4. Review loading, empty, validation, error, no-route, cached, stale, Pending Sync, and sync-failure states.
+5. Map frontend data needs to the approved API contract without editing backend contracts independently.
+6. Identify usability, mobile, and integration risks.
 
-**Expected evidence:** proposed boundary; dataset register/metadata; compatibility findings; routing contract; sample-fixture plan; data-gap risks.
+**Expected evidence:** reviewed UI states and workflows; frontend data-needs notes; map-interface requirements; responsive/accessibility findings.
+
+### Resolved ownership — geospatial data and routing
+
+Ranee assigned Matthew as accountable owner for dataset acquisition/processing, road-graph construction, and deterministic routing. Jared supports the backend integration boundary, Elle and Clarence own map/route presentation at the frontend boundary, and Ranee approves scope and gate decisions.
 
 ## 9. Expected outputs by workstream
 
@@ -430,11 +436,11 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 
 ### Scope and decisions
 
-- [ ] MVP and non-goals are approved.
-- [ ] User roles and coordinator/dispatcher terminology are approved.
-- [ ] Authentication scope is decided.
-- [ ] Success criteria and final demonstration boundary are recorded.
-- [ ] Open decisions have owners and due dates or `TBD` decision paths.
+- [x] MVP and non-goals are approved.
+- [x] User roles and coordinator/dispatcher terminology are approved.
+- [x] Authentication scope is decided: basic role simulation only.
+- [x] Success criteria and final U-Belt demonstration boundary are recorded.
+- [x] Open decisions have owners and evidence conditions.
 
 ### Workflows and UI/UX
 
@@ -453,7 +459,7 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 
 ### Data, routing, and AI/ML
 
-- [ ] Study-area boundary is approved or its blocker is explicit.
+- [x] Study-area boundary is approved and available as GeoJSON.
 - [ ] Required dataset sources, licenses, coverage, CRS, formats, age, quality, and limitations are recorded.
 - [ ] A small sample-fixture plan is approved.
 - [ ] Routing input/output and deterministic baseline assumptions are approved.
@@ -462,9 +468,9 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 
 ### Planning, testing, and documentation
 
-- [ ] Main and failure acceptance scenarios are written.
-- [ ] Risks, dependencies, and blockers are current.
-- [ ] Documents contain sources, owners, limitations, and `TBD` items.
+- [x] Main and failure acceptance scenarios are written.
+- [x] Risks, dependencies, and blockers are current.
+- [x] Documents contain sources, owners, limitations, and explicit conditional items.
 - [ ] Approved Sprint 01 work is represented by ready GitHub Issues.
 - [ ] A cross-component walkthrough finds no unresolved critical contradiction.
 - [ ] Phase 1 outputs are reviewed in pull requests and linked from project documentation.
@@ -473,7 +479,7 @@ Assignments below define Phase 1 ownership. Final GitHub Issues are created and 
 
 An artifact is done when its acceptance criteria are satisfied, sources and assumptions are recorded, terminology matches related artifacts, affected component owners review it, unresolved items are explicit, local links and diagrams work, sensitive/large data are absent, and the result can be used to create an implementation Issue without guessing.
 
-Phase 1 is done when the completion checklist passes and the team can trace one synthetic rescue scenario from UI interaction through API/domain/database behavior to route/risk inputs, expected responses, failure behavior, and verification.
+The Phase 1 gate is `Approve with conditions`. The approved decisions may guide eligible Core Application preparation after the documentation PR merges, but Phase 1 is not labeled `Completed and verified` until the unchecked evidence and review conditions in [`PHASE-01-GATE.md`](PHASE-01-GATE.md) pass.
 
 ## 14. End-of-phase demonstration
 
@@ -489,4 +495,4 @@ Use one synthetic scenario, for example a citizen requesting help for several pe
 8. Show error, no-route, stale, offline, and Pending Sync expectations.
 9. End with known constraints, decisions still marked `TBD`, approved Sprint 01 Issues, and the next review point.
 
-The Phase 1 demonstration validates the design and evidence. It does not need to pretend that Phase 2–7 features are already implemented.
+The Phase 1 demonstration validates the design and evidence. It does not imply that Project Foundation Phase 2 or Team Phases 1–5 are already implemented.

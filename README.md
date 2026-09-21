@@ -89,7 +89,7 @@ The project document currently specifies:
 - MongoDB for operational and geospatial data
 - A* or Dijkstra's algorithm for routing
 - Public road, flood-hazard, and elevation datasets
-- Logistic Regression, Random Forest, or XGBoost as possible ML models
+- Logistic Regression and Random Forest as the approved ML experiments
 - Rule-based road-risk scoring as a required fallback
 - Local caching and queued synchronization for limited offline behavior
 - GitHub for source control
@@ -99,33 +99,33 @@ The project document currently specifies:
 
 The approved development baseline uses React, TypeScript, and Vite for the frontend; Python and FastAPI for the backend; Leaflet for map interaction; PyMongo for MongoDB; Python geospatial libraries for routing; scikit-learn for manageable AI/ML experiments; and IndexedDB for limited offline client storage.
 
-## Official project phases
+## Project delivery phases
 
-### Phase 1 — Requirements and Data Validation
+### Project Foundation Phase 1 — Requirements and Data Validation
 
 Finalize users, workflows, study area, available datasets, MongoDB schema, and API contracts.
 
-### Phase 2 — Core Application
+### Project Foundation Phase 2 — Core Application
 
-Implement authentication as required, rescue-request CRUD, mission assignment, status updates, and MongoDB integration.
+Implement basic role simulation, rescue-request CRUD, mission assignment, status updates, and MongoDB integration.
 
-### Phase 3 — Mapping and Geospatial Pipeline
+### Team Phase 1 — Mapping and Geospatial Pipeline
 
 Integrate the map and prepare the road, flood, and elevation datasets.
 
-### Phase 4 — Routing
+### Team Phase 2 — Flood-Aware Routing
 
 Implement basic routing first, then add flood and risk penalties and dynamic rerouting.
 
-### Phase 5 — AI/ML
+### Team Phase 3 — AI/ML Road-Risk Component
 
 Build and evaluate the road-risk or passability component. Integrate its output only if it is reliable enough for the prototype.
 
-### Phase 6 — Offline Simulation
+### Team Phase 4 — Limited Offline Support
 
-Cache essential mission data, queue selected actions, and synchronize after reconnection.
+Cache one assigned mission, queue one status update, and validate it after reconnection.
 
-### Phase 7 — Integration and Testing
+### Team Phase 5 — Integration, Testing, and Presentation
 
 Test complete rescue scenarios, failure cases, stale information, routing changes, database consistency, and multiple rescue requests.
 
@@ -150,7 +150,7 @@ ResQPH/
 - [Project dashboard](docs/DASHBOARD.md)
 - [Current status](docs/STATUS.md)
 - [Project context](docs/PROJECT_CONTEXT.md)
-- [Seven-phase roadmap](docs/ROADMAP.md)
+- [Project roadmap](docs/ROADMAP.md)
 - [Phase guides](docs/phases/README.md)
 - [Phase 1 — Requirements and Data Validation](docs/phases/PHASE-01.md)
 - [Sprint process](docs/sprints/README.md)
@@ -159,16 +159,25 @@ ResQPH/
 - [Development setup](docs/SETUP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Backend workspace guide](backend/README.md)
-- Requirements — to be added
-- API contracts — to be added
-- Database schema — to be added
-- Dataset register — to be added
-- Testing plan — to be added
-- Local setup guide — to be added
+- [MVP scope](docs/requirements/MVP_SCOPE.md)
+- [Acceptance scenarios](docs/requirements/ACCEPTANCE_SCENARIOS.md)
+- [Rescue lifecycle](docs/workflows/RESCUE_LIFECYCLE.md)
+- [API contract](docs/api/API_CONTRACT.md)
+- [MongoDB schema](docs/database/MONGODB_SCHEMA.md)
+- [Dataset register](docs/data/DATASET_REGISTER.md)
+- [U-Belt study-area metadata](data/metadata/study-area.md)
+- [Phase 1 gate decision](docs/phases/PHASE-01-GATE.md)
+- [Routing contract](docs/routing/ROUTING_CONTRACT.md)
+- [ML feasibility and evaluation](docs/ml/ML_FEASIBILITY.md)
+- [Offline contract](docs/offline/OFFLINE_CONTRACT.md)
+- [UI states](docs/ui/UI_STATES.md)
+- [Test strategy](docs/testing/TEST_STRATEGY.md)
+- [Decision log](docs/decisions/DECISION_LOG.md)
+- [Risk register](docs/risks/RISK_REGISTER.md)
 
 ## Project scope
 
-The prototype will initially focus on a selected Metro Manila study area and controlled flood scenarios.
+The prototype focuses on a project-defined U-Belt pilot area in the City of Manila using controlled and historical flood scenarios. Its WGS 84 bounding box is west `120.982000`, south `14.596000`, east `121.004000`, and north `14.617500`. This is an academic scope boundary, not an official government or emergency-service boundary.
 
 The project will not provide:
 

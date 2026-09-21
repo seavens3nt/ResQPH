@@ -7,10 +7,10 @@ Responsibilities define ownership and accountability, but they are not strict bo
 | Member | GitHub | Primary responsibility | Secondary responsibility |
 |---|---|---|---|
 | Ranee Mikaella Gutierrez | [@seavens3nt](https://github.com/seavens3nt) | Project Management and Primary Backend | AI/ML and UI/UX support |
-| Jared Noel | [@AshenDary](https://github.com/AshenDary) | Secondary Backend and Integration | AI/ML support |
+| Jared Noel | [@AshenDary](https://github.com/AshenDary) | Primary Backend and Integration | Secondary AI/ML |
 | Elle | [@Qiuyuan26](https://github.com/Qiuyuan26) | Primary UI/UX and Frontend | Testing and documentation |
-| Matthew Trinitaria | [@matthew-sudo2](https://github.com/matthew-sudo2) | Primary AI/ML and Data Evaluation | Data validation and routing support |
-| Clarence | [@ClarenceArillo](https://github.com/ClarenceArillo) | Geospatial Data and Flood-Aware Routing | UI/UX support |
+| Matthew Trinitaria | [@matthew-sudo2](https://github.com/matthew-sudo2) | Primary AI/ML and Data Evaluation; Geospatial/Routing Owner | Jared supports backend integration |
+| Clarence | [@ClarenceArillo](https://github.com/ClarenceArillo) | UI/UX and Frontend | Testing and map-interface support |
 
 ## Ranee — Project Manager and Primary Backend Contributor
 
@@ -42,10 +42,10 @@ Responsibilities define ownership and accountability, but they are not strict bo
 - Help ensure backend behavior supports clear, accessible user experiences.
 - Support frontend-backend integration and usability testing.
 
-## Jared Noel — Secondary Backend and Integration Contributor
+## Jared Noel — Primary Backend and Integration Contributor
 
 - Own assigned backend endpoints and database modules.
-- Assist with MongoDB schemas, indexes, queries, and validation.
+- Co-own MongoDB schemas, indexes, queries, and validation with Ranee.
 - Implement selected location, flood-report, mission-history, or synchronization modules.
 - Prepare sample and seed data.
 - Write backend and database tests.
@@ -66,7 +66,7 @@ Responsibilities define ownership and accountability, but they are not strict bo
 - Coordinate frontend-backend integration with Ranee and Jared.
 - Lead accessibility, responsive-design, and frontend usability checks.
 
-## Matthew Trinitaria — Primary AI/ML and Data Evaluation Contributor
+## Matthew Trinitaria — Primary AI/ML, Data Evaluation, Geospatial, and Routing Contributor
 
 - Investigate available road-risk and passability data.
 - Define the target output and candidate features.
@@ -77,34 +77,32 @@ Responsibilities define ownership and accountability, but they are not strict bo
 - Compare model results with the baseline and perform error analysis.
 - Document assumptions, limitations, metrics, and reproducible experiments.
 - Recommend whether a model is reliable enough to integrate.
-- Work with Clarence to convert model output into explainable route penalties.
-- Support dataset validation and routing tests.
+- Own the bounded OSM extraction, documented processing steps, stable edge identifiers, and accepted scenario-layer joins.
+- Own deterministic A* implementation, known-graph tests, flood/passability penalties, no-route behavior, and route explanations.
+- Convert accepted model output into a bounded, explainable route penalty without overriding deterministic impassability.
+- Document geospatial attribution, CRS, coverage, data age, transformations, and routing limitations.
+- Request a scope decision from Ranee when source access, licensing, labels, or safety claims are uncertain.
 
-## Clarence — Geospatial Data and Flood-Aware Routing Contributor
+## Clarence — UI/UX and Frontend Contributor
 
-- Help select and document the initial study area.
-- Locate and validate road, flood, elevation, and facility datasets.
-- Align geographic datasets to appropriate coordinate-reference systems.
-- Prepare road-segment attributes and construct the road graph.
-- Implement the deterministic A* or Dijkstra routing baseline.
-- Add travel-time, flood, elevation, and explainable risk penalties.
-- Exclude roads considered impassable.
-- Implement simulated flood scenarios and dynamic rerouting.
-- Return route geometry and understandable route explanations.
-- Work with backend, frontend, and AI/ML contributors during integration.
-- Support Elle with UI/UX and map-workflow reviews.
+- Support the citizen, volunteer, rescuer, and coordinator workflows.
+- Implement assigned frontend pages and reusable components.
+- Implement loading, empty, validation, system-error, no-route, cached, stale, Pending Sync, and sync-failure states.
+- Support responsive layouts, accessibility, usability testing, and documentation.
+- Support the Leaflet map interface and route/hazard presentation without owning routing algorithms unless Ranee assigns a separate work package.
+- Coordinate frontend API integration with Ranee, Jared, and Elle through the approved contract.
 
-## Official phase leadership
+## Phase accountability
 
-| Project phase | Lead | Main support |
+| Project phase | Accountable owner | Main support |
 |---|---|---|
-| Phase 1 — Requirements and Data Validation | Ranee | All members |
-| Phase 2 — Core Application | Ranee | Jared and Elle |
-| Phase 3 — Mapping and Geospatial Pipeline | Clarence | Elle, Ranee, Jared, and Matthew |
-| Phase 4 — Routing | Clarence | Ranee, Jared, and Matthew |
-| Phase 5 — AI/ML | Matthew | Ranee, Clarence, and Jared |
-| Phase 6 — Offline Simulation | Ranee | Jared and Elle |
-| Phase 7 — Integration and Testing | Ranee | All members |
+| Project Foundation 1 — Requirements and Data Validation | Ranee | All members review affected contracts |
+| Project Foundation 2 — Core Application | Ranee | Jared, Elle, and Clarence |
+| Team 1 — Mapping and Geospatial Pipeline | Matthew | Jared for backend integration; Elle and Clarence for map presentation |
+| Team 2 — Flood-Aware Routing | Matthew | Jared for backend integration; Ranee for gate approval; Elle and Clarence for route presentation |
+| Team 3 — AI/ML Road-Risk Component | Matthew | Ranee and Jared |
+| Team 4 — Limited Offline Support | Ranee | Jared plus one assigned frontend owner |
+| Team 5 — Integration, Testing, and Presentation | Ranee | All members |
 
 ## Shared responsibilities
 
