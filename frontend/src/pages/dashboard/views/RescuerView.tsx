@@ -1,10 +1,22 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../../components/ui/Button'
 import { Icon } from '../../../components/art/Icon'
 import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import type { RescueRequest } from '../../../features/missions/types'
+import { ApiErrorBanner } from '../../../components/ui/ApiErrorBanner'
+import { RoleNotice } from '../../../components/ui/RoleNotice'
+import { RescuerOfflineQueue } from './rescuer/RescuerOfflineQueue'
+import { RescuerMissionCard } from './rescuer/RescuerMissionCard'
+import {
+  listMyMissions,
+  updateMissionStatus as apiUpdateMissionStatus,
+  nextValidStatus,
+  ApiError,
+} from '../../../api/missions'
+import type { OfflineQueueEntry } from '../../../api/missions'
 import {
   Section,
   StatCard,
@@ -15,17 +27,107 @@ import {
 import type { NavSection } from './navTypes'
 
 export function RescuerView(_props: { navSection?: NavSection }) {
+  const queryClient = useQueryClient()
   const {
     activeRescuerMission,
     requests,
-    updateMissionStatus,
+    updateMissionStatus: contextUpdateMissionStatus,
     overrideRoute,
+    isOffline,
   } = useMissions()
 
-  const mission = activeRescuerMission
+  // ── Phase 2: Real API mission fetch ─────────────────────────────────────
+  const {
+    data: apiMissionsData,
+    isLoading: isMissionsLoading,
+    isError: isMissionsError,
+    error: missionsError,
+    dataUpdatedAt,
+    refetch: refetchMissions,
+  } = useQuery({
+    queryKey: ['my-missions'],
+    queryFn: () => listMyMissions(),
+    staleTime: 30_000,
+    enabled: !isOffline,
+    retry: false,
+  })
+
+  // Use the first API mission if available, else fall back to mock context
+  const apiMission = apiMissionsData?.items[0] ?? null
+  const mission = activeRescuerMission  // keep mock-context mission for existing JSX
   const targetRequest = mission
     ? requests.find((r: RescueRequest) => r.id === mission.requestId)
     : null
+
+  // ── Offline queue (single-entry spec from RESCUE_LIFECYCLE.md) ───────────
+  const [offlineEntry, setOfflineEntry] = useState<OfflineQueueEntry | null>(null)
+  const syncAttemptedRef = useRef(false)
+
+  // ── Phase 2: Real API status advance mutation ────────────────────────────
+  const [apiError, setApiError] = useState<ApiError | null>(null)
+  const { mutate: advanceStatus, isPending: isAdvancing } = useMutation({
+    mutationFn: () => {
+      if (!apiMission) throw new Error('No mission loaded')
+      const next = nextValidStatus(apiMission.status)
+      if (!next) throw new Error('No valid next status')
+      const eventId = crypto.randomUUID()
+      if (isOffline) {
+        // Queue for later — spec: at most one queued transition
+        const entry: OfflineQueueEntry = {
+          localId: eventId,
+          missionId: apiMission.id,
+          body: {
+            event_id: eventId,
+            new_status: next,
+            expected_mission_version: apiMission.version,
+            client_recorded_at: new Date().toISOString(),
+            source: 'offline-sync',
+          },
+          syncState: 'pending',
+          enqueuedAt: new Date().toISOString(),
+        }
+        setOfflineEntry(entry)
+        return Promise.resolve(null)
+      }
+      return apiUpdateMissionStatus(apiMission.id, {
+        event_id: eventId,
+        new_status: next,
+        expected_mission_version: apiMission.version,
+        client_recorded_at: new Date().toISOString(),
+        source: 'online',
+      })
+    },
+    onSuccess: (result) => {
+      setApiError(null)
+      if (result) {
+        void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+      }
+    },
+    onError: (err) => {
+      if (err instanceof ApiError) {
+        setApiError(err)
+        // On conflict: refresh to show authoritative server state
+        if (err.isConflict) void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+      }
+    },
+  })
+
+  function handleRetrySync() {
+    if (!offlineEntry || isOffline) return
+    const entry = offlineEntry
+    setOfflineEntry({ ...entry, syncState: 'syncing' })
+    syncAttemptedRef.current = true
+    apiUpdateMissionStatus(entry.missionId, entry.body)
+      .then(() => {
+        setOfflineEntry(null)
+        void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+      })
+      .catch((err: unknown) => {
+        const reason = err instanceof ApiError ? err.message : 'Sync failed'
+        setOfflineEntry({ ...entry, syncState: 'failed', failureReason: reason })
+        void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+      })
+  }
 
   // UI States
   const [showIncomingModal, setShowIncomingModal] = useState(
@@ -37,6 +139,45 @@ export function RescuerView(_props: { navSection?: NavSection }) {
     targetRequest ? String(targetRequest.headcount) : '4',
   )
   const [rescuerFieldNotes, setRescuerFieldNotes] = useState('')
+
+  // If no active mission in mock context and API is loading
+  if (!mission && isMissionsLoading) {
+    return (
+      <div className="rescuer-view" aria-busy="true" aria-label="Loading mission">
+        <WeatherAlertBanner />
+        <div className="empty-state">
+          <span className="coord-queue__spinner" aria-hidden="true" />
+          <p>Loading your assigned mission…</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Role / system error from API when no context mission exists
+  if (!mission && isMissionsError && missionsError instanceof ApiError) {
+    if (missionsError.isForbidden) {
+      return (
+        <div className="rescuer-view">
+          <WeatherAlertBanner />
+          <RoleNotice
+            attemptedAction="retrieve assigned missions"
+            currentRole="current role"
+            requiredRole="rescuer"
+          />
+        </div>
+      )
+    }
+    // System error — show with retry
+    return (
+      <div className="rescuer-view">
+        <WeatherAlertBanner />
+        <ApiErrorBanner
+          error={missionsError}
+          onRetry={() => void refetchMissions()}
+        />
+      </div>
+    )
+  }
 
   // If no active mission
   if (!mission || !targetRequest) {
@@ -51,6 +192,13 @@ export function RescuerView(_props: { navSection?: NavSection }) {
         </div>
 
         <Section title="Field Rescuer Console — Standby">
+          {/* Offline queue shown even in standby */}
+          <RescuerOfflineQueue
+            entry={offlineEntry}
+            isOffline={isOffline}
+            onRetrySync={handleRetrySync}
+            onDismissFailed={() => setOfflineEntry(null)}
+          />
           <div className="empty-state">
             <Icon name="boat" size={38} />
             <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: 8 }}>
@@ -66,30 +214,43 @@ export function RescuerView(_props: { navSection?: NavSection }) {
     )
   }
 
-  // 1. Mission Execution actions
+  // 1. Mission Execution actions (mock context — preserved for existing view JSX)
   function handleAcceptMission() {
     if (!mission) return
-    updateMissionStatus(mission.id, 'assigned')
+    contextUpdateMissionStatus(mission.id, 'assigned')
     setShowIncomingModal(false)
   }
 
   function handleStartEnRoute() {
     if (!mission) return
-    updateMissionStatus(mission.id, 'en-route')
+    // Try real API first; fall back to context for demo mode
+    if (apiMission) {
+      advanceStatus()
+    } else {
+      contextUpdateMissionStatus(mission.id, 'en-route')
+    }
   }
 
   function handleMarkArrived() {
     if (!mission) return
-    updateMissionStatus(mission.id, 'arrived')
+    if (apiMission) {
+      advanceStatus()
+    } else {
+      contextUpdateMissionStatus(mission.id, 'arrived')
+    }
   }
 
   function handleConfirmCompleted() {
     if (!mission) return
-    updateMissionStatus(
-      mission.id,
-      'completed',
-      rescuerFieldNotes || `Successfully evacuated ${evacuatedCount} residents to evacuation center.`,
-    )
+    if (apiMission) {
+      advanceStatus()
+    } else {
+      contextUpdateMissionStatus(
+        mission.id,
+        'completed',
+        rescuerFieldNotes || `Successfully evacuated ${evacuatedCount} residents to evacuation center.`,
+      )
+    }
     setShowCompleteConfirm(false)
   }
 
@@ -100,6 +261,41 @@ export function RescuerView(_props: { navSection?: NavSection }) {
   return (
     <div className="rescuer-view">
       <WeatherAlertBanner />
+
+      {/* Phase 2: API error banner for status-advance failures */}
+      {apiError && !apiError.isForbidden && (
+        <ApiErrorBanner
+          error={apiError}
+          onRetry={advanceStatus}
+          onRefresh={() => void refetchMissions()}
+        />
+      )}
+      {apiError?.isForbidden && (
+        <RoleNotice
+          attemptedAction="advance mission status"
+          currentRole="rescuer"
+          requiredRole="assigned rescuer"
+        />
+      )}
+
+      {/* Phase 2: Offline sync queue */}
+      <RescuerOfflineQueue
+        entry={offlineEntry}
+        isOffline={isOffline}
+        onRetrySync={handleRetrySync}
+        onDismissFailed={() => setOfflineEntry(null)}
+      />
+
+      {/* Phase 2: Live API Mission card with sync badge & status history */}
+      {apiMission && (
+        <RescuerMissionCard
+          mission={apiMission}
+          lastSyncedAt={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null}
+          isStale={isOffline}
+          isAdvancing={isAdvancing}
+          onAdvanceStatus={advanceStatus}
+        />
+      )}
 
       {/* 1. INCOMING MISSION NOTIFICATION BANNER (IF PENDING ACCEPTANCE) */}
       {showIncomingModal && (
@@ -386,7 +582,7 @@ export function RescuerView(_props: { navSection?: NavSection }) {
 
         {/* Interactive Map */}
         <InteractiveFloodMap
-          activeStage={mission.status}
+          activeStage={mission.status === 'cancelled' ? undefined : mission.status}
           selectedRoute={selectedRouteKey}
           onSelectRoute={(r: 'primary' | 'alternative') => setSelectedRouteKey(r)}
           routeExplanation={mission.routeDelayExplanation}

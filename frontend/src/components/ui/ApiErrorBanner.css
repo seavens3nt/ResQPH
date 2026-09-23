@@ -1,0 +1,159 @@
+/* ==========================================================================
+   ApiErrorBanner — Modern, Clean, Intentional Alert Banner
+   ========================================================================== */
+
+.api-error-banner {
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #ef4444;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.api-error-banner:hover {
+  box-shadow: 0 6px 20px -2px rgba(15, 23, 42, 0.09);
+}
+
+/* Variant Accents */
+.api-error-banner--conflict {
+  border-left-color: #f59e0b;
+  background: linear-gradient(to right, rgba(254, 243, 199, 0.35), #ffffff 40%);
+}
+
+.api-error-banner--forbidden {
+  border-left-color: #ef4444;
+  background: linear-gradient(to right, rgba(254, 226, 226, 0.35), #ffffff 40%);
+}
+
+.api-error-banner--unavailable {
+  border-left-color: #64748b;
+  background: linear-gradient(to right, rgba(241, 245, 249, 0.5), #ffffff 40%);
+}
+
+.api-error-banner--error {
+  border-left-color: #dc2626;
+  background: linear-gradient(to right, rgba(254, 226, 226, 0.35), #ffffff 40%);
+}
+
+/* Header */
+.api-error-banner__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.api-error-banner__label {
+  font-weight: 800;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0f172a;
+}
+
+.api-error-banner--conflict .api-error-banner__label {
+  color: #b45309;
+}
+
+.api-error-banner--forbidden .api-error-banner__label {
+  color: #b91c1c;
+}
+
+.api-error-banner--unavailable .api-error-banner__label {
+  color: #334155;
+}
+
+.api-error-banner--error .api-error-banner__label {
+  color: #b91c1c;
+}
+
+.api-error-banner__req-id {
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.api-error-banner__message {
+  margin: 0;
+  line-height: 1.5;
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.api-error-banner__details {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  list-style: none;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.8rem;
+  color: #475569;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.api-error-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.api-error-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  font-family: var(--font-body);
+}
+
+.api-error-banner__btn--retry {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.api-error-banner__btn--retry:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.18);
+}
+
+.api-error-banner__btn--refresh {
+  background: #ffffff;
+  color: #b45309;
+  border-color: #fde68a;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.08);
+}
+
+.api-error-banner__btn--refresh:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+  transform: translateY(-1px);
+}
