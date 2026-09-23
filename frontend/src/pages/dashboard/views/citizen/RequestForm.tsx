@@ -56,7 +56,10 @@ interface RequestFormProps {
 export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown' }: RequestFormProps) {
   const uid = useId()
   const { user } = useAuth()
-  const savedLocation = user?.homeLocation
+  // homeLocation is not declared on the committed AuthUser type but may be stored
+  // at runtime (AuthProvider serialises/deserialises the full localStorage object).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const savedLocation = (user as any)?.homeLocation as { address: string; coordinates: [number, number] } | undefined
 
   // Form field state (kept across validation failures — "preserve safe input")
   const [address, setAddress] = useState(savedLocation?.address ?? 'Sanitized demonstration address, Sampaloc, Manila')

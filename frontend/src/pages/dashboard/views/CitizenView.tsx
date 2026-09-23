@@ -60,8 +60,9 @@ export function CitizenView({
   const activeCitizenTeam = activeReq?.assignedTeamId
     ? teams.find((team) => team.id === activeReq.assignedTeamId)
     : undefined
-  const assignedLeaderPhone = activeReq?.assignedLeaderPhone
-    || (activeReq?.assignedLeaderName ? activeCitizenTeam?.contactPhone : undefined)
+  // assignedLeaderPhone / assignedLeaderName are not in the committed RescueRequest type;
+  // fall back to team contactPhone (prototype placeholder: 09XX XXX XXXX).
+  const assignedLeaderPhone = activeCitizenTeam?.contactPhone ?? undefined
   const assignedLeaderTel = assignedLeaderPhone && /^[+\d\s()-]+$/.test(assignedLeaderPhone) && assignedLeaderPhone.replace(/\D/g, '').length >= 10
     ? `tel:${assignedLeaderPhone.replace(/[^+\d]/g, '')}`
     : undefined
@@ -395,7 +396,7 @@ export function CitizenView({
                           Assigned team: {activeCitizenTeam.name} ({activeCitizenTeam.unitType})
                         </strong>
                         <span style={{ display: 'block', fontSize: '0.75rem', color: '#334155', marginTop: '0.25rem' }}>
-                          Team leader: {activeReq.assignedLeaderName || activeCitizenTeam.leadRescuer || 'Not assigned'}
+                          Team leader: {activeReq.assignedTeamName || activeCitizenTeam.leadRescuer || 'Not assigned'}
                         </span>
                         <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
                           Simulated team contact for this prototype. X characters mask the number.
@@ -405,7 +406,7 @@ export function CitizenView({
                         Contact: {assignedLeaderPhone || 'No leader contact assigned'}
                       </span>
                       {assignedLeaderTel ? (
-                        <a href={assignedLeaderTel} aria-label={`Call team leader ${activeReq.assignedLeaderName ?? activeCitizenTeam.leadRescuer}`}>
+                        <a href={assignedLeaderTel} aria-label={`Call team leader ${activeReq.assignedTeamName ?? activeCitizenTeam.leadRescuer}`}>
                           Call team leader
                         </a>
                       ) : (
