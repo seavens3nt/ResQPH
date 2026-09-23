@@ -14,6 +14,11 @@ import {
   SEVERITY_CONFIG,
 } from './shared'
 import type { NavSection } from './navTypes'
+// API-backed citizen request flow (Issue #17)
+import { RequestForm } from './citizen/RequestForm'
+import { RequestStatusView } from './citizen/RequestStatusView'
+import { PrototypeNotice } from './citizen/PrototypeNotice'
+import type { RescueRequestRecord } from '../../../features/requests/types'
 
 export function CitizenView({
   navSection = 'overview',
@@ -38,6 +43,14 @@ export function CitizenView({
   const [stepA_severity, setStepA_severity] = useState<SeverityLevel>('moderate')
   const [locationAddress, setLocationAddress] = useState('Sanitized address, Jhocson St., U-Belt pilot')
   const [locationError, setLocationError] = useState('')
+
+  // API-backed request state (Issue #17)
+  // Tracks the confirmed server record after a successful POST /rescue-requests.
+  // When set, the inquiries tab shows the authoritative RequestStatusView instead
+  // of the mock tracking panel.
+  const [apiRequest, setApiRequest] = useState<RescueRequestRecord | null>(null)
+  const [showApiRequestForm, setShowApiRequestForm] = useState(false)
+  const [apiRequestSuccess, setApiRequestSuccess] = useState(false)
 
   const activeReq = activeCitizenRequest
   const activeMission = missions.find((m) => m.requestId === activeReq?.id) || missions[0]
@@ -262,6 +275,9 @@ export function CitizenView({
         {/* ── INQUIRIES TAB (RESCUE TRACKING) ─────────────────────────── */}
         {navSection === 'inquiries' && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* ── Prototype role simulation notice ────────────────── */}
+            <PrototypeNotice variant="role" />
+
             {/* Quick Action Bar in Inquiries */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <Button
@@ -271,12 +287,61 @@ export function CitizenView({
                 <Icon name="alert" size={18} />
                 <span>REQUEST EMERGENCY RESCUE</span>
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => { setApiRequestSuccess(false); setShowApiRequestForm(true) }}
+                aria-label="Submit a new rescue request via API"
+              >
+                <Icon name="shield" size={16} />
+                <span>New API Request</span>
+              </Button>
               <Button variant="outline" onClick={() => setShowHotlinesModal(true)}>
                 <Icon name="phone" size={16} />
                 <span>Emergency Hotlines (911)</span>
               </Button>
             </div>
 
+            {/* ── API-backed request tracking (authoritative) ──────── */}
+            {apiRequest && (
+              <Section
+                title="Active Rescue Tracking"
+                subtitle="Authoritative status from the API. Controlled scenario data — not live dispatch."
+              >
+                {/* Success confirmation after first submission */}
+                {apiRequestSuccess && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    data-testid="submission-success"
+                    style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.7rem 0.9rem',
+                      background: '#f0fdf4',
+                      border: '1px solid #86efac',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      color: '#14532d',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <span aria-hidden="true">✓</span>
+                    <div>
+                      <strong>Request submitted.</strong> Your request ID is{' '}
+                      <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>{apiRequest.id}</code>.
+                      Status: <strong>pending</strong>. No response time is guaranteed.
+                    </div>
+                  </div>
+                )}
+                <RequestStatusView
+                  requestId={apiRequest.id}
+                  onCancelled={() => setApiRequest(null)}
+                />
+              </Section>
+            )}
+
+            {/* ── Mock tracking panel (preserved for existing tests) ── */}
             {activeReq ? (
               <Section
                 title={`Active Rescue Tracking: ${activeReq.id}`}
@@ -421,6 +486,23 @@ export function CitizenView({
         )}
 
       </div>
+
+      {/* API REQUEST FORM MODAL (Issue #17 — connects to POST /rescue-requests) */}
+      <Modal
+        isOpen={showApiRequestForm}
+        onClose={() => setShowApiRequestForm(false)}
+        title="Submit rescue request"
+        subtitle="Connects to the API. Controlled scenario data — not a real emergency dispatch."
+      >
+        <RequestForm
+          onSuccess={(record) => {
+            setApiRequest(record)
+            setApiRequestSuccess(true)
+            setShowApiRequestForm(false)
+          }}
+          onCancel={() => setShowApiRequestForm(false)}
+        />
+      </Modal>
 
       {/* MULTI-STAGE TRIAGE MODAL */}
       <Modal
