@@ -22,6 +22,7 @@ import { Button } from '../../../../components/ui/Button'
 import { Icon } from '../../../../components/art/Icon'
 import { useMissions } from '../../../../features/missions/MissionContext'
 import type { RescueTeam } from '../../../../features/missions/types'
+import './CoordinatorAssignModal.css'
 
 interface CoordinatorAssignModalProps {
   isOpen: boolean

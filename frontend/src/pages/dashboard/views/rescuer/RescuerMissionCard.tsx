@@ -12,6 +12,7 @@ import { nextValidStatus } from '../../../../api/missions'
 import { StatusBadge } from '../shared'
 import { Button } from '../../../../components/ui/Button'
 import { Icon } from '../../../../components/art/Icon'
+import './RescuerMissionCard.css'
 
 interface RescuerMissionCardProps {
   mission: MissionDetail

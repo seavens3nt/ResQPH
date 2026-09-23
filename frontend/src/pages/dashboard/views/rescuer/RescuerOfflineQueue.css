@@ -1,0 +1,110 @@
+/* ==========================================================================
+   RescuerOfflineQueue — Modern, Clean Offline Sync Panel
+   ========================================================================== */
+
+.offline-queue-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.15rem 1.35rem;
+  background: #ffffff;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #f97316;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px -2px rgba(249, 115, 22, 0.08);
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.offline-queue-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.offline-queue-panel__title {
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+  color: #9a3412;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offline-queue-panel__body {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #7c2d12;
+  line-height: 1.45;
+}
+
+.offline-queue-panel__entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #ffedd5;
+}
+
+.offline-queue-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0.75rem 1rem;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.offline-queue-entry__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #c2410c;
+}
+
+.offline-queue-entry__value {
+  font-size: 0.88rem;
+  color: #431407;
+  font-family: var(--font-mono, monospace);
+}
+
+.offline-queue-entry__time {
+  font-size: 0.72rem;
+  color: #9a3412;
+  opacity: 0.8;
+}
+
+.offline-queue-panel__failure {
+  padding: 0.85rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.offline-queue-panel__failure strong {
+  color: #7f1d1d;
+  font-weight: 700;
+}
+
+.offline-queue-panel__failure small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #b91c1c;
+}
+
+.offline-queue-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

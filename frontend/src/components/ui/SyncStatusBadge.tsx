@@ -53,7 +53,10 @@ export function SyncStatusBadge({ state, lastSyncedAt, failureReason, className 
       aria-live="polite"
       aria-label={`Synchronization status: ${LABELS[state]}`}
     >
-      <span className="sync-badge__label">{LABELS[state]}</span>
+      <div className="sync-badge__header-row">
+        <span className="sync-badge__dot" aria-hidden="true" />
+        <span className="sync-badge__label">{LABELS[state]}</span>
+      </div>
 
       {lastSyncedAt && (
         <span className="sync-badge__time">

@@ -12,6 +12,7 @@ import { RoleNotice } from '../../../../components/ui/RoleNotice'
 import { StatusBadge } from '../shared'
 import { Icon } from '../../../../components/art/Icon'
 import { Button } from '../../../../components/ui/Button'
+import './CoordinatorPendingQueue.css'
 
 interface CoordinatorPendingQueueProps {
   selectedId: string | null

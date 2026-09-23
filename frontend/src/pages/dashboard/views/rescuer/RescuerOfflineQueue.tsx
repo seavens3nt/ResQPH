@@ -9,6 +9,7 @@
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import type { OfflineQueueEntry } from '../../../../api/missions'
 import { Button } from '../../../../components/ui/Button'
+import './RescuerOfflineQueue.css'
 
 interface RescuerOfflineQueueProps {
   entry: OfflineQueueEntry | null
