@@ -17,12 +17,11 @@
  * No ETA or route-safety guarantee is presented.
  */
 
-import { useRescueRequest, useCancelRescueRequest } from '../../../../features/requests/hooks'
+import { useRescueRequest, useCancelRescueRequest, rescueRequestKeys } from '../../../../features/requests/hooks'
 import { PrototypeNotice } from './PrototypeNotice'
 import { StatusBadge } from './StatusBadge'
 import type { RequestStatus } from '../../../../features/requests/types'
 import { useQueryClient } from '@tanstack/react-query'
-import { rescueRequestKeys } from '../../../../features/requests/hooks'
 import { useState } from 'react'
 
 const STAGE_ORDER: RequestStatus[] = ['pending', 'assigned', 'en-route', 'arrived', 'completed']

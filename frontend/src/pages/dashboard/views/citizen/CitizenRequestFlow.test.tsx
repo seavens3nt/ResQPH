@@ -311,7 +311,7 @@ describe('RequestForm', () => {
     })
 
     // Clean up: resolve the promise
-    act(() => resolve(FIXTURE_REQUEST))
+    await act(async () => { resolve(FIXTURE_REQUEST) })
   })
 
   // ── Success callback ──────────────────────────────────────────────────────
@@ -415,7 +415,8 @@ describe('RequestStatusView', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/Team assigned/i)).toBeInTheDocument()
+      // Multiple "Team assigned" text exists (badge + stepper), so check by role
+      expect(screen.getByRole('status', { name: /Team assigned/i })).toBeInTheDocument()
     })
   })
 
@@ -429,7 +430,8 @@ describe('RequestStatusView', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/En route/i)).toBeInTheDocument()
+      // Multiple "En route" text exists (badge + stepper), so check by role
+      expect(screen.getByRole('status', { name: /En route/i })).toBeInTheDocument()
     })
   })
 
@@ -627,9 +629,11 @@ describe('CitizenView — API-backed request flow', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('submission-success')).toBeInTheDocument()
-      expect(screen.getByText(/RQ-DEMO-001/i)).toBeInTheDocument()
-      // Must say pending, must NOT promise response time
-      expect(screen.getByText(/pending/i)).toBeInTheDocument()
+      // Check for request ID in the success banner specifically
+      const successBanner = screen.getByTestId('submission-success')
+      expect(successBanner).toHaveTextContent(/RQ-DEMO-001/i)
+      expect(successBanner).toHaveTextContent(/pending/i)
+      // Must NOT promise response time
       expect(screen.queryByText(/guaranteed/i)).not.toBeInTheDocument()
     })
   })
