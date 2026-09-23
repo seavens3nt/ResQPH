@@ -23,6 +23,7 @@ import { StatusBadge } from './StatusBadge'
 import type { RequestStatus } from '../../../../features/requests/types'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useMissions } from '../../../../features/missions/MissionContext'
 
 const STAGE_ORDER: RequestStatus[] = ['pending', 'assigned', 'en-route', 'arrived', 'completed']
 
@@ -43,6 +44,7 @@ interface RequestStatusViewProps {
 
 export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewProps) {
   const queryClient = useQueryClient()
+  const { teams } = useMissions()
   const { data, isLoading, isError, error, dataUpdatedAt, isFetching } = useRescueRequest(requestId)
   const { mutate: cancel, isPending: isCancelling } = useCancelRescueRequest()
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
@@ -112,6 +114,9 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
   // Success — data loaded
   // ---------------------------------------------------------------------------
   const { id, status, location, headcount, reported_flood_level, updated_at, status_history, version } = data
+  const assignedTeam = data.assigned_team_id
+    ? teams.find((team) => team.id === data.assigned_team_id)
+    : undefined
 
   const currentStageIdx = STAGE_ORDER.indexOf(status as RequestStatus)
   const isCancelled = status === 'cancelled'
@@ -292,6 +297,24 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
           <strong style={{ color: '#0f172a', textTransform: 'capitalize' }}>{reported_flood_level}</strong>
         </div>
       </div>
+
+      {assignedTeam && status !== 'pending' && (
+        <div
+          className="modern-clean-card"
+          style={{ padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}
+        >
+          <div>
+            <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Assigned team</span>
+            <strong style={{ color: '#0f172a' }}>{assignedTeam.name}</strong>
+            <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
+              Simulated team contact for this prototype
+            </span>
+          </div>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
+            Contact: {assignedTeam.contactPhone}
+          </span>
+        </div>
+      )}
 
       {/* ── Status history ───────────────────────────────────────────── */}
       {status_history && status_history.length > 0 && (

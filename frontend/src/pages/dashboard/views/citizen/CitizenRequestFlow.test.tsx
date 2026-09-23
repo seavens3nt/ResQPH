@@ -21,6 +21,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react'
+import { useState } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '../../../../features/auth/AuthContext'
@@ -29,6 +30,7 @@ import { CitizenView } from '../CitizenView'
 import { RequestForm } from './RequestForm'
 import { RequestStatusView } from './RequestStatusView'
 import { PrototypeNotice } from './PrototypeNotice'
+import type { NavSection } from '../navTypes'
 import { StatusBadge } from './StatusBadge'
 
 // ---------------------------------------------------------------------------
@@ -89,10 +91,11 @@ function makeQueryClient() {
 function renderWithProviders(
   ui: React.ReactElement,
   role: 'citizen' | 'rescuer' | 'coordinator' = 'citizen',
+  homeLocation?: { address: string; coordinates: [number, number] },
 ) {
   localStorage.setItem(
     'resqph.auth.user',
-    JSON.stringify({ email: 'maria@example.com', role, name: 'Maria Santos' }),
+    JSON.stringify({ email: 'maria@example.com', role, name: 'Maria Santos', homeLocation }),
   )
   const queryClient = makeQueryClient()
   return {
@@ -149,12 +152,49 @@ describe('RequestForm', () => {
   it('renders all required form fields', () => {
     renderForm()
     expect(screen.getByLabelText(/Location — street address/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Longitude/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Latitude/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/People needing assistance/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Reported flood level/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Adjust map coordinates/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Longitude/i)).not.toBeVisible()
+    expect(screen.getByRole('radio', { name: /Use current GPS/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Use saved account location/i })).toBeDisabled()
+    expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Describe the immediate conditions \(optional\)/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument()
+  })
+
+  it('loads and restores a saved account location when selected', () => {
+    const onSuccess = vi.fn()
+    const onCancel = vi.fn()
+    renderWithProviders(
+      <RequestForm onSuccess={onSuccess} onCancel={onCancel} />,
+      'citizen',
+      { address: 'Sanitized saved address, Sampaloc, Manila', coordinates: [120.995, 14.605] },
+    )
+
+    expect(screen.getByRole('radio', { name: /Use saved account location/i })).toBeChecked()
+    expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized saved address, Sampaloc, Manila')
+    fireEvent.click(screen.getByRole('radio', { name: /Use demo location/i }))
+    expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized demonstration address, Sampaloc, Manila')
+    fireEvent.click(screen.getByRole('radio', { name: /Use saved account location/i }))
+    expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized saved address, Sampaloc, Manila')
+  })
+
+  it('shows feedback when GPS is unavailable', () => {
+    renderForm()
+    fireEvent.click(screen.getByRole('radio', { name: /Use current GPS/i }))
+    expect(screen.getByRole('alert')).toHaveTextContent(/GPS is not available/i)
+  })
+
+  it('reveals optional responder details when requested', () => {
+    renderForm()
+    fireEvent.click(screen.getByText(/Add details for responders \(optional\)/i))
+    expect(screen.getByText(/Vulnerabilities \(select all that apply\)/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Medical assistance needed/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByText(/Describe the immediate conditions \(optional\)/i))
+    expect(screen.getByLabelText(/What is happening right now/i)).toBeInTheDocument()
+    expect(screen.getByText(/whether the water is rising, any blocked exits/i)).toBeInTheDocument()
   })
 
   // ── Validation error — empty address ─────────────────────────────────────
@@ -190,6 +230,7 @@ describe('RequestForm', () => {
 
   it('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
     renderForm()
+    fireEvent.click(screen.getByText(/Adjust map coordinates/i))
     // Set coordinates outside U-Belt boundary (far from pilot area)
     fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: '121.05' } })
     fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: '14.7' } })
@@ -318,7 +359,9 @@ describe('RequestForm', () => {
 
   it('calls onSuccess with the returned record on successful submission', async () => {
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
-    renderForm()
+    renderWithProviders(
+      <RequestForm initialFloodLevel="high" onSuccess={onSuccess} onCancel={onCancel} />,
+    )
     fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
 
     await waitFor(() => {
@@ -326,6 +369,10 @@ describe('RequestForm', () => {
         expect.objectContaining({ id: 'RQ-DEMO-001', status: 'pending' }),
       )
     })
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ reported_flood_level: 'high' }),
+    )
   })
 
   // ── Cancel button ─────────────────────────────────────────────────────────
@@ -400,15 +447,21 @@ describe('RequestStatusView', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('status-view')).toBeInTheDocument()
-      expect(screen.getByText(/RQ-DEMO-001/i)).toBeInTheDocument()
-      expect(screen.getByText(/Pending dispatch/i)).toBeInTheDocument()
+      // Request ID appears in the header
+      expect(screen.getByRole('heading', { name: /RQ-DEMO-001/i })).toBeInTheDocument()
+      // Multiple "Pending dispatch" text exists (badge + stepper), so check by role
+      expect(screen.getByRole('status', { name: /Pending dispatch/i })).toBeInTheDocument()
     })
   })
 
   // ── Assigned status ───────────────────────────────────────────────────────
 
   it('shows assigned status badge', async () => {
-    mockGet.mockResolvedValueOnce({ ...FIXTURE_REQUEST, status: 'assigned' })
+    mockGet.mockResolvedValueOnce({
+      ...FIXTURE_REQUEST,
+      status: 'assigned',
+      assigned_team_id: 'team-alpha',
+    })
 
     renderWithProviders(
       <RequestStatusView requestId="RQ-DEMO-001" />,
@@ -418,6 +471,9 @@ describe('RequestStatusView', () => {
       // Multiple "Team assigned" text exists (badge + stepper), so check by role
       expect(screen.getByRole('status', { name: /Team assigned/i })).toBeInTheDocument()
     })
+    expect(screen.queryByRole('link', { name: /Call assigned team/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/Contact: 09XX XXX XXXX/i)).toBeInTheDocument()
+    expect(screen.getByText(/Simulated team contact for this prototype/i)).toBeInTheDocument()
   })
 
   // ── En-route status ───────────────────────────────────────────────────────
@@ -587,6 +643,21 @@ describe('CitizenView — API-backed request flow', () => {
     return renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
   }
 
+  function renderOverview() {
+    function CitizenViewHarness() {
+      const [section, setSection] = useState<NavSection>('overview')
+      return <CitizenView navSection={section} onNavigateTab={setSection} />
+    }
+    return renderWithProviders(<CitizenViewHarness />, 'citizen')
+  }
+
+  function openSosRequestForm(severity?: RegExp) {
+    fireEvent.click(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i }))
+    if (severity) fireEvent.click(screen.getByRole('button', { name: severity }))
+    if (severity) fireEvent.click(screen.getByRole('button', { name: severity }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to request details/i }))
+  }
+
   // ── Role simulation notice ────────────────────────────────────────────────
 
   it('shows role-simulation notice on the inquiries tab', () => {
@@ -594,18 +665,33 @@ describe('CitizenView — API-backed request flow', () => {
     expect(screen.getByText(/Simulation only — not production authentication/i)).toBeInTheDocument()
   })
 
-  // ── New API Request button ────────────────────────────────────────────────
+  // ── Overview request actions ──────────────────────────────────────────────
 
-  it('shows New API Request button on the inquiries tab', () => {
+  it('keeps request and hotline actions on overview only', () => {
     renderInquiries()
-    expect(
-      screen.getByRole('button', { name: /Submit a new rescue request via API/i }),
-    ).toBeInTheDocument()
+    expect(screen.queryByText(/Controlled Scenario: High tide & heavy rainfall/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Emergency Hotlines/i })).not.toBeInTheDocument()
+
+    renderOverview()
+    expect(screen.getByText(/Controlled Scenario: High tide & heavy rainfall/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
   })
 
-  it('opens the API request form modal when "New API Request" is clicked', () => {
-    renderInquiries()
-    fireEvent.click(screen.getByRole('button', { name: /Submit a new rescue request via API/i }))
+  it('shows flood triage on SOS and carries the chosen level into the API form', () => {
+    renderOverview()
+    fireEvent.click(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i }))
+    expect(screen.getByText(/Step A/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Ankle-deep/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Knee-deep/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Waist-deep/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Chest-deep/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Overhead \/ Fast Current/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Chest-deep/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to request details/i }))
+    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Add a location and number of people/i)).toBeInTheDocument()
     expect(
       screen.getByText(/Academic prototype — do not use for a real emergency/i),
     ).toBeInTheDocument()
@@ -618,8 +704,8 @@ describe('CitizenView — API-backed request flow', () => {
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
     mockGet.mockResolvedValue(FIXTURE_REQUEST)
 
-    renderInquiries()
-    fireEvent.click(screen.getByRole('button', { name: /Submit a new rescue request via API/i }))
+    renderOverview()
+    openSosRequestForm()
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
@@ -633,8 +719,8 @@ describe('CitizenView — API-backed request flow', () => {
       const successBanner = screen.getByTestId('submission-success')
       expect(successBanner).toHaveTextContent(/RQ-DEMO-001/i)
       expect(successBanner).toHaveTextContent(/pending/i)
-      // Must NOT promise response time
-      expect(screen.queryByText(/guaranteed/i)).not.toBeInTheDocument()
+      // The banner SHOULD say "No response time is guaranteed" (correct disclaimer)
+      expect(successBanner).toHaveTextContent(/No response time is guaranteed/i)
     })
   })
 
@@ -644,8 +730,8 @@ describe('CitizenView — API-backed request flow', () => {
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
     mockGet.mockResolvedValue(FIXTURE_REQUEST)
 
-    renderInquiries()
-    fireEvent.click(screen.getByRole('button', { name: /Submit a new rescue request via API/i }))
+    renderOverview()
+    openSosRequestForm()
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()

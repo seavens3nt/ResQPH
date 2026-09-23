@@ -20,9 +20,9 @@
 
 import { type FormEvent, useId, useState } from 'react'
 import { isAxiosError } from 'axios'
+import { useAuth } from '../../../../features/auth/AuthContext'
 import { useCreateRescueRequest } from '../../../../features/requests/hooks'
 import {
-  FLOOD_LEVEL_OPTIONS,
   VULNERABILITY_OPTIONS,
   type FloodLevel,
   type RescueRequestRecord,
@@ -33,6 +33,7 @@ import {
   UBELT_BOUNDS,
 } from '../../../../features/requests/validation'
 import { PrototypeNotice } from './PrototypeNotice'
+import { RequestLocationMap } from './RequestLocationMap'
 
 // ---------------------------------------------------------------------------
 // Default sanitised demo coordinates (inside U-Belt boundary)
@@ -40,38 +41,34 @@ import { PrototypeNotice } from './PrototypeNotice'
 const DEMO_LNG = 120.9946
 const DEMO_LAT = 14.6042
 
-// Human-readable flood level labels (aligned to API contract values)
-const FLOOD_LEVEL_LABELS: Record<FloodLevel, string> = {
-  none: 'None — dry or draining',
-  low: 'Low — ankle-deep (0.1–0.2 m)',
-  moderate: 'Moderate — waist-deep (0.5–0.9 m)',
-  high: 'High — chest-deep (1.0–1.4 m)',
-  unknown: 'Unknown — unsure of depth',
-}
-
 interface FieldError {
   [field: string]: string
 }
 
 interface RequestFormProps {
+  initialFloodLevel?: FloodLevel
   /** Called when the API confirms the request was created */
   onSuccess: (record: RescueRequestRecord) => void
   /** Called when the user wants to dismiss / cancel the form */
   onCancel: () => void
 }
 
-export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
+export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown' }: RequestFormProps) {
   const uid = useId()
+  const { user } = useAuth()
+  const savedLocation = user?.homeLocation
 
   // Form field state (kept across validation failures — "preserve safe input")
-  const [address, setAddress] = useState('Sanitized demonstration address, Sampaloc, Manila')
-  const [lngStr, setLngStr] = useState(String(DEMO_LNG))
-  const [latStr, setLatStr] = useState(String(DEMO_LAT))
+  const [address, setAddress] = useState(savedLocation?.address ?? 'Sanitized demonstration address, Sampaloc, Manila')
+  const [lngStr, setLngStr] = useState(String(savedLocation?.coordinates[0] ?? DEMO_LNG))
+  const [latStr, setLatStr] = useState(String(savedLocation?.coordinates[1] ?? DEMO_LAT))
+  const [locationSource, setLocationSource] = useState<'profile' | 'gps' | 'demo' | 'map'>(savedLocation ? 'profile' : 'demo')
+  const [isLocating, setIsLocating] = useState(false)
+  const [gpsError, setGpsError] = useState('')
   const [headcountStr, setHeadcountStr] = useState('1')
   const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityTag[]>([])
   const [medicalNeeds, setMedicalNeeds] = useState(false)
   const [medicalDetails, setMedicalDetails] = useState('')
-  const [floodLevel, setFloodLevel] = useState<FloodLevel>('unknown')
   const [situationSummary, setSituationSummary] = useState('')
 
   // UI state
@@ -80,6 +77,53 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
   const [submitErrorCode, setSubmitErrorCode] = useState<string | null>(null)
 
   const { mutate, isPending } = useCreateRescueRequest()
+
+  function chooseLocationSource(source: 'profile' | 'gps' | 'demo') {
+    setGpsError('')
+    if (source === 'profile' && savedLocation) {
+      setAddress(savedLocation.address)
+      setLngStr(String(savedLocation.coordinates[0]))
+      setLatStr(String(savedLocation.coordinates[1]))
+      setLocationSource('profile')
+      return
+    }
+    if (source === 'demo') {
+      setAddress('Sanitized demonstration address, Sampaloc, Manila')
+      setLngStr(String(DEMO_LNG))
+      setLatStr(String(DEMO_LAT))
+      setLocationSource('demo')
+      return
+    }
+
+    if (!navigator.geolocation) {
+      setGpsError('GPS is not available in this browser. Choose your saved or demonstration location instead.')
+      return
+    }
+
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setAddress('')
+        setLngStr(String(coords.longitude))
+        setLatStr(String(coords.latitude))
+        setLocationSource('gps')
+        setIsLocating(false)
+      },
+      () => {
+        setGpsError('Could not get your GPS location. Allow location access or choose another location source.')
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    )
+  }
+
+  function chooseMapCoordinates(coordinates: [number, number]) {
+    setLngStr(String(coordinates[0]))
+    setLatStr(String(coordinates[1]))
+    setAddress('')
+    setLocationSource('map')
+    setGpsError('')
+  }
 
   // ---------------------------------------------------------------------------
   // Vulnerability toggle
@@ -115,7 +159,8 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
       vulnerabilities,
       medical_needs: medicalNeeds,
       medical_details: medicalDetails || undefined,
-      reported_flood_level: floodLevel,
+      // Flood depth is collected once in SOS triage and carried into the API request.
+      reported_flood_level: initialFloodLevel,
       situation_summary: situationSummary || undefined,
     }
 
@@ -197,6 +242,11 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
     >
       <PrototypeNotice variant="form" />
 
+      <div style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+        <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Start with the essentials</strong>
+        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Add a location and number of people. Extra details are optional.</span>
+      </div>
+
       {/* ── Global error banner ─────────────────────────────────────── */}
       {submitError && (
         <div
@@ -230,6 +280,19 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
 
       {/* ── Location — address ──────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <RequestLocationMap
+          coordinates={[
+            Number.isFinite(parseFloat(lngStr)) ? parseFloat(lngStr) : DEMO_LNG,
+            Number.isFinite(parseFloat(latStr)) ? parseFloat(latStr) : DEMO_LAT,
+          ]}
+          source={locationSource}
+          hasSavedLocation={!!savedLocation}
+          isLocating={isLocating}
+          disabled={isPending}
+          gpsError={gpsError}
+          onChooseSource={chooseLocationSource}
+          onChooseCoordinates={chooseMapCoordinates}
+        />
         <label
           htmlFor={`${uid}-address`}
           style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
@@ -242,7 +305,7 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
           type="text"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Street name, barangay, landmark"
+          placeholder={locationSource === 'gps' || locationSource === 'map' ? 'Enter street name, barangay, or landmark' : 'Street name, barangay, landmark'}
           aria-required="true"
           aria-describedby={fieldErrors['location.address'] ? `${uid}-address-err` : undefined}
           aria-invalid={!!fieldErrors['location.address']}
@@ -266,6 +329,13 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
       </div>
 
       {/* ── Location — coordinates ──────────────────────────────────── */}
+      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
+        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+          Adjust map coordinates
+          <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+            Coordinates come from your chosen source and can be adjusted here.
+          </span>
+        </summary>
       <fieldset
         style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
         aria-describedby={`${uid}-coords-hint`}
@@ -335,6 +405,7 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
           </span>
         )}
       </fieldset>
+      </details>
 
       {/* ── Headcount ───────────────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -376,6 +447,14 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
       </div>
 
       {/* ── Vulnerabilities ─────────────────────────────────────────── */}
+      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
+        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+          Add details for responders (optional)
+          <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+            Note who may need extra help and describe the situation.
+          </span>
+        </summary>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.9rem' }}>
       <fieldset style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem' }}>
         <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', padding: '0 4px' }}>
           Vulnerabilities (select all that apply)
@@ -458,66 +537,36 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
           </div>
         )}
       </div>
-
-      {/* ── Reported flood level ─────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <label
-          htmlFor={`${uid}-flood-level`}
-          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
-        >
-          Reported flood level
-          <span aria-hidden="true" style={{ color: '#dc2626' }}> *</span>
-        </label>
-        <select
-          id={`${uid}-flood-level`}
-          value={floodLevel}
-          onChange={(e) => setFloodLevel(e.target.value as FloodLevel)}
-          aria-required="true"
-          aria-describedby={fieldErrors['reported_flood_level'] ? `${uid}-flood-err` : undefined}
-          aria-invalid={!!fieldErrors['reported_flood_level']}
-          disabled={isPending}
-          style={{
-            padding: '0.55rem 0.75rem',
-            borderRadius: '6px',
-            border: `1px solid ${fieldErrors['reported_flood_level'] ? '#dc2626' : '#cbd5e1'}`,
-            fontSize: '0.88rem',
-            background: '#fff',
-            maxWidth: '320px',
-          }}
-        >
-          {FLOOD_LEVEL_OPTIONS.map((level) => (
-            <option key={level} value={level}>
-              {FLOOD_LEVEL_LABELS[level]}
-            </option>
-          ))}
-        </select>
-        {fieldErrors['reported_flood_level'] && (
-          <span
-            id={`${uid}-flood-err`}
-            role="alert"
-            style={{ color: '#dc2626', fontSize: '0.77rem' }}
-          >
-            {fieldErrors['reported_flood_level']}
-          </span>
-        )}
-      </div>
+        </div>
+      </details>
 
       {/* ── Situation summary ───────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
+        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+          Describe the immediate conditions (optional)
+          <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+            Water movement, blocked exits, or urgent needs.
+          </span>
+        </summary>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '0.9rem' }}>
         <label
           htmlFor={`${uid}-situation`}
           style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
         >
-          Situation summary
+          What is happening right now?
           <span style={{ fontWeight: 400, color: '#64748b' }}> (optional)</span>
         </label>
+        <span id={`${uid}-situation-hint`} style={{ fontSize: '0.77rem', color: '#64748b' }}>
+          Share what happened, whether the water is rising, any blocked exits, or urgent assistance needed. Do not include personal details.
+        </span>
         <textarea
           id={`${uid}-situation`}
           value={situationSummary}
           onChange={(e) => setSituationSummary(e.target.value)}
           rows={3}
           maxLength={1000}
-          placeholder="Brief description of the situation — sanitized, no personal details."
+          placeholder="Example: Water is rising inside the ground floor; the front exit is blocked."
+          aria-describedby={`${uid}-situation-hint`}
           disabled={isPending}
           style={{
             padding: '0.55rem 0.75rem',
@@ -528,6 +577,7 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
           }}
         />
       </div>
+      </details>
 
       {/* ── Actions ─────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '0.25rem' }}>
@@ -551,23 +601,25 @@ export function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
         </button>
         <button
           type="submit"
-          disabled={isPending}
-          aria-busy={isPending}
+          disabled={isPending || isLocating}
+          aria-busy={isPending || isLocating}
           style={{
             padding: '0.55rem 1.25rem',
             borderRadius: '7px',
             border: 'none',
-            background: isPending ? '#f87171' : '#dc2626',
+            background: isPending || isLocating ? '#f87171' : '#dc2626',
             color: '#fff',
             fontWeight: 700,
             fontSize: '0.88rem',
-            cursor: isPending ? 'not-allowed' : 'pointer',
+            cursor: isPending || isLocating ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
           }}
         >
-          {isPending ? (
+          {isLocating ? (
+            'Getting location…'
+          ) : isPending ? (
             <>
               <span aria-hidden="true" style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
               Submitting…
