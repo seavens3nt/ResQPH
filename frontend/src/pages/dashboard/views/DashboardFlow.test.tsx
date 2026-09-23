@@ -74,7 +74,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // 4 Services
     expect(screen.getByText(/Request Assistance/i)).toBeInTheDocument()
-    expect(screen.getByText(/4 Services Available/i)).toBeInTheDocument()
+    expect(screen.getByText(/4 Service Types/i)).toBeInTheDocument()
     expect(screen.getByText('Flood Rescue')).toBeInTheDocument()
     expect(screen.getByText('Evacuation')).toBeInTheDocument()
     expect(screen.getByText('Medical Aid')).toBeInTheDocument()
@@ -136,10 +136,9 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
 
 
-  it('opens severity-adaptive form and shows Step A triage with all 5 flood levels', () => {
-    renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
+  it('opens SOS flood triage and shows all 5 flood levels', () => {
+    renderWithProviders(<CitizenView navSection="overview" />, 'citizen')
 
-    // Tap request emergency rescue
     fireEvent.click(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i }))
 
     // Expect Step A Triage title
@@ -153,22 +152,17 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText('Overhead / Fast Current (>1.5m)')).toBeInTheDocument()
   })
 
-  it('activates Branch 3 fast-track mode for High/Severe severity with auto-pulled profile', () => {
-    renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
+  it('carries high SOS flood severity into the API request form', () => {
+    renderWithProviders(<CitizenView navSection="overview" />, 'citizen')
 
     fireEvent.click(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i }))
 
     // Select High severity
     fireEvent.click(screen.getByText('Chest-deep (1.0–1.4m)'))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to Step B/i }))
-
-    // Verify Fast-Track emergency banner appears
-    expect(screen.getByText(/FAST-TRACK EMERGENCY RESCUE ACTIVATED/i)).toBeInTheDocument()
-    expect(screen.getByText(/Auto-Attached Citizen Profile Data/i)).toBeInTheDocument()
-    expect(screen.getByText(/4 persons \(1 Infant, 1 Senior Citizen\)/i)).toBeInTheDocument()
-
-    // Verify single-step location input and fast submit
-    expect(screen.getByRole('button', { name: /SUBMIT EMERGENCY RESCUE REQUEST/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Continue to request details/i }))
+    expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
+    // Flood level pre-filled from triage — not shown again as an editable field
+    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
   })
 
   it('renders 5-stage prototype request tracking sequence when request is active', () => {

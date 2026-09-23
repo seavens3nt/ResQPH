@@ -3,7 +3,6 @@ import { Button } from '../../../components/ui/Button'
 import { Icon } from '../../../components/art/Icon'
 import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
-import { SAVED_CITIZEN_PROFILE } from '../../../features/missions/mockData'
 import type { SeverityLevel } from '../../../features/missions/types'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import {
@@ -11,9 +10,22 @@ import {
   EmergencyPreparednessGuide,
   Section,
   LocalizedForecastWidget,
-  SEVERITY_CONFIG,
 } from './shared'
 import type { NavSection } from './navTypes'
+// API-backed citizen request flow (Issue #17)
+import { RequestForm } from './citizen/RequestForm'
+import { RequestStatusView } from './citizen/RequestStatusView'
+import { PrototypeNotice } from './citizen/PrototypeNotice'
+import type { RescueRequestRecord } from '../../../features/requests/types'
+import type { FloodLevel } from '../../../features/requests/types'
+
+const SOS_TRIAGE_TO_FLOOD_LEVEL: Record<SeverityLevel, FloodLevel> = {
+  low: 'low',
+  'low-moderate': 'low',
+  moderate: 'moderate',
+  high: 'high',
+  severe: 'high',
+}
 
 export function CitizenView({
   navSection = 'overview',
@@ -25,72 +37,59 @@ export function CitizenView({
   const {
     activeCitizenRequest,
     missions,
-    createRescueRequest,
+    teams,
     cancelRescueRequest,
   } = useMissions()
 
-  const [showRequestForm, setShowRequestForm] = useState(false)
+  const [showSosTriage, setShowSosTriage] = useState(false)
   const [showHotlinesModal, setShowHotlinesModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [selectedService, setSelectedService] = useState<string | null>(null)
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [stepA_severity, setStepA_severity] = useState<SeverityLevel>('moderate')
-  const [locationAddress, setLocationAddress] = useState('Sanitized address, Jhocson St., U-Belt pilot')
-  const [locationError, setLocationError] = useState('')
+
+  // API-backed request state (Issue #17)
+  // Tracks the confirmed server record after a successful POST /rescue-requests.
+  // When set, the inquiries tab shows the authoritative RequestStatusView instead
+  // of the mock tracking panel.
+  const [apiRequest, setApiRequest] = useState<RescueRequestRecord | null>(null)
+  const [showApiRequestForm, setShowApiRequestForm] = useState(false)
+  const [apiRequestSuccess, setApiRequestSuccess] = useState(false)
+  const [sosReportedFloodLevel, setSosReportedFloodLevel] = useState<FloodLevel>('unknown')
 
   const activeReq = activeCitizenRequest
+  const activeCitizenTeam = activeReq?.assignedTeamId
+    ? teams.find((team) => team.id === activeReq.assignedTeamId)
+    : undefined
+  // assignedLeaderPhone / assignedLeaderName are not in the committed RescueRequest type;
+  // fall back to team contactPhone (prototype placeholder: 09XX XXX XXXX).
+  const assignedLeaderPhone = activeCitizenTeam?.contactPhone ?? undefined
+  const assignedLeaderTel = assignedLeaderPhone && /^[+\d\s()-]+$/.test(assignedLeaderPhone) && assignedLeaderPhone.replace(/\D/g, '').length >= 10
+    ? `tel:${assignedLeaderPhone.replace(/[^+\d]/g, '')}`
+    : undefined
   const activeMission = missions.find((m) => m.requestId === activeReq?.id) || missions[0]
   const currentRouteExplanation =
     activeMission?.routeDelayExplanation ||
     'The controlled scenario marks the direct shortcut impassable. The team is using the recommended corridor.'
   const currentEtaMinutes = activeMission?.etaMinutes || 6
 
-  function handleStartRequest(serviceName?: string) {
-    if (serviceName) setSelectedService(serviceName)
-    setCurrentStepIndex(0)
-    setShowRequestForm(true)
-    setLocationError('')
+  function handleSosDispatch() {
+    setShowSosTriage(true)
   }
 
-  function handleSubmitRequest() {
-    if (!locationAddress.trim()) {
-      setLocationError('Enter location before submitting.')
-      return
-    }
-
-    const isFastTrack = stepA_severity === 'high' || stepA_severity === 'severe'
-
-    createRescueRequest({
-      citizenName: SAVED_CITIZEN_PROFILE.name,
-      citizenPhone: SAVED_CITIZEN_PROFILE.phone,
-      severity: stepA_severity,
-      branchTaken: isFastTrack ? 3 : 1,
-      location: {
-        address: locationAddress.trim(),
-        coordinates: [121.0912, 14.6532],
-      },
-      headcount: SAVED_CITIZEN_PROFILE.headcount,
-      vulnerabilities: SAVED_CITIZEN_PROFILE.vulnerabilities,
-      medicalNeeds: selectedService === 'Medical Aid' || isFastTrack,
-      floodDepth: SEVERITY_CONFIG[stepA_severity].depth,
-      isAutoPulledProfile: isFastTrack,
-    })
-
-    setShowRequestForm(false)
+  function continueFromFloodTriage() {
+    setSosReportedFloodLevel(SOS_TRIAGE_TO_FLOOD_LEVEL[stepA_severity])
+    setApiRequestSuccess(false)
+    setShowSosTriage(false)
+    setShowApiRequestForm(true)
   }
-
-  const isBranch3 = stepA_severity === 'high' || stepA_severity === 'severe'
 
   return (
     <div className="resq-citizen-workspace">
       <div className="citizen-flow-stack" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
-        {/* Weather Forecast */}
-        <LocalizedForecastWidget />
-
         {/* ── OVERVIEW TAB ─────────────────────────────────────────────── */}
         {navSection === 'overview' && (
           <div className="citizen-overview-layout" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+            <LocalizedForecastWidget />
             {/* Location & GPS Status Bar */}
             <div className="modern-clean-card" style={{ padding: '0.9rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -123,7 +122,7 @@ export function CitizenView({
               <button
                 type="button"
                 className="sos-button-neat"
-                onClick={() => handleStartRequest('Emergency SOS')}
+                onClick={handleSosDispatch}
                 aria-label="REQUEST EMERGENCY RESCUE"
               >
                 <span style={{ fontSize: '1.85rem', fontWeight: 900, letterSpacing: '0.04em', lineHeight: 1 }}>SOS</span>
@@ -150,7 +149,7 @@ export function CitizenView({
                 <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Request Assistance
                 </h3>
-                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>4 Services Available</span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>4 Service Types</span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
@@ -160,19 +159,17 @@ export function CitizenView({
                   { name: 'Medical Aid', tag: 'First Response', icon: 'heart' },
                   { name: 'Relief Goods', tag: 'Supplies', icon: 'package' },
                 ].map((service) => (
-                  <button
+                  <div
                     key={service.name}
-                    type="button"
                     className="neu-red-card"
-                    style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '6px', cursor: 'pointer', textAlign: 'left', background: '#ffffff' }}
-                    onClick={() => handleStartRequest(service.name)}
+                    style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left', background: '#ffffff', cursor: 'default' }}
                   >
                     <div style={{ color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
                       <Icon name={service.icon as any} size={20} />
                     </div>
                     <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{service.name}</strong>
                     <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b' }}>{service.tag}</span>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -262,21 +259,50 @@ export function CitizenView({
         {/* ── INQUIRIES TAB (RESCUE TRACKING) ─────────────────────────── */}
         {navSection === 'inquiries' && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Quick Action Bar in Inquiries */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <Button
-                variant="primary"
-                onClick={() => handleStartRequest()}
-              >
-                <Icon name="alert" size={18} />
-                <span>REQUEST EMERGENCY RESCUE</span>
-              </Button>
-              <Button variant="outline" onClick={() => setShowHotlinesModal(true)}>
-                <Icon name="phone" size={16} />
-                <span>Emergency Hotlines (911)</span>
-              </Button>
-            </div>
+            {/* ── Prototype role simulation notice ────────────────── */}
+            <PrototypeNotice variant="role" />
 
+            {/* ── API-backed request tracking (authoritative) ──────── */}
+            {apiRequest && (
+              <Section
+                title="Active Rescue Tracking"
+                subtitle="Authoritative status from the API. Controlled scenario data — not live dispatch."
+              >
+                {/* Success confirmation after first submission */}
+                {apiRequestSuccess && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    data-testid="submission-success"
+                    style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.7rem 0.9rem',
+                      background: '#f0fdf4',
+                      border: '1px solid #86efac',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      color: '#14532d',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <span aria-hidden="true">✓</span>
+                    <div>
+                      <strong>Request submitted.</strong> Your request ID is{' '}
+                      <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>{apiRequest.id}</code>.
+                      Status: <strong>pending</strong>. No response time is guaranteed.
+                    </div>
+                  </div>
+                )}
+                <RequestStatusView
+                  requestId={apiRequest.id}
+                  onCancelled={() => setApiRequest(null)}
+                />
+              </Section>
+            )}
+
+            {/* ── Mock tracking panel (preserved for existing tests) ── */}
             {activeReq ? (
               <Section
                 title={`Active Rescue Tracking: ${activeReq.id}`}
@@ -360,6 +386,37 @@ export function CitizenView({
                     </div>
                   </div>
 
+                  {activeCitizenTeam && activeReq.status !== 'pending' && (
+                    <div
+                      className="modern-clean-card"
+                      style={{ padding: '0.9rem 1rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}
+                    >
+                      <div>
+                        <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.86rem' }}>
+                          Assigned team: {activeCitizenTeam.name} ({activeCitizenTeam.unitType})
+                        </strong>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#334155', marginTop: '0.25rem' }}>
+                          Team leader: {activeReq.assignedTeamName || activeCitizenTeam.leadRescuer || 'Not assigned'}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                          Simulated team contact for this prototype. X characters mask the number.
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
+                        Contact: {assignedLeaderPhone || 'No leader contact assigned'}
+                      </span>
+                      {assignedLeaderTel ? (
+                        <a href={assignedLeaderTel} aria-label={`Call team leader ${activeReq.assignedTeamName ?? activeCitizenTeam.leadRescuer}`}>
+                          Call team leader
+                        </a>
+                      ) : (
+                        <span aria-disabled="true" title="This sanitized prototype contact uses X placeholders, so it cannot place a call.">
+                          Calling unavailable in simulation
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* En route advisory card */}
                   <div className="enroute-reroute-explanation-card">
                     <div className="reroute-header">
@@ -422,15 +479,34 @@ export function CitizenView({
 
       </div>
 
+      {/* API REQUEST FORM MODAL (Issue #17 — connects to POST /rescue-requests) */}
+      <Modal
+        isOpen={showApiRequestForm}
+        onClose={() => setShowApiRequestForm(false)}
+        title="Submit rescue request"
+        subtitle="Connects to the API. Controlled scenario data — not a real emergency dispatch."
+      >
+        <RequestForm
+          key={sosReportedFloodLevel}
+          initialFloodLevel={sosReportedFloodLevel}
+          onSuccess={(record) => {
+            setApiRequest(record)
+            setApiRequestSuccess(true)
+            setShowApiRequestForm(false)
+            onNavigateTab?.('inquiries')
+          }}
+          onCancel={() => setShowApiRequestForm(false)}
+        />
+      </Modal>
+
       {/* MULTI-STAGE TRIAGE MODAL */}
       <Modal
-        isOpen={showRequestForm}
-        onClose={() => setShowRequestForm(false)}
-        title={selectedService ? `Request ${selectedService}` : 'Emergency Rescue Request'}
-        subtitle="Priority triage for flood-affected households."
+        isOpen={showSosTriage}
+        onClose={() => setShowSosTriage(false)}
+        title="SOS Dispatch — Flood Triage"
+        subtitle="Choose the reported flood severity before adding request details."
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {currentStepIndex === 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <label style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
                 Step A — How severe is the flooding at your location?
@@ -472,60 +548,10 @@ export function CitizenView({
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '0.5rem' }}>
-                <Button variant="ghost" onClick={() => setShowRequestForm(false)}>Cancel</Button>
-                <Button variant="primary" onClick={() => setCurrentStepIndex(1)}>Continue to Step B</Button>
+                <Button variant="ghost" onClick={() => setShowSosTriage(false)}>Cancel</Button>
+                <Button variant="primary" onClick={continueFromFloodTriage}>Continue to request details</Button>
               </div>
             </div>
-          )}
-
-          {currentStepIndex === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {isBranch3 ? (
-                <div style={{ padding: '0.85rem 1rem', background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e40af', fontWeight: 700, fontSize: '0.88rem' }}>
-                    <Icon name="shield" size={18} />
-                    <span>FAST-TRACK EMERGENCY RESCUE ACTIVATED</span>
-                  </div>
-                  <p style={{ fontSize: '0.78rem', color: '#3b82f6', margin: '4px 0 0 0' }}>
-                    Because severity is {stepA_severity.toUpperCase()}, verified profile data has been attached.
-                  </p>
-                </div>
-              ) : null}
-
-              {isBranch3 && (
-                <div style={{ padding: '0.85rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.82rem' }}>
-                  <span style={{ fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '4px' }}>
-                    Auto-Attached Citizen Profile Data
-                  </span>
-                  <span style={{ color: '#475569' }}>
-                    4 persons (1 Infant, 1 Senior Citizen)
-                  </span>
-                </div>
-              )}
-
-              {locationError && <p style={{ color: '#dc2626', fontSize: '0.82rem', margin: 0 }}>{locationError}</p>}
-
-              <label className="profile-form__field">
-                <span>Step B — Confirm Your Location</span>
-                <input
-                  type="text"
-                  value={locationAddress}
-                  onChange={(e) => {
-                    setLocationAddress(e.target.value)
-                    setLocationError('')
-                  }}
-                  placeholder="Street name, barangay, landmark"
-                />
-              </label>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '0.5rem' }}>
-                <Button variant="ghost" onClick={() => setCurrentStepIndex(0)}>← Back to Triage</Button>
-                <Button variant="primary" onClick={handleSubmitRequest}>
-                  SUBMIT EMERGENCY RESCUE REQUEST
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </Modal>
 
