@@ -75,7 +75,7 @@ export const RequestLocationSchema = z.object({
 export const CreateRequestSchema = z.object({
   location: RequestLocationSchema,
   headcount: z
-    .number({ invalid_type_error: 'Enter the number of people needing help.' })
+    .number({ error: 'Enter the number of people needing help.' })
     .int('Headcount must be a whole number.')
     .min(1, 'At least 1 person must need assistance.')
     .max(100, 'Headcount cannot exceed 100 for this prototype.'),
@@ -86,9 +86,7 @@ export const CreateRequestSchema = z.object({
     .trim()
     .max(500, 'Medical details cannot exceed 500 characters.')
     .optional(),
-  reported_flood_level: z.enum(FLOOD_LEVEL_OPTIONS, {
-    errorMap: () => ({ message: 'Select a flood level.' }),
-  }),
+  reported_flood_level: z.enum(FLOOD_LEVEL_OPTIONS, 'Select a flood level.'),
   situation_summary: z
     .string()
     .trim()
