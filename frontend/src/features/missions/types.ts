@@ -4,7 +4,7 @@ export type FloodDepth = 'ankle' | 'knee' | 'waist' | 'chest' | 'overhead'
 
 export type RequestStatus = 'pending' | 'assigned' | 'en-route' | 'arrived' | 'completed' | 'cancelled'
 
-export type MissionStatus = 'assigned' | 'en-route' | 'arrived' | 'completed'
+export type MissionStatus = 'assigned' | 'en-route' | 'arrived' | 'completed' | 'cancelled'
 
 export interface Vulnerabilities {
   infant: boolean
@@ -145,3 +145,11 @@ export interface WaterLevelStation {
   status: 'Normal' | 'Alert' | 'Alarm' | 'Critical'
   trend: 'Rising' | 'Steady' | 'Falling'
 }
+
+// ---------------------------------------------------------------------------
+// API snake_case type aliases (real backend responses, per API_CONTRACT.md)
+// Used by api/assignments.ts and api/missions.ts; kept here for shared reference.
+// ---------------------------------------------------------------------------
+
+export type ApiRequestStatus = RequestStatus
+export type ApiMissionStatus = MissionStatus

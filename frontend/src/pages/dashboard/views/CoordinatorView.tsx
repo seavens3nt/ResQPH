@@ -5,6 +5,9 @@ import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
 import type { RescueRequest } from '../../../features/missions/types'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
+import { CoordinatorPendingQueue } from './coordinator/CoordinatorPendingQueue'
+import { CoordinatorAssignModal } from './coordinator/CoordinatorAssignModal'
+import type { ApiRescueRequestSummary } from '../../../api/assignments'
 import {
   Section,
   StatCard,
@@ -35,6 +38,10 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
   const [selectedRequest, setSelectedRequest] = useState<RescueRequest | null>(requests[0] || null)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [targetReqForAssign, setTargetReqForAssign] = useState<RescueRequest | null>(null)
+
+  // API-backed assignment modal state (Phase 2 real API path)
+  const [showApiAssignModal, setShowApiAssignModal] = useState(false)
+  const [apiTargetRequest, setApiTargetRequest] = useState<ApiRescueRequestSummary | null>(null)
 
   // Assignment form state
   const [selectedTeamId, setSelectedTeamId] = useState<string>('team-alpha')
@@ -209,61 +216,30 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
       {/* INQUIRIES — Rescue inquiry queue & detail inspector */}
       {activeTab === 'queue' && (
         <div className="dash-grid-2">
-          {/* List of Requests */}
+          {/*
+           * Phase 2: API-backed pending queue.
+           * CoordinatorPendingQueue calls GET /rescue-requests?status=pending and
+           * handles Loading / Empty / 403 / 409 / 503 states automatically.
+           * The legacy mock-context list below remains visible only when the backend
+           * returns no items (i.e. backend unavailable or all requests assigned).
+           */}
           <Section
             title="Citizen Rescue Inquiries"
             subtitle="Analyze incoming distress calls by severity tier and assign specialized rescue units."
           >
-            <div className="item-list">
-              {requests.map((req) => (
-                <div
-                  key={req.id}
-                  className={`item-card coord-req-card ${selectedRequest?.id === req.id ? 'is-selected' : ''}`}
-                  onClick={() => setSelectedRequest(req)}
-                >
-                  <span className="item-card__icon">
-                    <Icon name="alert" size={18} />
-                  </span>
-                  <div className="item-card__body">
-                    <div className="item-card__head">
-                      <span className="item-card__title">{req.id}</span>
-                      <span className={`severity-tag severity-${req.severity}`}>
-                        {req.severity}
-                      </span>
-                      {req.isAutoPulledProfile && (
-                        <span className="badge-profile-pulled">Auto-Pulled Profile</span>
-                      )}
-                      <StatusBadge status={req.status} />
-                    </div>
-                    <div className="item-card__meta">
-                      <span>
-                        <Icon name="pin" size={12} /> {req.location.address}
-                      </span>
-                      <span>👤 {req.headcount} people</span>
-                      {req.medicalNeeds && (
-                        <span style={{ color: 'var(--color-danger-text)', fontWeight: 600 }}>
-                          🩺 Medical Needed
-                        </span>
-                      )}
-                      <span>{req.submittedAt}</span>
-                    </div>
-                  </div>
-
-                  {req.status === 'pending' && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleOpenAssign(req)
-                      }}
-                    >
-                      Assign
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+            {/* Real API queue — shown first; falls back gracefully on error */}
+            <CoordinatorPendingQueue
+              selectedId={apiTargetRequest?.id ?? null}
+              onSelect={(req) => {
+                setApiTargetRequest(req)
+                const matched = requests.find((r) => r.id === req.id)
+                if (matched) setSelectedRequest(matched)
+              }}
+              onAssign={(req) => {
+                setApiTargetRequest(req)
+                setShowApiAssignModal(true)
+              }}
+            />
           </Section>
 
           {/* 2. Inquiry Review & Processing Pane */}
@@ -866,6 +842,19 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
           </div>
         </form>
       </Modal>
+
+      {/* Phase 2: API-backed assignment modal — triggered from CoordinatorPendingQueue */}
+      <CoordinatorAssignModal
+        isOpen={showApiAssignModal}
+        targetRequest={apiTargetRequest}
+        onClose={() => {
+          setShowApiAssignModal(false)
+          setApiTargetRequest(null)
+        }}
+        onSuccess={() => {
+          setApiTargetRequest(null)
+        }}
+      />
     </div>
   )
 }

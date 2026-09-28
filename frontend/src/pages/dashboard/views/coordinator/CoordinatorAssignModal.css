@@ -1,0 +1,129 @@
+/* ==========================================================================
+   CoordinatorAssignModal — Modern, Clean Dispatch Modal
+   ========================================================================== */
+
+.assign-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+/* Prototype Header Notice */
+.assign-modal-body .proto-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.assign-modal-body .proto-notice code {
+  font-family: var(--font-mono, monospace);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+/* Fast-Track Emergency Banner */
+.assign-modal-body .fast-track-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.05);
+}
+
+.assign-modal-body .fast-track-banner strong {
+  color: #991b1b;
+  font-weight: 700;
+}
+
+/* Success Confirmation Banner */
+.assign-modal-body .alert-banner-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  animation: modal-fade-in 0.25s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Fields */
+.assign-modal-body .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assign-modal-body .field__label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+.assign-modal-body .form-select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.assign-modal-body .form-select:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.assign-modal-body .field__error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.assign-modal-body .modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem !important;
+}
