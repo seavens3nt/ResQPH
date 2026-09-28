@@ -53,18 +53,24 @@ export function RescuerMissionCard({
       </div>
 
       {/* Request summary */}
-      <div className="rescuer-mission-card__meta">
-        <span>
-          <Icon name="pin" size={12} /> {req.location.address}
-        </span>
-        <span>👤 {req.headcount} persons</span>
-        {req.medical_needs && (
-          <span style={{ color: 'var(--color-danger-text)', fontWeight: 600 }}>
-            🩺 Medical needed
+      {req ? (
+        <div className="rescuer-mission-card__meta">
+          <span>
+            <Icon name="pin" size={12} /> {req.location.address}
           </span>
-        )}
-        <span>Flood level: {req.reported_flood_level}</span>
-      </div>
+          <span>👤 {req.headcount} persons</span>
+          {req.medical_needs && (
+            <span style={{ color: 'var(--color-danger-text)', fontWeight: 600 }}>
+              🩺 Medical needed
+            </span>
+          )}
+          <span>Flood level: {req.reported_flood_level}</span>
+        </div>
+      ) : (
+        <p className="proto-notice" role="status">
+          Request summary is unavailable. Refresh before beginning the mission.
+        </p>
+      )}
 
       {/* Non-production prototype notice */}
       <p className="proto-notice" role="note" style={{ marginTop: 8 }}>

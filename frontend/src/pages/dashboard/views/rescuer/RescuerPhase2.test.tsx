@@ -124,10 +124,8 @@ describe('Rescuer Phase 2 UI States', () => {
       team_id: 'team-alpha',
       status: 'assigned',
       version: 1,
+      assigned_at: '2026-09-23T11:05:00Z',
       request_summary: {
-        id: 'REQ-303',
-        status: 'assigned',
-        version: 1,
         location: {
           address: 'Legarda St, Manila',
           point: { type: 'Point', coordinates: [120.99, 14.6] },
@@ -137,7 +135,6 @@ describe('Rescuer Phase 2 UI States', () => {
         medical_needs: false,
         reported_flood_level: 'knee',
         situation_summary: 'Water on first floor',
-        submitted_at: '2026-09-23T11:00:00Z',
       },
       status_history: [
         {
@@ -151,6 +148,8 @@ describe('Rescuer Phase 2 UI States', () => {
           note: 'Initial dispatch',
         },
       ],
+      data_source: 'synthetic',
+      sync_status: 'synced',
       created_at: '2026-09-23T11:05:00Z',
       updated_at: '2026-09-23T11:05:00Z',
     }

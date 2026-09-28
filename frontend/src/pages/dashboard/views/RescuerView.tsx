@@ -4,6 +4,7 @@ import { Button } from '../../../components/ui/Button'
 import { Icon } from '../../../components/art/Icon'
 import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
+import { useAuth } from '../../../features/auth/AuthContext'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import type { RescueRequest } from '../../../features/missions/types'
 import { ApiErrorBanner } from '../../../components/ui/ApiErrorBanner'
@@ -28,6 +29,7 @@ import type { NavSection } from './navTypes'
 
 export function RescuerView(_props: { navSection?: NavSection }) {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const {
     activeRescuerMission,
     requests,
@@ -45,7 +47,7 @@ export function RescuerView(_props: { navSection?: NavSection }) {
     dataUpdatedAt,
     refetch: refetchMissions,
   } = useQuery({
-    queryKey: ['my-missions'],
+    queryKey: ['my-missions', user?.email],
     queryFn: () => listMyMissions(),
     staleTime: 30_000,
     enabled: !isOffline,
@@ -53,7 +55,7 @@ export function RescuerView(_props: { navSection?: NavSection }) {
   })
 
   // Use the first API mission if available, else fall back to mock context
-  const apiMission = apiMissionsData?.items[0] ?? null
+  const apiMission = apiMissionsData?.[0] ?? null
   const mission = activeRescuerMission  // keep mock-context mission for existing JSX
   const targetRequest = mission
     ? requests.find((r: RescueRequest) => r.id === mission.requestId)
@@ -100,14 +102,14 @@ export function RescuerView(_props: { navSection?: NavSection }) {
     onSuccess: (result) => {
       setApiError(null)
       if (result) {
-        void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+        void queryClient.invalidateQueries({ queryKey: ['my-missions', user?.email] })
       }
     },
     onError: (err) => {
       if (err instanceof ApiError) {
         setApiError(err)
         // On conflict: refresh to show authoritative server state
-        if (err.isConflict) void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+        if (err.isConflict) void queryClient.invalidateQueries({ queryKey: ['my-missions', user?.email] })
       }
     },
   })
@@ -120,12 +122,12 @@ export function RescuerView(_props: { navSection?: NavSection }) {
     apiUpdateMissionStatus(entry.missionId, entry.body)
       .then(() => {
         setOfflineEntry(null)
-        void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+        void queryClient.invalidateQueries({ queryKey: ['my-missions', user?.email] })
       })
       .catch((err: unknown) => {
         const reason = err instanceof ApiError ? err.message : 'Sync failed'
         setOfflineEntry({ ...entry, syncState: 'failed', failureReason: reason })
-        void queryClient.invalidateQueries({ queryKey: ['my-missions'] })
+        void queryClient.invalidateQueries({ queryKey: ['my-missions', user?.email] })
       })
   }
 
@@ -175,6 +177,47 @@ export function RescuerView(_props: { navSection?: NavSection }) {
           error={missionsError}
           onRetry={() => void refetchMissions()}
         />
+      </div>
+    )
+  }
+
+  // A real backend mission is authoritative even when no matching mock fixture exists.
+  if ((!mission || !targetRequest) && apiMission) {
+    return (
+      <div className="rescuer-view">
+        <WeatherAlertBanner />
+        {apiError && !apiError.isForbidden && (
+          <ApiErrorBanner
+            error={apiError}
+            onRetry={advanceStatus}
+            onRefresh={() => void refetchMissions()}
+          />
+        )}
+        {apiError?.isForbidden && (
+          <RoleNotice
+            attemptedAction="advance mission status"
+            currentRole="rescuer"
+            requiredRole="assigned rescuer"
+          />
+        )}
+        <RescuerOfflineQueue
+          entry={offlineEntry}
+          isOffline={isOffline}
+          onRetrySync={handleRetrySync}
+          onDismissFailed={() => setOfflineEntry(null)}
+        />
+        <Section
+          title="Assigned Mission"
+          subtitle="Authoritative mission state from the ResQPH backend."
+        >
+          <RescuerMissionCard
+            mission={apiMission}
+            lastSyncedAt={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null}
+            isStale={isOffline}
+            isAdvancing={isAdvancing}
+            onAdvanceStatus={advanceStatus}
+          />
+        </Section>
       </div>
     )
   }

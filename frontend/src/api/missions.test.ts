@@ -5,8 +5,7 @@ import {
   updateMissionStatus,
   nextValidStatus,
   ApiError,
-  type PaginatedMissions,
-  type StatusEventResult,
+  type MissionDetail,
 } from './missions'
 
 vi.mock('./client', () => ({
@@ -36,42 +35,38 @@ describe('missions API client', () => {
 
   describe('listMyMissions', () => {
     it('returns missions list for current rescuer', async () => {
-      const mockData: PaginatedMissions = {
-        items: [
-          {
-            id: 'MSN-101',
-            request_id: 'REQ-101',
-            team_id: 'team-alpha',
-            status: 'assigned',
-            version: 1,
-            request_summary: {
-              id: 'REQ-101',
-              status: 'assigned',
-              version: 1,
-              location: {
-                address: 'España Blvd, Manila',
-                point: { type: 'Point', coordinates: [120.99, 14.6] },
-              },
-              headcount: 2,
-              vulnerabilities: [],
-              medical_needs: false,
-              reported_flood_level: 'waist',
-              situation_summary: 'Rescue needed',
-              submitted_at: '2026-09-23T11:00:00Z',
+      const mockData: MissionDetail[] = [
+        {
+          id: 'MSN-101',
+          request_id: 'REQ-101',
+          team_id: 'team-alpha',
+          status: 'assigned',
+          version: 1,
+          assigned_at: '2026-09-23T11:05:00Z',
+          request_summary: {
+            location: {
+              address: 'España Blvd, Manila',
+              point: { type: 'Point', coordinates: [120.99, 14.6] },
             },
-            status_history: [],
-            created_at: '2026-09-23T11:05:00Z',
-            updated_at: '2026-09-23T11:05:00Z',
+            headcount: 2,
+            vulnerabilities: [],
+            medical_needs: false,
+            reported_flood_level: 'waist',
+            situation_summary: 'Rescue needed',
           },
-        ],
-        next_cursor: null,
-      }
+          status_history: [],
+          data_source: 'synthetic',
+          sync_status: 'synced',
+          created_at: '2026-09-23T11:05:00Z',
+          updated_at: '2026-09-23T11:05:00Z',
+        },
+      ]
 
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockData })
 
       const res = await listMyMissions()
-      expect(res.items).toHaveLength(1)
-      expect(res.items[0].id).toBe('MSN-101')
+      expect(res).toHaveLength(1)
+      expect(res[0].id).toBe('MSN-101')
       expect(apiClient.get).toHaveBeenCalledWith('/missions', {
         params: { assigned_to: 'me', status: 'assigned,en-route,arrived' },
       })
@@ -106,51 +101,39 @@ describe('missions API client', () => {
 
   describe('updateMissionStatus', () => {
     it('returns updated mission and event on 200 OK', async () => {
-      const mockResult: StatusEventResult = {
-        mission: {
-          id: 'MSN-101',
-          request_id: 'REQ-101',
-          team_id: 'team-alpha',
-          status: 'en-route',
-          version: 2,
-          request_summary: {
-            id: 'REQ-101',
-            status: 'assigned',
-            version: 1,
-            location: {
-              address: 'España Blvd, Manila',
-              point: { type: 'Point', coordinates: [120.99, 14.6] },
-            },
-            headcount: 2,
-            vulnerabilities: [],
-            medical_needs: false,
-            reported_flood_level: 'waist',
-            situation_summary: 'Rescue needed',
-            submitted_at: '2026-09-23T11:00:00Z',
+      const mockResult: MissionDetail = {
+        id: 'MSN-101',
+        request_id: 'REQ-101',
+        team_id: 'team-alpha',
+        status: 'en-route',
+        version: 2,
+        assigned_at: '2026-09-23T11:05:00Z',
+        request_summary: {
+          location: {
+            address: 'España Blvd, Manila',
+            point: { type: 'Point', coordinates: [120.99, 14.6] },
           },
-          status_history: [
-            {
-              event_id: 'evt-1',
-              prior_status: 'assigned',
-              new_status: 'en-route',
-              actor_id: 'usr-rescuer',
-              actor_role: 'rescuer',
-              source: 'online',
-              server_recorded_at: '2026-09-23T11:10:00Z',
-            },
-          ],
-          created_at: '2026-09-23T11:05:00Z',
-          updated_at: '2026-09-23T11:10:00Z',
+          headcount: 2,
+          vulnerabilities: [],
+          medical_needs: false,
+          reported_flood_level: 'waist',
+          situation_summary: 'Rescue needed',
         },
-        event: {
-          event_id: 'evt-1',
-          prior_status: 'assigned',
-          new_status: 'en-route',
-          actor_id: 'usr-rescuer',
-          actor_role: 'rescuer',
-          source: 'online',
-          server_recorded_at: '2026-09-23T11:10:00Z',
-        },
+        status_history: [
+          {
+            event_id: 'evt-1',
+            prior_status: 'assigned',
+            new_status: 'en-route',
+            actor_id: 'usr-rescuer',
+            actor_role: 'rescuer',
+            source: 'online',
+            server_recorded_at: '2026-09-23T11:10:00Z',
+          },
+        ],
+        data_source: 'synthetic',
+        sync_status: 'synced',
+        created_at: '2026-09-23T11:05:00Z',
+        updated_at: '2026-09-23T11:10:00Z',
       }
 
       vi.mocked(apiClient.post).mockResolvedValueOnce({ data: mockResult })
@@ -163,8 +146,8 @@ describe('missions API client', () => {
         source: 'online',
       })
 
-      expect(res.mission.status).toBe('en-route')
-      expect(res.mission.version).toBe(2)
+      expect(res.status).toBe('en-route')
+      expect(res.version).toBe(2)
       expect(apiClient.post).toHaveBeenCalledWith(
         '/missions/MSN-101/status-events',
         expect.objectContaining({ event_id: 'evt-1', new_status: 'en-route' }),

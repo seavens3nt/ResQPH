@@ -14,10 +14,10 @@
 
 import { isAxiosError } from 'axios'
 import { apiClient } from './client'
-import type { ApiRescueRequestSummary, ApiLocation, GeoPoint } from './assignments'
+import type { ApiLocation, GeoPoint } from './assignments'
 
 // Re-export shared types for consumers that only import from missions.ts
-export type { ApiRescueRequestSummary, ApiLocation, GeoPoint }
+export type { ApiLocation, GeoPoint }
 
 // ---------------------------------------------------------------------------
 // Re-use ApiError from assignments (single error class for the whole app)
@@ -66,21 +66,27 @@ export interface MissionDetail {
   id: string
   request_id: string
   team_id: string
+  assigned_rescuer_id?: string | null
   status: MissionApiStatus
   version: number
-  request_summary: ApiRescueRequestSummary
+  assigned_at: string
+  request_summary?: {
+    location: ApiLocation
+    headcount: number
+    vulnerabilities: string[]
+    medical_needs: boolean
+    medical_details?: string | null
+    reported_flood_level: string
+    situation_summary: string
+    fixture_notice?: string
+  } | null
   status_history: MissionStatusHistoryItem[]
-  route_result?: {
-    available: boolean
-    explanation?: string
-  }
+  latest_route_result?: Record<string, unknown> | null
+  data_source: string
+  sync_status: string
+  completed_at?: string | null
   created_at: string
   updated_at: string
-}
-
-export interface PaginatedMissions {
-  items: MissionDetail[]
-  next_cursor: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -98,11 +104,6 @@ export interface StatusEventBody {
   client_recorded_at: string // ISO 8601 UTC
   source: 'online' | 'offline-sync'
   note?: string
-}
-
-export interface StatusEventResult {
-  mission: MissionDetail
-  event: MissionStatusHistoryItem
 }
 
 // ---------------------------------------------------------------------------
@@ -149,9 +150,9 @@ export function nextValidStatus(current: MissionApiStatus): MissionApiStatus | n
  */
 export async function listMyMissions(
   statuses: MissionApiStatus[] = ['assigned', 'en-route', 'arrived'],
-): Promise<PaginatedMissions> {
+): Promise<MissionDetail[]> {
   try {
-    const res = await apiClient.get<PaginatedMissions>('/missions', {
+    const res = await apiClient.get<MissionDetail[]>('/missions', {
       params: {
         assigned_to: 'me',
         status: statuses.join(','),
@@ -179,7 +180,7 @@ export async function getMission(missionId: string): Promise<MissionDetail> {
 /**
  * Advance the mission to the next valid status.
  *
- * Happy path:  201 Created → returns `StatusEventResult`.
+ * Happy path:  200 OK → returns the authoritative updated mission.
  * Error paths:
  *   - 403 → `ApiError.isForbidden` — not the assigned rescuer.
  *   - 409 → `ApiError.isConflict` — invalid transition, repeated event_id, or stale version.
@@ -188,9 +189,9 @@ export async function getMission(missionId: string): Promise<MissionDetail> {
 export async function updateMissionStatus(
   missionId: string,
   body: StatusEventBody,
-): Promise<StatusEventResult> {
+): Promise<MissionDetail> {
   try {
-    const res = await apiClient.post<StatusEventResult>(
+    const res = await apiClient.post<MissionDetail>(
       `/missions/${missionId}/status-events`,
       body,
     )
