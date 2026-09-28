@@ -60,7 +60,7 @@ The team-facing phase numbering starts at **Team Phase 1** after Ranee completes
 When time or capacity is limited, prioritize work in this order:
 
 1. A demonstrable rescue-request, assignment, mission-status, deterministic A*, and rule-based fallback workflow.
-2. The required Logistic Regression and Random Forest experiment with honest evaluation; integrate its output only if the evidence gate passes.
+2. The accepted XGBoost experiment with honest, reproducible evaluation; integrate its output only if the evidence gate passes.
 3. One cached assigned mission and one queued next-valid status update.
 4. Optional historical-data enrichment, elevation context, visual polish, and extra analytics.
 

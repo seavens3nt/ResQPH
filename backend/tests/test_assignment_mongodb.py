@@ -154,6 +154,10 @@ def test_full_fastapi_request_to_assignment_slice_against_mongodb() -> None:
         "X-Demo-User-Id": "coordinator-api-integration",
         "X-Demo-Role": "coordinator",
     }
+    rescuer_headers = {
+        "X-Demo-User-Id": "team-alpha",
+        "X-Demo-Role": "rescuer",
+    }
     payload = {
         "location": {
             "address": "Sanitized U-Belt integration address",
@@ -212,6 +216,35 @@ def test_full_fastapi_request_to_assignment_slice_against_mongodb() -> None:
             )
             assert mission.status_code == 200
             assert mission.json()["request_id"] == request["id"]
+            assert mission.json()["status"] == "assigned"
+            assert mission.json()["latest_route_result"] is None
+
+            advanced = api.post(
+                f"/api/v1/missions/{assignment['mission']['id']}/status-events",
+                json={
+                    "event_id": "phase-2-gate-en-route",
+                    "new_status": "en-route",
+                    "expected_mission_version": 1,
+                    "source": "online",
+                    "note": "Sanitized Phase 2 gate transition",
+                },
+                headers=rescuer_headers,
+            )
+            assert advanced.status_code == 200
+            advanced_mission = advanced.json()
+            assert advanced_mission["status"] == "en-route"
+            assert advanced_mission["version"] == 2
+            assert advanced_mission["latest_route_result"] is None
+            assert advanced_mission["status_history"][-1]["event_id"] == (
+                "phase-2-gate-en-route"
+            )
+
+            authoritative_mission = api.get(
+                f"/api/v1/missions/{assignment['mission']['id']}",
+                headers=rescuer_headers,
+            )
+            assert authoritative_mission.status_code == 200
+            assert authoritative_mission.json()["status"] == "en-route"
     finally:
         cleanup_client.drop_database(database_name)
         cleanup_client.close()

@@ -1,5 +1,7 @@
 # Project Foundation Phase 1 gate
 
+> Historical gate record: its XGBoost exclusion was superseded by D-019 on 2026-09-29. The remaining Phase 1 constraints still apply.
+
 **Decision:** Approve
 
 **Phase status:** Completed and verified
