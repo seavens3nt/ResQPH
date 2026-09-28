@@ -74,18 +74,19 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // 4 Services
     expect(screen.getByText(/Request Assistance/i)).toBeInTheDocument()
-    expect(screen.getByText(/4 Services Available/i)).toBeInTheDocument()
+    expect(screen.getByText(/4 Service Types/i)).toBeInTheDocument()
     expect(screen.getByText('Flood Rescue')).toBeInTheDocument()
     expect(screen.getByText('Evacuation')).toBeInTheDocument()
     expect(screen.getByText('Medical Aid')).toBeInTheDocument()
     expect(screen.getByText('Relief Goods')).toBeInTheDocument()
 
-    // Nearest Responders
-    expect(screen.getByText(/Nearest Responders/i)).toBeInTheDocument()
+    // Controlled responder fixtures must not present operational ETAs.
+    expect(screen.getByText(/Simulated Responders/i)).toBeInTheDocument()
     expect(screen.getByText(/Rescue Team Alpha/i)).toBeInTheDocument()
-    expect(screen.getByText(/ETA 6 min/i)).toBeInTheDocument()
-    expect(screen.getByText(/Coast Guard Boat 4/i)).toBeInTheDocument()
-    expect(screen.getByText(/ETA 11 min/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/No live ETA/i)).toHaveLength(2)
+    expect(screen.queryByText(/ETA 6 min/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Rescue Boat 4/i)).toBeInTheDocument()
+    expect(screen.queryByText(/ETA 11 min/i)).not.toBeInTheDocument()
 
     // Controlled-scenario notices
     expect(screen.getByText(/Scenario Notices/i)).toBeInTheDocument()
@@ -136,10 +137,9 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
 
 
-  it('opens severity-adaptive form and shows Step A triage with all 5 flood levels', () => {
-    renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
+  it('opens SOS flood triage and shows all 5 flood levels', () => {
+    renderWithProviders(<CitizenView navSection="overview" />, 'citizen')
 
-    // Tap request emergency rescue
     fireEvent.click(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i }))
 
     // Expect Step A Triage title
@@ -153,44 +153,34 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText('Overhead / Fast Current (>1.5m)')).toBeInTheDocument()
   })
 
-  it('activates Branch 3 fast-track mode for High/Severe severity with auto-pulled profile', () => {
-    renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
+  it('carries high SOS flood severity into the API request form', () => {
+    renderWithProviders(<CitizenView navSection="overview" />, 'citizen')
 
     fireEvent.click(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i }))
 
     // Select High severity
     fireEvent.click(screen.getByText('Chest-deep (1.0–1.4m)'))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to Step B/i }))
-
-    // Verify Fast-Track emergency banner appears
-    expect(screen.getByText(/FAST-TRACK EMERGENCY RESCUE ACTIVATED/i)).toBeInTheDocument()
-    expect(screen.getByText(/Auto-Attached Citizen Profile Data/i)).toBeInTheDocument()
-    expect(screen.getByText(/4 persons \(1 Infant, 1 Senior Citizen\)/i)).toBeInTheDocument()
-
-    // Verify single-step location input and fast submit
-    expect(screen.getByRole('button', { name: /SUBMIT EMERGENCY RESCUE REQUEST/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Continue to request details/i }))
+    expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
+    // Flood level pre-filled from triage — not shown again as an editable field
+    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
   })
 
-  it('renders 5-stage prototype request tracking sequence when request is active', () => {
+  it('does not present MissionContext mock state as a persisted citizen request', () => {
     renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
 
-    // Tracking title
-    expect(screen.getByText(/Active Rescue Tracking/i)).toBeInTheDocument()
-    expect(screen.getByText('Pending Dispatch')).toBeInTheDocument()
-    expect(screen.getByText('Rescuer Assigned')).toBeInTheDocument()
-    expect(screen.getByText('En Route')).toBeInTheDocument()
-    expect(screen.getByText('Arrived at Area')).toBeInTheDocument()
-    expect(screen.getByText('Rescued')).toBeInTheDocument()
+    expect(screen.getByText(/Loading your rescue requests/i)).toBeInTheDocument()
+    expect(screen.queryByText('Pending Dispatch')).not.toBeInTheDocument()
+    expect(screen.queryByText('Rescuer Assigned')).not.toBeInTheDocument()
   })
 
-  it('shows simulated route delay explanation card in En Route stage', () => {
-    renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
+  it('shows the simulated route delay explanation only in the controlled map view', () => {
+    renderWithProviders(<CitizenView navSection="map" />, 'citizen')
 
     // The default mission is en-route, so the advisory card should be visible
-    expect(screen.getByText(/SIMULATED ROUTE & DELAY ADVISORY/i)).toBeInTheDocument()
-    // The default route explanation message appears in both the advisory card and map telemetry banner
+    expect(screen.getByText(/SIMULATED EN ROUTE ADVISORY/i)).toBeInTheDocument()
+    // The controlled map retains the route explanation after the mock tracking panel is disabled.
     expect(screen.getAllByText(/All possible shortcuts are flooded/i).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/Prototype Status Log/i)).toBeInTheDocument()
   })
 })
 describe('Field Rescuer Mobile Dashboard Flows', () => {
