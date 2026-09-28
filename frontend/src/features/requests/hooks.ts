@@ -32,7 +32,7 @@ import type {
 
 export const rescueRequestKeys = {
   all: ['rescue-requests'] as const,
-  list: () => [...rescueRequestKeys.all, 'list'] as const,
+  list: (citizenId: string) => [...rescueRequestKeys.all, 'list', citizenId] as const,
   detail: (id: string) => [...rescueRequestKeys.all, 'detail', id] as const,
 }
 
@@ -40,15 +40,16 @@ export const rescueRequestKeys = {
 // useMyRescueRequests — GET /rescue-requests (citizen's own requests)
 // ---------------------------------------------------------------------------
 
-export function useMyRescueRequests() {
+export function useMyRescueRequests(enabled = true) {
   const { user } = useAuth()
+  const citizenId = user?.email ?? ''
   return useQuery({
-    queryKey: rescueRequestKeys.list(),
+    queryKey: rescueRequestKeys.list(citizenId),
     queryFn: () => {
       if (!user) throw new Error('Not authenticated')
       return listMyRescueRequests(user.email, { limit: 20 })
     },
-    enabled: !!user,
+    enabled: !!user && enabled,
     staleTime: 30_000,
   })
 }
@@ -96,7 +97,9 @@ export function useCreateRescueRequest() {
       // Seed the detail cache immediately so the status view loads instantly
       queryClient.setQueryData(rescueRequestKeys.detail(data.id), data)
       // Invalidate the list so it picks up the new entry
-      queryClient.invalidateQueries({ queryKey: rescueRequestKeys.list() })
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: rescueRequestKeys.list(user.email) })
+      }
     },
   })
 }
@@ -117,7 +120,9 @@ export function useCancelRescueRequest() {
     onSuccess: (data) => {
       // Update both the detail and list caches with the authoritative response
       queryClient.setQueryData(rescueRequestKeys.detail(data.id), data)
-      queryClient.invalidateQueries({ queryKey: rescueRequestKeys.list() })
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: rescueRequestKeys.list(user.email) })
+      }
     },
   })
 }

@@ -20,7 +20,6 @@
 
 import { type FormEvent, useId, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { useAuth } from '../../../../features/auth/AuthContext'
 import { useCreateRescueRequest } from '../../../../features/requests/hooks'
 import {
   VULNERABILITY_OPTIONS,
@@ -55,17 +54,12 @@ interface RequestFormProps {
 
 export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown' }: RequestFormProps) {
   const uid = useId()
-  const { user } = useAuth()
-  // homeLocation is not declared on the committed AuthUser type but may be stored
-  // at runtime (AuthProvider serialises/deserialises the full localStorage object).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const savedLocation = (user as any)?.homeLocation as { address: string; coordinates: [number, number] } | undefined
 
   // Form field state (kept across validation failures — "preserve safe input")
-  const [address, setAddress] = useState(savedLocation?.address ?? 'Sanitized demonstration address, Sampaloc, Manila')
-  const [lngStr, setLngStr] = useState(String(savedLocation?.coordinates[0] ?? DEMO_LNG))
-  const [latStr, setLatStr] = useState(String(savedLocation?.coordinates[1] ?? DEMO_LAT))
-  const [locationSource, setLocationSource] = useState<'profile' | 'gps' | 'demo' | 'map'>(savedLocation ? 'profile' : 'demo')
+  const [address, setAddress] = useState('Sanitized demonstration address, Sampaloc, Manila')
+  const [lngStr, setLngStr] = useState(String(DEMO_LNG))
+  const [latStr, setLatStr] = useState(String(DEMO_LAT))
+  const [locationSource, setLocationSource] = useState<'gps' | 'demo' | 'map'>('demo')
   const [isLocating, setIsLocating] = useState(false)
   const [gpsError, setGpsError] = useState('')
   const [headcountStr, setHeadcountStr] = useState('1')
@@ -81,15 +75,8 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
 
   const { mutate, isPending } = useCreateRescueRequest()
 
-  function chooseLocationSource(source: 'profile' | 'gps' | 'demo') {
+  function chooseLocationSource(source: 'gps' | 'demo') {
     setGpsError('')
-    if (source === 'profile' && savedLocation) {
-      setAddress(savedLocation.address)
-      setLngStr(String(savedLocation.coordinates[0]))
-      setLatStr(String(savedLocation.coordinates[1]))
-      setLocationSource('profile')
-      return
-    }
     if (source === 'demo') {
       setAddress('Sanitized demonstration address, Sampaloc, Manila')
       setLngStr(String(DEMO_LNG))
@@ -289,7 +276,6 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             Number.isFinite(parseFloat(latStr)) ? parseFloat(latStr) : DEMO_LAT,
           ]}
           source={locationSource}
-          hasSavedLocation={!!savedLocation}
           isLocating={isLocating}
           disabled={isPending}
           gpsError={gpsError}

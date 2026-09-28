@@ -91,11 +91,10 @@ function makeQueryClient() {
 function renderWithProviders(
   ui: React.ReactElement,
   role: 'citizen' | 'rescuer' | 'coordinator' = 'citizen',
-  homeLocation?: { address: string; coordinates: [number, number] },
 ) {
   localStorage.setItem(
     'resqph.auth.user',
-    JSON.stringify({ email: 'maria@example.com', role, name: 'Maria Santos', homeLocation }),
+    JSON.stringify({ email: 'maria@example.com', role, name: 'Maria Santos' }),
   )
   const queryClient = makeQueryClient()
   return {
@@ -157,28 +156,19 @@ describe('RequestForm', () => {
     expect(screen.getByText(/Adjust map coordinates/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Longitude/i)).not.toBeVisible()
     expect(screen.getByRole('radio', { name: /Use current GPS/i })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: /Use saved account location/i })).toBeDisabled()
+    expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Describe the immediate conditions \(optional\)/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument()
   })
 
-  it('loads and restores a saved account location when selected', () => {
-    const onSuccess = vi.fn()
-    const onCancel = vi.fn()
-    renderWithProviders(
-      <RequestForm onSuccess={onSuccess} onCancel={onCancel} />,
-      'citizen',
-      { address: 'Sanitized saved address, Sampaloc, Manila', coordinates: [120.995, 14.605] },
-    )
+  it('switches between GPS and the supported demonstration location', () => {
+    renderForm()
 
-    expect(screen.getByRole('radio', { name: /Use saved account location/i })).toBeChecked()
-    expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized saved address, Sampaloc, Manila')
+    expect(screen.getByRole('radio', { name: /Use demo location/i })).toBeChecked()
     fireEvent.click(screen.getByRole('radio', { name: /Use demo location/i }))
     expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized demonstration address, Sampaloc, Manila')
-    fireEvent.click(screen.getByRole('radio', { name: /Use saved account location/i }))
-    expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized saved address, Sampaloc, Manila')
   })
 
   it('shows feedback when GPS is unavailable', () => {
@@ -604,6 +594,8 @@ describe('RequestStatusView', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Conflict: the request state changed/i)).toBeInTheDocument()
+      expect(screen.getByText(/authoritative status is being refreshed/i)).toBeInTheDocument()
+      expect(mockGet).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -718,7 +710,7 @@ describe('CitizenView — API-backed request flow', () => {
       // Check for request ID in the success banner specifically
       const successBanner = screen.getByTestId('submission-success')
       expect(successBanner).toHaveTextContent(/RQ-DEMO-001/i)
-      expect(successBanner).toHaveTextContent(/pending/i)
+      expect(successBanner).not.toHaveTextContent(/Status: pending/i)
       // The banner SHOULD say "No response time is guaranteed" (correct disclaimer)
       expect(successBanner).toHaveTextContent(/No response time is guaranteed/i)
     })
@@ -741,7 +733,26 @@ describe('CitizenView — API-backed request flow', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Authoritative status from the API/i)).toBeInTheDocument()
+      expect(screen.queryByText('Rescuer Assigned')).not.toBeInTheDocument()
     })
+  })
+
+  it('recovers a persisted active request from the API list after remount', async () => {
+    mockList.mockResolvedValue({ items: [FIXTURE_REQUEST] })
+    const firstRender = renderInquiries()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Authoritative status from the API/i)).toBeInTheDocument()
+    })
+
+    firstRender.unmount()
+    renderInquiries()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Authoritative status from the API/i)).toBeInTheDocument()
+      expect(screen.getByText(/RQ-DEMO-001/i)).toBeInTheDocument()
+    })
+    expect(mockList).toHaveBeenCalledTimes(2)
   })
 
   // ── Controlled-data label ─────────────────────────────────────────────────
@@ -752,16 +763,15 @@ describe('CitizenView — API-backed request flow', () => {
     expect(screen.getByText(/Simulation only/i)).toBeInTheDocument()
   })
 
-  // ── Mock tracking still renders (existing tests must pass) ───────────────
+  // ── Empty authoritative state ────────────────────────────────────────────
 
-  it('still renders the mock Active Rescue Tracking stepper', () => {
+  it('shows an API-backed empty state without the local mock tracker', async () => {
     renderInquiries()
-    expect(screen.getByText(/Active Rescue Tracking/i)).toBeInTheDocument()
-    expect(screen.getByText(/Pending Dispatch/i)).toBeInTheDocument()
-    expect(screen.getByText(/Rescuer Assigned/i)).toBeInTheDocument()
-    expect(screen.getByText(/En Route/i)).toBeInTheDocument()
-    expect(screen.getByText(/Arrived at Area/i)).toBeInTheDocument()
-    expect(screen.getByText(/Rescued/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/No rescue requests found/i)).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: /Start a rescue request/i })).toBeInTheDocument()
+    expect(screen.queryByText(/Pending Dispatch/i)).not.toBeInTheDocument()
   })
 })
 

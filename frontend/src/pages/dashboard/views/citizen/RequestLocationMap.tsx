@@ -2,23 +2,21 @@ import { useEffect, useId, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-type LocationSource = 'profile' | 'gps' | 'demo' | 'map'
+type LocationSource = 'gps' | 'demo' | 'map'
 
 interface RequestLocationMapProps {
   coordinates: [number, number]
   source: LocationSource
-  hasSavedLocation: boolean
   isLocating: boolean
   disabled: boolean
   gpsError: string
-  onChooseSource: (source: 'profile' | 'gps' | 'demo') => void
+  onChooseSource: (source: 'gps' | 'demo') => void
   onChooseCoordinates: (coordinates: [number, number]) => void
 }
 
 export function RequestLocationMap({
   coordinates,
   source,
-  hasSavedLocation,
   isLocating,
   disabled,
   gpsError,
@@ -30,7 +28,10 @@ export function RequestLocationMap({
   const mapRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.CircleMarker | null>(null)
   const onChooseCoordinatesRef = useRef(onChooseCoordinates)
-  onChooseCoordinatesRef.current = onChooseCoordinates
+
+  useEffect(() => {
+    onChooseCoordinatesRef.current = onChooseCoordinates
+  }, [onChooseCoordinates])
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -84,10 +85,6 @@ export function RequestLocationMap({
             <input type="radio" name={`${uid}-location-source`} checked={source === 'gps'} disabled={disabled || isLocating} onChange={() => onChooseSource('gps')} />
             <span>Use current GPS</span>
           </label>
-          <label style={{ ...radioStyle, color: hasSavedLocation ? '#334155' : '#94a3b8' }}>
-            <input type="radio" name={`${uid}-location-source`} checked={source === 'profile'} disabled={!hasSavedLocation || disabled || isLocating} onChange={() => onChooseSource('profile')} />
-            <span>Use saved account location</span>
-          </label>
           <label style={radioStyle}>
             <input type="radio" name={`${uid}-location-source`} checked={source === 'demo'} disabled={disabled || isLocating} onChange={() => onChooseSource('demo')} />
             <span>Use demo location</span>
@@ -96,7 +93,6 @@ export function RequestLocationMap({
           {gpsError && <span role="alert" style={{ display: 'block', marginTop: '0.35rem', fontSize: '0.72rem', color: '#b91c1c' }}>{gpsError}</span>}
         </fieldset>
       </div>
-      {!hasSavedLocation && <span style={{ fontSize: '0.74rem', color: '#64748b' }}>Set a saved address and coordinates in Edit profile to use your account location.</span>}
       {source === 'gps' && <span style={{ fontSize: '0.74rem', color: '#475569' }}>GPS coordinates selected. Add the nearest street address below. Your browser may ask you to allow location access.</span>}
       {source === 'map' && <span style={{ fontSize: '0.74rem', color: '#475569' }}>Map point selected. Add its street address or a nearby landmark below.</span>}
       <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</span>

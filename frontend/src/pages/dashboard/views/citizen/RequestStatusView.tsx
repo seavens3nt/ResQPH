@@ -131,9 +131,10 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         onError: (err) => {
           const axiosErr = err as { response?: { status?: number; data?: { error?: { message?: string } } } }
           if (axiosErr.response?.status === 409) {
+            void queryClient.invalidateQueries({ queryKey: rescueRequestKeys.detail(id) })
             setCancelError(
               'Conflict: the request state changed before cancellation. ' +
-              'Refresh to see the current status.',
+              'The latest authoritative status is being refreshed.',
             )
           } else {
             setCancelError('Cancellation failed. Your input is preserved — try again.')

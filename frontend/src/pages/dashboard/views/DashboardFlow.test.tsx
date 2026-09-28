@@ -165,26 +165,21 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
   })
 
-  it('renders 5-stage prototype request tracking sequence when request is active', () => {
+  it('does not present MissionContext mock state as a persisted citizen request', () => {
     renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
 
-    // Tracking title
-    expect(screen.getByText(/Active Rescue Tracking/i)).toBeInTheDocument()
-    expect(screen.getByText('Pending Dispatch')).toBeInTheDocument()
-    expect(screen.getByText('Rescuer Assigned')).toBeInTheDocument()
-    expect(screen.getByText('En Route')).toBeInTheDocument()
-    expect(screen.getByText('Arrived at Area')).toBeInTheDocument()
-    expect(screen.getByText('Rescued')).toBeInTheDocument()
+    expect(screen.getByText(/Loading your rescue requests/i)).toBeInTheDocument()
+    expect(screen.queryByText('Pending Dispatch')).not.toBeInTheDocument()
+    expect(screen.queryByText('Rescuer Assigned')).not.toBeInTheDocument()
   })
 
-  it('shows simulated route delay explanation card in En Route stage', () => {
-    renderWithProviders(<CitizenView navSection="inquiries" />, 'citizen')
+  it('shows the simulated route delay explanation only in the controlled map view', () => {
+    renderWithProviders(<CitizenView navSection="map" />, 'citizen')
 
     // The default mission is en-route, so the advisory card should be visible
-    expect(screen.getByText(/SIMULATED ROUTE & DELAY ADVISORY/i)).toBeInTheDocument()
-    // The default route explanation message appears in both the advisory card and map telemetry banner
+    expect(screen.getByText(/SIMULATED EN ROUTE ADVISORY/i)).toBeInTheDocument()
+    // The controlled map retains the route explanation after the mock tracking panel is disabled.
     expect(screen.getAllByText(/All possible shortcuts are flooded/i).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/Prototype Status Log/i)).toBeInTheDocument()
   })
 })
 describe('Field Rescuer Mobile Dashboard Flows', () => {

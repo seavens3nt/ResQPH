@@ -4,6 +4,7 @@ import { Icon } from '../../../components/art/Icon'
 import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
 import type { SeverityLevel } from '../../../features/missions/types'
+import { useMyRescueRequests } from '../../../features/requests/hooks'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import {
   EmergencyHotlinesModal,
@@ -16,7 +17,6 @@ import type { NavSection } from './navTypes'
 import { RequestForm } from './citizen/RequestForm'
 import { RequestStatusView } from './citizen/RequestStatusView'
 import { PrototypeNotice } from './citizen/PrototypeNotice'
-import type { RescueRequestRecord } from '../../../features/requests/types'
 import type { FloodLevel } from '../../../features/requests/types'
 
 const SOS_TRIAGE_TO_FLOOD_LEVEL: Record<SeverityLevel, FloodLevel> = {
@@ -48,20 +48,32 @@ export function CitizenView({
   const [stepA_severity, setStepA_severity] = useState<SeverityLevel>('moderate')
 
   // API-backed request state (Issue #17)
-  // Tracks the confirmed server record after a successful POST /rescue-requests.
-  // When set, the inquiries tab shows the authoritative RequestStatusView instead
-  // of the mock tracking panel.
-  const [apiRequest, setApiRequest] = useState<RescueRequestRecord | null>(null)
+  // Keep only the selected ID locally. The request list query recovers persisted
+  // requests after refresh/remount, and the detail query remains authoritative.
+  const [selectedApiRequestId, setSelectedApiRequestId] = useState<string | null>(null)
   const [showApiRequestForm, setShowApiRequestForm] = useState(false)
-  const [apiRequestSuccess, setApiRequestSuccess] = useState(false)
+  const [createdRequestId, setCreatedRequestId] = useState<string | null>(null)
   const [sosReportedFloodLevel, setSosReportedFloodLevel] = useState<FloodLevel>('unknown')
+
+  const {
+    data: requestList,
+    isLoading: isRequestListLoading,
+    isError: isRequestListError,
+    refetch: refetchRequestList,
+  } = useMyRescueRequests(navSection === 'inquiries')
+
+  const recoveredRequest =
+    requestList?.items.find((request) => !['completed', 'cancelled'].includes(request.status)) ??
+    requestList?.items[0]
+  const apiRequestId = selectedApiRequestId ?? recoveredRequest?.id ?? null
+  // Kept as an explicit migration guard until the old MissionContext citizen
+  // panel is removed with the remaining prototype dashboard cleanup.
+  const showLegacyMockTracking: boolean = false
 
   const activeReq = activeCitizenRequest
   const activeCitizenTeam = activeReq?.assignedTeamId
     ? teams.find((team) => team.id === activeReq.assignedTeamId)
     : undefined
-  // assignedLeaderPhone / assignedLeaderName are not in the committed RescueRequest type;
-  // fall back to team contactPhone (prototype placeholder: 09XX XXX XXXX).
   const assignedLeaderPhone = activeCitizenTeam?.contactPhone ?? undefined
   const assignedLeaderTel = assignedLeaderPhone && /^[+\d\s()-]+$/.test(assignedLeaderPhone) && assignedLeaderPhone.replace(/\D/g, '').length >= 10
     ? `tel:${assignedLeaderPhone.replace(/[^+\d]/g, '')}`
@@ -78,7 +90,7 @@ export function CitizenView({
 
   function continueFromFloodTriage() {
     setSosReportedFloodLevel(SOS_TRIAGE_TO_FLOOD_LEVEL[stepA_severity])
-    setApiRequestSuccess(false)
+    setCreatedRequestId(null)
     setShowSosTriage(false)
     setShowApiRequestForm(true)
   }
@@ -263,13 +275,13 @@ export function CitizenView({
             <PrototypeNotice variant="role" />
 
             {/* ── API-backed request tracking (authoritative) ──────── */}
-            {apiRequest && (
+            {apiRequestId && (
               <Section
                 title="Active Rescue Tracking"
                 subtitle="Authoritative status from the API. Controlled scenario data — not live dispatch."
               >
                 {/* Success confirmation after first submission */}
-                {apiRequestSuccess && (
+                {createdRequestId === apiRequestId && (
                   <div
                     role="status"
                     aria-live="polite"
@@ -290,20 +302,51 @@ export function CitizenView({
                     <span aria-hidden="true">✓</span>
                     <div>
                       <strong>Request submitted.</strong> Your request ID is{' '}
-                      <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>{apiRequest.id}</code>.
-                      Status: <strong>pending</strong>. No response time is guaranteed.
+                      <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>{apiRequestId}</code>.
+                      The current status below comes from the API. No response time is guaranteed.
                     </div>
                   </div>
                 )}
                 <RequestStatusView
-                  requestId={apiRequest.id}
-                  onCancelled={() => setApiRequest(null)}
+                  requestId={apiRequestId}
+                  onCancelled={() => setCreatedRequestId(null)}
                 />
               </Section>
             )}
 
-            {/* ── Mock tracking panel (preserved for existing tests) ── */}
-            {activeReq ? (
+            {!apiRequestId && isRequestListLoading && (
+              <Section title="Rescue Tracking" subtitle="Loading your authoritative rescue-request state.">
+                <div role="status" aria-live="polite" aria-busy="true" className="modern-clean-card" style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>
+                  Loading your rescue requests…
+                </div>
+              </Section>
+            )}
+
+            {!apiRequestId && isRequestListError && (
+              <Section title="Rescue Tracking" subtitle="The request list could not be loaded from the API.">
+                <div role="alert" className="modern-clean-card" style={{ padding: '1.5rem', textAlign: 'center', color: '#7f1d1d' }}>
+                  <p>Unable to load your rescue requests. No local mock request is being shown as persisted.</p>
+                  <Button variant="outline" size="sm" onClick={() => void refetchRequestList()}>
+                    Retry
+                  </Button>
+                </div>
+              </Section>
+            )}
+
+            {!apiRequestId && !isRequestListLoading && !isRequestListError && (
+              <Section title="Rescue Tracking" subtitle="No persisted rescue request was returned by the API.">
+                <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
+                  <p style={{ color: '#64748b', fontWeight: 600, margin: '0 0 1rem' }}>No rescue requests found.</p>
+                  <Button variant="primary" size="sm" onClick={() => onNavigateTab?.('overview')}>
+                    Start a rescue request
+                  </Button>
+                </div>
+              </Section>
+            )}
+
+            {/* Legacy MissionContext tracking is intentionally disabled here.
+                Citizen status must come only from the authoritative request API. */}
+            {showLegacyMockTracking && (activeReq ? (
               <Section
                 title={`Active Rescue Tracking: ${activeReq.id}`}
                 subtitle="Prototype status sequence using controlled scenario data."
@@ -455,7 +498,7 @@ export function CitizenView({
                   <p style={{ color: '#64748b', fontWeight: 600, margin: 0 }}>No active rescue requests.</p>
                 </div>
               </Section>
-            )}
+            ))}
           </div>
         )}
 
@@ -490,8 +533,8 @@ export function CitizenView({
           key={sosReportedFloodLevel}
           initialFloodLevel={sosReportedFloodLevel}
           onSuccess={(record) => {
-            setApiRequest(record)
-            setApiRequestSuccess(true)
+            setSelectedApiRequestId(record.id)
+            setCreatedRequestId(record.id)
             setShowApiRequestForm(false)
             onNavigateTab?.('inquiries')
           }}
