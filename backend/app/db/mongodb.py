@@ -8,8 +8,13 @@ _client: AsyncMongoClient | None = None
 
 async def connect_mongodb() -> None:
     global _client
-    _client = AsyncMongoClient(settings.mongodb_uri)
-    await _client.admin.command("ping")
+    client = AsyncMongoClient(settings.mongodb_uri)
+    try:
+        await client.admin.command("ping")
+    except Exception:
+        await client.close()
+        raise
+    _client = client
 
 
 async def close_mongodb() -> None:
