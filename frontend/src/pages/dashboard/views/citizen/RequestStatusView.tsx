@@ -17,11 +17,10 @@
  * No ETA or route-safety guarantee is presented.
  */
 
-import { useRescueRequest, useCancelRescueRequest, rescueRequestKeys } from '../../../../features/requests/hooks'
+import { useRescueRequest, useCancelRescueRequest } from '../../../../features/requests/hooks'
 import { PrototypeNotice } from './PrototypeNotice'
 import { StatusBadge } from './StatusBadge'
 import type { RequestStatus } from '../../../../features/requests/types'
-import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 const STAGE_ORDER: RequestStatus[] = ['pending', 'assigned', 'en-route', 'arrived', 'completed']
@@ -42,8 +41,7 @@ interface RequestStatusViewProps {
 }
 
 export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewProps) {
-  const queryClient = useQueryClient()
-  const { data, isLoading, isError, error, dataUpdatedAt, isFetching } = useRescueRequest(requestId)
+  const { data, isLoading, isError, error, dataUpdatedAt, isFetching, refetch } = useRescueRequest(requestId)
   const { mutate: cancel, isPending: isCancelling } = useCancelRescueRequest()
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
@@ -89,7 +87,7 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         <span>{msg}</span>
         <button
           type="button"
-          onClick={() => queryClient.invalidateQueries({ queryKey: rescueRequestKeys.detail(requestId) })}
+          onClick={() => void refetch()}
           style={{
             alignSelf: 'flex-start',
             padding: '4px 12px',
@@ -131,7 +129,7 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         onError: (err) => {
           const axiosErr = err as { response?: { status?: number; data?: { error?: { message?: string } } } }
           if (axiosErr.response?.status === 409) {
-            void queryClient.invalidateQueries({ queryKey: rescueRequestKeys.detail(id) })
+            void refetch()
             setCancelError(
               'Conflict: the request state changed before cancellation. ' +
               'The latest authoritative status is being refreshed.',
@@ -173,7 +171,7 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
             <button
               type="button"
               aria-label="Refresh request status"
-              onClick={() => queryClient.invalidateQueries({ queryKey: rescueRequestKeys.detail(requestId) })}
+              onClick={() => void refetch()}
               style={{
                 padding: '3px 10px',
                 borderRadius: '6px',

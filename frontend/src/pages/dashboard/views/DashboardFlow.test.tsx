@@ -80,12 +80,13 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText('Medical Aid')).toBeInTheDocument()
     expect(screen.getByText('Relief Goods')).toBeInTheDocument()
 
-    // Nearest Responders
-    expect(screen.getByText(/Nearest Responders/i)).toBeInTheDocument()
+    // Controlled responder fixtures must not present operational ETAs.
+    expect(screen.getByText(/Simulated Responders/i)).toBeInTheDocument()
     expect(screen.getByText(/Rescue Team Alpha/i)).toBeInTheDocument()
-    expect(screen.getByText(/ETA 6 min/i)).toBeInTheDocument()
-    expect(screen.getByText(/Coast Guard Boat 4/i)).toBeInTheDocument()
-    expect(screen.getByText(/ETA 11 min/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/No live ETA/i)).toHaveLength(2)
+    expect(screen.queryByText(/ETA 6 min/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Rescue Boat 4/i)).toBeInTheDocument()
+    expect(screen.queryByText(/ETA 11 min/i)).not.toBeInTheDocument()
 
     // Controlled-scenario notices
     expect(screen.getByText(/Scenario Notices/i)).toBeInTheDocument()

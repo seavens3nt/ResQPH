@@ -33,7 +33,8 @@ import type {
 export const rescueRequestKeys = {
   all: ['rescue-requests'] as const,
   list: (citizenId: string) => [...rescueRequestKeys.all, 'list', citizenId] as const,
-  detail: (id: string) => [...rescueRequestKeys.all, 'detail', id] as const,
+  detail: (citizenId: string, id: string) =>
+    [...rescueRequestKeys.all, 'detail', citizenId, id] as const,
 }
 
 // ---------------------------------------------------------------------------
@@ -63,8 +64,9 @@ const TERMINAL_STATUSES = new Set(['completed', 'cancelled'])
 
 export function useRescueRequest(requestId: string | null) {
   const { user } = useAuth()
+  const citizenId = user?.email ?? ''
   return useQuery({
-    queryKey: rescueRequestKeys.detail(requestId ?? ''),
+    queryKey: rescueRequestKeys.detail(citizenId, requestId ?? ''),
     queryFn: () => {
       if (!user || !requestId) throw new Error('Not authenticated or missing ID')
       return getRescueRequest(user.email, requestId)
@@ -95,7 +97,9 @@ export function useCreateRescueRequest() {
     },
     onSuccess: (data) => {
       // Seed the detail cache immediately so the status view loads instantly
-      queryClient.setQueryData(rescueRequestKeys.detail(data.id), data)
+      if (user) {
+        queryClient.setQueryData(rescueRequestKeys.detail(user.email, data.id), data)
+      }
       // Invalidate the list so it picks up the new entry
       if (user) {
         queryClient.invalidateQueries({ queryKey: rescueRequestKeys.list(user.email) })
@@ -119,7 +123,9 @@ export function useCancelRescueRequest() {
     },
     onSuccess: (data) => {
       // Update both the detail and list caches with the authoritative response
-      queryClient.setQueryData(rescueRequestKeys.detail(data.id), data)
+      if (user) {
+        queryClient.setQueryData(rescueRequestKeys.detail(user.email, data.id), data)
+      }
       if (user) {
         queryClient.invalidateQueries({ queryKey: rescueRequestKeys.list(user.email) })
       }

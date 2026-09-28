@@ -128,7 +128,7 @@ export function CitizenView({
             <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>
               <div className="glowing-emergency-pill">
                 <span className="glowing-red-dot-live" />
-                <span>Emergency Channel Active</span>
+                <span>Prototype Emergency Channel</span>
               </div>
 
               <button
@@ -190,7 +190,7 @@ export function CitizenView({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Nearest Responders
+                  Simulated Responders
                 </h3>
                 <button
                   type="button"
@@ -204,8 +204,8 @@ export function CitizenView({
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {[
-                  { name: 'Rescue Team Alpha', distance: '1.2 km away', eta: 'ETA 6 min' },
-                  { name: 'Coast Guard Boat 4', distance: '3.4 km away', eta: 'ETA 11 min' },
+                  { name: 'Rescue Team Alpha', distance: 'Controlled fixture', eta: 'No live ETA' },
+                  { name: 'Rescue Boat 4', distance: 'Controlled fixture', eta: 'No live ETA' },
                 ].map((responder) => (
                   <div key={responder.name} className="neu-red-card" style={{ padding: '0.85rem 1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -26,6 +26,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '../../../../features/auth/AuthContext'
 import { MissionProvider } from '../../../../features/missions/MissionContext'
+import { rescueRequestKeys } from '../../../../features/requests/hooks'
 import { CitizenView } from '../CitizenView'
 import { RequestForm } from './RequestForm'
 import { RequestStatusView } from './RequestStatusView'
@@ -625,6 +626,12 @@ describe('RequestStatusView', () => {
 // ---------------------------------------------------------------------------
 
 describe('CitizenView — API-backed request flow', () => {
+  it('scopes authoritative request detail caches by simulated citizen', () => {
+    expect(rescueRequestKeys.detail('citizen-a@example.test', 'RQ-DEMO-001')).not.toEqual(
+      rescueRequestKeys.detail('citizen-b@example.test', 'RQ-DEMO-001'),
+    )
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     mockList.mockResolvedValue({ items: [] })
@@ -669,6 +676,8 @@ describe('CitizenView — API-backed request flow', () => {
     expect(screen.getByText(/Controlled Scenario: High tide & heavy rainfall/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/No live ETA/i)).toHaveLength(2)
+    expect(screen.queryByText(/ETA 6 min/i)).not.toBeInTheDocument()
   })
 
   it('shows flood triage on SOS and carries the chosen level into the API form', () => {
