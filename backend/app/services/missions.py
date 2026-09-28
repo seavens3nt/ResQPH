@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from typing import ClassVar
 
+from pymongo.asynchronous.client_session import AsyncClientSession
+
 from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import (
@@ -104,20 +106,6 @@ class MissionService:
             )
 
         recorded_at = utc_now()
-        updated_mission = await self._missions.update_status_if_current(
-            mission_id=mission.id,
-            expected_version=payload.expected_mission_version,
-            prior_status=mission.status,
-            new_status=payload.new_status,
-            recorded_at=recorded_at,
-        )
-        if updated_mission is None:
-            raise MissionServiceError(
-                409,
-                "mission_conflict",
-                "Mission status was not changed because the current state no longer matches the request.",
-            )
-
         event = MissionStatusEvent(
             event_id=payload.event_id,
             mission_id=mission.id,
@@ -130,19 +118,60 @@ class MissionService:
             server_recorded_at=recorded_at,
             note=payload.note,
         )
+
+        async def persist_transition(
+            session: AsyncClientSession,
+        ) -> tuple[Mission, MissionStatusEvent | None]:
+            transaction_event = await self._events.get_by_event_id(
+                payload.event_id,
+                session=session,
+            )
+            if transaction_event is not None:
+                self._validate_idempotent_retry(transaction_event, mission_id, payload, actor)
+                return mission, transaction_event
+
+            updated_mission = await self._missions.update_status_if_current(
+                mission_id=mission.id,
+                expected_version=payload.expected_mission_version,
+                prior_status=mission.status,
+                new_status=payload.new_status,
+                recorded_at=recorded_at,
+                session=session,
+            )
+            if updated_mission is None:
+                raise MissionServiceError(
+                    409,
+                    "mission_conflict",
+                    "Mission status was not changed because the current state no longer matches the request.",
+                )
+            await self._events.append(event, session=session)
+            return updated_mission, None
+
         try:
-            await self._events.append(event)
+            await self._events.ensure_indexes()
+            updated_mission, transaction_event = await self._events.run_in_transaction(
+                persist_transition
+            )
         except DuplicateMissionStatusEventError:
             existing_event = await self._events.get_by_event_id(payload.event_id)
             if existing_event is not None:
                 self._validate_idempotent_retry(existing_event, mission_id, payload, actor)
-                return await self._to_response(updated_mission)
+                current_mission = await self._missions.get_by_id(mission_id)
+                if current_mission is None:
+                    raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+                return await self._to_response(current_mission)
             raise MissionServiceError(
                 409,
                 "duplicate_event",
                 "Status event id was already used.",
                 [{"field": "event_id", "reason": "duplicate idempotency key"}],
             )
+
+        if transaction_event is not None:
+            current_mission = await self._missions.get_by_id(mission_id)
+            if current_mission is None:
+                raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            return await self._to_response(current_mission)
 
         return await self._to_response(updated_mission)
 

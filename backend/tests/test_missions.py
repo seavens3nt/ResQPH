@@ -1,6 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from fastapi import FastAPI
@@ -14,7 +14,10 @@ from app.api.routes.missions import (
 )
 from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
-from app.repositories.mission_status_events import DuplicateMissionStatusEventError
+from app.repositories.mission_status_events import (
+    DuplicateMissionStatusEventError,
+    MissionStatusEventRepository,
+)
 from app.services.missions import MissionService
 
 BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
@@ -52,6 +55,7 @@ class InMemoryMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        session: Any = None,
     ) -> Mission | None:
         mission = self.missions.get(mission_id)
         if mission is None or mission.version != expected_version or mission.status != prior_status:
@@ -69,10 +73,31 @@ class InMemoryMissionRepository:
 
 
 class InMemoryEventRepository:
-    def __init__(self) -> None:
+    def __init__(self, mission_store: dict[str, Mission]) -> None:
+        self._mission_store = mission_store
         self.events: dict[str, MissionStatusEvent] = {}
+        self.fail_on_append = False
 
-    async def get_by_event_id(self, event_id: str) -> MissionStatusEvent | None:
+    async def ensure_indexes(self) -> None:
+        return None
+
+    async def run_in_transaction(self, callback: Any) -> Any:
+        mission_snapshot = deepcopy(self._mission_store)
+        event_snapshot = deepcopy(self.events)
+        try:
+            return await callback(None)
+        except Exception:
+            self._mission_store.clear()
+            self._mission_store.update(mission_snapshot)
+            self.events.clear()
+            self.events.update(event_snapshot)
+            raise
+
+    async def get_by_event_id(
+        self,
+        event_id: str,
+        session: Any = None,
+    ) -> MissionStatusEvent | None:
         return self.events.get(event_id)
 
     async def list_for_mission(self, mission_id: str) -> list[MissionStatusEvent]:
@@ -81,7 +106,13 @@ class InMemoryEventRepository:
             key=lambda event: event.server_recorded_at,
         )
 
-    async def append(self, event: MissionStatusEvent) -> MissionStatusEvent:
+    async def append(
+        self,
+        event: MissionStatusEvent,
+        session: Any = None,
+    ) -> MissionStatusEvent:
+        if self.fail_on_append:
+            raise RuntimeError("simulated event persistence failure")
         if event.event_id in self.events:
             raise DuplicateMissionStatusEventError
         self.events[event.event_id] = event
@@ -118,8 +149,8 @@ def mission_store() -> dict[str, Mission]:
 
 
 @pytest.fixture()
-def event_store() -> InMemoryEventRepository:
-    return InMemoryEventRepository()
+def event_store(mission_store: dict[str, Mission]) -> InMemoryEventRepository:
+    return InMemoryEventRepository(mission_store)
 
 
 @pytest.fixture()
@@ -300,6 +331,21 @@ def test_stale_version_does_not_change_state_version_or_history(
     assert event_store.events == {}
 
 
+def test_event_write_failure_rolls_back_mission_state_and_version(
+    client: TestClient,
+    mission_store: dict[str, Mission],
+    event_store: InMemoryEventRepository,
+) -> None:
+    before = deepcopy(mission_store["mission-1"])
+    event_store.fail_on_append = True
+
+    with pytest.raises(RuntimeError, match="simulated event persistence failure"):
+        post_status(client, "failed-event", "en-route", 1)
+
+    assert mission_store["mission-1"] == before
+    assert event_store.events == {}
+
+
 def test_duplicate_event_id_retry_does_not_duplicate_history(
     client: TestClient,
     event_store: InMemoryEventRepository,
@@ -331,3 +377,29 @@ def test_unsupported_status_and_source_values_return_422(client: TestClient) -> 
     bad_filter = client.get("/api/v1/missions?assigned_to=me&status=assigned,flying", headers=rescuer_headers())
     assert bad_filter.status_code == 422
     assert bad_filter.json()["error"]["code"] == "invalid_status_filter"
+
+
+@pytest.mark.asyncio
+async def test_event_repository_creates_required_indexes_once() -> None:
+    class RecordingCollection:
+        def __init__(self) -> None:
+            self.calls: list[tuple[list[tuple[str, int]], dict[str, Any]]] = []
+
+        async def create_index(self, keys: list[tuple[str, int]], **kwargs: Any) -> None:
+            self.calls.append((keys, kwargs))
+
+    collection = RecordingCollection()
+    repository = cast(MissionStatusEventRepository, object.__new__(MissionStatusEventRepository))
+    repository._collection = collection  # type: ignore[assignment]
+    repository._indexes_ready = False
+
+    await repository.ensure_indexes()
+    await repository.ensure_indexes()
+
+    assert collection.calls == [
+        ([("event_id", 1)], {"name": "uq_mission_status_event_id", "unique": True}),
+        (
+            [("mission_id", 1), ("server_recorded_at", 1)],
+            {"name": "ix_mission_status_event_history"},
+        ),
+    ]

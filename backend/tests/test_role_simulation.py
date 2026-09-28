@@ -59,6 +59,7 @@ class RoleMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        session: Any = None,
     ) -> Mission | None:
         if (
             mission_id != self.mission.id
@@ -73,16 +74,38 @@ class RoleMissionRepository:
 
 
 class RoleEventRepository:
-    def __init__(self) -> None:
+    def __init__(self, mission_repository: RoleMissionRepository) -> None:
+        self._mission_repository = mission_repository
         self.events: dict[str, MissionStatusEvent] = {}
 
-    async def get_by_event_id(self, event_id: str) -> MissionStatusEvent | None:
+    async def ensure_indexes(self) -> None:
+        return None
+
+    async def run_in_transaction(self, callback: Any) -> Any:
+        mission_snapshot = self._mission_repository.mission.model_copy(deep=True)
+        event_snapshot = dict(self.events)
+        try:
+            return await callback(None)
+        except Exception:
+            self._mission_repository.mission = mission_snapshot
+            self.events = event_snapshot
+            raise
+
+    async def get_by_event_id(
+        self,
+        event_id: str,
+        session: Any = None,
+    ) -> MissionStatusEvent | None:
         return self.events.get(event_id)
 
     async def list_for_mission(self, mission_id: str) -> list[MissionStatusEvent]:
         return [event for event in self.events.values() if event.mission_id == mission_id]
 
-    async def append(self, event: MissionStatusEvent) -> MissionStatusEvent:
+    async def append(
+        self,
+        event: MissionStatusEvent,
+        session: Any = None,
+    ) -> MissionStatusEvent:
         if event.event_id in self.events:
             raise DuplicateMissionStatusEventError
         self.events[event.event_id] = event
@@ -96,7 +119,7 @@ def role_repository() -> RoleMissionRepository:
 
 @pytest.fixture()
 def client(role_repository: RoleMissionRepository) -> TestClient:
-    event_repository = RoleEventRepository()
+    event_repository = RoleEventRepository(role_repository)
     app = FastAPI()
     app.include_router(router, prefix="/api/v1")
     app.add_exception_handler(RequestValidationError, validation_exception_handler)

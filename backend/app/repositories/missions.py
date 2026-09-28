@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from pymongo import ReturnDocument
+from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.models.mission import Mission, MissionStatus
@@ -46,6 +47,7 @@ class MissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        session: AsyncClientSession | None = None,
     ) -> Mission | None:
         update: dict[str, Any] = {
             "$set": {
@@ -65,6 +67,7 @@ class MissionRepository:
             },
             update,
             return_document=ReturnDocument.AFTER,
+            session=session,
         )
         if document is None:
             return None
