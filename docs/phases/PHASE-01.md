@@ -1,5 +1,7 @@
 # Phase 1 — Requirements and Data Validation
 
+> Historical baseline: the model-family decision in this completed phase was superseded by D-019 on 2026-09-29. Current ML guidance is in `docs/ml/ML_FEASIBILITY.md`.
+
 ## Decision and implementation guide
 
 | Field | Value |

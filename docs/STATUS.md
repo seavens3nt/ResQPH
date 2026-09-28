@@ -1,13 +1,13 @@
 # ResQPH project status
 
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-29
 
 | Field | Current value |
 |---|---|
-| Current phase | Project Foundation Phase 2 — Core Application |
-| Current sprint | Foundation Phase 2 — ready to start |
-| Overall health | Foundation is merged and verified; implementation remains early and must follow the time-constrained priority order |
-| Current goal | Build one persistent rescue-request-to-mission vertical slice before optional enrichment. |
+| Current phase | Project Foundation Phase 2 — gate verified; Team Phase 1 opens after the gate record merges |
+| Current sprint | Foundation Phase 2 — closeout |
+| Overall health | Core request-to-mission lifecycle is merged and verified; routing, mapping, model packaging, and offline persistence remain later-phase work |
+| Current goal | Merge the Phase 2 gate record, then open Team Phase 1 mapping/geospatial work without widening scope. |
 
 ## Completed setup
 
@@ -29,13 +29,22 @@
 - Final Phase 1 decision log, risk register, evidence record, roadmap, and gate approval.
 - No later application feature is considered complete merely because its foundation is locked.
 
+## Completed and verified core application
+
+- PR #24: request validation, persistence, study-area enforcement, atomic assignment, rollback/conflict handling, and MongoDB integration coverage.
+- PR #21: mission visibility, ordered status transitions, idempotent history events, optimistic version checks, and role enforcement.
+- PR #22: citizen submission and authoritative request-status UI.
+- PR #23: coordinator queue/assignment and rescuer mission/status UI aligned to the backend contract.
+- Backend Ruff/Pytest, frontend lint/tests/build, both GitHub checks, and a sanitized full API flow against a real MongoDB replica set passed on 2026-09-29.
+- The real-MongoDB gate flow succeeds with `latest_route_result = null`, proving routing and ML are not required for the core lifecycle.
+
 ## Immediate next actions
 
-1. Create Project Foundation Phase 2 work packages from the locked API, schema, lifecycle, UI, and test contracts.
-2. Implement one sanitized rescue request through coordinator assignment and rescuer status update.
-3. Connect the core lifecycle to MongoDB and add conflict/transaction tests.
-4. Replace remaining prototype-only mocks only when their backing API is ready; do not widen scope.
-5. Keep Team Phases 1–5 planned until Ranee accepts the active gate.
+1. Merge the Foundation Phase 2 gate record and evidence.
+2. Open Team Phase 1 for the bounded U-Belt OSM/geospatial pipeline.
+3. Preserve the stable `edge_id` join contract and controlled-scenario labels.
+4. Package Matthew's completed XGBoost experiment for independent repository review; do not claim its reported metrics as verified yet.
+5. Keep rule-based risk available and keep runtime model use optional until Ranee accepts the evidence package.
 
 ## Project administration notes
 
@@ -45,7 +54,7 @@
 
 ## Active blockers
 
-No foundation decision blocks Phase 2. The exact course deadline and member availability are still not recorded, so the roadmap uses dependency and priority gates rather than invented calendar dates.
+No technical blocker remains for the Foundation Phase 2 gate. Team Phase 1 must not claim the externally trained XGBoost artifact or reported metrics as repository-verified until provenance, split, schema, artifact metadata, and reproducible evaluation evidence are reviewed. The exact course deadline and member availability are still not recorded, so the roadmap uses dependency and priority gates rather than invented calendar dates.
 
 ## Major risks
 
@@ -58,7 +67,7 @@ No foundation decision blocks Phase 2. The exact course deadline and member avai
 
 ## Latest demonstration
 
-Phase 1 foundation: the project can trace the sanitized rescue lifecycle through UI states, API/domain/schema behavior, controlled hazard joining, deterministic routing expectations, ML/fallback boundaries, offline behavior, and acceptance evidence. Runtime feature implementation remains assigned to later phases.
+Foundation Phase 2: a sanitized citizen request is persisted, listed for a coordinator, atomically assigned, retrieved by the assigned rescuer, and advanced to `en-route` against a real MongoDB replica set. Role, validation, duplicate/conflict, rollback, and lifecycle tests pass. Mapping, routing, model integration, and persistent offline behavior remain later-phase deliverables.
 
 ## Links
 
@@ -71,6 +80,9 @@ Phase 1 foundation: the project can trace the sanitized rescue lifecycle through
 - [Roadmap](ROADMAP.md)
 - [Phase 1 guide](phases/PHASE-01.md)
 - [Phase 2 guide](phases/PHASE-02.md)
+- [Team Phase 1 guide](phases/TEAM-PHASE-01.md)
 - [Phase 1 gate](phases/PHASE-01-GATE.md)
+- [Phase 2 gate](phases/PHASE-02-GATE.md)
 - [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
+- [Phase 2 evidence](testing/PHASE-02-EVIDENCE.md)
 - [Sprint 01](sprints/SPRINT-01.md)

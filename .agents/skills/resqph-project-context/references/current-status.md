@@ -1,13 +1,13 @@
 # Current Status
 
-- **Active phase:** Project Foundation Phase 2 — Core Application (`Ready to start`).
-- **Overall health:** Phase 1 foundation is merged and verified; application implementation remains early.
-- **Completed and verified:** Phase 1 scope, contracts, fixtures, wireframes, dataset feasibility, known routing expectations, test strategy, and gate evidence.
-- **Existing runtime:** frontend prototype with local state; FastAPI health endpoint; Docker MongoDB replica-set configuration.
-- **Not yet verified:** persistent request/assignment/mission lifecycle, bounded graph pipeline, A* implementation, trained-model evidence, offline synchronization, and end-to-end integration.
-- **Current target:** one persistent request-to-mission vertical slice defined in `docs/phases/PHASE-02.md`.
+- **Active phase:** Foundation Phase 2 gate closeout; Team Phase 1 opens after the gate record merges.
+- **Overall health:** Core application implementation and its real-MongoDB vertical slice are verified; mapping, routing, model packaging, and offline persistence remain later-phase work.
+- **Completed and verified:** Phase 1 foundation plus request creation, coordinator queue/assignment, rescuer mission/status, MongoDB transactions, failure cases, and frontend contract integration through PRs #21–#24.
+- **Existing runtime:** React/Vite role-simulation UI, FastAPI core APIs, and Docker MongoDB replica-set lifecycle.
+- **Not yet verified:** bounded graph pipeline, A* implementation, XGBoost artifact/evaluation package, runtime model integration, and persistent offline synchronization.
+- **Current target:** merge the Foundation Phase 2 gate record, then begin Team Phase 1 mapping/geospatial work.
 - **Blocker:** no scope blocker; exact course deadline and member availability are not recorded, so no calendar dates should be invented.
 - **Required checks:** frontend lint/tests/build; backend Ruff/Pytest; transaction, role, lifecycle, boundary, and integration evidence.
-- **Gate readiness:** Foundation Phase 2 has not started implementation and is not ready for its exit gate.
-- **Phase-opening rule:** create only the Foundation Phase 2 tracker and member work packages; Team Phases 1–5 remain planned until the active gate is approved.
-- **Last verified:** 2026-09-22 against Phase 1 merge commit `991c325` and the approved time-constrained Phase 2 alignment.
+- **Gate readiness:** Foundation Phase 2 is verified with an `Approve` decision recorded in `docs/phases/PHASE-02-GATE.md`; the record still must merge.
+- **Phase-opening rule:** Team Phase 1 becomes active when the gate record merges; later team phases remain planned until their preceding gates are approved.
+- **Last verified:** 2026-09-29 against implementation merges through PR #23 (`21a779d`) plus the sanitized MongoDB gate run.

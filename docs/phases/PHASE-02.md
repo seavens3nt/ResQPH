@@ -1,6 +1,6 @@
 # Project Foundation Phase 2 — Core Application
 
-**Status:** Ready to start  
+**Status:** Completed and gate-verified; gate record pending merge
 **Decision and gate owner:** Ranee  
 **Priority authority:** [`../requirements/MVP_SCOPE.md`](../requirements/MVP_SCOPE.md)  
 **Inputs:** Phase 1 contracts, fixtures, wireframes, and gate evidence merged through PR #13

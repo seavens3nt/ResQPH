@@ -39,7 +39,7 @@ The project does not build a hydrological forecasting model. It may use existing
 - MongoDB operational/geospatial storage and appropriate transaction boundaries.
 - Deterministic A* or Dijkstra baseline routing.
 - Explainable flood, elevation, passability, and risk penalties.
-- A required Logistic Regression and Random Forest road-risk experiment, with application integration only when the evidence is accepted.
+- The completed XGBoost road-risk experiment, with application integration only when its artifact and evaluation evidence are accepted.
 - A mandatory rule-based risk fallback.
 - Cached viewing of one assigned mission, one queued mission-status update, stale-data indicators, and reconnection validation.
 - Synthetic or sanitized demonstrations and tests.
@@ -51,7 +51,7 @@ The project does not build a hydrological forecasting model. It may use existing
 - Guaranteed road safety or autonomous rescue decisions.
 - Nationwide deployment or complete Metro Manila coverage in the initial prototype.
 - Direct integration with government emergency infrastructure.
-- XGBoost or deep-learning model development for the MVP.
+- Additional model-family development beyond packaging and validating the accepted XGBoost experiment.
 - Production authentication, identity verification, OAuth, or MFA.
 - More than one queued offline action or complete offline map packages.
 - Real mesh, radio, or satellite communication.

@@ -1,8 +1,8 @@
 # ResQPH project roadmap
 
-**Status:** Project Foundation Phase 1 is merged and verified; Project Foundation Phase 2 is ready to start
+**Status:** Project Foundation Phase 2 gate verified; Team Phase 1 ready to start after the gate record merges
 **Decision owner:** Ranee
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-29
 
 ## Delivery structure
 
@@ -35,7 +35,7 @@ Team Phase 5 — Integration, Testing, and Presentation
 1. The study area is the project-defined U-Belt pilot area, City of Manila, using the approved WGS 84 bounding box.
 2. Flood conditions are controlled or historical; the system does not claim live prediction.
 3. A* and rule-based penalties must work before ML is integrated.
-4. The required ML experiment uses Logistic Regression and Random Forest; XGBoost is excluded.
+4. XGBoost is the accepted candidate ML experiment under D-019; its artifact and reported metrics are not runtime-approved until the repository evidence package passes review.
 5. Model output may add a bounded penalty but cannot override impassability rules or human decisions.
 6. Offline support is limited to one cached assigned mission and one queued status update.
 7. The interface distinguishes simulated, historical, cached, stale, and pending-sync information.
@@ -74,7 +74,7 @@ Ranee recorded `Approve` on 2026-09-22 after verifying the locked foundation and
 
 ## Project Foundation Phase 2 — Core Application
 
-**Status:** Ready to start
+**Status:** Completed and gate-verified through PRs #21–#24; gate record pending merge
 **Lead:** Ranee
 **Backend review/support:** Jared
 **Frontend contract review/support:** Elle and Clarence
@@ -100,7 +100,7 @@ If capacity is lower than expected, complete one citizen request through coordin
 
 ## Team Phase 1 — Mapping and Geospatial Pipeline
 
-**Status:** Planned
+**Status:** Ready to start after the Foundation Phase 2 gate record merges
 **Accountable geospatial owner:** Matthew
 **Backend integration support:** Jared
 
@@ -120,7 +120,7 @@ Implement A*, baseline known-graph tests, deterministic flood/passability penalt
 **Accountable owner:** Matthew
 **Support:** Ranee and Jared
 
-Build the rule baseline, Logistic Regression and Random Forest experiments, reproducible preprocessing, spatial/temporal holdout when feasible, evaluation and error analysis, stable inference output, and missing/malformed-model fallback. Application integration requires Ranee’s evidence review.
+Package and verify the completed XGBoost experiment, including reproducible preprocessing, leakage-safe holdout evidence, evaluation and error analysis, stable inference output, and missing/malformed-model fallback. Application integration requires Ranee’s evidence review.
 
 If the evidence threshold is not met, the experiment is still documented and demonstrated as a non-integrated result; the rule-based route remains the accepted application behavior.
 

@@ -1,7 +1,7 @@
 # ResQPH decision log
 
 **Decision owner:** Ranee
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-29
 
 | ID | Decision | Status | Reason and consequence |
 |---|---|---|---|
@@ -10,7 +10,7 @@
 | D-003 | Use a curated OpenStreetMap extract for the study-area road graph. | Approved | Supports reproducible, bounded graph preparation. ODbL attribution and redistribution obligations must be observed. |
 | D-004 | Use deterministic A* as the primary routing algorithm. | Approved | Provides an explainable baseline with a geographic heuristic. Dijkstra is not a separate required feature. |
 | D-005 | Maintain a mandatory rule-based road-risk fallback. | Approved | Core routing must work when ML is unavailable, rejected, or unreliable. |
-| D-006 | Implement ML as a required supporting component using Logistic Regression and Random Forest. | Approved | ML contributes a bounded road-risk penalty; it does not control routing or override impassability rules. XGBoost is excluded. |
+| D-006 | Implement ML as a required supporting component using Logistic Regression and Random Forest. | Superseded by D-019 | The original Phase 1 model choice was revised after the completed external experiment favored a smaller XGBoost artifact at comparable reported performance. |
 | D-007 | Use basic role simulation for the MVP and exclude production authentication. | Approved | Keeps identity scope proportional to the academic prototype. UI and documentation must not represent this as secure authentication. |
 | D-008 | Limit offline support to cached mission viewing and one queued mission-status update. | Approved | Controls synchronization complexity while demonstrating connectivity-aware behavior. |
 | D-009 | Use new team phase numbering after the Project Foundation. | Approved | Team Phase 1 begins with Mapping and Geospatial Pipeline. The PM Foundation contains requirements/data validation and core application work. |
@@ -23,6 +23,7 @@
 | D-016 | Use fixed seconds-equivalent rule penalties and cap ML contribution at 60 per edge. | Approved | The known-graph fixture produces deterministic, inspectable baseline, reroute, exclusion, no-route, and ML-cap outcomes. |
 | D-017 | Apply a time-constrained three-tier delivery order: deterministic end-to-end workflow first, required ML experiment and limited offline behavior second, optional enrichment last. | Approved | Protects a demonstrable MVP without removing the agreed AI/ML experiment. Runtime ML integration remains evidence-gated; optional historical/elevation enrichment and extra interface features cannot delay the core workflow. |
 | D-018 | Reconcile all prototype UI claims with the locked academic scope. | Approved | Runtime text must identify the U-Belt controlled scenario and must not claim live PAGASA data, nationwide response, official dispatch, guaranteed safe routes, or production authentication. |
+| D-019 | Accept XGBoost as the selected road-risk experiment and stop requiring new Logistic Regression or Random Forest training. | Approved | Matthew reported an Ondoy 2009 experiment with ROC-AUC `0.97` and recall `0.92`, and a smaller artifact than the tested Random Forest. These figures remain team-reported and are not repository-verified until the training provenance, split, artifact, schema, and reproducible evaluation package are reviewed. Runtime use remains optional, bounded, and subordinate to the mandatory rule-based fallback. |
 
 ## Phase 1 decision closure
 

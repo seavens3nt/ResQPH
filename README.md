@@ -89,7 +89,7 @@ The approved project baseline specifies:
 - MongoDB for operational and geospatial data
 - A* or Dijkstra's algorithm for routing
 - Public road, flood-hazard, and elevation datasets
-- Logistic Regression and Random Forest as the approved ML experiments
+- XGBoost as the accepted candidate ML experiment, with repository verification still required
 - Rule-based road-risk scoring as a required fallback
 - Local caching and queued synchronization for limited offline behavior
 - GitHub for source control
@@ -119,7 +119,7 @@ Implement basic routing first, then add flood and risk penalties and dynamic rer
 
 ### Team Phase 3 — AI/ML Road-Risk Component
 
-Build and evaluate Logistic Regression and Random Forest road-risk experiments. Keep the experiment in the project, but integrate its output into routing only if the locked evidence gate passes; deterministic rule-based routing remains mandatory.
+Package and independently evaluate the completed XGBoost road-risk experiment. Integrate its output into routing only if the locked evidence gate passes; deterministic rule-based routing remains mandatory.
 
 ### Team Phase 4 — Limited Offline Support
 

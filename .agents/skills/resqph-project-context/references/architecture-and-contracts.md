@@ -5,7 +5,7 @@
 - `frontend/`: React/TypeScript/Vite role views, Leaflet map, API client, limited client caching, and frontend tests.
 - `backend/`: FastAPI, Pydantic validation, async PyMongo, lifecycle services, and backend tests.
 - `routing/`: bounded OSMnx/NetworkX graph preparation and deterministic flood-aware routing.
-- `ml/`: rule baseline, Logistic Regression and Random Forest experiments, evaluation, and optional accepted inference adapter.
+- `ml/`: rule baseline, accepted XGBoost evidence package, evaluation, and optional accepted inference adapter.
 - `data/`: metadata, reproducible acquisition/processing instructions, and small sanitized fixtures.
 - `docs/`: authoritative scope, architecture, contracts, roadmap, phase gates, status, and evidence.
 - `tests/`: planned cross-component and end-to-end verification.

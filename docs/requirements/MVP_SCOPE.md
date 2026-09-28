@@ -1,8 +1,8 @@
 # ResQPH MVP scope
 
-**Status:** Completed and verified Phase 1 scope baseline
+**Status:** Active MVP scope; Phase 1 baseline amended by D-019
 **Decision owner:** Ranee
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-29
 
 ## Purpose
 
@@ -34,7 +34,7 @@ This rectangle is a project-controlled scope boundary. It is not an official adm
 7. Apply transparent rule-based flood and passability penalties.
 8. Exclude roads classified as impassable in the active controlled scenario.
 9. Explain why a road was avoided and why the selected route was preferred.
-10. Train and evaluate Logistic Regression and Random Forest road-risk models when the validated data support them.
+10. Package and independently evaluate the completed XGBoost road-risk experiment when the validated data support it.
 11. Convert accepted model output into a bounded road-risk penalty without overriding deterministic impassability rules.
 12. Continue routing with the rule-based fallback when model inference is unavailable or rejected.
 13. Cache one assigned mission for viewing while offline.
@@ -47,7 +47,7 @@ This rectangle is a project-controlled scope boundary. It is not an official adm
 - Use one curated, reproducible OpenStreetMap extract rather than nationwide data.
 - Use A* as the primary routing algorithm. Dijkstra may be retained only as a test comparison or fallback investigation.
 - Keep the rule-based road-risk calculation independently testable.
-- Use Logistic Regression as the explainable ML baseline and Random Forest as the comparison model. XGBoost is excluded.
+- Use the accepted XGBoost experiment as the candidate ML artifact. Its provenance, feature schema, split, metrics, and compatibility must be reproduced before runtime acceptance.
 - Use basic prototype role simulation and label it clearly as non-production authentication.
 - Use synthetic or sanitized people, contact details, locations, missions, and incidents.
 - Keep raw datasets and generated model artifacts outside ordinary Git history.
@@ -70,7 +70,7 @@ The MVP is implemented in the following order. A lower tier must not delay a hig
 
 ### Tier 2 — Required experiment and limited resilience
 
-- Logistic Regression and Random Forest experiment with the approved split, metrics, and error analysis
+- XGBoost experiment package with the approved split evidence, metrics, error analysis, artifact metadata, and inference schema
 - Rule-based routing fallback demonstrated with ML disabled or rejected
 - Runtime ML penalty integration only if the evidence threshold passes and Ranee accepts it
 - One cached assigned mission and one queued next-valid mission-status update
@@ -110,11 +110,11 @@ The MVP succeeds when a reviewer can complete this sanitized demonstration:
 5. A* calculates an initial route.
 6. A controlled scenario marks one road risky or impassable.
 7. The engine returns an alternative route and a human-readable explanation.
-8. Logistic Regression and Random Forest results are reported honestly; if the evidence gate passes, the accepted result contributes a bounded risk penalty.
+8. XGBoost results are reported honestly; if the repository evidence gate passes, the accepted artifact contributes a bounded risk penalty.
 9. The same route workflow operates with ML disabled, rejected, missing, or malformed.
 10. The rescuer submits a status update and the citizen sees the new status.
 11. The rescuer can view the cached mission and synchronize one queued valid status update after reconnecting.
 
 ## Approval gate
 
-Ranee approved and verified this Phase 1 scope baseline on 2026-09-22. Later implementation phases must still produce working code, automated tests, trained-model evidence when applicable, and Ranee's acceptance; Phase 1 completion does not claim those features already exist.
+Ranee approved and verified the Phase 1 scope baseline on 2026-09-22 and approved the XGBoost amendment in D-019 on 2026-09-29. Later implementation phases must still produce working code, automated tests, trained-model evidence when applicable, and Ranee's acceptance; neither the original baseline nor the amendment makes externally reported model metrics repository-verified.

@@ -1,9 +1,11 @@
 # Road-risk ML feasibility and evaluation plan
 
-**Status:** Completed Phase 1 experiment contract; later training evidence required
-**Approved models:** Logistic Regression and Random Forest
-**Excluded model:** XGBoost
-**Last updated:** 2026-09-22
+**Status:** XGBoost selected; repository evidence and runtime acceptance pending
+**Approved candidate:** XGBoost road-risk classifier
+**Required fallback:** deterministic rule-based risk score
+**Last updated:** 2026-09-29
+
+The original Logistic Regression and Random Forest requirement was superseded by decision D-019. Matthew reports that an XGBoost model trained from Typhoon Ondoy 2009 data achieved ROC-AUC `0.97` and recall `0.92`, with a smaller artifact than the tested Random Forest; Logistic Regression reportedly did not learn the patterns sufficiently. Those figures are team-reported, not independently verified in this repository.
 
 ## Intended use
 
@@ -40,14 +42,15 @@ Do not train on `edge_id`, current outcome flood level, current outcome passabil
 - If fewer than 200 labeled records exist, either class has fewer than 40 examples, or grouped splitting cannot create all partitions, the experiment may still demonstrate the pipeline but its output is not integrated into routing.
 - Synthetic controlled records are always labeled as synthetic and are never mixed with historical records without a source indicator and separate result reporting.
 
-## Required experiments
+## Required evidence package
 
 1. Rule-based baseline using the approved deterministic risk table.
-2. Logistic Regression with documented preprocessing and interpretable coefficients.
-3. Random Forest using the same approved feature/label split.
-4. Comparison against the baseline on the same held-out data.
-5. Error analysis, especially false-low-risk predictions.
-6. Inference fallback test for missing, malformed, or rejected artifacts.
+2. XGBoost training code or immutable training reference with dependency versions and random seeds.
+3. Dataset provenance for the Ondoy 2009 records plus the exact feature and target schema.
+4. Leakage-safe train/validation/test construction and comparison against the rule baseline.
+5. Metrics, confusion matrix, and error analysis, especially false-low-risk predictions.
+6. Serialized artifact metadata, checksum, version, and stable edge-risk inference contract.
+7. Inference fallback tests for missing, malformed, incompatible, or rejected artifacts.
 
 ## Evaluation
 
@@ -66,7 +69,7 @@ Use a spatial or temporal holdout when enough data exist. A random row split is 
 
 ## Integration acceptance
 
-The experiment is a required deliverable. Model output is integrated into the demo only when:
+The evidence package is a required deliverable. Model output is integrated into the demo only when:
 
 - The target and labels are defensible and documented.
 - The held-out evaluation is reproducible.
@@ -75,7 +78,7 @@ The experiment is a required deliverable. Model output is integrated into the de
 - False-low-risk behavior and limitations are documented.
 - Ranee accepts the evidence.
 
-If these conditions are not met, the completed academic output is the evaluated experiment and error analysis, while the application demonstration uses the rule-based fallback. This is not cancellation of ML; it is a controlled integration decision.
+If these conditions are not met, the completed academic output is the externally trained experiment plus its documented evaluation, while the application demonstration uses the rule-based fallback. This is not cancellation of ML; it is a controlled integration decision.
 
 ## Approved model-to-routing mapping
 
@@ -94,8 +97,8 @@ The maximum ML contribution is therefore `60` seconds-equivalent prototype cost 
   "edge_id": "edge-001",
   "risk_probability": 0.74,
   "risk_level": "high",
-  "model_name": "random_forest",
-  "model_version": "rf-001",
+  "model_name": "xgboost",
+  "model_version": "xgb-ondoy-001",
   "generated_at": "2026-09-21T04:00:00Z"
 }
 ```
