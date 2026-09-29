@@ -1,0 +1,2 @@
+# Dev dependencies for the Ondoy 2009 experiment
+pytest>=8.0,<9.0

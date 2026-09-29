@@ -1,0 +1,24 @@
+{
+  "model_name": "random_forest",
+  "mode": "ml",
+  "features": [
+    "road_length_m",
+    "speed_kph",
+    "elevation_m",
+    "flood_depth_m",
+    "flood_hazard_class",
+    "road_class_code",
+    "distance_to_evac_m"
+  ],
+  "target": "risk_score",
+  "metrics": {
+    "mae": 0.01312255342315411,
+    "mse": 0.0004033429288562022,
+    "rmse": 0.020083399335177353,
+    "r2": 0.9941041208746446
+  },
+  "sample_count": 350,
+  "study_area": "Metro Manila",
+  "random_seed": 42,
+  "trained_at": "2026-09-29T06:39:21.500221+00:00"
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "model": "linear",
+    "r2": 0.977736037588973,
+    "mae": 0.03406074674803899,
+    "rmse": 0.046117927727149,
+    "train_seconds": 0.05,
+    "inference_seconds": 0.003,
+    "size_bytes": 1702,
+    "size_human": "1.7 KB"
+  },
+  {
+    "model": "decision_tree",
+    "r2": 0.9999905197642279,
+    "mae": 0.00034087152771161277,
+    "rmse": 0.0009516519097952913,
+    "train_seconds": 0.28,
+    "inference_seconds": 0.007,
+    "size_bytes": 422705,
+    "size_human": "412.8 KB"
+  },
+  {
+    "model": "random_forest",
+    "r2": 0.9999965911878199,
+    "mae": 0.00016471857882240348,
+    "rmse": 0.000570650353744115,
+    "train_seconds": 8.8,
+    "inference_seconds": 0.105,
+    "size_bytes": 118385585,
+    "size_human": "112.9 MB"
+  },
+  {
+    "model": "xgboost",
+    "r2": 0.9999940896456448,
+    "mae": 0.00038423426384375214,
+    "rmse": 0.000751407134352061,
+    "train_seconds": 2.64,
+    "inference_seconds": 0.025,
+    "size_bytes": 1812637,
+    "size_human": "1.7 MB"
+  },
+  {
+    "model": "knn",
+    "r2": 0.9994457185205238,
+    "mae": 0.0013606296620534517,
+    "rmse": 0.007276687729527708,
+    "train_seconds": 0.15,
+    "inference_seconds": 0.356,
+    "size_bytes": 15797965,
+    "size_human": "15.1 MB"
+  }
+]
