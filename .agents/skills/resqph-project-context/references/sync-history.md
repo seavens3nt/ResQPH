@@ -30,10 +30,26 @@ This sync changes reusable project guidance. It does not promote any later-phase
   metadata; the rule fallback remains operative.
 - **Evidence inspected:** PRs #26–#30 as merged into the baseline, artifact
   manifests and metadata, external training/evaluation code, backend adapter,
-  contracts, phase records, 43 passing backend tests, and 21 passing ML tests.
-- **Unresolved evidence:** pull-request CI, raw-data retraining, spatial or
+  contracts, phase records, 44 passing backend tests, and 21 passing ML tests.
+- **Unresolved evidence:** raw-data retraining, spatial or
   temporal evaluation, U-Belt-compatible model, bounded graph, deterministic
   routing, and persistent offline synchronization.
 
 This sync records the repaired architecture and evidence boundary. It does not
 approve runtime ML or replace Ranee's final gate decision.
+
+## 2026-09-29 — GitHub phase opening and PR verification
+
+- **Readiness commit:** `9a16dab`
+- **Pull request:** #31; mergeable with frontend, backend, and ML evidence CI passed
+- **Changed guidance:** GitHub milestones now use Team Phase 1–5 numbering;
+  Team Phase 1 is open through Issues #32–#36; only Matthew's Issue #32 is
+  ready to start, while Issues #33–#35 are blocked by its accepted fixture;
+  Team Phase 3 evidence review is tracked by Issue #37.
+- **Evidence inspected:** live PR #31 status and checks, milestone state,
+  assignees, labels, and issue metadata.
+- **Unresolved evidence:** Ranee's PR #31 review and merge decision, post-merge
+  `main` verification, the Team Phase 1 fixture, and later routing/offline work.
+
+This sync records the opened phase and verified CI. It does not approve or
+merge PR #31 and does not unblock dependent work early.

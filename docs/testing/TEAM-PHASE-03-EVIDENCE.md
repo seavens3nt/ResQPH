@@ -46,6 +46,8 @@ validate U-Belt predictive accuracy. The runtime classifier remains disabled.
 
 ## Merge gate
 
-This evidence becomes `Completed and verified` only after the pull request's
-frontend, backend, and ML evidence checks pass and Ranee records the gate
-decision.
+[PR #31](https://github.com/seavens3nt/ResQPH/pull/31) passed its frontend,
+backend, and ML evidence checks on 2026-09-29. This evidence becomes
+`Completed and verified` only after Ranee reviews and merges the pull request,
+verifies `main`, and records the gate decision in
+[Issue #37](https://github.com/seavens3nt/ResQPH/issues/37).

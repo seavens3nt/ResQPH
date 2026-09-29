@@ -60,17 +60,18 @@ Clarence own map presentation after the accepted fixture schema is on `main`.
   target, features, and evaluation do not meet the U-Belt contract.
 - The exact course deadline and member availability are still not recorded, so
   no calendar dates are invented.
-- CI results for this readiness branch remain pending until a pull request is
-  opened and pushed.
+- [PR #31](https://github.com/seavens3nt/ResQPH/pull/31) is open, mergeable,
+  and its frontend, backend, and ML evidence checks have passed. Ranee's review
+  and merge decision remain pending.
 
 ## Next decisions for Ranee
 
-1. Review and merge the Phase 3 readiness pull request after all three CI jobs
-   pass.
+1. Review [PR #31](https://github.com/seavens3nt/ResQPH/pull/31) and merge it
+   only if the inspected gate conditions remain acceptable.
 2. Record `Approve with conditions` in the Team Phase 3 gate, accepting the
    academic ML package while deferring runtime model integration.
-3. Keep Team Phase 1 as the active implementation phase and open only its
-   bounded work packages.
+3. Keep Team Phase 1 as the active implementation phase. Issues #32–#36 are
+   open; only Issue #32 is ready to start until its fixture is accepted.
 
 ## Links
 
