@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import assignments, health, missions, rescue_requests, ml
+from app.api.routes import assignments, health, missions, ml, rescue_requests
 from app.core.config import settings
 from app.db.mongodb import close_mongodb, connect_mongodb, get_database
 from app.db.setup import initialize_database

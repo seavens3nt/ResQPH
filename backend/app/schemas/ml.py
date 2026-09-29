@@ -21,7 +21,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 RiskLevel = Literal["low", "moderate", "high", "severe"]
 
 

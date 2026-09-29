@@ -118,7 +118,7 @@ def _risk_level(probability: float) -> str:
 
 def _ml_penalty(probability: float) -> int:
     """Per ML_FEASIBILITY.md: round(clamp(p, 0, 1) * 60)."""
-    return int(round(max(0.0, min(probability, 1.0)) * 60))
+    return round(max(0.0, min(probability, 1.0)) * 60)
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +161,7 @@ def initialize() -> None:
         _model = None
         _model_version = "rule-fallback-001"
 
-    except Exception as exc:  # broad on purpose: never fail startup
+    except Exception as exc:  # noqa: BLE001 — broad on purpose: never fail startup
         logger.warning(
             "ML model load failed (%s). Using rule-based fallback.", exc
         )
@@ -203,7 +203,7 @@ def predict_road_risk(payload: dict) -> dict:
                 ]
             ]
             probability = float(_model.predict_proba(features)[0, 1])
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — intentional fallback catch
             logger.warning(
                 "ML prediction failed (%s); using rule fallback.", exc
             )
