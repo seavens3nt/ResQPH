@@ -1,11 +1,19 @@
 # Road-risk ML feasibility and evaluation plan
 
-**Status:** XGBoost selected; repository evidence and runtime acceptance pending
-**Approved candidate:** XGBoost road-risk classifier
+**Status:** XGBoost evidence package delivered and repository-verified
+**Approved candidate:** XGBoost road-risk classifier (external evidence only)
 **Required fallback:** deterministic rule-based risk score
-**Last updated:** 2026-09-29
+**Last updated:** 2026-09-30
 
-The original Logistic Regression and Random Forest requirement was superseded by decision D-019. Matthew reports that an XGBoost model trained from Typhoon Ondoy 2009 data achieved ROC-AUC `0.97` and recall `0.92`, with a smaller artifact than the tested Random Forest; Logistic Regression reportedly did not learn the patterns sufficiently. Those figures are team-reported, not independently verified in this repository.
+The original Logistic Regression and Random Forest requirement was superseded by decision D-019. The evidence package under [`../../ml/external-experiments/ondoy-2009-metro-manila/`](../../ml/external-experiments/ondoy-2009-metro-manila/) contains the training code, artifacts, and reproducible evaluation. The repository-verified held-out metrics are:
+
+- ROC-AUC `0.976`
+- Recall (flooded) `0.923`
+- Precision (flooded) `0.238`
+- 520 positives / 148,495 total samples
+- Stratified 80/20 split, `random_state=42`
+
+Feature-importance analysis identifies `elevation_m` (0.658) as the dominant predictor. Runtime integration remains gated on the U-Belt retraining PR.
 
 ## Intended use
 
