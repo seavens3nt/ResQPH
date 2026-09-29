@@ -1,12 +1,12 @@
-﻿# Isolated training environment for the Ondoy 2009 Metro Manila experiment.
+# Isolated training environment for the Ondoy 2009 Metro Manila experiment.
 #
 # This file is intentionally separate from ml/requirements.txt. This experiment
 # predates the main repo's Python 3.12 / numpy 2.x / scikit-learn 1.6 baseline
 # and must not affect it. Runtime code in backend/ and routing/ must never
 # depend on anything listed here.
 #
-# Python: 3.11.x (numpy 1.26 and geopandas 0.14 do not have reliable cp312
-# wheels for Windows at the time this experiment was trained).
+# Python: 3.12.x (numpy 1.26 and geopandas 0.14 ship cp312
+# wheels; verified during the port).
 
 # --- Core numeric / data ---
 numpy==1.26.4

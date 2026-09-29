@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resqph-ondoy-2009-experiment"
+version = "0.1.0"
+description = "Metro Manila Typhoon Ondoy 2009 external ML experiment for ResQPH"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["resqph_ondoy_2009*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
