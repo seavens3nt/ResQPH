@@ -67,6 +67,9 @@ ml/artifacts/*
 *.pickle
 *.onnx
 
+# External experiment artifacts (approved by D-021)
+!ml/external-experiments/**/artifacts/*.pkl
+
 # ==================================================
 # Large datasets and generated geographic files
 # ==================================================
