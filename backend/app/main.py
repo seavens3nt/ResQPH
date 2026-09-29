@@ -9,12 +9,12 @@ from app.api.routes import assignments, health, missions, ml, rescue_requests
 from app.core.config import settings
 from app.db.mongodb import close_mongodb, connect_mongodb, get_database
 from app.db.setup import initialize_database
+from app.integrations import ml_inference
 from app.schemas.common import (
     ServiceError,
     service_error_handler,
     validation_exception_handler,
 )
-from app.services import ml_inference
 
 
 @asynccontextmanager

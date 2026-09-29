@@ -19,3 +19,21 @@ This log records context synchronization only. It is not evidence that Phase 2 i
 - **Unresolved evidence:** reproducible XGBoost training/evaluation package, bounded graph pipeline, A* implementation, and persistent offline synchronization.
 
 This sync changes reusable project guidance. It does not promote any later-phase feature to complete.
+
+## 2026-09-29 — Team Phase 3 evidence and runtime safety repair
+
+- **Baseline commit:** `6ec4e3b`
+- **Target:** Phase 3 readiness review with the external model disabled
+- **Changed guidance:** Team Phase 1 is active; Team Phase 3 is ready for early
+  evidence review; the Ondoy artifact is completed exploratory evidence but is
+  not runtime-compatible; backend model loading requires checksum and exact
+  metadata; the rule fallback remains operative.
+- **Evidence inspected:** PRs #26–#30 as merged into the baseline, artifact
+  manifests and metadata, external training/evaluation code, backend adapter,
+  contracts, phase records, 43 passing backend tests, and 21 passing ML tests.
+- **Unresolved evidence:** pull-request CI, raw-data retraining, spatial or
+  temporal evaluation, U-Belt-compatible model, bounded graph, deterministic
+  routing, and persistent offline synchronization.
+
+This sync records the repaired architecture and evidence boundary. It does not
+approve runtime ML or replace Ranee's final gate decision.

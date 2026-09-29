@@ -8,13 +8,13 @@ Closes #
 
 ## Project phase
 
-- [ ] Phase 1 — Requirements and Data Validation
-- [ ] Phase 2 — Core Application
-- [ ] Phase 3 — Mapping and Geospatial Pipeline
-- [ ] Phase 4 — Routing
-- [ ] Phase 5 — AI/ML
-- [ ] Phase 6 — Offline Simulation
-- [ ] Phase 7 — Integration and Testing
+- [ ] Project Foundation 1 — Requirements and Data Validation
+- [ ] Project Foundation 2 — Core Application
+- [ ] Team Phase 1 — Mapping and Geospatial Pipeline
+- [ ] Team Phase 2 — Flood-Aware Routing
+- [ ] Team Phase 3 — AI/ML Road-Risk Component
+- [ ] Team Phase 4 — Limited Offline Support
+- [ ] Team Phase 5 — Integration, Testing, and Presentation
 
 ## Affected components
 
@@ -71,5 +71,5 @@ Explain what the reviewer should pay particular attention to.
 - [ ] Error and failure cases are handled where appropriate.
 - [ ] Documentation is updated.
 - [ ] No passwords, tokens, `.env` files, or private data are committed.
-- [ ] Large datasets and generated model files are not committed to ordinary Git history.
-- [ ] At least one team member is assigned as a reviewer.
+- [ ] Large datasets and unapproved generated model files are not committed to ordinary Git history.
+- [ ] `@seavens3nt` is requested as the acceptance reviewer.

@@ -6,8 +6,9 @@ Binary classification:
   target = flooded_ondoy_2009  (0 = dry, 1 = flooded)
   models = logreg, random_forest, xgboost
 
-Reports accuracy, AUC, confusion matrix, and feature importances.
-Exports the best model to models/road_flood_classifier.pkl.
+Reports accuracy, AUC, confusion matrix, and feature importances. The preserved
+evaluation uses a stratified random row split and is exploratory only; it must
+not be represented as spatial or temporal generalization evidence.
 
 Model selection: prefers XGBoost when its AUC is within 0.01 of the best,
 because XGBoost achieves higher recall (safety-critical for rescue routing)
@@ -218,6 +219,18 @@ def main() -> None:
             "positive_count":  n_pos,
             "positive_rate":   float(pos_rate),
             "random_seed":     config.RANDOM_SEED,
+            "evaluation_status": "exploratory_only",
+            "split": {
+                "method": "stratified_random_row_holdout",
+                "test_size": config.TEST_SIZE,
+                "random_seed": config.RANDOM_SEED,
+                "leakage_safe": False,
+                "limitation": (
+                    "Neighboring road observations can cross the split; these "
+                    "metrics are not spatial or temporal generalization evidence."
+                ),
+            },
+            "runtime_compatible": False,
             "selection_note":  (
                 "XGBoost preferred when its AUC is within 0.01 of the best "
                 "model due to higher recall and smaller model size."

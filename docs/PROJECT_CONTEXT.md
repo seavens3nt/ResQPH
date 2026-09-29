@@ -39,7 +39,9 @@ The project does not build a hydrological forecasting model. It may use existing
 - MongoDB operational/geospatial storage and appropriate transaction boundaries.
 - Deterministic A* or Dijkstra baseline routing.
 - Explainable flood, elevation, passability, and risk penalties.
-- The completed XGBoost road-risk experiment, with application integration only when its artifact and evaluation evidence are accepted.
+- The completed external XGBoost road-flood experiment as exploratory academic
+  evidence. Its current artifact is not compatible with the U-Belt runtime
+  contract; application integration requires a new accepted artifact.
 - A mandatory rule-based risk fallback.
 - Cached viewing of one assigned mission, one queued mission-status update, stale-data indicators, and reconnection validation.
 - Synthetic or sanitized demonstrations and tests.
@@ -79,7 +81,9 @@ The project does not build a hydrological forecasting model. It may use existing
 - Elevation resolution may not support precise road-level conclusions.
 - Reported road and flood observations may be sparse, delayed, inconsistent, or simulated.
 - Coordinate reference systems and GeoJSON longitude/latitude ordering must be validated.
-- A supervised ML model may not be defensible if labels, coverage, or sample size are inadequate; the rule-based fallback remains the accepted outcome.
+- The preserved random-row Ondoy evaluation does not establish spatial,
+  temporal, or U-Belt generalization; the rule-based fallback remains the
+  accepted application outcome.
 - Offline data can become stale, and synchronization conflicts require backend validation.
 
 ## Safety and privacy notice

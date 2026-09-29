@@ -119,11 +119,27 @@ Routing and geospatial packages:
 .\backend\.venv\Scripts\python.exe -m pip install -r routing\requirements.txt
 ```
 
-AI/ML packages:
+Main AI/ML workspace packages:
 
 ```powershell
 .\backend\.venv\Scripts\python.exe -m pip install -r ml\requirements.txt
 ```
+
+Matthew's Ondoy 2009 evidence package uses a separate pinned environment and
+must not be installed into the core backend environment:
+
+```powershell
+Set-Location ml\external-experiments\ondoy-2009-metro-manila
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m pip install -e . --no-deps
+.\.venv\Scripts\python.exe -m pytest
+```
+
+The backend defaults to `ML_ENABLED=false`. Do not populate the optional ML
+artifact variables or add XGBoost to core requirements unless a new
+U-Belt-compatible artifact passes the gate in `docs/ml/ML_FEASIBILITY.md`.
 
 If OSMnx or another compiled geographic dependency fails to install with pip on Windows, the geospatial contributor may use a documented Conda/Miniforge environment instead. The chosen environment must remain reproducible.
 

@@ -31,12 +31,16 @@ def test_rule_based_risk_bounds():
     assert 0.0 <= pred[0] <= 1.0
 
 
-def test_train_produces_model_or_fallback():
+def test_train_produces_model_or_fallback(tmp_path, monkeypatch):
     # Regenerate processed data so the test is self-contained
     from resqph_ondoy_2009.etl.extract import extract_all
     from resqph_ondoy_2009.etl.load import load_processed
     from resqph_ondoy_2009.etl.transform import transform_all
 
+    monkeypatch.setattr(config, "PROCESSED_DIR", tmp_path / "processed")
+    monkeypatch.setattr(config, "MODELS_DIR", tmp_path / "artifacts")
+    config.PROCESSED_DIR.mkdir(parents=True)
+    config.MODELS_DIR.mkdir(parents=True)
     config.set_global_seed()
     raw = extract_all()
     processed = transform_all(raw)

@@ -1,84 +1,61 @@
 # ResQPH project dashboard
 
 **Last updated:** 2026-09-29
-**Source of truth for ticket status:** GitHub Issues and the GitHub Project
+**Decision owner:** Ranee
 
-| Current phase | Current sprint | Health | Current goal |
+| Active delivery phase | Parallel review | Health | Current goal |
 |---|---|---|---|
-| Project Foundation Phase 2 — Core Application | Gate verified; closeout PR pending | Core lifecycle and failure cases pass, including real MongoDB verification | Merge the gate record, then start Team Phase 1 mapping/geospatial work. |
-
-## Immediate next actions
-
-1. Merge the Foundation Phase 2 gate record and evidence.
-2. Open Team Phase 1 only for the bounded U-Belt mapping/geospatial pipeline.
-3. Require stable edge IDs, reproducible extraction, source metadata, and controlled-scenario joins.
-4. Review the completed XGBoost package separately before any runtime ML claim or routing integration.
-
-## Blockers and risks
-
-| Type | Item | Status/response |
-|---|---|---|
-| Blocker | No Phase 2 technical blocker | The gate record must merge before Team Phase 1 work is represented as active. |
-| Risk | Study area or datasets may be unsuitable | Validate coverage, CRS, resolution, age, and license before implementation. |
-| Risk | Scope expansion | Enforce the approved MVP and non-goals. |
-| Risk | Component contract mismatch | Review API, schema, route, and ML interfaces together. |
-| Risk | Insufficient ML evidence | Use the mandatory rule-based fallback. |
-| Risk | Stale/offline information | Display data age and validate queued changes after reconnection. |
-
-## Team ownership
-
-| Member | Primary ownership | Support |
-|---|---|---|
-| Ranee (`@seavens3nt`) | Project management and backend | AI/ML and UI/UX |
-| Jared Noel (`@AshenDary`) | Secondary backend and integration | AI/ML |
-| Elle (`@Qiuyuan26`) | UI/UX and frontend | Testing and documentation |
-| Matthew Trinitaria (`@matthew-sudo2`) | AI/ML, data evaluation, geospatial pipeline, and routing | Jared supports backend integration |
-| Clarence (`@ClarenceArillo`) | UI/UX and frontend | Testing and map-interface presentation |
+| Team 1 — Mapping and Geospatial Pipeline | Team 3 — AI/ML package ready for review | At risk | Merge the evidence repair without enabling the external model, then complete the U-Belt graph pipeline |
 
 ## Phase progress
 
-| Phase | Status | Exit focus |
+| Phase | Status | Gate focus |
 |---|---|---|
-| Project Foundation 1 — Requirements and Data Validation | Completed, verified, and merged through PR #13 | Locked scope, contracts, fixtures, wireframes, and evidence |
-| Project Foundation 2 — Core Application | Completed and gate-verified; closeout PR pending | Persistent rescue-request and mission lifecycle verified |
-| Team 1 — Mapping and Geospatial Pipeline | Ready next | Reproducible map/data pipeline for the study area |
-| Team 2 — Flood-Aware Routing | Planned | Deterministic flood-aware explainable routing |
-| Team 3 — AI/ML Road-Risk Component | Planned | Independently verified XGBoost package plus mandatory rule fallback |
-| Team 4 — Limited Offline Support | Planned | Cached mission and one validated queued update |
-| Team 5 — Integration, Testing, and Presentation | Planned | Verified end-to-end scenarios and reconciled deliverables |
+| Project Foundation 1 | Completed and verified | Scope, contracts, fixtures, and evidence |
+| Project Foundation 2 | Completed and verified | Persistent request-to-mission workflow |
+| Team 1 — Mapping and Geospatial | In progress | Reproducible bounded graph, stable IDs, controlled flood join |
+| Team 2 — Flood-Aware Routing | Planned | Deterministic A*, penalties, exclusions, explanations |
+| Team 3 — AI/ML | Ready for review | External evidence accepted; runtime integration deferred |
+| Team 4 — Limited Offline | Planned | One cached mission and one queued update |
+| Team 5 — Integration and Presentation | Planned | Verified end-to-end demo and reconciled academic outputs |
 
-## GitHub workspace
+## Evidence snapshot
 
-- GitHub Project: **To be added**
-- [Milestones](https://github.com/seavens3nt/ResQPH/milestones)
-- [Issues](https://github.com/seavens3nt/ResQPH/issues)
-- [Pull requests](https://github.com/seavens3nt/ResQPH/pulls)
-- [CI](https://github.com/seavens3nt/ResQPH/actions)
+| Area | Result | Interpretation |
+|---|---|---|
+| Frontend lint | Passed with 5 warnings | No lint errors; warnings are recorded technical debt outside this ML repair |
+| Frontend tests | 98 passed | Existing interface regression suite is green |
+| Frontend build | Passed | TypeScript and Vite production build succeeded |
+| Backend Ruff | Passed | Core and adapter style checks clean |
+| Backend Pytest | 44 passed, 2 skipped | Adapter gates and fallback verified; skipped tests are MongoDB integration cases |
+| External ML Pytest | 21 passed | Package, artifacts, checksums, ETL smoke, and models load consistently |
+| ML runtime | Disabled | External model is not contract-compatible |
+| Mapping | Not yet gate-verified | Active critical-path work |
+| Routing | Not yet started | Blocked by accepted graph/schema |
 
-Recommended workflow: `Backlog -> Ready -> In Progress -> In Review -> Blocked -> Done`
+## Ownership now
 
-Recommended fields: Phase, Sprint, Area, Priority, Owner, Support, Effort, and Status.
+| Owner | Work | Status |
+|---|---|---|
+| Ranee | Phase 3 review, backend boundary, status and gate decision | Ready for review |
+| Matthew | External ML evidence; Team 1 graph/flood pipeline | ML ready for review; mapping in progress |
+| Jared | Team 1 backend fixture loader | Ready to start from accepted schema |
+| Elle | Map UI and controlled-scenario states | Ready to start from accepted fixture |
+| Clarence | Map presentation, accessibility, and error states | Ready to start from accepted fixture |
 
-## Working documents
+## Immediate actions
 
-- [Project context](PROJECT_CONTEXT.md)
-- [Roadmap](ROADMAP.md)
+1. Open the Phase 3 readiness pull request and require frontend, backend, and
+   ML evidence checks.
+2. Keep `ML_ENABLED=false`; do not add XGBoost to core backend requirements.
+3. Continue Team Phase 1 without expanding to routing or offline work.
+
+## Navigation
+
 - [Current status](STATUS.md)
+- [Roadmap](ROADMAP.md)
 - [Phase guides](phases/README.md)
-- [Phase 1 guide](phases/PHASE-01.md)
-- [Phase 2 guide](phases/PHASE-02.md)
-- [Team Phase 1 guide](phases/TEAM-PHASE-01.md)
-- [Phase 1 gate](phases/PHASE-01-GATE.md)
-- [Phase 2 gate](phases/PHASE-02-GATE.md)
-- [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
-- [Phase 2 evidence](testing/PHASE-02-EVIDENCE.md)
-- [Sprint process](sprints/README.md)
-- [Sprint 01](sprints/SPRINT-01.md)
-- [Development setup](SETUP.md)
 - [Architecture](ARCHITECTURE.md)
 - [Team responsibilities](TEAM.md)
-- [Contribution workflow](../CONTRIBUTING.md)
-
-## Update routine
-
-Ranee updates this page and `STATUS.md` after sprint planning, major decisions, demonstrations, or material blocker changes. Individual ticket progress belongs in GitHub rather than being duplicated here.
+- [Development setup](SETUP.md)
+- [Contribution rules](../CONTRIBUTING.md)

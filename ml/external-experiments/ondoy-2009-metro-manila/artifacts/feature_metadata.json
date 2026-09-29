@@ -20,5 +20,8 @@
   "sample_count": 350,
   "study_area": "Metro Manila",
   "random_seed": 42,
-  "trained_at": "2026-09-29T06:39:21.500221+00:00"
+  "trained_at": "2026-09-29T06:39:21.500221+00:00",
+  "artifact_sha256": "d1745982ce771f7440d9bffce03a4f872f37675a24211bfa75a6a7fb4d54dc6a",
+  "runtime_compatible": false,
+  "acceptance_note": "Synthetic-rule surrogate retained only as experiment evidence; it is not an accepted U-Belt runtime model."
 }

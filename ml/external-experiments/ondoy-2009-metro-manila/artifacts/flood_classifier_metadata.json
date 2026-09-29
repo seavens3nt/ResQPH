@@ -67,5 +67,30 @@
   "positive_count": 520,
   "positive_rate": 0.0035018014074547966,
   "random_seed": 42,
-  "selection_note": "XGBoost preferred when its AUC is within 0.01 of the best model due to higher recall and smaller model size."
+  "selection_note": "XGBoost preferred when its AUC is within 0.01 of the best model due to higher recall and smaller model size.",
+  "model_version": "xgb-ondoy-exploratory-001",
+  "artifact_sha256": "b998272893726c78035186955949c1c97cd982b1c553789b740ca22b71616d92",
+  "evaluation_status": "exploratory_only",
+  "split": {
+    "method": "stratified_random_row_holdout",
+    "test_size": 0.2,
+    "random_seed": 42,
+    "leakage_safe": false,
+    "limitation": "Neighboring road observations can cross the split; these metrics are not evidence of spatial or temporal generalization."
+  },
+  "error_analysis": {
+    "true_negatives": 29288,
+    "false_positives": 307,
+    "false_negatives": 8,
+    "true_positives": 96,
+    "precision_warning": "Flooded-class precision is 0.238; most positive predictions in the holdout were false positives.",
+    "false_negative_warning": "Eight flooded samples were predicted dry in the holdout."
+  },
+  "runtime_compatible": false,
+  "runtime_rejection_reasons": [
+    "The target is flooded_ondoy_2009 rather than the approved high_risk_edge runtime target.",
+    "The ordered external feature list does not match the U-Belt backend request contract.",
+    "The reported evaluation uses a random row split rather than a spatial or temporal holdout.",
+    "Current-event flood depth and flood hazard inputs are not accepted as pre-outcome runtime predictors."
+  ]
 }

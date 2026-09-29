@@ -7,8 +7,8 @@ the deterministic rule-based fallback (D-005).
 """
 from fastapi import APIRouter
 
+from app.integrations import ml_inference
 from app.schemas.ml import RoadRiskRequest, RoadRiskResponse
-from app.services import ml_inference
 
 router = APIRouter(prefix="/ml", tags=["ml"])
 

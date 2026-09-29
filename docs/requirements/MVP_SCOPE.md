@@ -47,7 +47,10 @@ This rectangle is a project-controlled scope boundary. It is not an official adm
 - Use one curated, reproducible OpenStreetMap extract rather than nationwide data.
 - Use A* as the primary routing algorithm. Dijkstra may be retained only as a test comparison or fallback investigation.
 - Keep the rule-based road-risk calculation independently testable.
-- Use the accepted XGBoost experiment as the candidate ML artifact. Its provenance, feature schema, split, metrics, and compatibility must be reproduced before runtime acceptance.
+- Preserve the XGBoost experiment as the completed candidate-model evidence.
+  Its current artifact is not runtime-compatible; any future integrated model
+  requires a new U-Belt target/schema, checksum, spatial or temporal evidence,
+  and Ranee's acceptance.
 - Use basic prototype role simulation and label it clearly as non-production authentication.
 - Use synthetic or sanitized people, contact details, locations, missions, and incidents.
 - Keep raw datasets and generated model artifacts outside ordinary Git history.
@@ -110,7 +113,9 @@ The MVP succeeds when a reviewer can complete this sanitized demonstration:
 5. A* calculates an initial route.
 6. A controlled scenario marks one road risky or impassable.
 7. The engine returns an alternative route and a human-readable explanation.
-8. XGBoost results are reported honestly; if the repository evidence gate passes, the accepted artifact contributes a bounded risk penalty.
+8. XGBoost results are reported as external exploratory evidence. The current
+   artifact does not contribute a runtime penalty; a future accepted artifact
+   may contribute only the bounded penalty.
 9. The same route workflow operates with ML disabled, rejected, missing, or malformed.
 10. The rescuer submits a status update and the citizen sees the new status.
 11. The rescuer can view the cached mission and synchronize one queued valid status update after reconnecting.

@@ -1,83 +1,101 @@
-# ML runtime adapter — evidence and integration status
+# ML adapter and U-Belt integration status
 
-**Status:** Adapter shipped in fallback mode; U-Belt model integration gated on label availability
-**Last updated:** 2026-09-30
+**Status:** Ready for review
+
 **Owner:** Matthew
 
-## What ships
+**Review owner:** Ranee
+**Last updated:** 2026-09-29
 
-The backend exposes `POST /api/v1/ml/road-risk`. It accepts the per-edge
-feature contract from `docs/ml/ML_FEASIBILITY.md` and returns the documented
-response shape.
+## Accepted behavior in this change
 
-Two execution paths:
+The backend exposes `POST /api/v1/ml/road-risk` through
+`backend/app/integrations/ml_inference.py`. The endpoint always supports the
+approved deterministic rule score. A serialized model is optional and cannot
+load unless its checksum, metadata, target, ordered feature list, and version
+pass the runtime gate.
 
-1. **Fallback** (default): `settings.ml_enabled=False`. The endpoint returns
-   a deterministic rule-based probability computed in
-   `app/services/ml_inference.py`. No model is loaded; no optional dependency
-   is required.
-2. **Model-loaded**: `settings.ml_enabled=True` AND `xgboost` installed in
-   the backend environment AND a valid artifact at
-   `settings.ml_artifacts_dir/settings.ml_classifier_filename`. The XGBoost
-   classifier is loaded once at startup and used for predictions.
+Responses include:
 
-Both paths return the same response shape. The `fallback_used` field
-distinguishes them.
+- a bounded probability and risk level;
+- a penalty capped at 60 seconds-equivalent units;
+- model name and version;
+- `fallback_used`; and
+- a stable `fallback_reason` when the rule path is used.
 
-## Why model integration is gated
+## External artifact decision
 
-Training a U-Belt model requires:
+The Ondoy 2009 XGBoost artifact is valid only for its recorded external
+experiment schema. Its metadata now declares `runtime_compatible: false`.
+The backend's approved U-Belt target and feature order differ, so the adapter
+rejects this artifact before deserialization even if `ML_ENABLED=true`.
 
-| Requirement | Status |
-|---|---|
-| U-Belt study-area roads | Not yet extracted |
-| `high_risk_edge` labels for U-Belt | **Does not exist** |
-| `historical_flood_frequency` | Needs multi-observation history |
-| `distance_to_documented_waterway_m` | Waterway dataset not sourced |
-| `rainfall_band_before_outcome` | PAGASA data not sourced |
-| `baseline_travel_time_s` | Owned by routing team, not yet published |
+This is a controlled compatibility decision, not removal of Matthew's work.
+The model, comparison, evaluation record, and artifact remain demonstrable as
+the Team Phase 3 academic ML output.
 
-The external Ondoy 2009 experiment under
-`ml/external-experiments/ondoy-2009-metro-manila/` covers **all of Metro
-Manila**, not the U-Belt pilot area. Cropping it to U-Belt produces fewer
-than 30 positive examples — statistically insufficient for training
-(per the ≥ 200-record, ≥ 40-per-class threshold in `ML_FEASIBILITY.md`).
+## Verification performed
 
-This is the exact scenario `ML_FEASIBILITY.md` anticipated:
+Backend:
 
-> *"If these conditions are not met, the completed academic output is the
-> externally trained experiment plus its documented evaluation, while the
-> application demonstration uses the rule-based fallback. This is not
-> cancellation of ML; it is a controlled integration decision."*
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m ruff check app tests
+.\.venv\Scripts\python.exe -m pytest
+```
 
-## What activates when U-Belt labels exist
+Result on 2026-09-29: Ruff passed; `44 passed, 2 skipped`. The two skipped
+tests are MongoDB integration tests and are unrelated to the ML adapter.
 
-When a U-Belt model is trained under the target and feature contract, only
-two changes are needed in the runtime path:
+External experiment:
 
-1. Set `ML_ENABLED=true` in the backend `.env`
-2. Add `xgboost` to `backend/requirements.txt`
+```powershell
+Set-Location ml\external-experiments\ondoy-2009-metro-manila
+.\.venv\Scripts\python.exe -m pytest
+```
 
-The adapter picks up the artifact automatically. No code changes.
+Result on 2026-09-29: `21 passed`.
 
-## Test coverage
+The external suite verifies:
 
-`backend/tests/test_ml_inference.py` covers:
+- every manifest digest before artifact deserialization;
+- the XGBoost classifier type and prediction shape;
+- the Random Forest surrogate type and metadata;
+- target and ordered feature metadata;
+- exploratory split and error-analysis disclosure;
+- explicit runtime incompatibility;
+- deterministic fallback behavior; and
+- ETL/model smoke behavior in isolated temporary outputs.
 
-- Valid request returns the full contract shape
-- Invalid inputs rejected with HTTP 422
-- Missing required fields rejected with HTTP 422
-- Fallback probabilities are in range across elevation edge cases
-- `ml_penalty_seconds` matches `round(probability * 60)`
-- Model-loaded path (skipped until xgboost is a runtime dependency)
+The backend suite verifies:
 
-## Limitations
+- default rule fallback and response contract;
+- input validation and bounded penalties;
+- checksum rejection before unpickling;
+- external-schema rejection before unpickling;
+- activation only after all metadata gates pass;
+- prediction-failure fallback with the correct model identity; and
+- stable U-Belt runtime feature order and transformations.
 
-- **Fallback is the operative path.** The adapter is a scaffold, not a
-  deployed predictive model.
-- **Fallback features are heuristic.** The deterministic formula is a
-  documented placeholder, not a calibrated model.
-- **No geographic aggregation.** The endpoint scores one edge per call. The
-  routing engine aggregates per mission.
-- **No caching.** For routing loops scoring hundreds of edges per mission,
-  an in-memory cache or batched endpoint may be needed. Not in scope here.
+## Remaining limitations
+
+- The raw Global Flood Database export and processed training parquet are not
+  committed, so training and reported metrics were not regenerated.
+- The reported split is a stratified random row split, not a spatial or
+  temporal holdout.
+- The classifier's reported precision is `0.238`, with 307 false positives and
+  8 false negatives in the recorded holdout.
+- No U-Belt-compatible trained artifact exists.
+- No model output is connected to routing; Team Phase 2 deterministic routing
+  is not yet implemented.
+
+## Gate recommendation
+
+`Approve with conditions`:
+
+1. Accept the external package as completed exploratory ML evidence.
+2. Accept the backend endpoint and rule fallback contract.
+3. Keep `ML_ENABLED=false` for the MVP.
+4. Do not claim that the reported metrics were independently reproduced or
+   that the artifact predicts U-Belt road safety.
+5. Require a new artifact and new gate if runtime model integration is pursued.

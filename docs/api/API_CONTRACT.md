@@ -170,6 +170,20 @@ Allowed role: `coordinator`. Verification does not convert a controlled or histo
 
 Allowed roles: `rescuer` or `coordinator`. The request and response follow [the routing contract](../routing/ROUTING_CONTRACT.md). Routing may return a successful route, a documented no-route result, or an unavailable error when the deterministic engine itself cannot run.
 
+### Evaluate one road-risk record
+
+`POST /api/v1/ml/road-risk`
+
+The endpoint accepts the pre-outcome fields in
+[`data/samples/ml-road-risk-contract.example.json`](../../data/samples/ml-road-risk-contract.example.json)
+and returns a bounded probability, risk level, model identity, generated time,
+penalty capped at 60, `fallback_used`, and `fallback_reason`.
+
+The operative default is the deterministic rule score. A model is used only
+after checksum and exact target/ordered-feature metadata validation. The
+external Ondoy artifact is not compatible with this runtime contract. See
+[`ML_FEASIBILITY.md`](../ml/ML_FEASIBILITY.md).
+
 ## Phase 2 contract checks
 
 - Pydantic schemas reproduce the examples and constraints.

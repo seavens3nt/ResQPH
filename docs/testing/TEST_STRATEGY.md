@@ -26,6 +26,12 @@ A task is complete only when its acceptance criteria are supported by inspected 
 - Use synthetic names, contact details, addresses, mission records, and incidents.
 - Preserve GeoJSON `[longitude, latitude]` order.
 - Small committed fixtures must declare that they are synthetic and not proof of real-area accuracy.
+- External model artifacts must pass their isolated test environment, manifest
+  checksum, metadata/type/schema checks, and runtime-compatibility decision.
+  Artifact loading tests must verify integrity before deserialization.
+- Random row splits are exploratory when nearby or repeated road observations
+  can cross partitions. Only a documented spatial or temporal holdout may
+  support an application-integration accuracy claim.
 - Raw downloads, large processed data, secrets, private locations, and generated model artifacts remain outside Git.
 
 ## Required failure cases

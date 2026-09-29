@@ -10,7 +10,7 @@ The primary workflow is: citizen rescue request -> FastAPI validation -> MongoDB
 
 ## Delivery phases
 
-Work must align with these phases in order:
+Work follows these delivery phases:
 
 1. Project Foundation Phase 1 — Requirements and Data Validation
 2. Project Foundation Phase 2 — Core Application
@@ -20,10 +20,16 @@ Work must align with these phases in order:
 6. Team Phase 4 — Limited Offline Support
 7. Team Phase 5 — Integration, Testing, and Presentation
 
+Team Phase 1 is the active delivery phase. Matthew's already delivered Team
+Phase 3 package may be reviewed early as a parallel evidence closeout, but this
+does not activate Team Phase 2 or authorize runtime model integration.
+
 ## Time-constrained delivery order
 
 1. Protect the end-to-end deterministic demonstration: role simulation, rescue request, assignment, mission status, bounded U-Belt graph, A*, rule penalties, fallback, and tests.
-2. Complete the Logistic Regression and Random Forest experiment, but integrate model output only after the documented evidence gate and Ranee's acceptance.
+2. Preserve and verify the completed external XGBoost experiment, but keep its
+   random-row metrics exploratory and its artifact outside runtime because its
+   target and ordered features do not match the U-Belt contract.
 3. Implement the locked one-mission/one-update offline behavior.
 4. Defer optional historical/elevation enrichment, extra map layers, analytics, and visual polish before delaying the core path.
 
@@ -35,7 +41,8 @@ Runtime copy and test fixtures must say when data are controlled, simulated, his
 - Backend: Python 3.12, FastAPI, Pydantic, async PyMongo, Pytest, HTTPX, and Ruff.
 - Database: MongoDB 8 through Docker Compose as a local single-node replica set.
 - Routing/geospatial: OSMnx, NetworkX, GeoPandas, Shapely, PyProj, and Rasterio.
-- AI/ML: pandas, NumPy, scikit-learn, and joblib.
+- AI/ML: core rule fallback; isolated external experiment with pandas, NumPy,
+  scikit-learn, XGBoost, joblib, and pinned geospatial dependencies.
 - Delivery: GitHub Issues, GitHub Projects, feature branches, pull requests, and Markdown.
 
 Do not replace this stack without an approved, documented technical decision.
@@ -90,6 +97,9 @@ Ownership is accountability, not an exclusive boundary. Coordinate changes at co
 - Implement and verify deterministic A* or Dijkstra routing before ML-assisted penalties.
 - Use basic role simulation for the MVP; do not represent it as secure production authentication.
 - Maintain a documented, testable rule-based risk fallback. The application must not require a trained model to perform its prototype workflow.
+- Keep `ML_ENABLED=false` unless a new artifact passes checksum, metadata,
+  target, ordered-feature, evaluation, and Ranee-acceptance gates. Never point
+  the backend at the external Ondoy artifact.
 - ML output may adjust an explainable routing cost; it must not silently override deterministic impassability rules or human decisions.
 - Use synthetic or sanitized rescue scenarios during development. Do not commit real contact details, precise private locations, credentials, or operational emergency records.
 - Do not commit large raw/processed datasets, dependency folders, generated model artifacts, logs, or secrets. Commit metadata, scripts, and small test samples instead.
@@ -99,7 +109,7 @@ Ownership is accountability, not an exclusive boundary. Coordinate changes at co
 
 - Frontend: run lint, unit/component tests, and production build for affected work.
 - Backend: run Ruff and Pytest for affected work.
-- Routing/data/ML: add reproducible tests or evaluation evidence, including failure and fallback cases.
+- Routing/data/ML: add reproducible tests or evaluation evidence, including failure and fallback cases. Run the isolated Ondoy test suite from `ml/external-experiments/ondoy-2009-metro-manila/` when its code, artifacts, metadata, or documentation changes.
 - Integration changes: verify the full affected workflow and contract compatibility.
 - Documentation-only changes: validate links, code fences, commands, and consistency with the repository.
 
