@@ -22,6 +22,17 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 RiskLevel = Literal["low", "moderate", "high", "severe"]
+RoadClass = Literal[
+    "motorway",
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary",
+    "unclassified",
+    "residential",
+    "service",
+]
+RainfallBand = Literal["none", "light", "moderate", "heavy", "extreme", "unknown"]
 
 
 class RoadRiskRequest(BaseModel):
@@ -34,7 +45,7 @@ class RoadRiskRequest(BaseModel):
     """
 
     edge_id: str = Field(..., min_length=1, max_length=128)
-    road_class: str = Field(..., min_length=1, max_length=64)
+    road_class: RoadClass
     length_m: float = Field(..., ge=0.0)
     baseline_travel_time_s: float = Field(..., ge=0.0)
 
@@ -43,7 +54,7 @@ class RoadRiskRequest(BaseModel):
     max_prior_flood_depth_cm: float = Field(default=0.0, ge=0.0)
     distance_to_documented_waterway_m: float = Field(default=0.0, ge=0.0)
     elevation_context_m: float | None = None
-    rainfall_band_before_outcome: str = "unknown"
+    rainfall_band_before_outcome: RainfallBand = "unknown"
 
 
 class RoadRiskResponse(BaseModel):
@@ -62,6 +73,13 @@ class RoadRiskResponse(BaseModel):
     model_version: str
     generated_at: str
     fallback_used: bool
+    fallback_reason: str | None = Field(
+        default=None,
+        description=(
+            "Stable reason code when the rule fallback is used; null when an "
+            "approved runtime model produced the result."
+        ),
+    )
     ml_penalty_seconds: int = Field(
         ...,
         ge=0,

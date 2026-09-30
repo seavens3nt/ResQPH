@@ -13,14 +13,14 @@ Each experiment lives in its own subfolder with:
 - `artifacts/` — trained models and metadata, whitelisted in `.gitignore` per D-021
 
 Runtime code must never import from `ml/external-experiments/`. Any runtime
-integration happens through a stable adapter in `ml/src/` or
-`backend/app/services/` after a formal evidence review per `ML_FEASIBILITY.md`.
+integration happens through the evidence-gated adapter in
+`backend/app/integrations/` after a formal review per `ML_FEASIBILITY.md`.
 
 ## Experiments
 
 | Experiment | Status | Target | Study area |
 |---|---|---|---|
-| `ondoy-2009-metro-manila/` | Evidence package in progress | `flooded_ondoy_2009` | Metro Manila (60 x 30 km) |
+| `ondoy-2009-metro-manila/` | Ready for review as exploratory evidence; not runtime compatible | `flooded_ondoy_2009` | Metro Manila (60 x 30 km) |
 
 ## References
 

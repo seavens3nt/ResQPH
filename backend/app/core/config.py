@@ -18,16 +18,16 @@ class Settings(BaseSettings):
     # deterministic rule-based fallback. No optional dependency is required
     # and no artifact is loaded.
     #
-    # When True, the adapter attempts to load the XGBoost classifier at
-    # `ml_artifacts_dir / ml_classifier_filename`. Any load failure falls
-    # back cleanly to the rule-based path — it never blocks startup.
+    # Enabling ML is not enough to activate an artifact. The adapter also
+    # requires explicit artifact/metadata paths, a pinned SHA-256 digest, and
+    # an exact runtime feature/target contract match. Any failure retains the
+    # rule-based path and never blocks startup.
     #
     # See docs/ml/ML_FEASIBILITY.md and docs/decisions/DECISION_LOG.md (D-022).
     ml_enabled: bool = False
-    ml_artifacts_dir: str = (
-        "../ml/external-experiments/ondoy-2009-metro-manila/artifacts"
-    )
-    ml_classifier_filename: str = "road_flood_classifier.pkl"
+    ml_artifact_path: str = ""
+    ml_metadata_path: str = ""
+    ml_artifact_sha256: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

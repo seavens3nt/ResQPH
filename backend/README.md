@@ -12,6 +12,10 @@ backend/
 │   ├── api/routes/          FastAPI route handlers
 │   ├── core/                Configuration and shared application setup
 │   ├── db/                  MongoDB connection setup
+│   ├── integrations/        Evidence-gated routing and ML adapters
+│   ├── repositories/        MongoDB persistence and queries
+│   ├── schemas/             Pydantic API contracts
+│   ├── services/            Rescue and mission workflow orchestration
 │   └── main.py              Application entry point
 ├── tests/                   Backend tests
 ├── .env.example
@@ -21,7 +25,7 @@ backend/
 
 ## Growth rules
 
-Create the following boundaries when the first approved feature needs them:
+Use the following boundaries:
 
 - `app/domain/`: entities, statuses, transitions, and business rules.
 - `app/schemas/`: Pydantic request and response contracts.
@@ -36,6 +40,10 @@ API route -> service -> domain rule -> repository or integration adapter
 ```
 
 Do not place MongoDB queries directly in route handlers, import notebooks or generated model artifacts, or make the core rescue workflow depend on ML availability.
+
+The ML adapter defaults to the deterministic rule score. A model can load only
+after explicit enablement, SHA-256 verification, and an exact metadata match.
+The external Ondoy experiment is not a backend runtime artifact.
 
 ## Commands
 

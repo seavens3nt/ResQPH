@@ -4,199 +4,148 @@
 
 COM243 | CCSFEN1L | Code Tayo Right-Neow
 
-## Project overview
+ResQPH is an academic web application for coordinating rescue requests and
+missions during controlled or historical flood scenarios. Citizens submit
+requests, coordinators assign missions, and rescuers review assignments and
+update mission status.
 
-ResQPH is a flood-aware emergency rescue coordination system that connects stranded individuals with rescue teams. Citizens can submit rescue requests containing their location and situation, while rescuers can view assigned missions, track affected locations, and receive recommended routes.
+The foundation and core request-to-mission workflow are verified. **Team Phase
+1 — Mapping and Geospatial Pipeline** is the active delivery phase. Matthew's
+early **Team Phase 3 — AI/ML** package is ready for review as external
+exploratory evidence; its model is not enabled in the application.
 
-The project combines:
+> [!IMPORTANT]
+> ResQPH is a classroom prototype. It is not an official emergency-response
+> system, live flood forecast, or guarantee that a route is safe.
 
-- A transactional rescue workflow
-- An interactive map
-- A bounded OpenStreetMap extract and controlled or historical flood scenarios
-- Flood-aware routing
-- A limited and explainable machine-learning component
-- Basic offline synchronization
-- MongoDB operational and geospatial data
+## Start here
 
-ResQPH is an academic engineering prototype. It is not an official emergency-response, flood-forecasting, or guaranteed road-safety platform.
+| Need | Read |
+|---|---|
+| See the active work and blockers | [Current status](docs/STATUS.md) |
+| Follow the delivery sequence | [Roadmap](docs/ROADMAP.md) |
+| Find your responsibility | [Team responsibilities](docs/TEAM.md) |
+| Install and run the project | [Development setup](docs/SETUP.md) |
+| Understand the repository structure | [Architecture](docs/ARCHITECTURE.md) |
+| Review the ML acceptance boundary | [ML feasibility](docs/ml/ML_FEASIBILITY.md) |
+| Follow branch, PR, and merge rules | [Contributing](CONTRIBUTING.md) |
 
-## Primary users
+## Delivery status
 
-### Citizen
+Verified now:
 
-A citizen can:
+- Basic citizen, coordinator, and rescuer role simulation
+- Validated rescue-request creation and status tracking
+- Atomic coordinator assignment and mission history
+- Deterministic road-risk fallback and evidence-gated ML adapter
+- Preserved and checksum-verified external XGBoost experiment
 
-- Submit a rescue request.
-- Provide a location and contact information.
-- Report the number of people requiring assistance.
-- Describe the situation.
-- Optionally report flood depth.
-- Monitor the request status.
+Still required for the MVP:
 
-### Rescuer
+- Reproducible U-Belt OpenStreetMap and controlled-flood pipeline
+- Stable road-edge identifiers shared across map, flood, and routing records
+- Deterministic A* routing with explainable penalties and no-route behavior
+- Limited offline support for one cached mission and one queued status update
+- Final end-to-end verification and presentation evidence
 
-A rescuer can:
+The external XGBoost metrics are exploratory. They were produced with a random
+row split and were not retrained from raw source data in this repository. The
+artifact's target and features do not match the U-Belt runtime contract, so the
+backend rejects it and uses the rule score.
 
-- View assigned missions.
-- View the stranded person's location.
-- Review relevant flood information.
-- Receive a recommended route.
-- Update location and mission status.
-- Submit road or flood observations.
+## Technology
 
-### Coordinator
+| Area | Baseline |
+|---|---|
+| Frontend | React, TypeScript, Vite, Leaflet |
+| Backend | Python 3.12, FastAPI, Pydantic, PyMongo |
+| Database | MongoDB 8 development replica set |
+| Routing/geospatial | NetworkX, OSMnx, GeoPandas, Shapely, PyProj, Rasterio |
+| AI/ML | Isolated XGBoost experiment; deterministic runtime fallback |
+| Testing | Vitest, Testing Library, Pytest, HTTPX, Ruff |
 
-A coordinator can:
-
-- Monitor rescue requests and teams.
-- Assign missions.
-- Review mission-status changes.
-- Manage operational records.
-
-## Typical mission workflow
-
-1. A citizen submits a rescue request.
-2. The backend validates and stores the request in MongoDB.
-3. A dispatcher or authorized workflow assigns a rescue team.
-4. The routing component combines rescuer location, victim location, road data, flood data, elevation, and road-risk information.
-5. A flood-aware route is returned to the rescuer.
-6. The rescuer updates the mission while travelling.
-7. The route can be recalculated when simulated flood conditions change.
-8. The completed mission is retained for history and evaluation.
-
-## High-level architecture
-
-```text
-Frontend
-    |
-    v
-Backend API
-    |
-    +--> MongoDB
-    |
-    +--> Routing Engine
-    |
-    +--> AI/ML Road-Risk Component
-
-```
-
-The system uses a modular architecture so that the user interface, application logic, data storage, routing, and AI/ML components can be developed and tested independently.
-
-## Proposed technical components
-
-The approved project baseline specifies:
-
-- MongoDB for operational and geospatial data
-- A* or Dijkstra's algorithm for routing
-- Public road, flood-hazard, and elevation datasets
-- XGBoost as the accepted candidate ML experiment, with repository verification still required
-- Rule-based road-risk scoring as a required fallback
-- Local caching and queued synchronization for limited offline behavior
-- GitHub for source control
-- GitHub Issues as the ticketing system
-- Markdown for project documentation
-- Feature branches and pull requests for collaborative development
-
-The approved development baseline uses React, TypeScript, and Vite for the frontend; Python and FastAPI for the backend; Leaflet for map interaction; PyMongo for MongoDB; Python geospatial libraries for routing; scikit-learn for manageable AI/ML experiments; and IndexedDB for limited offline client storage.
-
-## Project delivery phases
-
-### Project Foundation Phase 1 — Requirements and Data Validation
-
-Finalize users, workflows, study area, available datasets, MongoDB schema, and API contracts.
-
-### Project Foundation Phase 2 — Core Application
-
-Implement basic role simulation, rescue-request CRUD, mission assignment, status updates, and MongoDB integration.
-
-### Team Phase 1 — Mapping and Geospatial Pipeline
-
-Integrate the map and prepare the road, flood, and elevation datasets.
-
-### Team Phase 2 — Flood-Aware Routing
-
-Implement basic routing first, then add flood and risk penalties and dynamic rerouting.
-
-### Team Phase 3 — AI/ML Road-Risk Component
-
-Package and independently evaluate the completed XGBoost road-risk experiment. Integrate its output into routing only if the locked evidence gate passes; deterministic rule-based routing remains mandatory.
-
-### Team Phase 4 — Limited Offline Support
-
-Cache one assigned mission, queue one status update, and validate it after reconnection.
-
-### Team Phase 5 — Integration, Testing, and Presentation
-
-Test complete rescue scenarios, failure cases, stale information, routing changes, database consistency, and multiple rescue requests.
-
-## Repository structure
+## Project structure
 
 ```text
-ResQPH/
-├── .github/                 GitHub templates and repository configuration
-├── frontend/                Citizen, rescuer, and dispatcher interfaces
-├── backend/                 API, MongoDB, mission workflow, and synchronization
-├── routing/                 Road graph and flood-aware routing
-├── ml/                      Road-risk investigation, training, and evaluation
-├── data/                    Dataset metadata, samples, and generated data
-├── docs/                    Project documentation
-├── tests/                   Cross-component and end-to-end tests
-├── .gitignore
-└── README.md
+.github/             Issue templates, pull-request template, CI, and ownership
+.agents/             Repository-specific Codex project context
+frontend/            React interface, API client, components, and tests
+backend/             FastAPI, MongoDB workflow, integration adapters, and tests
+routing/             Geospatial pipeline and deterministic routing workspace
+ml/                  Rule baseline, isolated experiments, artifacts, and tests
+data/                Source metadata and small sanitized fixtures
+docs/                Scope, phases, contracts, evidence, and project status
+tests/integration/   Cross-component and end-to-end scenarios
 ```
 
-## Documentation
+See [Architecture](docs/ARCHITECTURE.md) before adding or moving files.
 
-- [Project dashboard](docs/DASHBOARD.md)
-- [Current status](docs/STATUS.md)
-- [Project context](docs/PROJECT_CONTEXT.md)
-- [Project roadmap](docs/ROADMAP.md)
-- [Phase guides](docs/phases/README.md)
-- [Phase 1 — Requirements and Data Validation](docs/phases/PHASE-01.md)
-- [Phase 2 — Core Application](docs/phases/PHASE-02.md)
-- [Sprint process](docs/sprints/README.md)
-- [Sprint 01 plan](docs/sprints/SPRINT-01.md)
-- [Team responsibilities](docs/TEAM.md)
-- [Development setup](docs/SETUP.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Backend workspace guide](backend/README.md)
-- [MVP scope](docs/requirements/MVP_SCOPE.md)
-- [Acceptance scenarios](docs/requirements/ACCEPTANCE_SCENARIOS.md)
-- [Rescue lifecycle](docs/workflows/RESCUE_LIFECYCLE.md)
-- [API contract](docs/api/API_CONTRACT.md)
-- [MongoDB schema](docs/database/MONGODB_SCHEMA.md)
-- [Dataset register](docs/data/DATASET_REGISTER.md)
-- [U-Belt study-area metadata](data/metadata/study-area.md)
-- [Road-network source and extraction evidence](data/metadata/road-network.md)
-- [Flood-hazard source decision](data/metadata/flood-hazard.md)
-- [Elevation data decision](data/metadata/elevation.md)
-- [Phase 1 gate decision](docs/phases/PHASE-01-GATE.md)
-- [Routing contract](docs/routing/ROUTING_CONTRACT.md)
-- [ML feasibility and evaluation](docs/ml/ML_FEASIBILITY.md)
-- [Offline contract](docs/offline/OFFLINE_CONTRACT.md)
-- [UI states](docs/ui/UI_STATES.md)
-- [Low-fidelity UI wireframes](docs/ui/WIREFRAMES.md)
-- [Test strategy](docs/testing/TEST_STRATEGY.md)
-- [Phase 1 verification evidence](docs/testing/PHASE-01-EVIDENCE.md)
-- [Decision log](docs/decisions/DECISION_LOG.md)
-- [Risk register](docs/risks/RISK_REGISTER.md)
+## Run locally
 
-## Project scope
+Complete the one-time setup in [Development setup](docs/SETUP.md), then use
+separate PowerShell terminals.
 
-The prototype focuses on a project-defined U-Belt pilot area in the City of Manila using controlled and historical flood scenarios. Its WGS 84 bounding box is west `120.982000`, south `14.596000`, east `121.004000`, and north `14.617500`. This is an academic scope boundary, not an official government or emergency-service boundary.
+MongoDB from the repository root:
 
-The project will not provide:
+```powershell
+docker compose up -d
+docker compose ps
+```
 
-- Official real-time flood forecasts
-- Guaranteed road safety
-- Nationwide deployment
-- Direct integration with government emergency infrastructure
-- Real mesh, radio, or satellite communication
+Backend:
 
-## Time-constrained delivery rule
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m fastapi dev app\main.py --port 8000
+```
 
-The required demonstration is one complete vertical slice: simulated role selection, a sanitized rescue request, coordinator assignment, rescuer mission status, a controlled U-Belt flood scenario, deterministic A* rerouting with an explanation, and the rule-based fallback. The ML experiment remains required, but runtime integration is conditional on acceptable evaluation evidence. Historical-layer enrichment, elevation-derived routing, extra dashboards, and additional offline actions are deferred before any core workflow is delayed.
+Frontend:
 
-## Engineering principle
+```powershell
+Set-Location frontend
+npm run dev
+```
 
-AI assists the system, while deterministic routing, transparent data, and human rescue decisions remain responsible for the operational workflow.
+Open `http://localhost:5173` for the interface or
+`http://localhost:8000/docs` for the API documentation.
+
+## Quick verification
+
+Frontend:
+
+```powershell
+Set-Location frontend
+npm run lint
+npm test
+npm run build
+```
+
+Backend:
+
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m ruff check app tests
+.\.venv\Scripts\python.exe -m pytest
+```
+
+External ML evidence:
+
+```powershell
+Set-Location ml\external-experiments\ondoy-2009-metro-manila
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Follow the experiment's [README](ml/external-experiments/ondoy-2009-metro-manila/README.md)
+for its isolated first-time installation. Core backend setup intentionally does
+not install XGBoost.
+
+## Scope limits
+
+The prototype is limited to the project-defined U-Belt pilot area in the City
+of Manila. It uses controlled or historical flood inputs, sanitized rescue
+records, basic role simulation, and a manageable road-network extract.
+
+It does not provide live flood prediction, nationwide routing,
+government-system integration, production authentication, guaranteed road
+safety, or deployment for actual emergencies. Deterministic rules and human
+decisions remain authoritative.

@@ -1,6 +1,6 @@
 # Team Phase 1 — Mapping and Geospatial Pipeline
 
-**Status:** Ready to start when the Foundation Phase 2 gate PR merges
+**Status:** In progress
 
 **Gate owner:** Ranee
 
@@ -27,6 +27,13 @@ Produce one small, reproducible road-network and controlled-flood dataset for `u
 - No final route-safety, live-monitoring, government, or actual-emergency-readiness claim.
 
 ## Work packages
+
+GitHub tracker: [Issue #36](https://github.com/seavens3nt/ResQPH/issues/36)
+
+- Matthew: [Issue #32](https://github.com/seavens3nt/ResQPH/issues/32) — ready to start
+- Jared: [Issue #33](https://github.com/seavens3nt/ResQPH/issues/33) — blocked until Issue #32's accepted fixture is merged
+- Elle: [Issue #34](https://github.com/seavens3nt/ResQPH/issues/34) — blocked until Issue #32's accepted fixture is merged
+- Clarence: [Issue #35](https://github.com/seavens3nt/ResQPH/issues/35) — blocked until Issue #32's accepted fixture is merged
 
 ### Matthew — Road-network and geospatial pipeline
 

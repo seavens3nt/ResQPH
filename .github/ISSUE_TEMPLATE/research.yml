@@ -16,13 +16,13 @@ body:
     attributes:
       label: Project phase
       options:
-        - Phase 1 — Requirements and Data Validation
-        - Phase 2 — Core Application
-        - Phase 3 — Mapping and Geospatial Pipeline
-        - Phase 4 — Routing
-        - Phase 5 — AI/ML
-        - Phase 6 — Offline Simulation
-        - Phase 7 — Integration and Testing
+        - Project Foundation 1 — Requirements and Data Validation
+        - Project Foundation 2 — Core Application
+        - Team Phase 1 — Mapping and Geospatial Pipeline
+        - Team Phase 2 — Flood-Aware Routing
+        - Team Phase 3 — AI/ML Road-Risk Component
+        - Team Phase 4 — Limited Offline Support
+        - Team Phase 5 — Integration, Testing, and Presentation
     validations:
       required: true
 

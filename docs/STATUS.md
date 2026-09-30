@@ -4,85 +4,84 @@
 
 | Field | Current value |
 |---|---|
-| Current phase | Project Foundation Phase 2 — gate verified; Team Phase 1 opens after the gate record merges |
-| Current sprint | Foundation Phase 2 — closeout |
-| Overall health | Core request-to-mission lifecycle is merged and verified; routing, mapping, model packaging, and offline persistence remain later-phase work |
-| Current goal | Merge the Phase 2 gate record, then open Team Phase 1 mapping/geospatial work without widening scope. |
+| Active delivery phase | Team Phase 1 — Mapping and Geospatial Pipeline |
+| Parallel review | Team Phase 3 — AI/ML Road-Risk Component |
+| Overall health | At risk: core workflow is verified and ML evidence is repaired, but mapping and deterministic routing are still missing |
+| Current goal | Merge the Phase 3 evidence repair, keep runtime ML disabled, and complete the bounded U-Belt mapping pipeline |
 
-## Completed setup
+## Completed and verified
 
-- [x] Repository foundation and contribution workflow
-- [x] Frontend, backend, routing, ML, data, docs, and integration-test structure
-- [x] React/TypeScript/Vite frontend scaffold
-- [x] FastAPI backend health endpoint and tests
-- [x] Docker Compose MongoDB 8 single-node replica-set setup
-- [x] Local development environment confirmed working
-- [x] GitHub templates and CI workflow
-- [x] Team responsibilities documented
-- [x] Project-management, phase, sprint, status, and editor documentation prepared on the current branch
+- Project Foundation Phases 1 and 2, including the persistent request,
+  assignment, mission, role, and status workflow through PR #25.
+- Frontend and backend core checks plus the sanitized real-MongoDB Phase 2 gate
+  flow.
+- External ML artifact integrity, metadata consistency, and isolated package
+  execution in the current readiness branch: 21 ML tests passed.
+- Backend evidence gates and rule fallback in the current readiness branch:
+  Ruff passed and 43 backend tests passed, with two unrelated MongoDB tests
+  skipped in that unit run.
 
-## Completed and verified foundation
+## Ready for review
 
-- U-Belt scope, boundary, source/fallback decisions, role simulation, ownership, and exclusions.
-- Lifecycle, API, MongoDB, routing, ML, offline, UI-state, accessibility, testing, and acceptance contracts.
-- Reproducible OSM feasibility evidence, controlled flood and stable-join fixture, known routing graph, ML schema, and role wireframes.
-- Final Phase 1 decision log, risk register, evidence record, roadmap, and gate approval.
-- No later application feature is considered complete merely because its foundation is locked.
+### Matthew — Team Phase 3 external ML package
 
-## Completed and verified core application
+- XGBoost classifier and Random Forest surrogate are checksum-pinned.
+- The actual random-row split, reported metrics, precision limitation, 307
+  false positives, and 8 false negatives are documented.
+- The package is accepted only as exploratory evidence; raw-data retraining and
+  spatial/temporal generalization are not verified.
+- The external target and feature schema are explicitly rejected for U-Belt
+  runtime use.
 
-- PR #24: request validation, persistence, study-area enforcement, atomic assignment, rollback/conflict handling, and MongoDB integration coverage.
-- PR #21: mission visibility, ordered status transitions, idempotent history events, optimistic version checks, and role enforcement.
-- PR #22: citizen submission and authoritative request-status UI.
-- PR #23: coordinator queue/assignment and rescuer mission/status UI aligned to the backend contract.
-- Backend Ruff/Pytest, frontend lint/tests/build, both GitHub checks, and a sanitized full API flow against a real MongoDB replica set passed on 2026-09-29.
-- The real-MongoDB gate flow succeeds with `latest_route_result = null`, proving routing and ML are not required for the core lifecycle.
+### Ranee — Backend ML boundary and phase reconciliation
 
-## Immediate next actions
+- `POST /api/v1/ml/road-risk` retains the mandatory deterministic fallback.
+- Artifact loading requires explicit enablement, SHA-256, metadata, version,
+  target, and exact ordered features.
+- Incompatible or failed artifacts return a stable fallback reason.
+- A dedicated ML evidence CI job is included.
+- Team Phase 3 guide, evidence, gate draft, decisions, roadmap, status, and
+  project context are reconciled.
 
-1. Merge the Foundation Phase 2 gate record and evidence.
-2. Open Team Phase 1 for the bounded U-Belt OSM/geospatial pipeline.
-3. Preserve the stable `edge_id` join contract and controlled-scenario labels.
-4. Package Matthew's completed XGBoost experiment for independent repository review; do not claim its reported metrics as verified yet.
-5. Keep rule-based risk available and keep runtime model use optional until Ranee accepts the evidence package.
+## In progress
 
-## Project administration notes
+### Team Phase 1 — Mapping and Geospatial Pipeline
 
-- The Phase 1 completion date is 2026-09-22; its start date was not recorded.
-- Future phase dates must be set when Ranee has the actual course deadline and team availability; no date is invented in this foundation.
-- GitHub Issues, pull requests, and milestones are the current ticketing source of truth. A GitHub Project board is optional and not required for Phase 1 completion.
+Matthew remains accountable for the bounded U-Belt graph, stable `edge_id`,
+controlled flood join, source/CRS/license metadata, small fixture, and
+reproduction evidence. Jared owns the narrow backend fixture loader. Elle and
+Clarence own map presentation after the accepted fixture schema is on `main`.
 
-## Active blockers
+## Blockers and constraints
 
-No technical blocker remains for the Foundation Phase 2 gate. Team Phase 1 must not claim the externally trained XGBoost artifact or reported metrics as repository-verified until provenance, split, schema, artifact metadata, and reproducible evaluation evidence are reviewed. The exact course deadline and member availability are still not recorded, so the roadmap uses dependency and priority gates rather than invented calendar dates.
+- Team Phase 2 deterministic routing cannot start until the accepted Team
+  Phase 1 graph and edge schema exist.
+- The external Ondoy artifact cannot be activated at runtime because its
+  target, features, and evaluation do not meet the U-Belt contract.
+- The exact course deadline and member availability are still not recorded, so
+  no calendar dates are invented.
+- [PR #31](https://github.com/seavens3nt/ResQPH/pull/31) is open, mergeable,
+  and its frontend, backend, and ML evidence checks have passed. Ranee's review
+  and merge decision remain pending.
 
-## Major risks
+## Next decisions for Ranee
 
-- Public datasets may be stale, incomplete, incompatible, or redistribution-restricted.
-- The prototype can become too broad if authentication, prediction, nationwide coverage, or external-agency integration enters the MVP.
-- Frontend, backend, routing, and ML can diverge without early contract approval.
-- ML labels may be insufficient; the rule-based fallback must remain demonstrable.
-- Offline synchronization and changing route conditions create conflict and stale-data risks.
-- Existing frontend behavior is largely prototype/local state; UI completeness must not be reported as backend integration.
-
-## Latest demonstration
-
-Foundation Phase 2: a sanitized citizen request is persisted, listed for a coordinator, atomically assigned, retrieved by the assigned rescuer, and advanced to `en-route` against a real MongoDB replica set. Role, validation, duplicate/conflict, rollback, and lifecycle tests pass. Mapping, routing, model integration, and persistent offline behavior remain later-phase deliverables.
+1. Review [PR #31](https://github.com/seavens3nt/ResQPH/pull/31) and merge it
+   only if the inspected gate conditions remain acceptable.
+2. Record `Approve with conditions` in the Team Phase 3 gate, accepting the
+   academic ML package while deferring runtime model integration.
+3. Keep Team Phase 1 as the active implementation phase. Issues #32–#36 are
+   open; only Issue #32 is ready to start until its fixture is accepted.
 
 ## Links
 
-- GitHub Project: **To be added**
-- Milestones: [GitHub milestones](https://github.com/seavens3nt/ResQPH/milestones)
-- Issues: [GitHub Issues](https://github.com/seavens3nt/ResQPH/issues)
-- Pull requests: [GitHub pull requests](https://github.com/seavens3nt/ResQPH/pulls)
-- CI: [GitHub Actions](https://github.com/seavens3nt/ResQPH/actions)
 - [Dashboard](DASHBOARD.md)
 - [Roadmap](ROADMAP.md)
-- [Phase 1 guide](phases/PHASE-01.md)
-- [Phase 2 guide](phases/PHASE-02.md)
 - [Team Phase 1 guide](phases/TEAM-PHASE-01.md)
-- [Phase 1 gate](phases/PHASE-01-GATE.md)
-- [Phase 2 gate](phases/PHASE-02-GATE.md)
-- [Phase 1 evidence](testing/PHASE-01-EVIDENCE.md)
-- [Phase 2 evidence](testing/PHASE-02-EVIDENCE.md)
-- [Sprint 01](sprints/SPRINT-01.md)
+- [Team Phase 3 guide](phases/TEAM-PHASE-03.md)
+- [Team Phase 3 gate](phases/TEAM-PHASE-03-GATE.md)
+- [Team Phase 3 evidence](testing/TEAM-PHASE-03-EVIDENCE.md)
+- [ML feasibility and acceptance](ml/ML_FEASIBILITY.md)
+- [GitHub Issues](https://github.com/seavens3nt/ResQPH/issues)
+- [GitHub pull requests](https://github.com/seavens3nt/ResQPH/pulls)
+- [GitHub Actions](https://github.com/seavens3nt/ResQPH/actions)

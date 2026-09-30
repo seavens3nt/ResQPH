@@ -52,6 +52,15 @@ per decision D-020.
 - **Temporal:** single snapshot (2009-09-30). The full flood duration is not captured.
 - **Urban bias:** rooftops and impervious surfaces can produce false negatives.
 - **Provenance:** the Metro Manila subset has not been ground-truthed in this project.
+- **Evaluation:** the preserved classifier used a stratified random row split,
+  so neighboring road observations may occur in both train and test sets.
+- **Runtime contract:** its `flooded_ondoy_2009` target and ordered feature list
+  do not match the approved U-Belt `high_risk_edge` API contract.
+- **Feature timing:** `flood_depth_m` and `flood_hazard_class` describe the
+  event layer and are not accepted as pre-outcome runtime predictors.
+- **Reproduction:** source rasters and the labeled training parquet are not
+  committed, so repository tests validate artifact integrity and behavior but
+  do not retrain the reported metrics.
 
 ## References
 

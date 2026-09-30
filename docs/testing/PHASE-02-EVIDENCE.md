@@ -60,6 +60,12 @@ Verified result: `8` test files and `98` tests passed; the production build pass
 
 Matthew reports that the completed Ondoy 2009 XGBoost model achieved ROC-AUC `0.97` and recall `0.92` and produced a smaller artifact than Random Forest. This record deliberately labels those values as **not independently verified**. Team Phase 3 must import or reference the immutable artifact and supply dataset provenance, feature/target schema, leakage-safe split evidence, environment versions, checksums, reproducible metrics, error analysis, and fallback tests before runtime integration is accepted.
 
+**Later review note (2026-09-29):** Team Phase 3 imported and tested the
+package, but the preserved evaluation used a random row split and the external
+target/features do not match the U-Belt runtime contract. The experiment is
+accepted as exploratory evidence; runtime integration remains deferred. See
+[`TEAM-PHASE-03-EVIDENCE.md`](TEAM-PHASE-03-EVIDENCE.md).
+
 ## Gate interpretation
 
 These results support `Approve` for Foundation Phase 2. They do not verify the mapping pipeline, A* routing, model artifact, model-to-routing adapter, or persistent offline queue; those remain explicit later-phase gates.

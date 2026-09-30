@@ -1,12 +1,16 @@
 # ResQPH project roadmap
 
-**Status:** Project Foundation Phase 2 gate verified; Team Phase 1 ready to start after the gate record merges
+**Status:** Team Phase 1 active; Team Phase 3 early evidence package ready for review
 **Decision owner:** Ranee
 **Last updated:** 2026-09-29
 
 ## Delivery structure
 
-Ranee completes the Project Foundation before team feature phases open. The team’s numbered roadmap begins with Mapping and Geospatial Pipeline as Team Phase 1. Only the active phase receives executable issues; later phases remain planned summaries until the preceding gate is approved.
+Ranee completed the Project Foundation through PR #25. The team's numbered
+roadmap begins with Mapping and Geospatial Pipeline as Team Phase 1. Only that
+active delivery phase receives implementation issues. Matthew's already
+delivered Team Phase 3 experiment is an early evidence-review exception; it
+does not activate intervening routing work.
 
 Because delivery time is constrained, every phase must protect the smallest end-to-end demonstration. Deterministic rescue coordination and rule-based A* routing are the critical path. ML experimentation remains required, while runtime ML integration and optional data enrichment are conditional and must not block that path.
 
@@ -35,7 +39,7 @@ Team Phase 5 — Integration, Testing, and Presentation
 1. The study area is the project-defined U-Belt pilot area, City of Manila, using the approved WGS 84 bounding box.
 2. Flood conditions are controlled or historical; the system does not claim live prediction.
 3. A* and rule-based penalties must work before ML is integrated.
-4. XGBoost is the accepted candidate ML experiment under D-019; its artifact and reported metrics are not runtime-approved until the repository evidence package passes review.
+4. XGBoost is accepted as completed external exploratory evidence under D-019 and D-020; its artifact is not U-Belt runtime-compatible or routing-approved.
 5. Model output may add a bounded penalty but cannot override impassability rules or human decisions.
 6. Offline support is limited to one cached assigned mission and one queued status update.
 7. The interface distinguishes simulated, historical, cached, stale, and pending-sync information.
@@ -74,7 +78,7 @@ Ranee recorded `Approve` on 2026-09-22 after verifying the locked foundation and
 
 ## Project Foundation Phase 2 — Core Application
 
-**Status:** Completed and gate-verified through PRs #21–#24; gate record pending merge
+**Status:** Completed and verified through PRs #21–#25
 **Lead:** Ranee
 **Backend review/support:** Jared
 **Frontend contract review/support:** Elle and Clarence
@@ -100,7 +104,7 @@ If capacity is lower than expected, complete one citizen request through coordin
 
 ## Team Phase 1 — Mapping and Geospatial Pipeline
 
-**Status:** Ready to start after the Foundation Phase 2 gate record merges
+**Status:** In progress
 **Accountable geospatial owner:** Matthew
 **Backend integration support:** Jared
 
@@ -116,13 +120,19 @@ Implement A*, baseline known-graph tests, deterministic flood/passability penalt
 
 ## Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Planned
+**Status:** Ready for review as an early parallel evidence package
 **Accountable owner:** Matthew
 **Support:** Ranee and Jared
 
-Package and verify the completed XGBoost experiment, including reproducible preprocessing, leakage-safe holdout evidence, evaluation and error analysis, stable inference output, and missing/malformed-model fallback. Application integration requires Ranee’s evidence review.
+Package and verify the completed XGBoost experiment, including provenance,
+artifact integrity, the actual random-row evaluation boundary, error analysis,
+stable inference output, and missing/malformed/incompatible-model fallback.
+The external artifact is not compatible with the U-Belt runtime contract.
 
-If the evidence threshold is not met, the experiment is still documented and demonstrated as a non-integrated result; the rule-based route remains the accepted application behavior.
+The proposed gate accepts the experiment as a non-integrated academic result
+and the backend adapter as a safe fallback boundary. The rule-based route
+remains the accepted application behavior. See
+[`TEAM-PHASE-03.md`](phases/TEAM-PHASE-03.md).
 
 ## Team Phase 4 — Limited Offline Support
 

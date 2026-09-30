@@ -1,114 +1,140 @@
-# Road-risk ML feasibility and evaluation plan
+# Road-risk ML feasibility and acceptance
 
-**Status:** XGBoost evidence package delivered and repository-verified
-**Approved candidate:** XGBoost road-risk classifier (external evidence only)
-**Required fallback:** deterministic rule-based risk score
-**Last updated:** 2026-09-30
+**Status:** Ready for review as completed exploratory evidence; runtime model integration deferred
 
-The original Logistic Regression and Random Forest requirement was superseded by decision D-019. The evidence package under [`../../ml/external-experiments/ondoy-2009-metro-manila/`](../../ml/external-experiments/ondoy-2009-metro-manila/) contains the training code, artifacts, and reproducible evaluation. The repository-verified held-out metrics are:
+**Candidate experiment:** XGBoost road-flood classifier from the Ondoy 2009 package
 
-- ROC-AUC `0.976`
-- Recall (flooded) `0.923`
-- Precision (flooded) `0.238`
-- 520 positives / 148,495 total samples
-- Stratified 80/20 split, `random_state=42`
+**Operative application path:** deterministic rule-based risk score
+**Last updated:** 2026-09-29
 
-Feature-importance analysis identifies `elevation_m` (0.658) as the dominant predictor. Runtime integration remains gated on the U-Belt retraining PR.
+Matthew's external experiment is preserved under
+[`../../ml/external-experiments/ondoy-2009-metro-manila/`](../../ml/external-experiments/ondoy-2009-metro-manila/).
+The repository can verify that the code, artifacts, metadata, checksums, and
+smoke tests are internally consistent. The source training parquet is not
+committed, so the reported metrics have not been regenerated from raw inputs.
 
-## Intended use
+## Evidence levels
 
-The ML component estimates a bounded road-risk probability or category for a road edge. An accepted result may add a non-negative penalty to the deterministic routing cost. It cannot mark an impassable edge passable, override a controlled rule, dispatch a team, or make an autonomous safety decision.
+| Claim | Status | Evidence |
+|---|---|---|
+| XGBoost classifier artifact exists and matches the manifest | Verified | SHA-256 plus artifact-load tests |
+| Artifact accepts its recorded seven-feature external schema | Verified | Isolated ML test suite |
+| Reported random-row metrics are recorded consistently | Verified as artifact metadata | `flood_classifier_metadata.json` |
+| Training can be reproduced from raw source data in this repository | Not verified | Raw export and processed labeled parquet are intentionally absent |
+| Metrics demonstrate spatial or temporal generalization | Not verified | Evaluation used a stratified random row split |
+| Artifact matches the approved U-Belt runtime target and features | Rejected | Target and ordered feature schemas differ |
+| Artifact may influence routing | Not approved | Runtime adapter rejects incompatible metadata and uses the rule fallback |
 
-## Approved target
+## Preserved experiment results
 
-The Phase 1 target is binary `high_risk_edge` for one road edge under one labeled scenario or historical observation:
+The committed metadata reports the following XGBoost holdout values:
 
-- `1`: the verified outcome is `high`, `severe`, `restricted`, or `impassable`;
-- `0`: the verified outcome is `none`, `low`, or `moderate` and `passable`.
+- ROC-AUC: `0.9763345225`
+- Flooded-class recall: `0.9230769231`
+- Flooded-class precision: `0.2382133995`
+- Flooded-class F1: `0.3786982249`
+- Samples: `148,495`
+- Positive samples: `520` (`0.350%`)
+- Confusion matrix: `[[29288, 307], [8, 96]]`
+- Split: stratified random row holdout, test size `0.20`, seed `42`
 
-Each record must include a stable `edge_id`, scenario/time group, spatial group, source type, and label provenance. The contract fixture is [`../../data/samples/ml-road-risk-contract.example.json`](../../data/samples/ml-road-risk-contract.example.json).
+These values are **artifact-reported exploratory results**, not independently
+retrained results and not proof of U-Belt or street-level accuracy. The
+holdout includes 307 false positives and 8 false negatives. The low precision
+means most positive predictions in this holdout were false alarms.
 
-Controlled labels are approved for demonstrating preprocessing, training, comparison, inference, and fallback. They are not evidence of real-world predictive accuracy. Application integration remains optional and requires an honest held-out evaluation.
+## Why the external artifact is not a runtime model
 
-## Candidate features
+The artifact predicts `flooded_ondoy_2009` using:
 
-- Road class
-- Edge length and baseline travel time
-- Historical flood frequency calculated only from records before the labeled outcome
-- Maximum prior flood depth calculated only from records before the labeled outcome
-- Distance to a documented waterway when the method and CRS are recorded
-- Optional contextual elevation with missingness handling
-- Rainfall band before the outcome when its source period aligns with the label
+```text
+road_length_m
+speed_kph
+elevation_m
+flood_depth_m
+flood_hazard_class
+road_class_code
+distance_to_evac_m
+```
 
-Do not train on `edge_id`, current outcome flood level, current outcome passability, post-outcome observations, or duplicate location identifiers. These leak the answer or memorize location rather than learning a defensible relationship.
+The approved application target is `high_risk_edge`, and the backend contract
+uses pre-outcome U-Belt fields such as historical flood frequency, prior flood
+depth, waterway distance, baseline travel time, and rainfall band. Equal vector
+length is not compatibility. Loading the external model with differently
+ordered or differently defined values would produce meaningless output.
 
-## Data sufficiency and split decision
+Current-event flood depth and hazard class also cannot be presented as
+pre-outcome predictors without a separate, time-aligned source decision. The
+external evaluation's random row split may place neighboring road observations
+in both train and test sets.
 
-- Use grouped train/validation/test partitions by `scenario_group` and `spatial_group`; the same edge/scenario group must not cross partitions.
-- Prefer a temporal test set when multiple historical periods exist.
-- Report missingness and class balance before fitting.
-- If fewer than 200 labeled records exist, either class has fewer than 40 examples, or grouped splitting cannot create all partitions, the experiment may still demonstrate the pipeline but its output is not integrated into routing.
-- Synthetic controlled records are always labeled as synthetic and are never mixed with historical records without a source indicator and separate result reporting.
+## Approved runtime target and features
 
-## Required evidence package
+The accepted future target is binary `high_risk_edge`:
 
-1. Rule-based baseline using the approved deterministic risk table.
-2. XGBoost training code or immutable training reference with dependency versions and random seeds.
-3. Dataset provenance for the Ondoy 2009 records plus the exact feature and target schema.
-4. Leakage-safe train/validation/test construction and comparison against the rule baseline.
-5. Metrics, confusion matrix, and error analysis, especially false-low-risk predictions.
-6. Serialized artifact metadata, checksum, version, and stable edge-risk inference contract.
-7. Inference fallback tests for missing, malformed, incompatible, or rejected artifacts.
+- `1`: a verified historical or controlled outcome is high, severe,
+  restricted, or impassable;
+- `0`: a verified outcome is none, low, or moderate and passable.
 
-## Evaluation
+The approved ordered runtime feature representation is:
 
-Report at minimum:
+```text
+road_class_code
+length_m
+baseline_travel_time_s
+historical_flood_frequency
+max_prior_flood_depth_cm
+distance_to_documented_waterway_m
+elevation_context_m
+rainfall_band_code
+```
 
-- Sample count and class distribution
-- Train/validation/test construction
-- Precision, recall, and F1 by risk class
-- Confusion matrix
-- ROC-AUC only when the target and class structure make it meaningful
-- Calibration or probability reliability when probabilities become routing penalties
-- False-low-risk cases and their consequences
-- Geographic and temporal limitations
+The source request contract remains
+[`../../data/samples/ml-road-risk-contract.example.json`](../../data/samples/ml-road-risk-contract.example.json).
+Do not train on `edge_id`, current outcome flood level, current outcome
+passability, post-outcome observations, or duplicate location identifiers.
 
-Use a spatial or temporal holdout when enough data exist. A random row split is not acceptable when neighboring or repeated road observations could leak nearly identical examples across sets.
+## Runtime activation gate
 
-## Integration acceptance
+The backend loads a model only when all of the following are true:
 
-The evidence package is a required deliverable. Model output is integrated into the demo only when:
+1. `ML_ENABLED=true` is set deliberately.
+2. Artifact and metadata paths are configured explicitly.
+3. The configured SHA-256 digest matches the artifact before deserialization.
+4. Metadata declares `runtime_compatible: true`.
+5. Model name, version, target, and ordered feature list exactly match the
+   backend contract.
+6. Optional runtime dependencies are installed.
+7. The artifact loads and produces a finite probability.
 
-- The target and labels are defensible and documented.
-- The held-out evaluation is reproducible.
-- The output schema is stable and keyed to routing edges.
-- The model does not silently emit out-of-range or missing values.
-- False-low-risk behavior and limitations are documented.
-- Ranee accepts the evidence.
+Any failure produces the deterministic rule score and a stable
+`fallback_reason`. The external Ondoy metadata declares
+`runtime_compatible: false`, so it cannot pass this gate.
 
-If these conditions are not met, the completed academic output is the externally trained experiment plus its documented evaluation, while the application demonstration uses the rule-based fallback. This is not cancellation of ML; it is a controlled integration decision.
+## Requirements for a future integrated model
 
-## Approved model-to-routing mapping
+- U-Belt-compatible labels and stable `edge_id` joins
+- Source, time, CRS, missingness, and class-balance records
+- Spatial or temporal holdout with no edge/scenario group overlap
+- Rule-baseline comparison
+- Precision, recall, F1, confusion matrix, probability reliability, and error
+  analysis focused on false-low-risk predictions
+- Versioned artifact, metadata, checksum, and exact preprocessing schema
+- Missing, malformed, incompatible, corrupted, and prediction-failure tests
+- Ranee's explicit acceptance
 
-An accepted probability becomes a non-negative bounded cost:
+If those conditions are not met, Team Phase 3 still completes its academic ML
+deliverable through the external experiment and honest evaluation record while
+the application continues with the mandatory rule-based path.
+
+## Model-to-routing boundary
+
+An accepted future probability may contribute only this bounded non-negative
+cost:
 
 ```text
 ml_penalty = round(clamp(risk_probability, 0, 1) * 60)
 ```
 
-The maximum ML contribution is therefore `60` seconds-equivalent prototype cost units per edge. It cannot reduce deterministic penalties, restore an excluded edge, or replace the rule-based score. Invalid, incompatible, or stale output is rejected and produces a visible fallback indicator.
-
-## Inference contract
-
-```json
-{
-  "edge_id": "edge-001",
-  "risk_probability": 0.74,
-  "risk_level": "high",
-  "model_name": "xgboost",
-  "model_version": "xgb-ondoy-001",
-  "generated_at": "2026-09-21T04:00:00Z"
-}
-```
-
-The adapter rejects unknown edge IDs, non-finite probabilities, values outside `0..1`, incompatible versions, and stale results outside the documented scenario policy.
+It cannot reduce deterministic penalties, restore an impassable edge, override
+a controlled rule, dispatch a team, or replace human judgment.

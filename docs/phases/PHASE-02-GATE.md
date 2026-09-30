@@ -50,6 +50,11 @@ Detailed evidence and reproducible commands are in [`../testing/PHASE-02-EVIDENC
 - XGBoost is the accepted candidate experiment under D-019, but its team-reported ROC-AUC `0.97` and recall `0.92` are not repository-verified until the evidence package is reproduced and reviewed.
 - No routing, ML, offline, government-integration, guaranteed-safety, nationwide, or actual-emergency-readiness claim is approved by this gate.
 
+Later Team Phase 3 review preserved the package as exploratory evidence but
+rejected the artifact for U-Belt runtime use because its target, ordered
+features, and random-row evaluation do not meet the application gate. This
+does not change the historical Phase 2 decision.
+
 ## Administrative boundary
 
 This gate approves the technical phase. GitHub Issue #19 and any remaining implementation issue are not treated as closed merely because this document exists; issue state must match merged evidence and Ranee's explicit administrative decision.

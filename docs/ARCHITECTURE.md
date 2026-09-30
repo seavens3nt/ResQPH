@@ -51,7 +51,18 @@ The routing component begins with a deterministic A* or Dijkstra baseline. Its c
 
 ## AI/ML boundary
 
-The AI/ML component estimates road risk or passability only when the available data support a defensible model. A rule-based baseline and fallback are mandatory. Model output is translated into an explainable routing penalty and does not replace deterministic constraints or human decisions.
+The backend owns the runtime boundary at
+`backend/app/integrations/ml_inference.py`. The deterministic rule score is
+mandatory. A serialized model may load only after explicit enablement,
+checksum verification, and an exact metadata match for target, version, and
+ordered features. Failure at any gate returns the rule score with a stable
+reason code.
+
+The Ondoy 2009 package under `ml/external-experiments/` is isolated academic
+evidence. Its dependencies are not core backend dependencies, and its artifact
+is not U-Belt runtime-compatible. Future accepted model output may add a
+bounded, explainable routing penalty but cannot replace deterministic
+constraints, restore an impassable edge, or override human decisions.
 
 ## Offline boundary
 
