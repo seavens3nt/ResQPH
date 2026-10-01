@@ -1,18 +1,76 @@
 # Routing workspace
 
-This folder owns road-graph preparation, basic shortest-path routing, flood and geographic risk costs, impassable-road handling, dynamic rerouting, and route explanations.
+This folder owns road-graph preparation, deterministic shortest-path routing,
+flood and geographic risk costs, impassable-road handling, dynamic rerouting,
+and route explanations for the ResQPH prototype.
 
-Implementation begins with a deterministic A* or Dijkstra baseline. AI/ML output may contribute a documented road-risk penalty but must not replace deterministic constraints or human rescue decisions.
+Team Phase 1 delivers the extraction, normalization, flood-join, and
+validation pipeline for the U-Belt pilot area. Later phases add A*/Dijkstra
+routing and cost penalties on top of the fixtures produced here.
 
-## Intended structure
+## Installation
 
-When Phase 3–4 implementation begins, organize reusable code under `src/resqph_routing/`:
+```powershell
+cd routing
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
 
-- `contracts.py` for route inputs, results, warnings, and explanations.
-- `graph/` for graph construction, loading, validation, and coordinate snapping.
-- `algorithms/` for deterministic A* or Dijkstra.
-- `costs/` for distance, time, flood, elevation, passability, and bounded risk penalties.
-- `scenarios/` for controlled flood changes and rerouting.
-- `tests/` for small known graphs, no-route cases, cost changes, and explanations.
+## Build the U-Belt graph and fixtures
 
-Routing must remain independent of FastAPI, MongoDB, React, notebooks, and trained-model availability. Add reproducible package metadata and installation instructions when the first routing implementation Issue begins; do not modify `PYTHONPATH` inside source files.
+From the repository root, with the routing venv active:
+
+```powershell
+python routing/scripts/build_ubelt_graph.py
+python routing/scripts/build_ubelt_graph.py --force
+```
+
+### What it produces
+
+| Path | Committed? | Purpose |
+|---|---|---|
+| `data/raw/ubelt-v1-osm.graphml` | no (gitignored) | OSMnx raw extraction cache |
+| `data/interim/ubelt-v1-graph.graphml` | no (gitignored) | Intermediate NetworkX graph |
+| `data/processed/ubelt-v1-edges.geojson` | no (gitignored) | Full joined edges (~2,168) |
+| `data/samples/ubelt-v1-preview.geojson` | yes | 30-edge committed fixture |
+| `data/samples/ubelt-v1-flood-join.geojson` | yes | 10-record committed scenario |
+
+## Run tests
+
+```powershell
+python -m pytest tests/ -v
+```
+
+44 tests: extraction bounds, edge-ID format, normalization, flood join
+rejection rules, schema validation, and committed-fixture integrity. No
+network access required.
+
+## Module layout
+
+```text
+routing/src/resqph_routing/
+  config.py       Constants, CRS definitions, path helpers, road-class maps
+  extract.py      Study-area loader + OSMnx download with cache
+  normalize.py    Contract-schema projection and edge-ID generation
+  flood_join.py   Controlled-scenario join + rejection reporting
+  validate.py     Bounds, geometry, schema, and join-coverage checks
+```
+
+## Reference contracts
+
+- `docs/phases/TEAM-PHASE-01.md` — phase scope and acceptance criteria
+- `docs/routing/ROUTING_CONTRACT.md` — routing inputs, outputs, and cost rules
+- `data/samples/road-edge.example.geojson` — edge schema
+- `data/samples/flood-scenario.example.geojson` — scenario schema
+- `data/metadata/road-network.md` — extraction details and limitations
+- `data/metadata/flood-hazard.md` — controlled scenario and join rules
+
+## Limitations
+
+- OSM road completeness and access tags can change over time.
+- No road is guaranteed passable or safe because it appears in OSM.
+- The controlled flood scenario is synthetic and explicitly labelled as such.
+- This phase does not implement final A* routing, runtime ML integration,
+  or persistent offline behavior.

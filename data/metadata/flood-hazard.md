@@ -45,3 +45,52 @@ The committed fixture demonstrates the contract join. It does not claim that the
 ## Safety limitation
 
 Controlled and historical layers are not live flood measurements. The UI must show the scenario/source timestamp and must not claim current accuracy, guaranteed passability, or safe navigation.
+
+---
+
+## Committed sample scenario (2026-10-01)
+
+**Scenario ID:** `scenario-controlled-ubelt-001`
+**Scenario timestamp:** `2026-10-01T00:00:00Z`
+**Records:** 10
+**Fixture:** `data/samples/ubelt-v1-flood-join.geojson`
+
+The sample scenario is generated deterministically by
+`routing/src/resqph_routing/flood_join.py::build_sample_scenario`, which
+applies a fixed rotation of (flood_level, passability, flood_depth_cm)
+patterns to the first 10 edges of the graph sorted by `edge_id`. This
+guarantees identical output on every regeneration for a given graph.
+
+### Join coverage
+
+| Metric | Value |
+|---|---:|
+| Scenario records | 10 |
+| Matched edges | 10 |
+| Unmatched edges | 2,158 |
+| Rejected (unknown edge_id) | 0 |
+| Rejected (duplicate edge_id) | 0 |
+| Rejected (invalid record) | 0 |
+
+### Resulting flood-level distribution
+
+| Level | Edges |
+|---|---:|
+| none | 2,160 |
+| low | 2 |
+| moderate | 2 |
+| high | 2 |
+| severe | 2 |
+
+### Resulting passability distribution
+
+| Passability | Edges |
+|---|---:|
+| passable | 2,162 |
+| restricted | 4 |
+| impassable | 2 |
+
+Unmatched edges retain the contract defaults `flood_level='none'` and
+`passability='passable'`. Consumers must apply the documented uncertainty
+penalty (see `docs/routing/ROUTING_CONTRACT.md`) rather than treating
+unmatched records as automatically safe.

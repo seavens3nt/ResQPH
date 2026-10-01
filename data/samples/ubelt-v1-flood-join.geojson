@@ -1,0 +1,309 @@
+{
+  "type": "FeatureCollection",
+  "name": "resqph-ubelt-controlled-scenario-v1",
+  "fixture_notice": "Synthetic academic scenario; not live or historical flood evidence.",
+  "scenario": {
+    "scenario_id": "scenario-controlled-ubelt-001",
+    "scenario_timestamp": "2026-10-01T00:00:00Z",
+    "source_type": "controlled",
+    "study_area_id": "ubelt-pilot-v1"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:10148847773:259425496:0",
+        "flood_level": "severe",
+        "flood_depth_cm": 120,
+        "passability": "impassable",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.00364279999998,
+            14.612390899999998
+          ],
+          [
+            121.0034267,
+            14.612300799999998
+          ],
+          [
+            121.0034126,
+            14.612289399999998
+          ],
+          [
+            121.0034126,
+            14.612268299999998
+          ],
+          [
+            121.0036128,
+            14.6117538
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:1037130787:68082882:0",
+        "flood_level": "high",
+        "flood_depth_cm": 80,
+        "passability": "restricted",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.99376830000001,
+            14.5977574
+          ],
+          [
+            120.9935571,
+            14.5979657
+          ],
+          [
+            120.99326129999999,
+            14.598246200000002
+          ],
+          [
+            120.9931743,
+            14.598328699999998
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:1037130917:1037130787:0",
+        "flood_level": "moderate",
+        "flood_depth_cm": 35,
+        "passability": "restricted",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9938198,
+            14.597709300000002
+          ],
+          [
+            120.99376830000001,
+            14.5977574
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:1037131083:1037130787:0",
+        "flood_level": "low",
+        "flood_depth_cm": 15,
+        "passability": "passable",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9936791,
+            14.597677600000004
+          ],
+          [
+            120.99376830000001,
+            14.5977574
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:1037131083:11206903876:0",
+        "flood_level": "none",
+        "flood_depth_cm": null,
+        "passability": "passable",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9936791,
+            14.597677600000004
+          ],
+          [
+            120.9937387,
+            14.597624400000003
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:104969325:79639026:0",
+        "flood_level": "moderate",
+        "flood_depth_cm": 40,
+        "passability": "restricted",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9982622,
+            14.616760599999994
+          ],
+          [
+            120.99800229999998,
+            14.6165245
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:104970348:104973409:0",
+        "flood_level": "high",
+        "flood_depth_cm": 75,
+        "passability": "restricted",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9995679,
+            14.612801499999996
+          ],
+          [
+            120.99909730000002,
+            14.613294900000001
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:104970348:61090370:0",
+        "flood_level": "none",
+        "flood_depth_cm": null,
+        "passability": "passable",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9995679,
+            14.612801499999996
+          ],
+          [
+            120.9999008,
+            14.6120383
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:104970348:79641494:0",
+        "flood_level": "low",
+        "flood_depth_cm": 10,
+        "passability": "passable",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9995679,
+            14.612801499999996
+          ],
+          [
+            120.9995052,
+            14.613149500000002
+          ],
+          [
+            120.999472,
+            14.613424100000001
+          ],
+          [
+            120.99945970000002,
+            14.613465499999998
+          ],
+          [
+            120.99944090000001,
+            14.613491600000003
+          ],
+          [
+            120.9993847,
+            14.613554999999996
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "scenario_id": "scenario-controlled-ubelt-001",
+        "edge_id": "ubelt-v1:104970910:130167086:0",
+        "flood_level": "severe",
+        "flood_depth_cm": 150,
+        "passability": "impassable",
+        "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z",
+        "reason": "Deterministic sample pattern for Phase 1 fixture."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0019221,
+            14.609915200000001
+          ],
+          [
+            121.0016006,
+            14.609632099999997
+          ]
+        ]
+      }
+    }
+  ]
+}
