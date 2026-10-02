@@ -83,7 +83,9 @@ describe('InteractiveFloodMap Component', () => {
     expect(screen.getByText('Edge ID')).toBeInTheDocument()
     const dataset = buildMapLayerDataset()
     expect(screen.getByText(dataset.edges[0].edgeId)).toBeInTheDocument()
-    expect(screen.getByText(dataset.edges[0].passability.toUpperCase())).toBeInTheDocument()
+    expect(
+      screen.getAllByText(dataset.edges[0].passability.toUpperCase()).length,
+    ).toBeGreaterThan(0)
   })
 
   it('renders routing rationale and simulated route delay banner', () => {

@@ -12,6 +12,10 @@ Responsibilities define ownership and accountability, but they are not strict bo
 | Matthew Trinitaria | [@matthew-sudo2](https://github.com/matthew-sudo2) | Primary AI/ML and Data Evaluation; Geospatial/Routing Owner | Jared supports backend integration |
 | Clarence | [@ClarenceArillo](https://github.com/ClarenceArillo) | UI/UX and Frontend | Testing and map-interface support |
 
+Temporary Team Phase 2 coverage: while Elle is unavailable, Ranee owns Elle's
+route-data/frontend work package. This does not change Elle's permanent role;
+Ranee will decide when to return future frontend packages to her.
+
 ## Ranee — Project Manager and Primary Backend Contributor
 
 ### Project management
@@ -99,7 +103,7 @@ Responsibilities define ownership and accountability, but they are not strict bo
 | Project Foundation 1 — Requirements and Data Validation | Ranee | Completed foundation becomes authoritative after merge |
 | Project Foundation 2 — Core Application | Ranee | Jared, Elle, and Clarence |
 | Team 1 — Mapping and Geospatial Pipeline | Matthew | Jared for backend integration; Elle and Clarence for map presentation |
-| Team 2 — Flood-Aware Routing | Matthew | Jared for backend integration; Ranee for gate approval; Elle and Clarence for route presentation |
+| Team 2 — Flood-Aware Routing | Matthew | Jared for backend integration; Ranee temporarily covers Elle's route-data package and owns the gate; Clarence owns accessible route presentation |
 | Team 3 — AI/ML Road-Risk Component | Matthew | Ranee and Jared |
 | Team 4 — Limited Offline Support | Ranee | Jared plus one assigned frontend owner |
 | Team 5 — Integration, Testing, and Presentation | Ranee | All members |

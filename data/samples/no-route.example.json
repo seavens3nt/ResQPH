@@ -1,0 +1,10 @@
+{
+  "fixture_notice": "Synthetic known-graph response for contract tests; not live navigation or an operational dispatch result.",
+  "status": "no-route",
+  "reason": "controlled_impassability_disconnected_destination",
+  "warnings": [
+    "No eligible route exists under the selected controlled scenario.",
+    "Do not draw a straight-line or ordinary shortest-path substitute."
+  ],
+  "scenario_timestamp": "2026-10-01T00:00:00Z"
+}

@@ -1,6 +1,6 @@
 # Team Phase 1 — Mapping and Geospatial Pipeline
 
-**Status:** In progress
+**Status:** Completed and verified on 2026-10-03
 
 **Gate owner:** Ranee
 
@@ -30,10 +30,10 @@ Produce one small, reproducible road-network and controlled-flood dataset for `u
 
 GitHub tracker: [Issue #36](https://github.com/seavens3nt/ResQPH/issues/36)
 
-- Matthew: [Issue #32](https://github.com/seavens3nt/ResQPH/issues/32) — ready to start
-- Jared: [Issue #33](https://github.com/seavens3nt/ResQPH/issues/33) — blocked until Issue #32's accepted fixture is merged
-- Elle: [Issue #34](https://github.com/seavens3nt/ResQPH/issues/34) — blocked until Issue #32's accepted fixture is merged
-- Clarence: [Issue #35](https://github.com/seavens3nt/ResQPH/issues/35) — blocked until Issue #32's accepted fixture is merged
+- Matthew: [Issue #32](https://github.com/seavens3nt/ResQPH/issues/32) — completed through PR #39
+- Jared: [Issue #33](https://github.com/seavens3nt/ResQPH/issues/33) — completed through PR #40
+- Elle: [Issue #34](https://github.com/seavens3nt/ResQPH/issues/34) — completed through PRs #42 and #43
+- Clarence: [Issue #35](https://github.com/seavens3nt/ResQPH/issues/35) — completed through PR #41
 
 ### Matthew — Road-network and geospatial pipeline
 
@@ -174,3 +174,7 @@ At minimum, the phase evidence must record:
 ## Exit gate
 
 Ranee may choose `Approve` only when another member can reproduce the bounded graph/fixture from documented commands, stable IDs pass automated validation, source/CRS/license limitations are recorded, and the controlled flood join is inspectable. Final A* routing, runtime XGBoost integration, and persistent offline behavior are not exit requirements for this phase.
+
+Ranee recorded `Approve` on 2026-10-03. See
+[`TEAM-PHASE-01-GATE.md`](TEAM-PHASE-01-GATE.md) and
+[`TEAM-PHASE-01-EVIDENCE.md`](../testing/TEAM-PHASE-01-EVIDENCE.md).

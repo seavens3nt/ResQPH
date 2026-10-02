@@ -1,6 +1,6 @@
 # Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Ready for review
+**Status:** Completed as external exploratory evidence; runtime integration deferred
 
 **Accountable owner:** Matthew
 
@@ -10,10 +10,9 @@
 ## Why this phase is being reviewed early
 
 Matthew completed the external XGBoost work before Team Phases 1 and 2. Ranee
-opened an early Phase 3 evidence review so the finished work can be preserved,
-tested, and scoped honestly. This does not replace Team Phase 1 as the active
-delivery phase and does not open runtime ML integration ahead of mapping and
-deterministic routing.
+opened and completed an early Phase 3 evidence review so the work could be
+preserved, tested, and scoped honestly. The evidence acceptance does not open
+runtime ML integration ahead of deterministic routing.
 
 ## Phase goal
 
@@ -90,8 +89,7 @@ docs/
 
 ## Phase exit decision
 
-The proposed gate is `Approve with conditions`: accept the experiment as the
-completed academic ML deliverable and accept the evidence-gated fallback
-adapter, while deferring runtime model and routing integration. Ranee records
-the final decision in [`TEAM-PHASE-03-GATE.md`](TEAM-PHASE-03-GATE.md) after the
-pull request and CI checks pass.
+The gate decision is `Approve with conditions`: the experiment is accepted as
+the completed academic ML deliverable and the evidence-gated fallback adapter
+is accepted, while runtime model integration remains deferred. See
+[`TEAM-PHASE-03-GATE.md`](TEAM-PHASE-03-GATE.md).

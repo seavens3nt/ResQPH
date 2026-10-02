@@ -1,0 +1,31 @@
+{
+  "fixture_notice": "Synthetic known-graph response for contract tests; not live navigation or a guaranteed-safe route.",
+  "status": "route-found",
+  "route_id": "route-known-graph-baseline",
+  "algorithm": "astar",
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [120.99, 14.604],
+      [120.991, 14.6045],
+      [120.9915, 14.6055]
+    ]
+  },
+  "distance_m": 120,
+  "estimated_time_s": 120,
+  "total_cost": 120,
+  "edge_ids": ["AB", "BD"],
+  "cost_breakdown": {
+    "base": 120,
+    "deterministic_risk": 0,
+    "ml_risk": 0
+  },
+  "fallback_used": true,
+  "warnings": [
+    "Synthetic controlled scenario; not live navigation data.",
+    "Runtime ML is disabled; deterministic rules were used."
+  ],
+  "explanation": "The baseline known graph selected AB and BD as the lowest-cost eligible path.",
+  "scenario_timestamp": "2026-10-01T00:00:00Z",
+  "model_version": null
+}

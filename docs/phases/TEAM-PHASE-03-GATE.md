@@ -1,11 +1,11 @@
 # Team Phase 3 gate — AI/ML Road-Risk Component
 
-**Status:** Ready for review
+**Status:** Completed and verified
 
 **Decision owner:** Ranee
 
-**Proposed decision:** Approve with conditions
-**Decision date:** Pending Ranee review and merge
+**Decision:** Approve with conditions
+**Decision date:** 2026-09-30
 
 ## Inspected evidence
 
@@ -39,6 +39,6 @@
 
 ## Final decision
 
-Pending. All required PR #31 CI checks passed on 2026-09-29. Ranee may change
-this record to `Completed and verified` and record `Approve with conditions`
-only after reviewing and merging the pull request, then verifying `main`.
+Ranee accepted the external experiment as academic evidence through merged PR
+#31 and closed Issue #37. Runtime ML remains disabled because the artifact is
+not compatible with the U-Belt target and ordered-feature contract.

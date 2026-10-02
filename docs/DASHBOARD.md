@@ -1,11 +1,11 @@
 # ResQPH project dashboard
 
-**Last updated:** 2026-09-29
+**Last updated:** 2026-10-03
 **Decision owner:** Ranee
 
-| Active delivery phase | Parallel review | Health | Current goal |
-|---|---|---|---|
-| Team 1 — Mapping and Geospatial Pipeline | Team 3 — AI/ML package ready for review | At risk | Merge the evidence repair without enabling the external model, then complete the U-Belt graph pipeline |
+| Active phase | Health | Current goal |
+|---|---|---|
+| Team 2 — Flood-Aware Routing | On track | Deterministic, explainable A* from engine through API and UI |
 
 ## Phase progress
 
@@ -13,48 +13,46 @@
 |---|---|---|
 | Project Foundation 1 | Completed and verified | Scope, contracts, fixtures, and evidence |
 | Project Foundation 2 | Completed and verified | Persistent request-to-mission workflow |
-| Team 1 — Mapping and Geospatial | In progress | Reproducible bounded graph, stable IDs, controlled flood join |
-| Team 2 — Flood-Aware Routing | Planned | Deterministic A*, penalties, exclusions, explanations |
-| Team 3 — AI/ML | Ready for review | External evidence accepted; runtime integration deferred |
+| Team 1 — Mapping and Geospatial | Completed and verified | Reproducible bounded graph, stable IDs, controlled flood join |
+| Team 2 — Flood-Aware Routing | Ready to start | A*, penalties, exclusions, no-route, explanations, API/UI integration |
+| Team 3 — AI/ML | Completed with conditions | External evidence accepted; runtime integration deferred |
 | Team 4 — Limited Offline | Planned | One cached mission and one queued update |
 | Team 5 — Integration and Presentation | Planned | Verified end-to-end demo and reconciled academic outputs |
 
-## Evidence snapshot
+## Team Phase 1 evidence snapshot
 
-| Area | Result | Interpretation |
+| Area | Result |
+|---|---|
+| Graph extraction | 912 nodes; 2,168 directed edges |
+| Controlled join | 10 matched; 0 rejected |
+| Committed map fixture | 30 road edges; 10 controlled records |
+| Routing tests | 59 passed |
+| Backend tests | 73 passed; 2 environment-gated skips |
+| Frontend tests | 155 passed |
+| Frontend build | Passed with non-blocking bundle-size advisory |
+| Gate | Approved |
+
+## Active ownership
+
+| Owner | Team Phase 2 package | Status |
 |---|---|---|
-| Frontend lint | Passed with 5 warnings | No lint errors; warnings are recorded technical debt outside this ML repair |
-| Frontend tests | 98 passed | Existing interface regression suite is green |
-| Frontend build | Passed | TypeScript and Vite production build succeeded |
-| Backend Ruff | Passed | Core and adapter style checks clean |
-| Backend Pytest | 44 passed, 2 skipped | Adapter gates and fallback verified; skipped tests are MongoDB integration cases |
-| External ML Pytest | 21 passed | Package, artifacts, checksums, ETL smoke, and models load consistently |
-| ML runtime | Disabled | External model is not contract-compatible |
-| Mapping | Not yet gate-verified | Active critical-path work |
-| Routing | Not yet started | Blocked by accepted graph/schema |
-
-## Ownership now
-
-| Owner | Work | Status |
-|---|---|---|
-| Ranee | Phase 3 review, backend boundary, status and gate decision | Ready for review |
-| Matthew | External ML evidence; Team 1 graph/flood pipeline | ML ready for review; mapping in progress |
-| Jared | Team 1 backend fixture loader | Ready to start from accepted schema |
-| Elle | Map UI and controlled-scenario states | Ready to start from accepted fixture |
-| Clarence | Map presentation, accessibility, and error states | Ready to start from accepted fixture |
+| Ranee | Tracker/gate and temporary route client/map-overlay coverage for Elle | Ready to start |
+| Matthew | Deterministic routing engine | Ready to start |
+| Jared | Backend routing API boundary | Ready to start from locked response contract |
+| Clarence | Accessible route presentation | Ready to start from locked response contract |
+| Elle | Temporarily unavailable; no active package until Ranee reassigns one | Paused by PM decision |
 
 ## Immediate actions
 
-1. Open the Phase 3 readiness pull request and require frontend, backend, and
-   ML evidence checks.
-2. Keep `ML_ENABLED=false`; do not add XGBoost to core backend requirements.
-3. Continue Team Phase 1 without expanding to routing or offline work.
+1. Each active owner pulls the gate revision from `main` and creates the branch named in the assigned issue.
+2. Implement only the owned files and verify against the locked fixtures.
+3. Submit one focused PR with exact evidence; Ranee reviews and merges.
 
 ## Navigation
 
 - [Current status](STATUS.md)
 - [Roadmap](ROADMAP.md)
-- [Phase guides](phases/README.md)
+- [Team Phase 2](phases/TEAM-PHASE-02.md)
 - [Architecture](ARCHITECTURE.md)
 - [Team responsibilities](TEAM.md)
 - [Development setup](SETUP.md)

@@ -89,9 +89,16 @@ The authoritative verification input is [`../../data/samples/routing-known-graph
   "warnings": ["Controlled flood scenario; not live navigation data."],
   "explanation": "Loyola Street was excluded as impassable. The selected corridor had the lowest eligible combined cost.",
   "scenario_timestamp": "2026-09-21T04:00:00Z",
-  "model_version": "rf-001"
+  "model_version": null
 }
 ```
+
+This example deliberately records `fallback_used: true` and an ML contribution
+of zero because runtime ML remains disabled. Team Phase 2 must prove the
+deterministic route without loading the external Ondoy artifact. The checked-in
+response fixtures are
+[`route-found.example.json`](../../data/samples/route-found.example.json) and
+[`no-route.example.json`](../../data/samples/no-route.example.json).
 
 ## No-route result
 

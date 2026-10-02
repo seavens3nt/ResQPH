@@ -1,16 +1,13 @@
 # Current Status
 
-- **Active phase:** Team Phase 1 — Mapping and Geospatial Pipeline.
-- **Parallel review:** Team Phase 3 — AI/ML Road-Risk Component is ready for early evidence review.
-- **Overall health:** At risk. Core application and repaired ML evidence are verified locally; mapping and deterministic routing remain missing.
-- **Completed and verified:** Phase 1 foundation plus request creation, coordinator queue/assignment, rescuer mission/status, MongoDB transactions, failure cases, and frontend contract integration through PRs #21–#24.
-- **Existing runtime:** React/Vite role-simulation UI, FastAPI core APIs, and Docker MongoDB replica-set lifecycle.
-- **Ready for review:** external XGBoost artifact integrity and isolated tests; evidence-gated backend adapter; honest random-row metric/error record; Phase 3 gate proposal.
-- **Not yet verified:** bounded graph pipeline, A* implementation, raw-data retraining, U-Belt-compatible runtime model, and persistent offline synchronization.
-- **Current target:** Ranee reviews PR #31 with runtime ML disabled while Matthew starts Team Phase 1 Issue #32; Issues #33–#35 wait for the accepted fixture.
-- **Open work:** Team Phase 1 tracker #36; Matthew #32 ready to start; Jared #33, Elle #34, and Clarence #35 blocked by the fixture dependency; Team Phase 3 gate review #37.
-- **Blocker:** no scope blocker; Team Phase 2 and dependent Team Phase 1 packages wait for the accepted graph/fixture. Exact course deadline and member availability are not recorded, so no calendar dates should be invented.
-- **Required checks:** frontend lint/tests/build; backend Ruff/Pytest; isolated ML Pytest; artifact manifest; relevant integration evidence.
-- **Gate readiness:** PR #31 is mergeable and all three CI jobs passed. Team Phase 3 recommendation is `Approve with conditions`; final approval waits for Ranee's review, merge decision, and post-merge verification.
-- **Phase rule:** Team Phase 1 remains active. Early Team Phase 3 evidence review does not activate Team Phase 2 or runtime model integration.
-- **Last verified:** 2026-09-29 against `origin/main` at `6ec4e3b`, readiness commit `9a16dab`, PR #31 CI, and GitHub Issues #32–#37.
+- **Active phase:** Team Phase 2 — Flood-Aware Routing.
+- **Overall health:** On track within the constrained MVP.
+- **Completed and verified:** Project Foundation Phases 1–2; Team Phase 1 bounded graph, controlled flood join, authoritative fixtures, backend loader, and accessible fixture-driven map; Team Phase 3 external evidence with runtime ML deferred.
+- **Current target:** deterministic A*, explainable rule costs, impassable-edge exclusion, no-route behavior, backend route API, and truthful route UI.
+- **Runtime ML:** disabled; the external Ondoy artifact is not U-Belt contract-compatible.
+- **Temporary assignment:** Ranee owns Elle's Team Phase 2 route client/map-overlay package until Ranee explicitly changes it. Elle has no active package while unavailable.
+- **Locked Team Phase 2 inputs:** `TEAM-PHASE-02.md`, routing contract, known graph, route-found/no-route response fixtures, authoritative U-Belt road/flood fixtures, and UI states.
+- **Latest checks:** routing 59 passed; backend 73 passed and 2 environment-gated skips; frontend 155 passed, lint with 4 pre-existing warnings, and production build passed; 10 JSON/GeoJSON fixtures parsed.
+- **Blockers:** none for starting Team Phase 2. Exact deadline and member weekly capacity remain unrecorded.
+- **Gate readiness:** Team Phase 1 approved on 2026-10-03; Team Phase 2 packages are ready to start after the gate change reaches `main`.
+- **Last verified:** 2026-10-03 against `main` at `7541c65` plus the Team Phase 1 gate correction.

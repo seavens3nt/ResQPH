@@ -56,6 +56,7 @@ export interface MapLegendProps {
   className?: string
 }
 
+// oxlint-disable-next-line react/only-export-components -- shared immutable legend fixture for consumers and tests.
 export const DEFAULT_LEGEND_ITEMS: LegendItem[] = [
   // 1. Flood Hazard Severity
   {
