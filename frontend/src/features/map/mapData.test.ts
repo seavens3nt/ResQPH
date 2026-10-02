@@ -141,7 +141,7 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
     expect(dataset.fixtureNotice).toMatch(/Synthetic|controlled/i)
 
     // Check edge joining
-    expect(dataset.edges.length).toBe(3)
+    expect(dataset.edges.length).toBe(1)
     const joinedEdge1 = dataset.edges.find((e) => e.edgeId === 'edge-demo-001')
     expect(joinedEdge1).toBeDefined()
     expect(joinedEdge1?.passability).toBe('restricted')
@@ -149,16 +149,11 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
     expect(joinedEdge1?.floodDepthCm).toBe(30)
     expect(joinedEdge1?.leafletCoordinates[0]).toEqual([14.6035, 120.994])
 
-    const joinedEdge2 = dataset.edges.find((e) => e.edgeId === 'edge-demo-002')
-    expect(joinedEdge2?.passability).toBe('impassable')
-    expect(joinedEdge2?.floodLevel).toBe('severe')
-    expect(joinedEdge2?.floodDepthCm).toBe(140)
-
     // Check statistics
-    expect(dataset.stats.totalEdges).toBe(3)
-    expect(dataset.stats.passableCount).toBe(1)
+    expect(dataset.stats.totalEdges).toBe(1)
+    expect(dataset.stats.passableCount).toBe(0)
     expect(dataset.stats.restrictedCount).toBe(1)
-    expect(dataset.stats.impassableCount).toBe(1)
+    expect(dataset.stats.impassableCount).toBe(0)
 
     // Check study area boundary
     expect(dataset.studyArea.name).toMatch(/U-Belt/i)

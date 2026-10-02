@@ -74,8 +74,8 @@ describe('InteractiveFloodMap Component', () => {
     expect(screen.getByText(/Accessible Road Network & Flood Passability Summary/i)).toBeInTheDocument()
     expect(screen.getByText('Edge ID')).toBeInTheDocument()
     expect(screen.getByText('edge-demo-001')).toBeInTheDocument()
-    expect(screen.getByText('edge-demo-002')).toBeInTheDocument()
-    expect(screen.getAllByText('IMPASSABLE').length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByText('edge-demo-002')).not.toBeInTheDocument()
+    expect(screen.getByText('RESTRICTED')).toBeInTheDocument()
   })
 
   it('renders routing rationale and simulated route delay banner', () => {

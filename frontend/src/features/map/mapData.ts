@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import roadEdgeFixtureJson from '../../../../data/samples/road-edge.example.geojson?raw'
+import floodScenarioFixtureJson from '../../../../data/samples/flood-scenario.example.geojson?raw'
+import studyAreaFixtureJson from '../../../../data/samples/study-area.geojson?raw'
 
 /**
  * U-Belt Pilot Bounding Box (EPSG:4326 / WGS 84)
@@ -67,7 +70,7 @@ export const roadEdgeFeatureSchema = z.object({
     road_class: z.string().default('unclassified'),
     flood_level: z.string().optional().default('none'),
     passability: z.string().optional().default('passable'),
-    observed_at: z.string().optional().default(new Date().toISOString()),
+    observed_at: z.string().optional().default('not provided'),
     source_type: z.string().optional().default('controlled'),
   }),
   geometry: z.object({
@@ -92,12 +95,12 @@ export const floodScenarioFeatureSchema = z.object({
     flood_depth_cm: z.number().nonnegative().optional(),
     passability: z.string().default('passable'),
     source_type: z.string().default('controlled'),
-    scenario_timestamp: z.string().default(new Date().toISOString()),
+    scenario_timestamp: z.string().default('not provided'),
     reason: z.string().optional(),
   }),
   geometry: z.object({
     type: z.enum(['LineString', 'Polygon', 'MultiPolygon']),
-    coordinates: z.any(),
+    coordinates: z.array(z.unknown()).min(1),
   }),
 })
 
@@ -108,7 +111,7 @@ export const floodScenarioCollectionSchema = z.object({
   scenario: z
     .object({
       scenario_id: z.string().default('scenario-controlled-001'),
-      scenario_timestamp: z.string().default(new Date().toISOString()),
+      scenario_timestamp: z.string().default('not provided'),
       source_type: z.string().default('controlled'),
       study_area_id: z.string().default('ubelt-pilot-v1'),
     })
@@ -201,168 +204,10 @@ export interface MapLayerDataset {
   }
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
- * Locked Authoritative Sample Fixtures
- * Matches data/samples/*.geojson
- * ────────────────────────────────────────────────────────────────────────── */
-
-export const LOCKED_ROAD_EDGE_FIXTURE: RoadEdgeCollection = {
-  type: 'FeatureCollection',
-  name: 'synthetic_resqph_road_edge_fixture',
-  fixture_notice: 'Synthetic contract fixture; not validated real-world road or flood data.',
-  features: [
-    {
-      type: 'Feature',
-      properties: {
-        edge_id: 'edge-demo-001',
-        from_node: 'node-demo-a',
-        to_node: 'node-demo-b',
-        length_m: 125.0,
-        travel_time_s: 30.0,
-        road_class: 'residential',
-        flood_level: 'moderate',
-        passability: 'restricted',
-        observed_at: '2026-09-21T04:00:00Z',
-        source_type: 'controlled',
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [120.9940, 14.6035],
-          [120.9946, 14.6042],
-        ],
-      },
-    },
-    {
-      type: 'Feature',
-      properties: {
-        edge_id: 'edge-demo-002',
-        from_node: 'node-demo-b',
-        to_node: 'node-demo-c',
-        length_m: 210.0,
-        travel_time_s: 45.0,
-        road_class: 'secondary',
-        flood_level: 'severe',
-        passability: 'impassable',
-        observed_at: '2026-09-21T04:00:00Z',
-        source_type: 'controlled',
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [120.9946, 14.6042],
-          [120.9915, 14.6015],
-        ],
-      },
-    },
-    {
-      type: 'Feature',
-      properties: {
-        edge_id: 'edge-demo-003',
-        from_node: 'node-demo-a',
-        to_node: 'node-demo-d',
-        length_m: 180.0,
-        travel_time_s: 35.0,
-        road_class: 'tertiary',
-        flood_level: 'none',
-        passability: 'passable',
-        observed_at: '2026-09-21T04:00:00Z',
-        source_type: 'controlled',
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [120.9940, 14.6035],
-          [120.9892, 14.6018],
-        ],
-      },
-    },
-  ],
-}
-
-export const LOCKED_FLOOD_SCENARIO_FIXTURE: FloodScenarioCollection = {
-  type: 'FeatureCollection',
-  name: 'resqph-controlled-flood-scenario-v1',
-  fixture_notice: 'Synthetic academic scenario; not live or historical flood evidence.',
-  scenario: {
-    scenario_id: 'scenario-controlled-001',
-    scenario_timestamp: '2026-09-22T00:00:00Z',
-    source_type: 'controlled',
-    study_area_id: 'ubelt-pilot-v1',
-  },
-  features: [
-    {
-      type: 'Feature',
-      properties: {
-        scenario_id: 'scenario-controlled-001',
-        edge_id: 'edge-demo-001',
-        flood_level: 'moderate',
-        flood_depth_cm: 30,
-        passability: 'restricted',
-        source_type: 'controlled',
-        scenario_timestamp: '2026-09-22T00:00:00Z',
-        reason: 'Synthetic contract example for stable edge joining.',
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [120.9940, 14.6035],
-          [120.9946, 14.6042],
-        ],
-      },
-    },
-    {
-      type: 'Feature',
-      properties: {
-        scenario_id: 'scenario-controlled-001',
-        edge_id: 'edge-demo-002',
-        flood_level: 'severe',
-        flood_depth_cm: 140,
-        passability: 'impassable',
-        source_type: 'controlled',
-        scenario_timestamp: '2026-09-22T00:00:00Z',
-        reason: 'Loyola corridor deep ponding barrier (>1.2m).',
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [120.9946, 14.6042],
-          [120.9915, 14.6015],
-        ],
-      },
-    },
-  ],
-}
-
-export const LOCKED_STUDY_AREA_FIXTURE: StudyAreaCollection = {
-  type: 'FeatureCollection',
-  name: 'resqph-ubelt-pilot-boundary',
-  features: [
-    {
-      type: 'Feature',
-      properties: {
-        study_area_id: 'ubelt-pilot-v1',
-        name: 'U-Belt pilot area, City of Manila',
-        status: 'project-defined academic prototype boundary',
-        crs: 'EPSG:4326',
-        approved_on: '2026-09-22',
-        live_operational_boundary: false,
-      },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [
-          [
-            [120.982, 14.596],
-            [121.004, 14.596],
-            [121.004, 14.6175],
-            [120.982, 14.6175],
-            [120.982, 14.596],
-          ],
-        ],
-      },
-    },
-  ],
-}
+/* Locked GeoJSON is consumed directly from data/samples, not duplicated here. */
+export const LOCKED_ROAD_EDGE_FIXTURE: unknown = JSON.parse(roadEdgeFixtureJson)
+export const LOCKED_FLOOD_SCENARIO_FIXTURE: unknown = JSON.parse(floodScenarioFixtureJson)
+export const LOCKED_STUDY_AREA_FIXTURE: unknown = JSON.parse(studyAreaFixtureJson)
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Parser and Adapter Functions
@@ -399,7 +244,45 @@ export function parseFloodScenarioFixture(raw: unknown): FloodScenarioCollection
   if (!result.success) {
     throw new Error(`Malformed flood scenario GeoJSON fixture: ${result.error.message}`)
   }
+  for (const feature of result.data.features) {
+    const { positions, malformed } = collectCoordinatePairs(feature.geometry.coordinates)
+    const featureId = feature.properties.edge_id || feature.properties.scenario_id
+    if (malformed || positions.length === 0) {
+      throw new Error(
+        `Malformed flood scenario GeoJSON: feature ${featureId} has invalid or missing coordinates.`,
+      )
+    }
+    for (const [lng, lat] of positions) {
+      if (!isWithinUBeltBounds(lng, lat)) {
+        throw new Error(
+          `Flood feature ${featureId} coordinate [${lng}, ${lat}] is outside approved U-Belt pilot boundary.`,
+        )
+      }
+    }
+  }
   return result.data
+}
+
+function collectCoordinatePairs(value: unknown): { positions: [number, number][]; malformed: boolean } {
+  if (!Array.isArray(value)) return { positions: [], malformed: true }
+  if (typeof value[0] === 'number' || typeof value[1] === 'number') {
+    const parsed = coordinatePairSchema.safeParse(value)
+    return parsed.success
+      ? { positions: [parsed.data], malformed: false }
+      : { positions: [], malformed: true }
+  }
+  const children = value.map(collectCoordinatePairs)
+  return {
+    positions: children.flatMap((child) => child.positions),
+    malformed: children.some((child) => child.malformed),
+  }
+}
+
+function mapNestedCoordinates(value: unknown): unknown {
+  if (Array.isArray(value) && value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
+    return geojsonToLeafletLatLng([value[0], value[1]])
+  }
+  return Array.isArray(value) ? value.map(mapNestedCoordinates) : value
 }
 
 /**
@@ -442,15 +325,10 @@ export function buildMapLayerDataset(
       floodMap.set(f.properties.edge_id, f)
     }
 
-    let leafletCoords: any
-    if (f.geometry.type === 'LineString') {
-      leafletCoords = geojsonLineToLeaflet(f.geometry.coordinates as [number, number][])
-    } else if (f.geometry.type === 'Polygon') {
-      leafletCoords = (f.geometry.coordinates as [number, number][][]).map(geojsonPolygonToLeaflet)
-    }
+    const leafletCoords = mapNestedCoordinates(f.geometry.coordinates)
 
     parsedFloodFeatures.push({
-      id: f.properties.edge_id || f.properties.scenario_id || `flood-${Math.random().toString(36).slice(2, 7)}`,
+      id: f.properties.edge_id || f.properties.scenario_id,
       edgeId: f.properties.edge_id,
       geometryType: f.geometry.type,
       floodLevel: f.properties.flood_level,
@@ -504,7 +382,7 @@ export function buildMapLayerDataset(
       floodLevel,
       floodDepthCm: floodInfo?.properties.flood_depth_cm,
       sourceType: floodInfo?.properties.source_type || road.properties.source_type || 'controlled',
-      observedAt: floodInfo?.properties.scenario_timestamp || road.properties.observed_at || new Date().toISOString(),
+      observedAt: floodInfo?.properties.scenario_timestamp || road.properties.observed_at || 'not provided',
       reason: floodInfo?.properties.reason,
       geojsonCoordinates: road.geometry.coordinates as [number, number][],
       leafletCoordinates: geojsonLineToLeaflet(road.geometry.coordinates as [number, number][]),
