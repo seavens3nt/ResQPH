@@ -1,7 +1,10 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Icon } from '../../components/art/Icon'
+import { RouteOverlay } from '../routing/RouteOverlay'
+import { toLeafletRouteCoordinates } from '../routing/types'
+import type { RouteState } from '../routing/types'
 import { NON_LIVE_DATA_DISCLAIMER } from './mapData'
 import { useMapLayers, type UseMapLayersOptions } from './useMapLayers'
 import './map.css'
@@ -14,6 +17,7 @@ export interface MapProps extends UseMapLayersOptions {
   onSelectRoute?: (route: 'primary' | 'alternative') => void
   routeExplanation?: string
   etaMinutes?: number
+  routeState?: RouteState
   operationContext?: {
     requestId: string
     address: string
@@ -56,31 +60,12 @@ const TILE_PROVIDERS = {
   },
 }
 
-// Sanitized pilot mission route coordinates in U-Belt
-const CITIZEN_TARGET: [number, number] = [14.6042, 120.9946]
-
-const SAFE_CORRIDOR_COORDS: [number, number][] = [
-  [14.6005, 120.9875], // Simulated dispatch hub
-  [14.6018, 120.9892], // Waypoint 1
-  [14.6028, 120.9910], // Waypoint 2
-  [14.6036, 120.9930], // Approach corridor
-  [14.6042, 120.9946], // Sanitized destination
-]
-
-const DETOUR_COORDS: [number, number][] = [
-  [14.6005, 120.9875],
-  [14.6020, 120.9905],
-  [14.6050, 120.9930],
-  [14.6042, 120.9946],
-]
+const DEFAULT_MAP_CENTER: [number, number] = [14.6040, 120.9940]
+const IDLE_ROUTE_STATE: RouteState = { status: 'idle' }
 
 export function InteractiveFloodMap({
   activeStage = 'en-route',
-  showAlternatives = true,
-  selectedRoute = 'primary',
-  onSelectRoute,
-  routeExplanation = 'Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and team is using Jhocson St.',
-  etaMinutes = 9,
+  routeState,
   operationContext,
   roadFixture,
   floodFixture,
@@ -111,6 +96,15 @@ export function InteractiveFloodMap({
     simulatedState,
   })
 
+  const effectiveRouteState = routeState ?? IDLE_ROUTE_STATE
+  const routeResult = effectiveRouteState.status === 'route-found'
+    ? effectiveRouteState.result
+    : null
+  const routeCoordinates = useMemo<[number, number][]>(
+    () => routeResult ? toLeafletRouteCoordinates(routeResult) : [],
+    [routeResult],
+  )
+
   // Vehicle progress based on active stage
   const progressIdx =
     activeStage === 'none'
@@ -125,7 +119,15 @@ export function InteractiveFloodMap({
             ? 3
             : 4
 
-  const boatCurrentPos = SAFE_CORRIDOR_COORDS[progressIdx]
+  const routeProgressIndex = progressIdx < 0 || routeCoordinates.length === 0
+    ? -1
+    : Math.min(
+        routeCoordinates.length - 1,
+        Math.round((progressIdx / 4) * (routeCoordinates.length - 1)),
+      )
+  const boatCurrentPos = routeProgressIndex >= 0
+    ? routeCoordinates[routeProgressIndex]
+    : undefined
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -141,7 +143,7 @@ export function InteractiveFloodMap({
       })
 
       const map = L.map(mapContainerRef.current, {
-        center: [14.6040, 120.9940],
+        center: DEFAULT_MAP_CENTER,
         zoom: 15,
         zoomControl: false,
       })
@@ -275,41 +277,25 @@ export function InteractiveFloodMap({
         }
       }
 
-      // 4. Mission Route & Vehicle Overlay
-      if (layerVisibility.route) {
-        // Safe Recommended Route Line
-        const safeLine = L.polyline(SAFE_CORRIDOR_COORDS, {
-          color: selectedRoute === 'primary' ? '#22c55e' : '#16a34a',
-          weight: selectedRoute === 'primary' ? 6 : 4,
+      // 4. Authoritative Mission Route & Vehicle Overlay
+      if (layerVisibility.route && routeResult && routeCoordinates.length >= 2) {
+        const routeLine = L.polyline(routeCoordinates, {
+          color: '#22c55e',
+          weight: 6,
           opacity: 0.9,
           dashArray: '8, 6',
         }).bindPopup(`
           <div class="leaflet-popup-route">
-            <strong style="color:#22c55e;">RECOMMENDED ROUTE</strong><br/>
-            <span>Jhocson St. corridor · Avoids an impassable controlled-scenario edge</span><br/>
-            <span>ETA: ${etaMinutes} minutes</span>
+            <strong style="color:#22c55e;">CONTROLLED-SCENARIO ROUTE</strong><br/>
+            <span>Route: ${escapeHtml(routeResult.route_id)}</span><br/>
+            <span>Edges: ${escapeHtml(routeResult.edge_ids.join(', '))}</span><br/>
+            <span>Estimated transit: ${Math.ceil(routeResult.estimated_time_s / 60)} minutes</span><br/>
+            <span>${escapeHtml(routeResult.explanation)}</span>
           </div>
         `)
-        safeLine.on('click', () => onSelectRoute?.('primary'))
-        overlayGroup.addLayer(safeLine)
+        overlayGroup.addLayer(routeLine)
 
-        // Alternative Detour Line
-        if (showAlternatives) {
-          const detourLine = L.polyline(DETOUR_COORDS, {
-            color: selectedRoute === 'alternative' ? '#f59e0b' : 'rgba(245, 158, 11, 0.55)',
-            weight: selectedRoute === 'alternative' ? 6 : 3.5,
-            dashArray: '6, 6',
-          }).bindPopup(`
-            <div class="leaflet-popup-route">
-              <strong style="color:#f59e0b;">ALTERNATIVE DETOUR: GERARDO ST.</strong><br/>
-              <span>Moderate water ponding (0.4m) · Secondary route</span>
-            </div>
-          `)
-          detourLine.on('click', () => onSelectRoute?.('alternative'))
-          overlayGroup.addLayer(detourLine)
-        }
-
-        // Citizen Distress Beacon Marker
+        const citizenTarget = routeCoordinates[routeCoordinates.length - 1]
         const citizenIcon = L.divIcon({
           className: 'leaflet-custom-marker',
           html: `
@@ -324,7 +310,7 @@ export function InteractiveFloodMap({
           iconAnchor: [18, 18],
         })
 
-        const citizenMarker = L.marker(CITIZEN_TARGET, { icon: citizenIcon }).bindPopup(`
+        const citizenMarker = L.marker(citizenTarget, { icon: citizenIcon }).bindPopup(`
           <div class="leaflet-popup-citizen">
             <strong style="color:#ef4444;">${operationContext ? `RESCUE TARGET · ${escapeHtml(operationContext.requestId)}` : 'SANITIZED U-BELT STUDY TARGET'}</strong><br/>
             <span>${operationContext ? escapeHtml(operationContext.address) : 'Controlled U-Belt pilot location'}</span><br/>
@@ -333,7 +319,6 @@ export function InteractiveFloodMap({
         `)
         overlayGroup.addLayer(citizenMarker)
 
-        // Rescue Boat Marker
         if (boatCurrentPos) {
           const boatIcon = L.divIcon({
             className: 'leaflet-custom-marker',
@@ -352,33 +337,11 @@ export function InteractiveFloodMap({
             <div class="leaflet-popup-rescuer">
               <strong style="color:#38bdf8;">${operationContext ? escapeHtml(operationContext.teamName) : 'Simulated Rescue Unit'}</strong><br/>
               <span>${operationContext ? `Status: ${escapeHtml(operationContext.status.replace('-', ' '))} · Assigned route` : 'Status: Controlled scenario only'}</span><br/>
-              <span>ETA: ${etaMinutes} minutes</span>
+              <span>Estimated transit: ${Math.ceil(routeResult.estimated_time_s / 60)} minutes</span>
             </div>
           `)
           overlayGroup.addLayer(boatMarker)
         }
-
-        // Evacuation Center Marker
-        const evacIcon = L.divIcon({
-          className: 'leaflet-custom-marker',
-          html: `
-            <div class="pin-beacon-wrapper">
-              <div class="pin-beacon-center evac-beacon">
-                <span>🏫</span>
-              </div>
-            </div>
-          `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-        })
-
-        const evacMarker = L.marker([14.6050, 120.9930], { icon: evacIcon }).bindPopup(`
-          <div class="leaflet-popup-evac">
-            <strong style="color:#22c55e;">Evacuation Center (Sanitized U-Belt Pilot)</strong><br/>
-            <span>Capacity: 70% occupied · Hot meals & medical staff</span>
-          </div>
-        `)
-        overlayGroup.addLayer(evacMarker)
       }
     } catch (err) {
       console.warn('Error rendering Leaflet overlays:', err)
@@ -386,19 +349,20 @@ export function InteractiveFloodMap({
   }, [
     dataset,
     layerVisibility,
-    showAlternatives,
-    selectedRoute,
-    activeStage,
-    etaMinutes,
+    routeResult,
+    routeCoordinates,
     operationContext,
-    onSelectRoute,
     boatCurrentPos,
   ])
 
   function handleRecenter() {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView([14.6042, 120.9946], 15)
+    const map = mapInstanceRef.current
+    if (!map) return
+    if (routeCoordinates.length >= 2) {
+      map.fitBounds(routeCoordinates)
+      return
     }
+    map.setView(DEFAULT_MAP_CENTER, 15)
   }
 
   return (
@@ -537,17 +501,7 @@ export function InteractiveFloodMap({
         </div>
       )}
 
-      {/* Simulated Route Advisory Banner */}
-      <div className="map-realtime-routing-banner">
-        <div className="banner-pulse-icon">
-          <Icon name="route" size={18} />
-        </div>
-        <div className="banner-text">
-          <strong>{operationContext ? `SIMULATED OPERATION · ${operationContext.requestId}:` : 'SIMULATED EN ROUTE ADVISORY:'}</strong>{' '}
-          <span>{routeExplanation}</span>
-        </div>
-        <span className="banner-eta-badge font-mono">ETA: {etaMinutes} MINS</span>
-      </div>
+      <RouteOverlay state={effectiveRouteState} />
 
       {/* OpenStreetMap Leaflet Canvas */}
       <div className="flood-map-leaflet-wrapper">
@@ -619,34 +573,6 @@ export function InteractiveFloodMap({
         </div>
       )}
 
-      {/* Map Bottom Rationale Drawer */}
-      <div className="flood-map-explanation">
-        <div className="explanation-head">
-          <div className="explanation-title">
-            <Icon name="shield" size={16} />
-            <span>Controlled-Scenario Routing Rationale</span>
-          </div>
-          <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--color-brand-hover)' }}>
-            LiPAD Hazard & Elevation Matrix Active
-          </span>
-        </div>
-        <div className="explanation-body">
-          <div className="explanation-row">
-            <span className="exp-badge exp-avoided">AVOIDED SHORTCUT</span>
-            <span className="exp-text">
-              <strong>Loyola St. Shortcut:</strong> Water depth reaches <strong>1.40 m</strong> (waist/chest current),
-              which exceeds the safe rescue craft threshold (<strong>0.30 m</strong>). High probability of engine stall.
-            </span>
-          </div>
-          <div className="explanation-row">
-            <span className="exp-badge exp-selected">RECOMMENDED ROUTE</span>
-            <span className="exp-text">
-              <strong>Jhocson St. Corridor:</strong> Lower controlled-scenario penalty and no impassable edge.
-              Safety Score: <strong>94/100</strong>. Unit ETA: <strong>{etaMinutes} minutes</strong>.
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

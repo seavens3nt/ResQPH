@@ -2,6 +2,28 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { InteractiveFloodMap } from './InteractiveFloodMap'
 import { buildMapLayerDataset } from './mapData'
+import { toLeafletRouteCoordinates } from '../routing/types'
+import type { RouteFoundResult } from '../routing/types'
+
+const routeFound: RouteFoundResult = {
+  status: 'route-found',
+  route_id: 'route-known-graph-baseline',
+  algorithm: 'astar',
+  geometry: {
+    type: 'LineString',
+    coordinates: [[120.99, 14.604], [120.991, 14.6045], [120.9915, 14.6055]],
+  },
+  distance_m: 120,
+  estimated_time_s: 120,
+  total_cost: 120,
+  edge_ids: ['AB', 'BD'],
+  cost_breakdown: { base: 120, deterministic_risk: 0, ml_risk: 0 },
+  fallback_used: true,
+  warnings: ['Synthetic controlled scenario; not live navigation data.'],
+  explanation: 'The baseline known graph selected AB and BD.',
+  scenario_timestamp: '2026-10-01T00:00:00Z',
+  model_version: null,
+}
 
 describe('InteractiveFloodMap Component', () => {
   it('renders default fixture-driven map with source time and non-live disclaimer', () => {
@@ -88,11 +110,36 @@ describe('InteractiveFloodMap Component', () => {
     ).toBeGreaterThan(0)
   })
 
-  it('renders routing rationale and simulated route delay banner', () => {
+  it('does not claim or draw a calculated route when no result is supplied', () => {
     render(<InteractiveFloodMap />)
-    expect(screen.getByText(/Controlled-Scenario Routing Rationale/i)).toBeInTheDocument()
-    expect(screen.getByText(/AVOIDED SHORTCUT/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/SIMULATED EN ROUTE ADVISORY:/i)).toBeInTheDocument()
+    expect(screen.getByText(/No route has been calculated/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Safety Score/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/RECOMMENDED ROUTE/i)).not.toBeInTheDocument()
+  })
+
+  it('renders route-found and no-route states from authoritative results', () => {
+    const { rerender } = render(
+      <InteractiveFloodMap routeState={{ status: 'route-found', result: routeFound }} />,
+    )
+    expect(screen.getByText(/Controlled-scenario route displayed/i)).toBeInTheDocument()
+
+    rerender(<InteractiveFloodMap routeState={{
+      status: 'no-route',
+      result: {
+        status: 'no-route',
+        reason: 'controlled_impassability_disconnected_destination',
+        warnings: ['No eligible route exists under the selected controlled scenario.'],
+        scenario_timestamp: '2026-10-01T00:00:00Z',
+      },
+    }} />)
+    expect(screen.getByText(/No substitute or straight-line route/i)).toBeInTheDocument()
+  })
+
+  it('converts only server-provided longitude/latitude geometry for Leaflet', () => {
+    expect(toLeafletRouteCoordinates(routeFound)).toEqual([
+      [14.604, 120.99],
+      [14.6045, 120.991],
+      [14.6055, 120.9915],
+    ])
   })
 })
