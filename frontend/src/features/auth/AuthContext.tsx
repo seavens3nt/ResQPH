@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { AuthUser, ProfileUpdate, UserRole } from './types'
+import type { AuthUser, ProfileUpdate, SignupRole, UserRole } from './types'
 
 /*
  * Prototype-only client auth. This is NOT real authentication: it persists a
@@ -14,7 +14,7 @@ const STORAGE_KEY = 'resqph.auth.user'
 interface AuthContextValue {
   user: AuthUser | null
   login: (input: { email: string; role: UserRole; name?: string }) => void
-  signup: (input: ProfileUpdate & { role: UserRole; locationPermission?: boolean }) => void
+  signup: (input: ProfileUpdate & { role: SignupRole; locationPermission?: boolean }) => void
   updateProfile: (input: ProfileUpdate) => void
   logout: () => void
 }

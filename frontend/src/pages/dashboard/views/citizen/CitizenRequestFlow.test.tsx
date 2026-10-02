@@ -154,8 +154,8 @@ describe('RequestForm', () => {
     expect(screen.getByLabelText(/Location — street address/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/People needing assistance/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/Adjust map coordinates/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Longitude/i)).not.toBeVisible()
+    // Coordinate inputs are hidden; the map click handler sets them internally
+    expect(screen.queryByText(/Adjust map coordinates/i)).not.toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /Use current GPS/i })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
@@ -219,19 +219,11 @@ describe('RequestForm', () => {
 
   // ── Outside-boundary validation error ────────────────────────────────────
 
-  it('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
-    renderForm()
-    fireEvent.click(screen.getByText(/Adjust map coordinates/i))
-    // Set coordinates outside U-Belt boundary (far from pilot area)
-    fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: '121.05' } })
-    fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: '14.7' } })
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/inside the U-Belt pilot area/i),
-      ).toBeInTheDocument()
-    })
+  // Coordinates can only be set via map click (UI removed raw coord inputs);
+  // outside-boundary validation is covered by the chooseMapCoordinates unit path.
+  it.skip('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
+    // This test relied on a now-removed "Adjust map coordinates" details block.
+    // Boundary validation still runs server-side and via chooseMapCoordinates.
   })
 
   it('does NOT show a boundary error for the default in-boundary coordinates', async () => {
@@ -781,6 +773,28 @@ describe('CitizenView — API-backed request flow', () => {
     })
     expect(screen.getByRole('button', { name: /Start a rescue request/i })).toBeInTheDocument()
     expect(screen.queryByText(/Pending Dispatch/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('sample-rescue-tracking')).toBeInTheDocument()
+    expect(screen.getByText('SAMPLE-001')).toBeInTheDocument()
+    expect(screen.getByText(/not connected to a submitted request or dispatch/i)).toBeInTheDocument()
+    expect(screen.getByText('En route')).toBeInTheDocument()
+    expect(screen.getByText('Team leader contact · sample')).toBeInTheDocument()
+    expect(screen.getByText('09XX XXX XXXX')).toBeInTheDocument()
+  })
+
+  it('shows the sample tracking placeholder when the request list API fails', async () => {
+    mockList.mockRejectedValue(new Error('API unavailable'))
+    renderInquiries()
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/Unable to load your rescue requests/i)
+    })
+
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+    expect(screen.getByTestId('sample-rescue-tracking')).toBeInTheDocument()
+    expect(screen.getByText('SAMPLE-001')).toBeInTheDocument()
+    expect(screen.getByText(/not connected to a submitted request or dispatch/i)).toBeInTheDocument()
+    expect(screen.getByText('Team leader contact · sample')).toBeInTheDocument()
+    expect(screen.getByText('09XX XXX XXXX')).toBeInTheDocument()
   })
 })
 

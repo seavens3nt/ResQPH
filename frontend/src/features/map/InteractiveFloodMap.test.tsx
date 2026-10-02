@@ -25,8 +25,8 @@ describe('InteractiveFloodMap Component', () => {
 
     // Tile switcher and layer toggles
     expect(screen.getByRole('button', { name: 'OpenStreetMap' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tactical Dark' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Satellite View' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tactical Dark' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Roads: ON/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Flood Hazard: ON/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Boundary: ON/i })).toBeInTheDocument()

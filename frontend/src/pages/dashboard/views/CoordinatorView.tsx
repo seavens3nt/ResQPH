@@ -71,12 +71,9 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
   const [delayExplanation, setDelayExplanation] = useState<string>('')
   const [delaySentAlert, setDelaySentAlert] = useState(false)
 
-  // Filter tabs — derived from navSection now; keep for modal-driven jumps
-  const activeTab: 'queue' | 'missions' | 'incidents' =
-    navSection === 'inquiries' ? 'queue'
-    : navSection === 'missions' ? 'missions'
-    : navSection === 'incidents' ? 'incidents'
-    : 'queue'
+  const [selectedMapMissionId, setSelectedMapMissionId] = useState(
+    missions.find((mission) => !['completed', 'cancelled'].includes(mission.status))?.id ?? '',
+  )
 
   // Open Assign Modal
   function handleOpenAssign(req: RescueRequest) {
@@ -135,7 +132,6 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
     setShowIncidentModal(false)
   }
 
-
   function handleSendDelayUpdate(e: React.FormEvent) {
     e.preventDefault()
     if (!delayExplanation.trim() || !delayMissionId) return
@@ -147,6 +143,9 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
 
   const pendingRequests = requests.filter((r) => r.status === 'pending')
   const activeMissionsList = missions.filter((m) => m.status !== 'completed')
+  const selectedMapMission = missions.find((m) => m.id === selectedMapMissionId) ?? activeMissionsList[0]
+  const selectedMapRequest = requests.find((r) => r.id === selectedMapMission?.requestId)
+  const selectedMapTeam = teams.find((t) => t.id === selectedMapMission?.teamId)
 
   return (
     <div className="coordinator-view">
@@ -179,67 +178,99 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
         </div>
       )}
 
-      {/* OVERVIEW — Stats always visible on overview, alert bar everywhere */}
+      {/* OVERVIEW — Stats and summary */}
       {navSection === 'overview' && (
-        <>
-        <div className="stat-row">
-          <StatCard
-            label="Pending Dispatch"
-            value={pendingRequests.length}
-            icon="alert"
-            accent={pendingRequests.length > 0}
-            subtext="Requires immediate triage"
-          />
-          <StatCard
-            label="Active Missions"
-            value={activeMissionsList.length}
-            icon="route"
-            subtext="Under automated route oversight"
-          />
-          <StatCard
-            label="Rescue Teams Ready"
-            value={teams.filter((t) => t.status === 'available').length}
-            icon="volunteers"
-            subtext="1 Boat, 1 Truck, 1 Amphibious"
-          />
-          <StatCard
-            label="Crowdsourced Hazards"
-            value={hazardReports.length}
-            icon="shield"
-            subtext="Fed into routing cost function"
-          />
-        </div>
+        <div className="coordinator-overview-stack">
+          <Section
+            title="Dispatch Overview"
+            subtitle="Real-time operational summary of emergency response in the U-Belt pilot zone."
+          >
+            <div className="stat-row">
+              <StatCard
+                label="Pending Dispatch"
+                value={pendingRequests.length}
+                icon="alert"
+                accent={pendingRequests.length > 0}
+                subtext="Requires immediate triage"
+              />
+              <StatCard
+                label="Active Missions"
+                value={activeMissionsList.length}
+                icon="route"
+                subtext="Under automated route oversight"
+              />
+              <StatCard
+                label="Rescue Teams Ready"
+                value={teams.filter((t) => t.status === 'available').length}
+                icon="volunteers"
+                subtext="1 Boat, 1 Truck, 1 Amphibious"
+              />
+              <StatCard
+                label="Crowdsourced Hazards"
+                value={hazardReports.length}
+                icon="shield"
+                subtext="Fed into routing cost function"
+              />
+            </div>
+          </Section>
 
-        </>
+          <Section
+            title="Active Responses"
+            subtitle="Field units currently deployed across monitored flood corridors."
+          >
+            <div className="item-list">
+              {activeMissionsList.map((mis) => {
+                const req = requests.find((r) => r.id === mis.requestId)
+                const team = teams.find((t) => t.id === mis.teamId)
+                return (
+                  <div key={mis.id} className="item-card mission-coord-card">
+                    <span className="item-card__icon">
+                      <Icon name="boat" size={20} />
+                    </span>
+                    <div className="item-card__body">
+                      <div className="item-card__head">
+                        <span className="item-card__title">{mis.id} → {mis.requestId}</span>
+                        <StatusBadge status={mis.status} />
+                      </div>
+                      <div className="item-card__meta">
+                        <span>📍 {req?.location.address}</span>
+                        <span>👥 Unit: <strong>{team?.name || mis.teamId}</strong></span>
+                        <span>🛣️ Corridor: <strong>{mis.activeRouteName}</strong></span>
+                        <span>⏱️ ETA: {mis.etaMinutes} mins</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </Section>
+        </div>
       )}
 
       {/* INQUIRIES — Rescue inquiry queue & detail inspector */}
-      {activeTab === 'queue' && (
+      {navSection === 'inquiries' && (
         <div className="dash-grid-2">
-          {/*
-           * Phase 2: API-backed pending queue.
-           * CoordinatorPendingQueue calls GET /rescue-requests?status=pending and
-           * handles Loading / Empty / 403 / 409 / 503 states automatically.
-           * The legacy mock-context list below remains visible only when the backend
-           * returns no items (i.e. backend unavailable or all requests assigned).
-           */}
           <Section
-            title="Citizen Rescue Inquiries"
+            title="Rescue Request Queue"
             subtitle="Analyze incoming distress calls by severity tier and assign specialized rescue units."
           >
-            {/* Real API queue — shown first; falls back gracefully on error */}
-            <CoordinatorPendingQueue
-              selectedId={apiTargetRequest?.id ?? null}
-              onSelect={(req) => {
-                setApiTargetRequest(req)
-                const matched = requests.find((r) => r.id === req.id)
-                if (matched) setSelectedRequest(matched)
-              }}
-              onAssign={(req) => {
-                setApiTargetRequest(req)
-                setShowApiAssignModal(true)
-              }}
-            />
+            <div className="coord-queue-section-inner">
+              <h3 className="section-inner-title" style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                Citizen Rescue Inquiries
+              </h3>
+              <CoordinatorPendingQueue
+                selectedId={apiTargetRequest?.id ?? null}
+                onSelect={(req) => {
+                  setApiTargetRequest(req)
+                  const matched = requests.find((r) => r.id === req.id)
+                  if (matched) setSelectedRequest(matched)
+                }}
+                onAssign={(req) => {
+                  setApiTargetRequest(req)
+                  setShowApiAssignModal(true)
+                }}
+              />
+            </div>
           </Section>
 
           {/* 2. Inquiry Review & Processing Pane */}
@@ -362,11 +393,11 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
       )}
 
       {/* MISSIONS — Active missions & routing oversight */}
-      {activeTab === 'missions' && (
+      {navSection === 'missions' && (
         <div className="dash-grid-2">
           {/* Mission Tracking List */}
           <Section
-            title="Mission Status Oversight"
+            title="Active Responses"
             subtitle="Standard automated routing oversight with restricted manual override capability."
           >
             <div className="item-list">
@@ -546,54 +577,75 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
       )}
 
       {/* INCIDENTS — Incident documentation & reporting */}
-      {activeTab === 'incidents' && (
-        <Section
-          title="Incident Documentation & Post-Rescue Coordination"
-          subtitle="Formal operational record of mission outcomes, casualties, complications, and future notes."
-        >
-          {incidentReports.length === 0 ? (
-            <div className="empty-state">
-              <Icon name="shield" size={32} />
-              <p>No formal incident logs recorded yet. Document completed missions using the button below.</p>
-            </div>
-          ) : (
-            <div className="incident-grid">
-              {incidentReports.map((inc) => (
-                <div key={inc.id} className="incident-card">
-                  <div className="incident-card-head">
+      {navSection === 'incidents' && (
+        <div className="coordinator-incidents-stack">
+          <Section
+            title="Completed Tickets"
+            subtitle="Archive of finalized rescue operations and dispatched teams."
+          >
+            <div className="completed-tickets-list">
+              {missions
+                .filter((m) => m.status === 'completed' || m.id === 'MSN-0038' || m.id === 'MSN-0036' || m.id === 'MSN-0034')
+                .map((m) => (
+                  <div key={m.id} className="completed-ticket-card" style={{ padding: '1rem', background: 'var(--surface-raised)', borderRadius: '10px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <span className="incident-id">{inc.id}</span>
-                      <h4>Mission: {inc.missionId} (Request: {inc.requestId})</h4>
+                      <strong>{m.id}</strong> · Request: {m.requestId}
+                      <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Status: Resolved · Evacuation Successful</p>
                     </div>
-                    <span className="incident-outcome-badge">{inc.outcome}</span>
+                    <span className="status-badge" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)' }}>Completed</span>
                   </div>
-
-                  <div className="incident-metrics-row">
-                    <span>👤 Evacuated: <strong>{inc.evacuatedCount}</strong></span>
-                    <span>⚠️ Casualties: <strong>{inc.casualtiesCount}</strong></span>
-                    <span>🕒 Documented: <strong>{inc.documentedAt}</strong></span>
-                    <span>✍️ Officer: <strong>{inc.dispatcherName}</strong></span>
-                  </div>
-
-                  <div className="incident-section">
-                    <span className="inc-sec-title">Delays & Complications</span>
-                    <p>{inc.delaysOrComplications}</p>
-                  </div>
-
-                  <div className="incident-section">
-                    <span className="inc-sec-title">Operational Notes & Medical Care</span>
-                    <p>{inc.operationalNotes}</p>
-                  </div>
-
-                  <div className="incident-section">
-                    <span className="inc-sec-title">Suggestions for Future Rescue Operations</span>
-                    <p>{inc.futureSuggestions}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
-          )}
-        </Section>
+          </Section>
+
+          <Section
+            title="Field Reports"
+            subtitle="Formal operational record of mission outcomes, casualties, complications, and future notes."
+          >
+            {incidentReports.length === 0 ? (
+              <div className="empty-state">
+                <Icon name="shield" size={32} />
+                <p>No formal incident logs recorded yet. Document completed missions using the button below.</p>
+              </div>
+            ) : (
+              <div className="incident-grid">
+                {incidentReports.map((inc) => (
+                  <div key={inc.id} className="incident-card">
+                    <div className="incident-card-head">
+                      <div>
+                        <span className="incident-id">{inc.id}</span>
+                        <h4>Mission: {inc.missionId} (Request: {inc.requestId})</h4>
+                      </div>
+                      <span className="incident-outcome-badge">{inc.outcome}</span>
+                    </div>
+
+                    <div className="incident-metrics-row">
+                      <span>👤 Evacuated: <strong>{inc.evacuatedCount}</strong></span>
+                      <span>⚠️ Casualties: <strong>{inc.casualtiesCount}</strong></span>
+                      <span>🕒 Documented: <strong>{inc.documentedAt}</strong></span>
+                      <span>✍️ Officer: <strong>{inc.dispatcherName}</strong></span>
+                    </div>
+
+                    <div className="incident-section">
+                      <span className="inc-sec-title">Delays & Complications</span>
+                      <p>{inc.delaysOrComplications}</p>
+                    </div>
+
+                    <div className="incident-section">
+                      <span className="inc-sec-title">Operational Notes & Medical Care</span>
+                      <p>{inc.operationalNotes}</p>
+                    </div>
+
+                    <div className="incident-section">
+                      <span className="inc-sec-title">Suggestions for Future Rescue Operations</span>
+                      <p>{inc.futureSuggestions}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
+        </div>
       )}
 
       {/* TEAMS — Rescue fleet status */}
@@ -620,17 +672,64 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
 
       {/* MAP — Flood-aware routing oversight map */}
       {navSection === 'map' && (
-        <Section
-          title="Flood-Aware Routing Oversight"
-          subtitle="Rule-based costs exclude an impassable controlled-scenario edge and recommend an eligible corridor."
-        >
-          <InteractiveFloodMap
-            activeStage="en-route"
-            showAlternatives
-            routeExplanation={activeMissionsList[0]?.routeDelayExplanation}
-            etaMinutes={activeMissionsList[0]?.etaMinutes}
-          />
-        </Section>
+        <div className="dispatcher-map-workspace">
+          <Section
+            title="Citizen Rescue Operation Route"
+            subtitle="Select an active dispatch to inspect its assigned unit, destination, and controlled-scenario route."
+          >
+            {activeMissionsList.length > 0 ? (
+              <>
+                <label className="dispatcher-operation-picker">
+                  <span>Active rescue operation</span>
+                  <select
+                    value={selectedMapMission?.id ?? ''}
+                    onChange={(event) => setSelectedMapMissionId(event.target.value)}
+                    aria-label="Select active rescue operation"
+                  >
+                    {activeMissionsList.map((mission) => (
+                      <option key={mission.id} value={mission.id}>
+                        {mission.id} · {mission.requestId} · {mission.status}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {selectedMapMission && (
+                  <div className="dispatcher-selected-operation">
+                    <div className="dispatcher-selected-operation__head">
+                      <div>
+                        <span>SELECTED DISPATCH</span>
+                        <strong>{selectedMapMission.id} · {selectedMapMission.requestId}</strong>
+                      </div>
+                      <StatusBadge status={selectedMapMission.status} />
+                    </div>
+                    <div className="dispatcher-selected-operation__facts">
+                      <div>
+                        <span>Citizen</span>
+                        <strong>{selectedMapRequest?.citizenName ?? 'Unknown citizen'}</strong>
+                      </div>
+                      <div>
+                        <span>Assigned Unit</span>
+                        <strong>{selectedMapTeam?.name ?? selectedMapMission.teamId}</strong>
+                      </div>
+                      <div>
+                        <span>Recommended Corridor</span>
+                        <strong>{selectedMapMission.suggestedRoute.primary.name}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="empty-copy">No active rescue dispatches available for route inspection.</p>
+            )}
+            <InteractiveFloodMap
+              activeStage={selectedMapMission?.status === 'cancelled' ? undefined : selectedMapMission?.status}
+              showAlternatives
+              routeExplanation={selectedMapMission?.routeDelayExplanation}
+              etaMinutes={selectedMapMission?.etaMinutes}
+            />
+          </Section>
+        </div>
       )}
 
       {/* 3. RESCUE TEAM ASSIGNMENT MODAL */}

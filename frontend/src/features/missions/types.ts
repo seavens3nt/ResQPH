@@ -68,15 +68,21 @@ export interface RescueRequest {
   isAutoPulledProfile?: boolean
 }
 
+export type TeamSpecialization = 'medic' | 'diver' | 'equipment' | 'command' | 'general'
+
 export interface RescueTeam {
   id: string
   name: string
   unitType: 'Rubber Boat' | 'High-Clearance Truck' | 'Amphibious Unit'
   membersCount: number
   hasMedicalUnit: boolean
+  specializations: TeamSpecialization[]
+  equipment: string[]
   status: 'available' | 'assigned' | 'en-route' | 'on-scene'
   contactPhone: string
   leadRescuer: string
+  baseLocation?: string
+  members?: string[]
 }
 
 export interface RescueMission {

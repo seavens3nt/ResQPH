@@ -12,6 +12,8 @@ export interface MapProps extends UseMapLayersOptions {
   showAlternatives?: boolean
   selectedRoute?: 'primary' | 'alternative' | 'override'
   onSelectRoute?: (route: 'primary' | 'alternative') => void
+  showRouteAdvisory?: boolean
+  showRouteRationale?: boolean
   routeExplanation?: string
   etaMinutes?: number
   operationContext?: {
@@ -40,12 +42,6 @@ const TILE_PROVIDERS = {
     name: 'OpenStreetMap',
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  },
-  dark: {
-    name: 'Tactical Dark OSM',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; CARTO',
     maxZoom: 19,
   },
   satellite: {
@@ -79,6 +75,8 @@ export function InteractiveFloodMap({
   showAlternatives = true,
   selectedRoute = 'primary',
   onSelectRoute,
+  showRouteAdvisory = true,
+  showRouteRationale = true,
   routeExplanation = 'Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and team is using Jhocson St.',
   etaMinutes = 9,
   operationContext,
@@ -93,7 +91,7 @@ export function InteractiveFloodMap({
   const overlaysLayerGroupRef = useRef<L.LayerGroup | null>(null)
   const uid = useId()
 
-  const [mapLayerMode, setMapLayerMode] = useState<'osm' | 'dark' | 'satellite'>('osm')
+  const [mapLayerMode, setMapLayerMode] = useState<'osm' | 'satellite'>('osm')
   const [showTextAlt, setShowTextAlt] = useState(false)
 
   // Fixture-driven layer state hook
@@ -405,78 +403,79 @@ export function InteractiveFloodMap({
     <div className="flood-map-container" role="region" aria-label="Interactive Realistic Flood-Aware Rescue Map">
       {/* Top Map HUD & Cartography Controls */}
       <div className="flood-map-controls">
-        <div className="flood-map-legend-items">
-          <span className="legend-tag legend-study">
-            🗺️ OpenStreetMap · U-Belt controlled scenario · 14.6042° N, 120.9946° E
-          </span>
-          <span className="legend-tag legend-safe">
-            ● Passable ({metadata.stats.passableCount})
-          </span>
-          <span className="legend-tag legend-restricted">
-            ▲ Restricted ({metadata.stats.restrictedCount})
-          </span>
-          <span className="legend-tag legend-impassable">
-            ✕ Impassable ({metadata.stats.impassableCount})
-          </span>
+        <div className="flood-map-controls__summary">
+          <div className="flood-map-location">
+            <span className="flood-map-location__eyebrow">CONTROLLED STUDY AREA</span>
+            <strong>U-Belt Pilot · 14.6042° N, 120.9946° E</strong>
+          </div>
+          <div className="flood-map-legend-items" aria-label="Road passability legend">
+            <span className="legend-tag legend-study">🗺️ OpenStreetMap · U-Belt controlled scenario</span>
+            <span className="legend-tag legend-safe">● Passable ({metadata.stats.passableCount})</span>
+            <span className="legend-tag legend-restricted">▲ Restricted ({metadata.stats.restrictedCount})</span>
+            <span className="legend-tag legend-impassable">✕ Impassable ({metadata.stats.impassableCount})</span>
+          </div>
         </div>
 
-        <div className="flood-map-toggles">
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'osm' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('osm')}
-            title="Standard OpenStreetMap Cartography"
-          >
-            OpenStreetMap
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'dark' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('dark')}
-            title="Tactical Night Response OpenStreetMap"
-          >
-            Tactical Dark
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'satellite' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('satellite')}
-            title="Satellite Aerial Imagery"
-          >
-            Satellite View
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${layerVisibility.roads ? 'is-active' : ''}`}
-            onClick={() => toggleLayer('roads')}
-            title="Toggle Road Network Layer"
-          >
-            Roads: {layerVisibility.roads ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${layerVisibility.flood ? 'is-active' : ''}`}
-            onClick={() => toggleLayer('flood')}
-            title="Toggle Flood Scenario Layer"
-          >
-            Flood Hazard: {layerVisibility.flood ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${layerVisibility.boundary ? 'is-active' : ''}`}
-            onClick={() => toggleLayer('boundary')}
-            title="Toggle U-Belt Pilot Boundary"
-          >
-            Boundary: {layerVisibility.boundary ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
-            className="map-toggle-btn"
-            onClick={handleRecenter}
-            title="Recenter Map on Target"
-          >
-            Recenter
-          </button>
+        <div className="map-control-row">
+          <div className="map-base-layers" role="group" aria-label="Map style">
+            <button
+              type="button"
+              className={`map-mode-btn ${mapLayerMode === 'osm' ? 'is-active' : ''}`}
+              aria-pressed={mapLayerMode === 'osm'}
+              onClick={() => setMapLayerMode('osm')}
+              title="Standard OpenStreetMap Cartography"
+            >
+              OpenStreetMap
+            </button>
+            <button
+              type="button"
+              className={`map-mode-btn ${mapLayerMode === 'satellite' ? 'is-active' : ''}`}
+              aria-pressed={mapLayerMode === 'satellite'}
+              onClick={() => setMapLayerMode('satellite')}
+              title="Satellite Aerial Imagery"
+            >
+              Satellite View
+            </button>
+          </div>
+
+          <div className="flood-map-toggles" role="group" aria-label="Map overlays and view controls">
+            <button
+              type="button"
+              className={`map-toggle-btn ${layerVisibility.roads ? 'is-active' : ''}`}
+              aria-pressed={layerVisibility.roads}
+              onClick={() => toggleLayer('roads')}
+              title="Toggle Road Network Layer"
+            >
+              Roads: {layerVisibility.roads ? 'ON' : 'OFF'}
+            </button>
+            <button
+              type="button"
+              className={`map-toggle-btn ${layerVisibility.flood ? 'is-active' : ''}`}
+              aria-pressed={layerVisibility.flood}
+              onClick={() => toggleLayer('flood')}
+              title="Toggle Flood Scenario Layer"
+            >
+              Flood Hazard: {layerVisibility.flood ? 'ON' : 'OFF'}
+            </button>
+            <button
+              type="button"
+              className={`map-toggle-btn ${layerVisibility.boundary ? 'is-active' : ''}`}
+              aria-pressed={layerVisibility.boundary}
+              onClick={() => toggleLayer('boundary')}
+              title="Toggle U-Belt Pilot Boundary"
+            >
+              Boundary: {layerVisibility.boundary ? 'ON' : 'OFF'}
+            </button>
+            <button
+              type="button"
+              className="map-toggle-btn map-recenter-btn"
+              aria-label="Recenter map on study area"
+              onClick={handleRecenter}
+              title="Recenter Map on Target"
+            >
+              Recenter
+            </button>
+          </div>
         </div>
       </div>
 
@@ -538,22 +537,24 @@ export function InteractiveFloodMap({
       )}
 
       {/* Simulated Route Advisory Banner */}
-      <div className="map-realtime-routing-banner">
-        <div className="banner-pulse-icon">
-          <Icon name="route" size={18} />
+      {showRouteAdvisory && (
+        <div className="map-realtime-routing-banner">
+          <div className="banner-pulse-icon">
+            <Icon name="route" size={18} />
+          </div>
+          <div className="banner-text">
+            <strong>{operationContext ? `SIMULATED OPERATION · ${operationContext.requestId}:` : 'SIMULATED EN ROUTE ADVISORY:'}</strong>{' '}
+            <span>{routeExplanation}</span>
+          </div>
+          <span className="banner-eta-badge font-mono">ETA: {etaMinutes} MINS</span>
         </div>
-        <div className="banner-text">
-          <strong>{operationContext ? `SIMULATED OPERATION · ${operationContext.requestId}:` : 'SIMULATED EN ROUTE ADVISORY:'}</strong>{' '}
-          <span>{routeExplanation}</span>
-        </div>
-        <span className="banner-eta-badge font-mono">ETA: {etaMinutes} MINS</span>
-      </div>
+      )}
 
       {/* OpenStreetMap Leaflet Canvas */}
       <div className="flood-map-leaflet-wrapper">
         <div
           ref={mapContainerRef}
-          className={`flood-map-leaflet-canvas ${mapLayerMode === 'dark' ? 'leaflet-theme-dark' : ''}`}
+          className="flood-map-leaflet-canvas"
           id="openmap-hazard-map"
           style={{ width: '100%', height: '460px' }}
         />
@@ -620,33 +621,35 @@ export function InteractiveFloodMap({
       )}
 
       {/* Map Bottom Rationale Drawer */}
-      <div className="flood-map-explanation">
-        <div className="explanation-head">
-          <div className="explanation-title">
-            <Icon name="shield" size={16} />
-            <span>Controlled-Scenario Routing Rationale</span>
-          </div>
-          <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--color-brand-hover)' }}>
-            LiPAD Hazard & Elevation Matrix Active
-          </span>
-        </div>
-        <div className="explanation-body">
-          <div className="explanation-row">
-            <span className="exp-badge exp-avoided">AVOIDED SHORTCUT</span>
-            <span className="exp-text">
-              <strong>Loyola St. Shortcut:</strong> Water depth reaches <strong>1.40 m</strong> (waist/chest current),
-              which exceeds the safe rescue craft threshold (<strong>0.30 m</strong>). High probability of engine stall.
+      {showRouteRationale && (
+        <div className="flood-map-explanation">
+          <div className="explanation-head">
+            <div className="explanation-title">
+              <Icon name="shield" size={16} />
+              <span>Controlled-Scenario Routing Rationale</span>
+            </div>
+            <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--color-brand-hover)' }}>
+              LiPAD Hazard & Elevation Matrix Active
             </span>
           </div>
-          <div className="explanation-row">
-            <span className="exp-badge exp-selected">RECOMMENDED ROUTE</span>
-            <span className="exp-text">
-              <strong>Jhocson St. Corridor:</strong> Lower controlled-scenario penalty and no impassable edge.
-              Safety Score: <strong>94/100</strong>. Unit ETA: <strong>{etaMinutes} minutes</strong>.
-            </span>
+          <div className="explanation-body">
+            <div className="explanation-row">
+              <span className="exp-badge exp-avoided">AVOIDED SHORTCUT</span>
+              <span className="exp-text">
+                <strong>Loyola St. Shortcut:</strong> Water depth reaches <strong>1.40 m</strong> (waist/chest current),
+                which exceeds the safe rescue craft threshold (<strong>0.30 m</strong>). High probability of engine stall.
+              </span>
+            </div>
+            <div className="explanation-row">
+              <span className="exp-badge exp-selected">RECOMMENDED ROUTE</span>
+              <span className="exp-text">
+                <strong>Jhocson St. Corridor:</strong> Lower controlled-scenario penalty and no impassable edge.
+                Safety Score: <strong>94/100</strong>. Unit ETA: <strong>{etaMinutes} minutes</strong>.
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

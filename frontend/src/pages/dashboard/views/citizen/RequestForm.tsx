@@ -29,7 +29,6 @@ import {
 } from '../../../../features/requests/types'
 import {
   CreateRequestSchema,
-  UBELT_BOUNDS,
 } from '../../../../features/requests/validation'
 import { PrototypeNotice } from './PrototypeNotice'
 import { RequestLocationMap } from './RequestLocationMap'
@@ -214,10 +213,6 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     })
   }
 
-  // ---------------------------------------------------------------------------
-  // Boundary helper text
-  // ---------------------------------------------------------------------------
-  const boundaryHint = `U-Belt pilot area — Longitude ${UBELT_BOUNDS.west}–${UBELT_BOUNDS.east}, Latitude ${UBELT_BOUNDS.south}–${UBELT_BOUNDS.north}`
 
   // ---------------------------------------------------------------------------
   // Render
@@ -233,7 +228,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       <PrototypeNotice variant="form" />
 
       <div style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-        <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Start with the essentials</strong>
+        <strong style={{ display: 'block', fontSize: '0.84rem', color: '#f1f5f9' }}>Start with the essentials</strong>
         <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Add a location and number of people. Extra details are optional.</span>
       </div>
 
@@ -284,7 +279,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         />
         <label
           htmlFor={`${uid}-address`}
-          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
+          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f1f5f9' }}
         >
           Location — street address
           <span aria-hidden="true" style={{ color: '#dc2626' }}> *</span>
@@ -317,90 +312,14 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         )}
       </div>
 
-      {/* ── Location — coordinates ──────────────────────────────────── */}
-      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
-          Adjust map coordinates
-          <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
-            Coordinates come from your chosen source and can be adjusted here.
-          </span>
-        </summary>
-      <fieldset
-        style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
-        aria-describedby={`${uid}-coords-hint`}
-      >
-        <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', padding: '0 4px' }}>
-          Coordinates (longitude, latitude)
-        </legend>
-        <span
-          id={`${uid}-coords-hint`}
-          style={{ fontSize: '0.75rem', color: '#64748b' }}
-        >
-          {boundaryHint}
-        </span>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: '120px' }}>
-            <label htmlFor={`${uid}-lng`} style={{ fontSize: '0.8rem', color: '#475569' }}>
-              Longitude
-            </label>
-            <input
-              id={`${uid}-lng`}
-              type="number"
-              step="any"
-              value={lngStr}
-              onChange={(e) => setLngStr(e.target.value)}
-              aria-required="true"
-              aria-describedby={fieldErrors['location.point.coordinates'] ? `${uid}-coords-err` : `${uid}-coords-hint`}
-              aria-invalid={!!fieldErrors['location.point.coordinates']}
-              disabled={isPending}
-              style={{
-                padding: '0.45rem 0.6rem',
-                borderRadius: '6px',
-                border: `1px solid ${fieldErrors['location.point.coordinates'] ? '#dc2626' : '#cbd5e1'}`,
-                fontSize: '0.85rem',
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: '120px' }}>
-            <label htmlFor={`${uid}-lat`} style={{ fontSize: '0.8rem', color: '#475569' }}>
-              Latitude
-            </label>
-            <input
-              id={`${uid}-lat`}
-              type="number"
-              step="any"
-              value={latStr}
-              onChange={(e) => setLatStr(e.target.value)}
-              aria-required="true"
-              aria-describedby={fieldErrors['location.point.coordinates'] ? `${uid}-coords-err` : `${uid}-coords-hint`}
-              aria-invalid={!!fieldErrors['location.point.coordinates']}
-              disabled={isPending}
-              style={{
-                padding: '0.45rem 0.6rem',
-                borderRadius: '6px',
-                border: `1px solid ${fieldErrors['location.point.coordinates'] ? '#dc2626' : '#cbd5e1'}`,
-                fontSize: '0.85rem',
-              }}
-            />
-          </div>
-        </div>
-        {fieldErrors['location.point.coordinates'] && (
-          <span
-            id={`${uid}-coords-err`}
-            role="alert"
-            style={{ color: '#dc2626', fontSize: '0.77rem' }}
-          >
-            {fieldErrors['location.point.coordinates']}
-          </span>
-        )}
-      </fieldset>
-      </details>
+      {/* Coordinates are tracked internally via map click; no need to expose raw fields */}
+
 
       {/* ── Headcount ───────────────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <label
           htmlFor={`${uid}-headcount`}
-          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
+          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f1f5f9' }}
         >
           People needing assistance
           <span aria-hidden="true" style={{ color: '#dc2626' }}> *</span>
@@ -437,7 +356,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
 
       {/* ── Vulnerabilities ─────────────────────────────────────────── */}
       <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+        <summary style={{ cursor: 'pointer', color: '#cbd5e1', fontWeight: 600, fontSize: '0.84rem' }}>
           Add details for responders (optional)
           <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
             Note who may need extra help and describe the situation.
@@ -445,7 +364,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         </summary>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.9rem' }}>
       <fieldset style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem' }}>
-        <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', padding: '0 4px' }}>
+        <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f1f5f9', padding: '0 4px' }}>
           Vulnerabilities (select all that apply)
         </legend>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -488,7 +407,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       {/* ── Medical needs ───────────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '0.85rem', color: '#f1f5f9', cursor: 'pointer' }}
         >
           <input
             id={`${uid}-medical`}
@@ -504,7 +423,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label
               htmlFor={`${uid}-medical-details`}
-              style={{ fontSize: '0.8rem', color: '#475569' }}
+              style={{ fontSize: '0.8rem', color: '#94a3b8' }}
             >
               Medical details (sanitized — no personal health records)
             </label>
@@ -531,7 +450,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
 
       {/* ── Situation summary ───────────────────────────────────────── */}
       <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+        <summary style={{ cursor: 'pointer', color: '#cbd5e1', fontWeight: 600, fontSize: '0.84rem' }}>
           Describe the immediate conditions (optional)
           <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
             Water movement, blocked exits, or urgent needs.
@@ -540,7 +459,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '0.9rem' }}>
         <label
           htmlFor={`${uid}-situation`}
-          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
+          style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f1f5f9' }}
         >
           What is happening right now?
           <span style={{ fontWeight: 400, color: '#64748b' }}> (optional)</span>
@@ -579,7 +498,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             borderRadius: '7px',
             border: '1px solid #e2e8f0',
             background: '#fff',
-            color: '#475569',
+            color: '#94a3b8',
             fontWeight: 600,
             fontSize: '0.85rem',
             cursor: isPending ? 'not-allowed' : 'pointer',

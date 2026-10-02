@@ -66,9 +66,9 @@ describe('Rescuer API mission flow', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText('mission-api-only')).toBeInTheDocument()
+    expect((await screen.findAllByText('mission-api-only')).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Assigned Mission')).toBeInTheDocument()
-    expect(screen.getByText(/España Boulevard, Sampaloc/i)).toBeInTheDocument()
+    expect((await screen.findAllByText(/España Boulevard, Sampaloc/i)).length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText(/Field Rescuer Console — Standby/i)).not.toBeInTheDocument()
   })
 })

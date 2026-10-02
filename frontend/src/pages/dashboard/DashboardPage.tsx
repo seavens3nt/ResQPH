@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiHealth } from '../../api/health'
 import { useAuth } from '../../features/auth/AuthContext'
 import { ROLE_LABELS } from '../../features/auth/types'
+import type { UserRole } from '../../features/auth/types'
 import { Icon } from '../../components/art/Icon'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -11,7 +12,6 @@ import { OfflineIndicator } from '../../features/offline/OfflineIndicator'
 import { CitizenView } from './views/CitizenView'
 import { CoordinatorView } from './views/CoordinatorView'
 import { RescuerView } from './views/RescuerView'
-import { VolunteerView } from './views/VolunteerView'
 import type { NavSection } from './views/navTypes'
 import './dashboard.css'
 
@@ -21,7 +21,6 @@ export function DashboardPage() {
   // Sidebar & Role Switcher state
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeNav, setActiveNav] = useState<NavSection>('overview')
-  const [activeRole, setActiveRole] = useState<'citizen' | 'volunteer'>('citizen')
 
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileName, setProfileName] = useState('')
@@ -43,20 +42,12 @@ export function DashboardPage() {
       return <RescuerView navSection={activeNav} />
     }
 
-    if (activeRole === 'volunteer') {
-      return <VolunteerView navSection={activeNav} onNavigateTab={(section) => setActiveNav(section)} />
-    }
-
     return <CitizenView navSection={activeNav} onNavigateTab={(section) => setActiveNav(section)} />
-  }, [user?.role, activeRole, activeNav])
+  }, [user?.role, activeNav])
 
   function handleLogout() {
     logout()
     navigate('/', { replace: true })
-  }
-
-  function toggleRoleSwitch() {
-    setActiveRole((prev) => (prev === 'citizen' ? 'volunteer' : 'citizen'))
   }
 
   function openProfile() {
@@ -112,6 +103,51 @@ export function DashboardPage() {
     .map((p) => p.charAt(0).toUpperCase())
     .join('')
 
+  const navItems: { section: NavSection; label: string; icon: 'pin' | 'alert' | 'navigation' | 'route' | 'user' | 'shield' | 'check' }[] =
+    user.role === 'rescuer'
+      ? [
+          { section: 'overview', label: 'Assigned Team & Progress', icon: 'route' },
+          { section: 'inquiries', label: 'Rescue Target Details', icon: 'user' },
+          { section: 'missions', label: 'Flood-Aware Navigation', icon: 'navigation' },
+          { section: 'incidents', label: 'Rescue Records', icon: 'check' },
+        ]
+      : user.role === 'coordinator'
+      ? [
+          { section: 'overview', label: 'Dispatch Overview', icon: 'pin' },
+          { section: 'inquiries', label: 'Rescue Request Queue', icon: 'alert' },
+          { section: 'missions', label: 'Active Responses', icon: 'route' },
+          { section: 'teams', label: 'Rescue Fleet Status', icon: 'user' },
+          { section: 'map', label: 'Hazard Map & Route Oversight', icon: 'navigation' },
+          { section: 'incidents', label: 'Incident Reports', icon: 'check' },
+        ]
+      : [
+          { section: 'overview', label: 'Overview', icon: 'pin' },
+          { section: 'inquiries', label: 'Rescue Tracking', icon: 'alert' },
+          { section: 'map', label: user.role === 'citizen' ? 'Rescue Team Location' : 'Hazard Map', icon: 'navigation' },
+        ]
+
+  const pageTitles: Record<UserRole, Partial<Record<NavSection, string>>> = {
+    citizen: {
+      overview: 'Overview',
+      inquiries: 'Rescue Tracking',
+      map: 'Rescue Team Location',
+    },
+    coordinator: {
+      overview: 'Central Dispatch Console',
+      inquiries: 'Dispatch Request Queue',
+      missions: 'Active Responses',
+      teams: 'Rescue Fleet Status',
+      map: 'Hazard Map & Route Oversight',
+      incidents: 'Incident Reports',
+    },
+    rescuer: {
+      overview: 'Assigned Team & Progress',
+      inquiries: 'Rescue Target Details',
+      missions: 'Flood-Aware Navigation',
+      incidents: 'Rescue Records',
+    },
+  }
+
   return (
     <div className={`dash${menuOpen ? ' dash--menu-open' : ''}`}>
       {/* OVERLAY BACKDROP */}
@@ -129,12 +165,15 @@ export function DashboardPage() {
           <div className="brand-wrapper">
             <div className="logo-image-container">
               <img
-                src="/resQPHLogo.png"
-                alt="ResQPH Logo"
+                src="/logo.png"
+                alt=""
+                aria-hidden="true"
                 className="brand-logo-img"
               />
             </div>
-            <span className="brand-title">ResQPH</span>
+            <span className="brand-title">
+              ResQ<span className="brand-title__p">P</span><span className="brand-title__h">H</span>
+            </span>
           </div>
 
           <button
@@ -151,41 +190,23 @@ export function DashboardPage() {
           <div className="user-role-container">
             <span className="role-label">Logged in as</span>
             <strong className="role-value">
-              {user.name || (user.role === 'coordinator' ? 'Dispatcher / Coordinator' : ROLE_LABELS[user.role])}
+              {user.name || (ROLE_LABELS[user.role] ?? user.role)}
             </strong>
           </div>
 
           <nav className="sidebar-nav-list">
-            <button
-              type="button"
-              className={`modern-nav-item ${activeNav === 'overview' ? 'is-active' : ''}`}
-              onClick={() => { setActiveNav('overview'); setMenuOpen(false) }}
-            >
-              <Icon name="pin" size={18} />
-              <span>Overview</span>
-            </button>
-
-            {/* NAV ITEM: "Track SOS" FOR VOLUNTEER, "Inquiries" FOR CITIZEN */}
-            <button
-              type="button"
-              className={`modern-nav-item ${activeNav === 'inquiries' ? 'is-active' : ''}`}
-              onClick={() => { setActiveNav('inquiries'); setMenuOpen(false) }}
-            >
-              <Icon name="alert" size={18} />
-              <span>{activeRole === 'volunteer' ? 'Track SOS' : 'Inquiries'}</span>
-              {activeRole === 'volunteer' && (
-                <span className="active-red-dot" title="Simulated SOS activity" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              className={`modern-nav-item ${activeNav === 'map' ? 'is-active' : ''}`}
-              onClick={() => { setActiveNav('map'); setMenuOpen(false) }}
-            >
-              <Icon name="shield" size={18} />
-              <span>Hazard Map</span>
-            </button>
+            {navItems.map((item) => (
+              <button
+                key={item.section}
+                type="button"
+                className={`modern-nav-item ${activeNav === item.section ? 'is-active' : ''}`}
+                aria-current={activeNav === item.section ? 'page' : undefined}
+                onClick={() => { setActiveNav(item.section); setMenuOpen(false) }}
+              >
+                <Icon name={item.icon} size={18} />
+                <span>{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
 
@@ -209,47 +230,14 @@ export function DashboardPage() {
             >
               <Icon name="menu" size={20} />
             </button>
-            <div className="header-title-group">
-              <span className="header-subtitle">
-                {ROLE_LABELS[user.role]} Console · U-Belt Pilot · Academic Prototype
-              </span>
-              <h1 className="header-page-title">
-                {user.role === 'citizen' && 'Citizen Distress & Volunteer Portal'}
-                {user.role === 'rescuer' && 'Field Rescuer Mobile Guidance'}
-                {user.role === 'coordinator' && 'Disaster Response Dispatcher Oversight'}
-              </h1>
-            </div>
+
           </div>
 
-          <div className="header-center">
-            <div className="header-brand-badge">
-              <img
-                src="/resQPHLogo.png"
-                alt="ResQPH Logo"
-                className="header-logo-img"
-              />
-            </div>
-          </div>
+          <h1 className="header-page-title visually-hidden">
+            {pageTitles[user.role][activeNav] ?? ROLE_LABELS[user.role]}
+          </h1>
 
           <div className="header-right">
-            {user.role === 'citizen' && (
-              <button
-                type="button"
-                className="btn-role-switch"
-                onClick={toggleRoleSwitch}
-                aria-label="Switch portal"
-                title="Switch portal view"
-              >
-                <span className={`role-option ${activeRole === 'citizen' ? 'is-active' : 'is-inactive'}`}>
-                  Citizen
-                </span>
-                <span className="role-divider">/</span>
-                <span className={`role-option ${activeRole === 'volunteer' ? 'is-active' : 'is-inactive'}`}>
-                  Volunteer
-                </span>
-              </button>
-            )}
-
             <button className="avatar-badge" type="button" onClick={openProfile} aria-label="Edit profile">
               {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : initials || 'RQ'}
             </button>
