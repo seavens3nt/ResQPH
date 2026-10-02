@@ -67,16 +67,16 @@ describe('mapData - Fixture Parsing & Validation', () => {
     const parsed = parseRoadEdgeFixture(LOCKED_ROAD_EDGE_FIXTURE)
     expect(parsed.type).toBe('FeatureCollection')
     expect(parsed.features.length).toBeGreaterThan(0)
-    expect(parsed.features[0].properties.edge_id).toBe('edge-demo-001')
+    expect(parsed.features[0].properties.edge_id).toBeTruthy()
     expect(parsed.features[0].geometry.type).toBe('LineString')
   })
 
   it('parses authoritative locked flood scenario fixture', () => {
     const parsed = parseFloodScenarioFixture(LOCKED_FLOOD_SCENARIO_FIXTURE)
     expect(parsed.type).toBe('FeatureCollection')
-    expect(parsed.scenario?.scenario_id).toBe('scenario-controlled-001')
+    expect(parsed.scenario?.scenario_id).toBeTruthy()
     expect(parsed.features.length).toBeGreaterThan(0)
-    expect(parsed.features[0].properties.edge_id).toBe('edge-demo-001')
+    expect(parsed.features[0].properties.edge_id).toBeTruthy()
   })
 
   it('parses authoritative locked study area fixture', () => {
@@ -125,6 +125,30 @@ describe('mapData - Fixture Parsing & Validation', () => {
     }
     expect(() => parseRoadEdgeFixture(outsideBoundary)).toThrow(/outside approved U-Belt pilot boundary/)
   })
+
+  it('rejects duplicate road edge IDs before rendering', () => {
+    const fixture = structuredClone(LOCKED_ROAD_EDGE_FIXTURE) as {
+      features: unknown[]
+    }
+    fixture.features.push(structuredClone(fixture.features[0]))
+    expect(() => parseRoadEdgeFixture(fixture)).toThrow(/duplicate edge_id/i)
+  })
+
+  it('rejects unsupported live source labels instead of presenting them as controlled data', () => {
+    const fixture = structuredClone(LOCKED_FLOOD_SCENARIO_FIXTURE) as {
+      scenario: { source_type: string }
+    }
+    fixture.scenario.source_type = 'live'
+    expect(() => parseFloodScenarioFixture(fixture)).toThrow(/Malformed flood scenario GeoJSON/i)
+  })
+
+  it('rejects duplicate flood edge IDs before joining them to roads', () => {
+    const fixture = structuredClone(LOCKED_FLOOD_SCENARIO_FIXTURE) as {
+      features: unknown[]
+    }
+    fixture.features.push(structuredClone(fixture.features[0]))
+    expect(() => parseFloodScenarioFixture(fixture)).toThrow(/duplicate edge_id/i)
+  })
 })
 
 describe('mapData - buildMapLayerDataset Adapter', () => {
@@ -135,29 +159,61 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
       LOCKED_STUDY_AREA_FIXTURE,
     )
 
-    expect(dataset.scenarioId).toBe('scenario-controlled-001')
-    expect(dataset.sourceType).toBe('controlled')
+    const parsedRoads = parseRoadEdgeFixture(LOCKED_ROAD_EDGE_FIXTURE)
+    const parsedFlood = parseFloodScenarioFixture(LOCKED_FLOOD_SCENARIO_FIXTURE)
+
+    expect(dataset.scenarioId).toBe(parsedFlood.scenario?.scenario_id)
+    expect(dataset.sourceType).toBe(parsedFlood.scenario?.source_type)
     expect(dataset.isLive).toBe(false)
-    expect(dataset.fixtureNotice).toMatch(/Synthetic|controlled/i)
+    expect(dataset.fixtureNotice).toBeTruthy()
 
-    // Check edge joining
-    expect(dataset.edges.length).toBe(1)
-    const joinedEdge1 = dataset.edges.find((e) => e.edgeId === 'edge-demo-001')
-    expect(joinedEdge1).toBeDefined()
-    expect(joinedEdge1?.passability).toBe('restricted')
-    expect(joinedEdge1?.floodLevel).toBe('moderate')
-    expect(joinedEdge1?.floodDepthCm).toBe(30)
-    expect(joinedEdge1?.leafletCoordinates[0]).toEqual([14.6035, 120.994])
+    // The assertions deliberately derive from the checked-in fixtures so the
+    // same test becomes the compatibility gate when Issue #32 replaces them.
+    expect(dataset.edges).toHaveLength(parsedRoads.features.length)
+    for (const road of parsedRoads.features) {
+      const joined = dataset.edges.find((edge) => edge.edgeId === road.properties.edge_id)
+      const flood = parsedFlood.features.find(
+        (feature) => feature.properties.edge_id === road.properties.edge_id,
+      )
+      expect(joined).toBeDefined()
+      expect(joined?.geojsonCoordinates).toEqual(road.geometry.coordinates)
+      expect(joined?.leafletCoordinates[0]).toEqual([
+        road.geometry.coordinates[0][1],
+        road.geometry.coordinates[0][0],
+      ])
+      if (flood) {
+        expect(joined?.passability).toBe(flood.properties.passability)
+        expect(joined?.floodLevel).toBe(flood.properties.flood_level)
+        expect(joined?.floodDepthCm).toBe(flood.properties.flood_depth_cm)
+      }
+    }
 
-    // Check statistics
-    expect(dataset.stats.totalEdges).toBe(1)
-    expect(dataset.stats.passableCount).toBe(0)
-    expect(dataset.stats.restrictedCount).toBe(1)
-    expect(dataset.stats.impassableCount).toBe(0)
+    // Every rendered edge is represented exactly once in the status totals.
+    expect(dataset.stats.totalEdges).toBe(parsedRoads.features.length)
+    expect(
+      dataset.stats.passableCount +
+        dataset.stats.restrictedCount +
+        dataset.stats.impassableCount,
+    ).toBe(dataset.stats.totalEdges)
 
     // Check study area boundary
     expect(dataset.studyArea.name).toMatch(/U-Belt/i)
     expect(dataset.studyArea.leafletPolygon.length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('rejects a flood fixture assigned to a different study area', () => {
+    const floodFixture = structuredClone(LOCKED_FLOOD_SCENARIO_FIXTURE) as {
+      scenario: { study_area_id: string }
+    }
+    floodFixture.scenario.study_area_id = 'different-study-area'
+
+    expect(() =>
+      buildMapLayerDataset(
+        LOCKED_ROAD_EDGE_FIXTURE,
+        floodFixture,
+        LOCKED_STUDY_AREA_FIXTURE,
+      ),
+    ).toThrow(/Fixture contract mismatch/i)
   })
 
   it('exposes non-live disclaimer constant', () => {

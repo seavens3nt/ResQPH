@@ -58,6 +58,9 @@ export function geojsonPolygonToLeaflet(ring: [number, number][]): [number, numb
  * ────────────────────────────────────────────────────────────────────────── */
 
 const coordinatePairSchema = z.tuple([z.number(), z.number()])
+const passabilitySchema = z.enum(['passable', 'restricted', 'impassable'])
+const floodLevelSchema = z.enum(['none', 'low', 'moderate', 'high', 'severe'])
+const scenarioSourceSchema = z.enum(['controlled', 'historical'])
 
 export const roadEdgeFeatureSchema = z.object({
   type: z.literal('Feature'),
@@ -68,10 +71,10 @@ export const roadEdgeFeatureSchema = z.object({
     length_m: z.number().nonnegative(),
     travel_time_s: z.number().nonnegative().optional(),
     road_class: z.string().default('unclassified'),
-    flood_level: z.string().optional().default('none'),
-    passability: z.string().optional().default('passable'),
+    flood_level: floodLevelSchema.optional().default('none'),
+    passability: passabilitySchema.optional().default('passable'),
     observed_at: z.string().optional().default('not provided'),
-    source_type: z.string().optional().default('controlled'),
+    source_type: scenarioSourceSchema.optional().default('controlled'),
   }),
   geometry: z.object({
     type: z.literal('LineString'),
@@ -91,10 +94,10 @@ export const floodScenarioFeatureSchema = z.object({
   properties: z.object({
     scenario_id: z.string().optional().default('scenario-controlled-001'),
     edge_id: z.string().optional(),
-    flood_level: z.string().default('none'),
+    flood_level: floodLevelSchema.default('none'),
     flood_depth_cm: z.number().nonnegative().optional(),
-    passability: z.string().default('passable'),
-    source_type: z.string().default('controlled'),
+    passability: passabilitySchema.default('passable'),
+    source_type: scenarioSourceSchema.default('controlled'),
     scenario_timestamp: z.string().default('not provided'),
     reason: z.string().optional(),
   }),
@@ -112,7 +115,7 @@ export const floodScenarioCollectionSchema = z.object({
     .object({
       scenario_id: z.string().default('scenario-controlled-001'),
       scenario_timestamp: z.string().default('not provided'),
-      source_type: z.string().default('controlled'),
+      source_type: scenarioSourceSchema.default('controlled'),
       study_area_id: z.string().default('ubelt-pilot-v1'),
     })
     .optional(),
@@ -222,8 +225,16 @@ export function parseRoadEdgeFixture(raw: unknown): RoadEdgeCollection {
     throw new Error(`Malformed road edge GeoJSON fixture: ${result.error.message}`)
   }
 
-  // Verify all coordinates fall within the U-Belt boundary
+  const edgeIds = new Set<string>()
+
+  // Verify stable unique IDs and coordinates within the U-Belt boundary.
   for (const feature of result.data.features) {
+    const edgeId = feature.properties.edge_id
+    if (edgeIds.has(edgeId)) {
+      throw new Error(`Malformed road edge GeoJSON fixture: duplicate edge_id ${edgeId}.`)
+    }
+    edgeIds.add(edgeId)
+
     for (const [lng, lat] of feature.geometry.coordinates) {
       if (!isWithinUBeltBounds(lng, lat)) {
         throw new Error(
@@ -244,9 +255,18 @@ export function parseFloodScenarioFixture(raw: unknown): FloodScenarioCollection
   if (!result.success) {
     throw new Error(`Malformed flood scenario GeoJSON fixture: ${result.error.message}`)
   }
+  const linkedEdgeIds = new Set<string>()
   for (const feature of result.data.features) {
     const { positions, malformed } = collectCoordinatePairs(feature.geometry.coordinates)
     const featureId = feature.properties.edge_id || feature.properties.scenario_id
+    if (feature.properties.edge_id) {
+      if (linkedEdgeIds.has(feature.properties.edge_id)) {
+        throw new Error(
+          `Malformed flood scenario GeoJSON fixture: duplicate edge_id ${feature.properties.edge_id}.`,
+        )
+      }
+      linkedEdgeIds.add(feature.properties.edge_id)
+    }
     if (malformed || positions.length === 0) {
       throw new Error(
         `Malformed flood scenario GeoJSON: feature ${featureId} has invalid or missing coordinates.`,
@@ -310,6 +330,14 @@ export function buildMapLayerDataset(
   const studyArea = parseStudyAreaFixture(studyAreaInput)
 
   const studyAreaFeature = studyArea.features[0]
+  if (!studyAreaFeature) {
+    throw new Error('Malformed study area GeoJSON fixture: expected one approved U-Belt boundary feature.')
+  }
+  if (flood.scenario && flood.scenario.study_area_id !== studyAreaFeature.properties.study_area_id) {
+    throw new Error(
+      `Fixture contract mismatch: flood scenario study_area_id ${flood.scenario.study_area_id} does not match ${studyAreaFeature.properties.study_area_id}.`,
+    )
+  }
   const leafletStudyAreaPolygon = studyAreaFeature
     ? geojsonPolygonToLeaflet(studyAreaFeature.geometry.coordinates[0] as [number, number][])
     : []

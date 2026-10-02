@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { InteractiveFloodMap } from './InteractiveFloodMap'
+import { buildMapLayerDataset } from './mapData'
 
 describe('InteractiveFloodMap Component', () => {
   it('renders default fixture-driven map with source time and non-live disclaimer', () => {
@@ -17,8 +18,9 @@ describe('InteractiveFloodMap Component', () => {
 
     // Scenario metadata
     expect(screen.getByText(/Scenario:/i)).toBeInTheDocument()
-    expect(screen.getByText('scenario-controlled-001')).toBeInTheDocument()
-    expect(screen.getByText('CONTROLLED')).toBeInTheDocument()
+    const dataset = buildMapLayerDataset()
+    expect(screen.getByText(dataset.scenarioId)).toBeInTheDocument()
+    expect(screen.getByText(dataset.sourceType.toUpperCase())).toBeInTheDocument()
 
     // Non-live disclaimer
     expect(screen.getByText(/Controlled scenario data · Not live PAGASA forecasting or official emergency dispatch/i)).toBeInTheDocument()
@@ -50,6 +52,12 @@ describe('InteractiveFloodMap Component', () => {
     expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
   })
 
+  it('renders unavailable state as a visible warning while preserving the base map', () => {
+    render(<InteractiveFloodMap simulatedState="unavailable" />)
+    expect(screen.getByRole('alert')).toHaveTextContent(/currently unavailable/i)
+    expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
+  })
+
   it('toggles layer buttons between ON and OFF', () => {
     render(<InteractiveFloodMap />)
 
@@ -73,9 +81,9 @@ describe('InteractiveFloodMap Component', () => {
     // Check table headers and rows
     expect(screen.getByText(/Accessible Road Network & Flood Passability Summary/i)).toBeInTheDocument()
     expect(screen.getByText('Edge ID')).toBeInTheDocument()
-    expect(screen.getByText('edge-demo-001')).toBeInTheDocument()
-    expect(screen.queryByText('edge-demo-002')).not.toBeInTheDocument()
-    expect(screen.getByText('RESTRICTED')).toBeInTheDocument()
+    const dataset = buildMapLayerDataset()
+    expect(screen.getByText(dataset.edges[0].edgeId)).toBeInTheDocument()
+    expect(screen.getByText(dataset.edges[0].passability.toUpperCase())).toBeInTheDocument()
   })
 
   it('renders routing rationale and simulated route delay banner', () => {
