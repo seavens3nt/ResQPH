@@ -7,7 +7,12 @@ from typing import Any
 import pytest
 
 from app.integrations.geospatial import (
+    AUTHORITATIVE_CONTRACT_REVISION,
     BASELINE_CONTRACT_REVISION,
+    BASELINE_FLOOD_FIXTURE,
+    BASELINE_ROAD_FIXTURE,
+    DEFAULT_FLOOD_FIXTURE,
+    DEFAULT_ROAD_FIXTURE,
     SUPPORTED_SCHEMA_VERSION,
     GeospatialFixtureConfig,
     load_geospatial_fixtures,
@@ -15,33 +20,51 @@ from app.integrations.geospatial import (
 from app.schemas.geospatial import GeospatialFixtureBundle, GeospatialFixtureError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ROAD_SAMPLE = REPO_ROOT / "data" / "samples" / "road-edge.example.geojson"
-FLOOD_SAMPLE = REPO_ROOT / "data" / "samples" / "flood-scenario.example.geojson"
+ROAD_SAMPLE = BASELINE_ROAD_FIXTURE
+FLOOD_SAMPLE = BASELINE_FLOOD_FIXTURE
 
 
-def test_locked_baseline_samples_load_successfully() -> None:
+def test_authoritative_ubelt_fixtures_load_by_default() -> None:
     bundle = load_geospatial_fixtures()
 
     assert_geospatial_contract(bundle)
-    assert bundle.contract_revision == BASELINE_CONTRACT_REVISION
-    assert bundle.version_source == "baseline_compatibility"
+    assert bundle.contract_revision == AUTHORITATIVE_CONTRACT_REVISION
+    assert bundle.version_source == "edge_id_prefix"
     assert bundle.road_edges.schema_version is None
     assert bundle.flood_scenario.schema_version is None
+    assert len(bundle.road_edges.features) == 30
+    assert len(bundle.flood_scenario.features) == 10
+    assert Path(bundle.road_path) == DEFAULT_ROAD_FIXTURE
+    assert Path(bundle.flood_path) == DEFAULT_FLOOD_FIXTURE
 
     road = bundle.road_edges.features[0]
     flood = bundle.flood_scenario.features[0]
-    assert road.properties.edge_id == "edge-demo-001"
-    assert road.properties.observed_at == "2026-09-21T04:00:00Z"
-    assert bundle.road_edges.fixture_notice == (
-        "Synthetic contract fixture; not validated real-world road or flood data."
+    assert road.properties.edge_id.startswith("ubelt-v1:")
+    assert isinstance(road.properties.flood_depth_cm, float)
+    assert flood.properties.edge_id.startswith("ubelt-v1:")
+    assert flood.properties.scenario_timestamp == "2026-10-01T00:00:00Z"
+    assert bundle.flood_scenario.scenario.scenario_id == (
+        "scenario-controlled-ubelt-001"
     )
-    assert flood.properties.edge_id == "edge-demo-001"
-    assert flood.properties.scenario_timestamp == "2026-09-22T00:00:00Z"
-    assert bundle.flood_scenario.scenario.scenario_id == "scenario-controlled-001"
     assert bundle.flood_scenario.scenario.study_area_id == "ubelt-pilot-v1"
     assert bundle.flood_scenario.fixture_notice == (
         "Synthetic academic scenario; not live or historical flood evidence."
     )
+    road_ids = {feature.properties.edge_id for feature in bundle.road_edges.features}
+    assert all(
+        feature.properties.edge_id in road_ids
+        for feature in bundle.flood_scenario.features
+    )
+
+
+def test_locked_baseline_examples_require_explicit_compatibility() -> None:
+    bundle = load_geospatial_fixtures(
+        GeospatialFixtureConfig.baseline_compatibility()
+    )
+
+    assert bundle.contract_revision == BASELINE_CONTRACT_REVISION
+    assert bundle.version_source == "baseline_compatibility"
+    assert bundle.road_edges.features[0].properties.edge_id == "edge-demo-001"
 
 
 def assert_geospatial_contract(bundle: GeospatialFixtureBundle) -> None:
@@ -66,7 +89,7 @@ def test_repository_relative_loading_works_from_different_cwd(
 
     bundle = load_geospatial_fixtures()
 
-    assert bundle.road_edges.features[0].properties.edge_id == "edge-demo-001"
+    assert bundle.road_edges.features[0].properties.edge_id.startswith("ubelt-v1:")
 
 
 @pytest.mark.parametrize("missing_kind", ["road", "flood"])
@@ -189,7 +212,11 @@ def test_duplicate_flood_scenario_edge_records_are_rejected(tmp_path: Path) -> N
 def test_missing_version_requires_explicit_baseline_compatibility(tmp_path: Path) -> None:
     road, flood = write_mutated_samples(tmp_path)
     road_path, flood_path = dump_pair(tmp_path, road, flood)
-    config = GeospatialFixtureConfig(road_path=road_path, flood_path=flood_path)
+    config = GeospatialFixtureConfig(
+        road_path=road_path,
+        flood_path=flood_path,
+        allow_unversioned_contract=False,
+    )
 
     with pytest.raises(GeospatialFixtureError) as exc_info:
         load_geospatial_fixtures(config)
@@ -205,11 +232,34 @@ def test_declared_supported_schema_version_loads(tmp_path: Path) -> None:
     road_path, flood_path = dump_pair(tmp_path, road, flood)
 
     bundle = load_geospatial_fixtures(
-        GeospatialFixtureConfig(road_path=road_path, flood_path=flood_path)
+        GeospatialFixtureConfig(
+            road_path=road_path,
+            flood_path=flood_path,
+            contract_revision=SUPPORTED_SCHEMA_VERSION,
+            allow_unversioned_contract=False,
+        )
     )
 
     assert bundle.version_source == "declared"
     assert bundle.contract_revision == SUPPORTED_SCHEMA_VERSION
+
+
+def test_declared_schema_requires_matching_config_revision(tmp_path: Path) -> None:
+    road, flood = write_mutated_samples(tmp_path)
+    road["schema_version"] = SUPPORTED_SCHEMA_VERSION
+    flood["schema_version"] = SUPPORTED_SCHEMA_VERSION
+    road_path, flood_path = dump_pair(tmp_path, road, flood)
+
+    with pytest.raises(GeospatialFixtureError) as exc_info:
+        load_geospatial_fixtures(
+            GeospatialFixtureConfig(road_path=road_path, flood_path=flood_path)
+        )
+
+    assert_error(
+        exc_info.value,
+        "incompatible_version",
+        "config.contract_revision",
+    )
 
 
 def test_unsupported_configured_baseline_revision_is_rejected() -> None:
@@ -221,6 +271,80 @@ def test_unsupported_configured_baseline_revision_is_rejected() -> None:
         load_geospatial_fixtures(config)
 
     assert_error(exc_info.value, "incompatible_version", "config.contract_revision")
+
+
+def test_authoritative_edge_id_version_mismatch_is_rejected(tmp_path: Path) -> None:
+    road = json.loads(DEFAULT_ROAD_FIXTURE.read_text(encoding="utf-8"))
+    flood = json.loads(DEFAULT_FLOOD_FIXTURE.read_text(encoding="utf-8"))
+    road["features"][0]["properties"]["edge_id"] = "wrong-v1:1:2:0"
+    road_path, flood_path = dump_pair(tmp_path, road, flood)
+
+    with pytest.raises(GeospatialFixtureError) as exc_info:
+        load_geospatial_fixtures(
+            GeospatialFixtureConfig(road_path=road_path, flood_path=flood_path)
+        )
+
+    assert_error(exc_info.value, "incompatible_version", "edge_id")
+
+
+def test_unknown_flood_edge_id_is_rejected(tmp_path: Path) -> None:
+    road = json.loads(DEFAULT_ROAD_FIXTURE.read_text(encoding="utf-8"))
+    flood = json.loads(DEFAULT_FLOOD_FIXTURE.read_text(encoding="utf-8"))
+    flood["features"][0]["properties"]["edge_id"] = "ubelt-v1:999:998:0"
+    road_path, flood_path = dump_pair(tmp_path, road, flood)
+
+    with pytest.raises(GeospatialFixtureError) as exc_info:
+        load_geospatial_fixtures(
+            GeospatialFixtureConfig(road_path=road_path, flood_path=flood_path)
+        )
+
+    assert_error(exc_info.value, "unknown_edge_id", "edge_id")
+
+
+def test_authoritative_null_observed_at_is_allowed() -> None:
+    bundle = load_geospatial_fixtures()
+
+    assert any(
+        feature.properties.observed_at is None
+        for feature in bundle.road_edges.features
+    )
+
+
+def test_naive_scenario_timestamp_is_rejected(tmp_path: Path) -> None:
+    road, flood = write_mutated_samples(tmp_path)
+    flood["scenario"]["scenario_timestamp"] = "2026-09-22T00:00:00"
+    flood["features"][0]["properties"]["scenario_timestamp"] = (
+        "2026-09-22T00:00:00"
+    )
+
+    error = load_with_mutation(tmp_path, road, flood)
+
+    assert_error(error, "invalid_properties", "scenario_timestamp")
+
+
+def test_zero_length_road_edge_is_rejected(tmp_path: Path) -> None:
+    road, flood = write_mutated_samples(tmp_path)
+    road["features"][0]["properties"]["length_m"] = 0
+
+    error = load_with_mutation(tmp_path, road, flood)
+
+    assert_error(error, "invalid_properties", "length_m")
+
+
+@pytest.mark.parametrize("fixture_kind", ["road", "flood"])
+def test_empty_feature_collection_is_rejected(
+    tmp_path: Path,
+    fixture_kind: str,
+) -> None:
+    road, flood = write_mutated_samples(tmp_path)
+    if fixture_kind == "road":
+        road["features"] = []
+    else:
+        flood["features"] = []
+
+    error = load_with_mutation(tmp_path, road, flood)
+
+    assert_error(error, "invalid_properties", f"{fixture_kind}.features")
 
 
 def test_incompatible_declared_schema_version_is_rejected(tmp_path: Path) -> None:

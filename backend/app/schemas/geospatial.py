@@ -47,12 +47,13 @@ class RoadEdgeProperties(BaseModel):
     edge_id: str = Field(min_length=1)
     from_node: str = Field(min_length=1)
     to_node: str = Field(min_length=1)
-    length_m: float = Field(ge=0.0)
-    travel_time_s: float | None = Field(default=None, ge=0.0)
+    length_m: float = Field(gt=0.0)
+    travel_time_s: float | None = Field(default=None, gt=0.0)
     road_class: str = Field(min_length=1)
     flood_level: FloodLevel
+    flood_depth_cm: float | None = Field(default=None, ge=0.0)
     passability: Passability
-    observed_at: str = Field(min_length=1)
+    observed_at: str | None = Field(default=None, min_length=1)
     source_type: SourceType
 
 
@@ -101,7 +102,7 @@ class RoadEdgeCollection(BaseModel):
     name: str | None = None
     fixture_notice: str | None = None
     schema_version: str | None = None
-    features: list[RoadEdgeFeature]
+    features: list[RoadEdgeFeature] = Field(min_length=1)
 
 
 class FloodScenarioCollection(BaseModel):
@@ -112,14 +113,18 @@ class FloodScenarioCollection(BaseModel):
     fixture_notice: str | None = None
     schema_version: str | None = None
     scenario: FloodScenarioMetadata
-    features: list[FloodScenarioFeature]
+    features: list[FloodScenarioFeature] = Field(min_length=1)
 
 
 class GeospatialFixtureBundle(BaseModel):
     """Validated road and flood fixtures kept separate for later adapters."""
 
     contract_revision: str
-    version_source: Literal["declared", "baseline_compatibility"]
+    version_source: Literal[
+        "declared",
+        "edge_id_prefix",
+        "baseline_compatibility",
+    ]
     road_path: str
     flood_path: str
     road_edges: RoadEdgeCollection

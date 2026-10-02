@@ -1,18 +1,19 @@
 """Load and validate contract-compatible geospatial fixtures.
 
-The locked baseline samples at repository revision ``0559a25`` do not declare
-an in-file ``schema_version``. To keep that limitation explicit, unversioned
-fixtures load only through ``GeospatialFixtureConfig.baseline_compatibility``.
-Arbitrary explicit paths must declare a supported schema version unless the
-caller opts into that baseline compatibility mode for deterministic tests or
-later verification.
+The default paths point to the reviewed ``ubelt-v1`` fixtures merged through
+Issue #32. Those GeoJSON files do not carry a top-level ``schema_version``, so
+their extraction version is enforced through the stable ``edge_id`` prefix.
+The older one-edge contract examples remain available only through explicit
+baseline compatibility for regression tests.
 """
 
 from __future__ import annotations
 
 import json
 import math
+import re
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,12 +29,21 @@ from app.schemas.geospatial import (
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_ROAD_FIXTURE = REPOSITORY_ROOT / "data" / "samples" / "road-edge.example.geojson"
+DEFAULT_ROAD_FIXTURE = (
+    REPOSITORY_ROOT / "data" / "samples" / "ubelt-v1-preview.geojson"
+)
 DEFAULT_FLOOD_FIXTURE = (
+    REPOSITORY_ROOT / "data" / "samples" / "ubelt-v1-flood-join.geojson"
+)
+BASELINE_ROAD_FIXTURE = (
+    REPOSITORY_ROOT / "data" / "samples" / "road-edge.example.geojson"
+)
+BASELINE_FLOOD_FIXTURE = (
     REPOSITORY_ROOT / "data" / "samples" / "flood-scenario.example.geojson"
 )
 
 SUPPORTED_SCHEMA_VERSION = "resqph-geospatial-fixture-v1"
+AUTHORITATIVE_CONTRACT_REVISION = "ubelt-v1"
 BASELINE_CONTRACT_REVISION = "0559a25"
 STUDY_AREA_ID = "ubelt-pilot-v1"
 
@@ -55,15 +65,15 @@ class GeospatialFixtureConfig:
 
     road_path: Path | str = DEFAULT_ROAD_FIXTURE
     flood_path: Path | str = DEFAULT_FLOOD_FIXTURE
-    contract_revision: str = SUPPORTED_SCHEMA_VERSION
-    allow_unversioned_baseline: bool = False
+    contract_revision: str = AUTHORITATIVE_CONTRACT_REVISION
+    allow_unversioned_contract: bool = True
 
     @classmethod
     def baseline_compatibility(
         cls,
         *,
-        road_path: Path | str = DEFAULT_ROAD_FIXTURE,
-        flood_path: Path | str = DEFAULT_FLOOD_FIXTURE,
+        road_path: Path | str = BASELINE_ROAD_FIXTURE,
+        flood_path: Path | str = BASELINE_FLOOD_FIXTURE,
         contract_revision: str = BASELINE_CONTRACT_REVISION,
     ) -> GeospatialFixtureConfig:
         """Allow the locked 0559a25 samples' missing in-file schema version."""
@@ -72,7 +82,7 @@ class GeospatialFixtureConfig:
             road_path=road_path,
             flood_path=flood_path,
             contract_revision=contract_revision,
-            allow_unversioned_baseline=True,
+            allow_unversioned_contract=True,
         )
 
 
@@ -81,7 +91,7 @@ def load_geospatial_fixtures(
 ) -> GeospatialFixtureBundle:
     """Read, validate, and return road/flood fixtures without joining them."""
 
-    effective_config = config or GeospatialFixtureConfig.baseline_compatibility()
+    effective_config = config or GeospatialFixtureConfig()
     road_path = _resolve_fixture_path(effective_config.road_path)
     flood_path = _resolve_fixture_path(effective_config.flood_path)
 
@@ -92,6 +102,12 @@ def load_geospatial_fixtures(
 
     road_edges = _validate_road_collection(road_payload, road_path)
     flood_scenario = _validate_flood_collection(flood_payload, flood_path)
+    _validate_cross_fixture_contract(
+        road_edges,
+        flood_scenario,
+        effective_config,
+        version_source,
+    )
 
     return GeospatialFixtureBundle(
         contract_revision=effective_config.contract_revision,
@@ -171,6 +187,20 @@ def _validate_versions(
         )
 
     if len(present_versions) == 2:
+        if config.contract_revision != SUPPORTED_SCHEMA_VERSION:
+            raise GeospatialFixtureError(
+                "incompatible_version",
+                "Configured contract revision does not match declared schema version.",
+                [
+                    {
+                        "field": "config.contract_revision",
+                        "reason": (
+                            f"expected {SUPPORTED_SCHEMA_VERSION}, "
+                            f"got {config.contract_revision}"
+                        ),
+                    }
+                ],
+            )
         return "declared"
     if present_versions:
         missing = [
@@ -184,28 +214,92 @@ def _validate_versions(
             missing,
         )
 
-    if not config.allow_unversioned_baseline:
+    if not config.allow_unversioned_contract:
         raise GeospatialFixtureError(
             "missing_version",
-            "Unversioned fixtures require explicit baseline compatibility.",
+            "Unversioned fixtures require an explicit contract revision.",
             [
                 {"field": "road.schema_version", "reason": "missing schema_version"},
                 {"field": "flood.schema_version", "reason": "missing schema_version"},
             ],
         )
 
-    if config.contract_revision != BASELINE_CONTRACT_REVISION:
+    if config.contract_revision == AUTHORITATIVE_CONTRACT_REVISION:
+        return "edge_id_prefix"
+    if config.contract_revision == BASELINE_CONTRACT_REVISION:
+        return "baseline_compatibility"
+
+    raise GeospatialFixtureError(
+        "incompatible_version",
+        "Unsupported configured unversioned contract revision.",
+        [
+            {
+                "field": "config.contract_revision",
+                "reason": (
+                    f"expected {AUTHORITATIVE_CONTRACT_REVISION} or "
+                    f"{BASELINE_CONTRACT_REVISION}, got {config.contract_revision}"
+                ),
+            }
+        ],
+    )
+
+
+def _validate_cross_fixture_contract(
+    road_edges: RoadEdgeCollection,
+    flood_scenario: FloodScenarioCollection,
+    config: GeospatialFixtureConfig,
+    version_source: str,
+) -> None:
+    """Enforce stable versioned IDs and flood-to-road referential integrity."""
+    road_ids = {feature.properties.edge_id for feature in road_edges.features}
+
+    if version_source == "edge_id_prefix":
+        pattern = re.compile(
+            rf"^{re.escape(config.contract_revision)}:\d+:\d+:\d+$"
+        )
+        invalid_ids = sorted(edge_id for edge_id in road_ids if not pattern.fullmatch(edge_id))
+        invalid_ids.extend(
+            sorted(
+                feature.properties.edge_id
+                for feature in flood_scenario.features
+                if not pattern.fullmatch(feature.properties.edge_id)
+            )
+        )
+        if invalid_ids:
+            raise GeospatialFixtureError(
+                "incompatible_version",
+                "Geospatial edge_id values do not match the configured extraction version.",
+                [
+                    {
+                        "field": "edge_id",
+                        "reason": (
+                            f"expected {config.contract_revision}:<u>:<v>:<key>, "
+                            f"got {edge_id}"
+                        ),
+                    }
+                    for edge_id in invalid_ids
+                ],
+            )
+
+    unknown_ids = sorted(
+        {
+            feature.properties.edge_id
+            for feature in flood_scenario.features
+            if feature.properties.edge_id not in road_ids
+        }
+    )
+    if unknown_ids:
         raise GeospatialFixtureError(
-            "incompatible_version",
-            "Unsupported configured baseline contract revision.",
+            "unknown_edge_id",
+            "Flood fixture references edge_id values absent from the road fixture.",
             [
                 {
-                    "field": "config.contract_revision",
-                    "reason": f"expected {BASELINE_CONTRACT_REVISION}, got {config.contract_revision}",
+                    "field": "flood.features.properties.edge_id",
+                    "reason": f"unknown road edge_id {edge_id}",
                 }
+                for edge_id in unknown_ids
             ],
         )
-    return "baseline_compatibility"
 
 
 def _validate_road_collection(payload: GeoJsonObject, path: Path) -> RoadEdgeCollection:
@@ -395,23 +489,48 @@ def _validate_numeric_properties(
     fixture_kind: str,
     field: str,
 ) -> None:
-    checks = ["length_m"]
-    if fixture_kind == "road" and "travel_time_s" in properties:
-        checks.append("travel_time_s")
-    if fixture_kind == "flood" and properties.get("flood_depth_cm") is not None:
-        checks = ["flood_depth_cm"]
+    if fixture_kind == "road":
+        checks = ["length_m"]
+        if properties.get("travel_time_s") is not None:
+            checks.append("travel_time_s")
+        if properties.get("flood_depth_cm") is not None:
+            checks.append("flood_depth_cm")
+    else:
+        checks = (
+            ["flood_depth_cm"]
+            if properties.get("flood_depth_cm") is not None
+            else []
+        )
 
     invalid: list[dict[str, str]] = []
     for name in checks:
         value = properties.get(name)
-        if not _finite_number(value):
+        validator = (
+            _coercible_finite_number
+            if fixture_kind == "road" and name == "flood_depth_cm"
+            else _finite_number
+        )
+        if not validator(value):
             invalid.append(
                 {"field": f"{field}.properties.{name}", "reason": "expected finite number"}
             )
             continue
-        if float(value) < 0:
+        requires_positive = fixture_kind == "road" and name in {
+            "length_m",
+            "travel_time_s",
+        }
+        if (requires_positive and float(value) <= 0) or (
+            not requires_positive and float(value) < 0
+        ):
             invalid.append(
-                {"field": f"{field}.properties.{name}", "reason": "expected non-negative number"}
+                {
+                    "field": f"{field}.properties.{name}",
+                    "reason": (
+                        "expected positive number"
+                        if fixture_kind == "road"
+                        else "expected non-negative number"
+                    ),
+                }
             )
     if invalid:
         raise GeospatialFixtureError(
@@ -428,6 +547,8 @@ def _validate_timestamp_properties(
 ) -> None:
     timestamp_field = "observed_at" if fixture_kind == "road" else "scenario_timestamp"
     value = properties.get(timestamp_field)
+    if fixture_kind == "road" and value is None:
+        return
     if not _non_blank_string(value) or not _is_iso_timestamp(value):
         raise GeospatialFixtureError(
             "invalid_properties",
@@ -644,14 +765,21 @@ def _finite_number(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, int | float) and math.isfinite(value)
 
 
+def _coercible_finite_number(value: Any) -> bool:
+    if isinstance(value, bool) or not isinstance(value, int | float | str):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except ValueError:
+        return False
+
+
 def _is_iso_timestamp(value: Any) -> bool:
     if not _non_blank_string(value):
         return False
     try:
         normalized = value.replace("Z", "+00:00")
-        from datetime import datetime
-
-        datetime.fromisoformat(normalized)
+        parsed = datetime.fromisoformat(normalized)
     except ValueError:
         return False
-    return True
+    return parsed.tzinfo is not None
