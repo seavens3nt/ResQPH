@@ -1,10 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { MapLegend } from './MapLegend'
+import { DEFAULT_LEGEND_ITEMS, MapLegend } from './MapLegend'
+
+const LEGEND_PROPS = {
+  items: DEFAULT_LEGEND_ITEMS,
+  scenarioTimestamp: '2026-09-22T00:00:00Z',
+  sourceType: 'controlled' as const,
+}
 
 describe('MapLegend Component', () => {
   it('renders default legend entries with text-supported badges and symbols (not color-only)', () => {
-    render(<MapLegend />)
+    render(<MapLegend {...LEGEND_PROPS} />)
 
     // Title
     expect(screen.getByText('Map Legend & Hazard Severity')).toBeInTheDocument()
@@ -50,6 +56,7 @@ describe('MapLegend Component', () => {
     const onToggleMock = vi.fn()
     render(
       <MapLegend
+        {...LEGEND_PROPS}
         activeLayerIds={['flood-critical', 'route-recommended']}
         onToggleLayer={onToggleMock}
       />,
@@ -76,11 +83,13 @@ describe('MapLegend Component', () => {
   })
 
   it('supports collapsible behavior with aria-expanded and aria-controls', () => {
-    render(<MapLegend collapsible defaultExpanded={true} />)
+    render(<MapLegend {...LEGEND_PROPS} collapsible defaultExpanded={true} />)
 
     const collapseBtn = screen.getByRole('button', { name: /Collapse map legend/i })
     expect(collapseBtn).toHaveAttribute('aria-expanded', 'true')
-    expect(collapseBtn).toHaveAttribute('aria-controls', 'map-legend-body')
+    const controlledBodyId = collapseBtn.getAttribute('aria-controls')
+    expect(controlledBodyId).toBeTruthy()
+    expect(document.getElementById(controlledBodyId!)).toBeInTheDocument()
     expect(screen.getByText('CRITICAL (>1.5M)')).toBeInTheDocument()
 
     // Collapse
@@ -95,7 +104,7 @@ describe('MapLegend Component', () => {
   })
 
   it('renders empty-layer state when items list is empty', () => {
-    render(<MapLegend items={[]} />)
+    render(<MapLegend {...LEGEND_PROPS} items={[]} />)
 
     expect(screen.getByText('No Active Map Layers')).toBeInTheDocument()
     expect(
@@ -104,7 +113,7 @@ describe('MapLegend Component', () => {
   })
 
   it('renders loading state without displaying stale values as current', () => {
-    render(<MapLegend status="loading" />)
+    render(<MapLegend {...LEGEND_PROPS} status="loading" />)
 
     expect(
       screen.getByText(/Loading map legend and layer metadata\.\.\./i),
@@ -115,6 +124,7 @@ describe('MapLegend Component', () => {
     const onRetryMock = vi.fn()
     render(
       <MapLegend
+        {...LEGEND_PROPS}
         status="stale"
         lastSyncedAt="2026-09-22T08:00:00Z"
         onRetry={onRetryMock}
@@ -132,6 +142,7 @@ describe('MapLegend Component', () => {
     const onRetryMock = vi.fn()
     render(
       <MapLegend
+        {...LEGEND_PROPS}
         status="unavailable"
         errorMessage="Failed to fetch legend metadata."
         onRetry={onRetryMock}
@@ -143,6 +154,7 @@ describe('MapLegend Component', () => {
     const retryBtn = screen.getByRole('button', { name: /Retry loading legend/i })
     fireEvent.click(retryBtn)
     expect(onRetryMock).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('CRITICAL (>1.5M)')).not.toBeInTheDocument()
   })
 
   it('renders custom items without mutating default items', () => {
@@ -157,11 +169,28 @@ describe('MapLegend Component', () => {
       description: 'Bridge approach submerged under controlled runoff.',
     }
 
-    render(<MapLegend items={[customItem]} />)
+    render(<MapLegend {...LEGEND_PROPS} items={[customItem]} />)
     expect(screen.getByText('Submerged Bridge Edge')).toBeInTheDocument()
     expect(screen.getByText('HAZARD')).toBeInTheDocument()
     expect(screen.getByText(/Orange zigzag stripe/i)).toBeInTheDocument()
     // Verify default items are not in document
     expect(screen.queryByText('CRITICAL (>1.5M)')).not.toBeInTheDocument()
+  })
+
+  it('uses unique collapse target IDs when multiple legends render on one page', () => {
+    render(
+      <>
+        <MapLegend {...LEGEND_PROPS} title="Primary map legend" />
+        <MapLegend {...LEGEND_PROPS} title="Comparison map legend" />
+      </>,
+    )
+
+    const targetIds = screen
+      .getAllByRole('button', { name: /Collapse map legend/i })
+      .map((button) => button.getAttribute('aria-controls'))
+
+    expect(targetIds[0]).toBeTruthy()
+    expect(targetIds[1]).toBeTruthy()
+    expect(targetIds[0]).not.toBe(targetIds[1])
   })
 })

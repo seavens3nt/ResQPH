@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useId } from 'react'
 import './MapLayerSummary.css'
 
 export type FeatureSeverity = 'critical' | 'moderate' | 'low' | 'none'
@@ -30,125 +30,38 @@ export interface MapRouteExplanation {
 }
 
 export interface MapLayerSummaryProps {
-  scenarioId?: string
-  scenarioTimestamp?: string
-  sourceType?: 'controlled' | 'historical' | 'unverified'
-  studyAreaId?: string
+  scenarioId: string
+  scenarioTimestamp: string
+  sourceType: 'controlled' | 'historical' | 'unverified'
+  studyAreaId: string
   status?: 'ready' | 'loading' | 'empty' | 'stale' | 'unavailable' | 'no-route'
   lastSyncedAt?: string
   errorMessage?: string
   onRetry?: () => void
-  features?: MapLayerFeature[]
+  features: MapLayerFeature[]
   routeExplanation?: MapRouteExplanation
   noRouteReason?: string
   title?: string
   className?: string
 }
 
-export const DEFAULT_SUMMARY_FEATURES: MapLayerFeature[] = [
-  {
-    id: 'feat-hazard-1',
-    name: 'Loyola St. Segment (Impassable Barrier)',
-    type: 'hazard',
-    coordinates: '14.6030° N, 120.9910° E',
-    severity: 'critical',
-    statusText: 'Impassable (1.40m Depth)',
-    landmarkOrDetails: 'Loyola St. corridor between Dalupan and Jhocson',
-    reason: 'Water depth exceeds safe rescue craft threshold (0.30m). High probability of engine stall.',
-  },
-  {
-    id: 'feat-hazard-2',
-    name: 'Severe Flood Ponding Zone',
-    type: 'hazard',
-    coordinates: '14.6040° N, 120.9930° E',
-    severity: 'critical',
-    statusText: 'Severe Flood Zone (>1.50m)',
-    landmarkOrDetails: 'U-Belt low-lying basin',
-    reason: 'Simulated high-depth basin impassable in this demonstration scenario.',
-  },
-  {
-    id: 'feat-hazard-3',
-    name: 'Gerardo St. Moderate Ponding',
-    type: 'hazard',
-    coordinates: '14.6020° N, 120.9905° E',
-    severity: 'moderate',
-    statusText: 'Moderate Ponding (0.40m)',
-    landmarkOrDetails: 'Alternative Detour route',
-    reason: 'Passable with high-clearance assets or rescue watercraft.',
-  },
-  {
-    id: 'feat-route-1',
-    name: 'Jhocson St. Recommended Corridor',
-    type: 'route',
-    coordinates: '14.6005° N, 120.9875° E to 14.6042° N, 120.9946° E',
-    severity: 'none',
-    statusText: 'Recommended Corridor (Active)',
-    landmarkOrDetails: 'Direct path avoiding impassable flood obstacles',
-    reason: 'Lowest simulated graph traversal penalty with zero impassable edge violations.',
-  },
-  {
-    id: 'feat-poi-1',
-    name: 'Citizen Distress Beacon',
-    type: 'poi',
-    coordinates: '14.6042° N, 120.9946° E',
-    severity: 'critical',
-    statusText: 'Distress Beacon Active',
-    landmarkOrDetails: 'Simulated resident distress target',
-    reason: 'Headcount: 4 persons. Reported deep flood condition.',
-  },
-  {
-    id: 'feat-poi-2',
-    name: 'Rescue Team Alpha (Boat Unit)',
-    type: 'poi',
-    coordinates: '14.6028° N, 120.9910° E',
-    severity: 'none',
-    statusText: 'En Route',
-    landmarkOrDetails: 'Simulated rescue watercraft unit',
-    reason: 'Following recommended corridor toward distress target.',
-  },
-  {
-    id: 'feat-poi-3',
-    name: 'Evacuation Center (Concepcion / NU Gym)',
-    type: 'poi',
-    coordinates: '14.6510° N, 121.0990° E',
-    severity: 'none',
-    statusText: 'Operational (70% Occupied)',
-    landmarkOrDetails: 'Designated safe assembly center',
-    reason: 'Emergency shelter equipped with food, water, and first aid.',
-  },
-]
-
-export const DEFAULT_ROUTE_EXPLANATION: MapRouteExplanation = {
-  recommendedCorridorName: 'Jhocson St. Corridor',
-  etaMinutes: 9,
-  distanceMeters: 850,
-  selectedReason:
-    'Lower controlled-scenario penalty score and zero impassable edge crossings.',
-  avoidedStreets: [
-    {
-      streetName: 'Loyola St. Shortcut',
-      reason:
-        'Water depth reaches 1.40 m, exceeding the safe rescue craft threshold (0.30 m). High stall hazard.',
-      depthCm: 140,
-    },
-  ],
-}
-
 export const MapLayerSummary: React.FC<MapLayerSummaryProps> = ({
-  scenarioId = 'scenario-controlled-001',
-  scenarioTimestamp = '2026-09-22T00:00:00Z',
-  sourceType = 'controlled',
-  studyAreaId = 'ubelt-pilot-v1',
+  scenarioId,
+  scenarioTimestamp,
+  sourceType,
+  studyAreaId,
   status = 'ready',
   lastSyncedAt,
   errorMessage,
   onRetry,
-  features = DEFAULT_SUMMARY_FEATURES,
-  routeExplanation = DEFAULT_ROUTE_EXPLANATION,
+  features,
+  routeExplanation,
   noRouteReason,
   title = 'Accessible Map Layer & Route Text Summary',
   className = '',
 }) => {
+  const routeHeadingId = useId()
+  const featuresHeadingId = useId()
   const isNoRoute = status === 'no-route' || Boolean(noRouteReason)
   const isStale = status === 'stale'
   const isUnavailable = status === 'unavailable'
@@ -258,7 +171,6 @@ export const MapLayerSummary: React.FC<MapLayerSummaryProps> = ({
         <div
           className="map-layer-summary__no-route"
           role="alert"
-          aria-live="polite"
         >
           <div className="map-layer-summary__no-route-title">
             <span aria-hidden="true">🚫</span>
@@ -277,8 +189,8 @@ export const MapLayerSummary: React.FC<MapLayerSummaryProps> = ({
 
       {/* Route Rationale Section (when route is eligible) */}
       {!isNoRoute && !isEmpty && !isLoading && !isUnavailable && routeExplanation && (
-        <div className="map-layer-summary__section" aria-labelledby="route-summary-heading">
-          <h4 className="map-layer-summary__section-title" id="route-summary-heading">
+        <div className="map-layer-summary__section" aria-labelledby={routeHeadingId}>
+          <h4 className="map-layer-summary__section-title" id={routeHeadingId}>
             <span aria-hidden="true">🧭</span>
             <span>Controlled Scenario Route Explanation</span>
           </h4>
@@ -309,7 +221,7 @@ export const MapLayerSummary: React.FC<MapLayerSummaryProps> = ({
                   {routeExplanation.avoidedStreets.map((street, idx) => (
                     <li key={idx} className="map-layer-summary__avoided-item">
                       <strong>{street.streetName}:</strong> {street.reason}
-                      {street.depthCm ? ` [Recorded depth: ${street.depthCm} cm]` : ''}
+                      {street.depthCm !== undefined ? ` [Recorded depth: ${street.depthCm} cm]` : ''}
                     </li>
                   ))}
                 </ul>
@@ -334,8 +246,8 @@ export const MapLayerSummary: React.FC<MapLayerSummaryProps> = ({
 
       {/* Feature & Hazard List */}
       {!isEmpty && !isLoading && !isUnavailable && (
-        <div className="map-layer-summary__section" aria-labelledby="features-summary-heading">
-          <h4 className="map-layer-summary__section-title" id="features-summary-heading">
+        <div className="map-layer-summary__section" aria-labelledby={featuresHeadingId}>
+          <h4 className="map-layer-summary__section-title" id={featuresHeadingId}>
             <span aria-hidden="true">📍</span>
             <span>Active Scenario Features & Hazard Locations ({features.length})</span>
           </h4>

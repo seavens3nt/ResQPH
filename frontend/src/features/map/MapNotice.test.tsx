@@ -2,12 +2,19 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MapNotice } from './MapNotice'
 
+const REQUIRED_PROPS = {
+  scenarioId: 'scenario-controlled-001',
+  scenarioTimestamp: '2026-09-22T00:00:00Z',
+  sourceType: 'controlled' as const,
+  studyAreaId: 'ubelt-pilot-v1',
+}
+
 describe('MapNotice Component', () => {
   it('renders default controlled scenario metadata and truthful prototype disclaimers', () => {
-    render(<MapNotice />)
+    render(<MapNotice {...REQUIRED_PROPS} />)
 
     // Heading / title
-    expect(screen.getByText('ResQPH Controlled Scenario Map')).toBeInTheDocument()
+    expect(screen.getByText('ResQPH Controlled Synthetic Scenario Map')).toBeInTheDocument()
 
     // Provenance badges
     expect(screen.getByText('CONTROLLED')).toBeInTheDocument()
@@ -26,13 +33,14 @@ describe('MapNotice Component', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('scenario-controlled-001')).toBeInTheDocument()
     expect(
-      screen.getByText(/Recommended corridors reflect simulated edge costs and do not guarantee transit safety/i),
+      screen.getByText(/Recommended corridors reflect prototype edge costs and do not guarantee transit safety/i),
     ).toBeInTheDocument()
   })
 
   it('renders historical source type and custom scenario parameters', () => {
     render(
       <MapNotice
+        {...REQUIRED_PROPS}
         scenarioId="scenario-hist-1988"
         scenarioTimestamp="1988-11-04T12:00:00Z"
         sourceType="historical"
@@ -45,22 +53,24 @@ describe('MapNotice Component', () => {
     expect(screen.getByText(/BOUNDS: ubelt-pilot-v2/i)).toBeInTheDocument()
     expect(screen.getByText(/Scenario Time: 1988-11-04T12:00:00Z/i)).toBeInTheDocument()
     expect(screen.getByText('Archived monsoon flood event record.')).toBeInTheDocument()
+    expect(screen.getByText(/archived evidence is not a live condition report/i)).toBeInTheDocument()
+    expect(screen.queryByText(/not live or historical flood evidence/i)).not.toBeInTheDocument()
   })
 
   it('renders unverified and simulated source types with accessible icons and text', () => {
-    const { rerender } = render(<MapNotice sourceType="unverified" />)
+    const { rerender } = render(<MapNotice {...REQUIRED_PROPS} sourceType="unverified" />)
     expect(screen.getByText('UNVERIFIED')).toBeInTheDocument()
 
-    rerender(<MapNotice sourceType="simulated" />)
+    rerender(<MapNotice {...REQUIRED_PROPS} sourceType="simulated" />)
     expect(screen.getByText('SIMULATED')).toBeInTheDocument()
   })
 
   it('renders loading state without presenting stale values as current', () => {
-    render(<MapNotice status="loading" studyAreaId="ubelt-pilot-v1" />)
+    render(<MapNotice {...REQUIRED_PROPS} status="loading" />)
 
     expect(screen.getByText('Loading Scenario Data...')).toBeInTheDocument()
     expect(
-      screen.getByText(/Retrieving controlled map layers and edge passability for ubelt-pilot-v1/i),
+      screen.getByText(/Retrieving controlled synthetic scenario map layers and edge passability for ubelt-pilot-v1/i),
     ).toBeInTheDocument()
   })
 
@@ -68,6 +78,7 @@ describe('MapNotice Component', () => {
     const onRetryMock = vi.fn()
     render(
       <MapNotice
+        {...REQUIRED_PROPS}
         status="stale"
         lastSyncedAt="2026-09-22T08:30:00Z"
         onRetry={onRetryMock}
@@ -90,6 +101,7 @@ describe('MapNotice Component', () => {
     const onRetryMock = vi.fn()
     render(
       <MapNotice
+        {...REQUIRED_PROPS}
         status="unavailable"
         errorMessage="Network timeout connecting to scenario server."
         onRetry={onRetryMock}
@@ -114,7 +126,7 @@ describe('MapNotice Component', () => {
   })
 
   it('renders offline mode state explaining that network actions are unavailable', () => {
-    render(<MapNotice status="offline" />)
+    render(<MapNotice {...REQUIRED_PROPS} status="offline" />)
 
     expect(screen.getByText('Offline Mode — Cached Scenario Active')).toBeInTheDocument()
     expect(
@@ -123,16 +135,18 @@ describe('MapNotice Component', () => {
   })
 
   it('renders ML fallback state stating rule-based routing remains active', () => {
-    render(<MapNotice status="fallback" />)
+    render(<MapNotice {...REQUIRED_PROPS} status="fallback" />)
 
     expect(screen.getByText('ML Fallback — Rule-Based Routing')).toBeInTheDocument()
     expect(
-      screen.getByText(/Machine learning prediction service is unreachable\. Rule-based routing graph remains active/i),
+      screen.getByText(/Optional ML road-risk input is unavailable\. The deterministic rule-based routing fallback remains active/i),
     ).toBeInTheDocument()
   })
 
   it('renders compact mode with custom class', () => {
-    const { container } = render(<MapNotice compact className="custom-test-notice" />)
+    const { container } = render(
+      <MapNotice {...REQUIRED_PROPS} compact className="custom-test-notice" />,
+    )
     const notice = container.querySelector('.map-notice')
     expect(notice).toHaveClass('map-notice--compact')
     expect(notice).toHaveClass('custom-test-notice')

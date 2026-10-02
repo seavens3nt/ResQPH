@@ -6,13 +6,13 @@ export type MapNoticeStatus = 'ready' | 'loading' | 'stale' | 'unavailable' | 'o
 
 export interface MapNoticeProps {
   /** Identifier of the controlled scenario (e.g. "scenario-controlled-001") */
-  scenarioId?: string
+  scenarioId: string
   /** ISO timestamp of the scenario data */
-  scenarioTimestamp?: string
+  scenarioTimestamp: string
   /** Origin/authority of the geospatial scenario data */
-  sourceType?: MapSourceType
+  sourceType: MapSourceType
   /** Identifier of the study boundary (e.g. "ubelt-pilot-v1") */
-  studyAreaId?: string
+  studyAreaId: string
   /** Operational/network state of the map data */
   status?: MapNoticeStatus
   /** Timestamp when data was last retrieved or cached */
@@ -36,10 +36,10 @@ const SOURCE_LABELS: Record<MapSourceType, { label: string; icon: string }> = {
 }
 
 export const MapNotice: React.FC<MapNoticeProps> = ({
-  scenarioId = 'scenario-controlled-001',
-  scenarioTimestamp = '2026-09-22T00:00:00Z',
-  sourceType = 'controlled',
-  studyAreaId = 'ubelt-pilot-v1',
+  scenarioId,
+  scenarioTimestamp,
+  sourceType,
+  studyAreaId,
   status = 'ready',
   lastSyncedAt,
   errorMessage,
@@ -48,7 +48,14 @@ export const MapNotice: React.FC<MapNoticeProps> = ({
   customNotice,
   className = '',
 }) => {
-  const sourceInfo = SOURCE_LABELS[sourceType] || SOURCE_LABELS.controlled
+  const sourceInfo = SOURCE_LABELS[sourceType]
+
+  const limitationText =
+    sourceType === 'historical'
+      ? 'Historical academic scenario; archived evidence is not a live condition report or official forecast.'
+      : sourceType === 'unverified'
+        ? 'Unverified academic field report; not confirmed live conditions or official emergency information.'
+        : 'Synthetic academic scenario; not live or historical flood evidence.'
 
   // Only unavailable is assertive; stale and offline are polite status notifications
   const isUnavailableAlert = status === 'unavailable'
@@ -86,7 +93,7 @@ export const MapNotice: React.FC<MapNoticeProps> = ({
                     ? 'Offline Mode — Cached Scenario Active'
                     : status === 'fallback'
                       ? 'ML Fallback — Rule-Based Routing'
-                      : 'ResQPH Controlled Scenario Map'}
+                      : `ResQPH ${sourceInfo.label} Map`}
           </span>
         </div>
 
@@ -125,7 +132,7 @@ export const MapNotice: React.FC<MapNoticeProps> = ({
         {/* Status-specific advisory message */}
         {status === 'loading' && (
           <p className="map-notice__status-msg">
-            Retrieving controlled map layers and edge passability for {studyAreaId}...
+            Retrieving {sourceInfo.label.toLowerCase()} map layers and edge passability for {studyAreaId}...
           </p>
         )}
 
@@ -154,16 +161,15 @@ export const MapNotice: React.FC<MapNoticeProps> = ({
 
         {status === 'fallback' && (
           <p className="map-notice__status-msg">
-            Machine learning prediction service is unreachable. Rule-based routing graph remains
-            active under the controlled scenario.
+            Optional ML road-risk input is unavailable. The deterministic rule-based routing
+            fallback remains active for this scenario.
           </p>
         )}
 
         {/* Truthful non-live and non-guaranteed-safety disclosure */}
         <p className="map-notice__limitation">
-          Synthetic academic scenario (ID: <code>{scenarioId}</code>); not live or historical
-          flood evidence. Recommended corridors reflect simulated edge costs and do not guarantee
-          transit safety or emergency response times.
+          {limitationText} Scenario ID: <code>{scenarioId}</code>. Recommended corridors reflect
+          prototype edge costs and do not guarantee transit safety or emergency response times.
         </p>
 
         {customNotice && <p className="map-notice__custom">{customNotice}</p>}

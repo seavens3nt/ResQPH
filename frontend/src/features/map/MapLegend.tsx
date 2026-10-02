@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
 import './MapLegend.css'
 
 export type LegendCategory = 'flood' | 'passability' | 'route' | 'marker'
@@ -29,8 +29,8 @@ export interface LegendItem {
 }
 
 export interface MapLegendProps {
-  /** Custom or external legend items. Falls back to default scenario items if omitted. */
-  items?: LegendItem[]
+  /** Legend items derived by the caller from the visible scenario layers. */
+  items: LegendItem[]
   /** Array of currently active layer IDs */
   activeLayerIds?: string[]
   /** Callback fired when user toggles an interactive layer */
@@ -48,9 +48,9 @@ export interface MapLegendProps {
   /** Initial expansion state when collapsible */
   defaultExpanded?: boolean
   /** Scenario timestamp for provenance display */
-  scenarioTimestamp?: string
+  scenarioTimestamp: string
   /** Origin/authority of scenario data */
-  sourceType?: 'controlled' | 'historical' | 'unverified'
+  sourceType: 'controlled' | 'historical' | 'unverified'
   /** Header title */
   title?: string
   className?: string
@@ -98,7 +98,7 @@ export const DEFAULT_LEGEND_ITEMS: LegendItem[] = [
   // 2. Road Network Passability
   {
     id: 'road-impassable',
-    label: 'Impassable Road Edge (Loyola St.)',
+    label: 'Impassable Road Edge',
     category: 'passability',
     textBadge: 'IMPASSABLE',
     symbol: '✕',
@@ -133,7 +133,7 @@ export const DEFAULT_LEGEND_ITEMS: LegendItem[] = [
   // 3. Routing Corridors
   {
     id: 'route-recommended',
-    label: 'Recommended Corridor (Jhocson St.)',
+    label: 'Recommended Corridor',
     category: 'route',
     textBadge: 'RECOMMENDED CORRIDOR',
     symbol: '━━━',
@@ -145,7 +145,7 @@ export const DEFAULT_LEGEND_ITEMS: LegendItem[] = [
   },
   {
     id: 'route-alternative',
-    label: 'Alternative Detour (Gerardo St.)',
+    label: 'Alternative Detour',
     category: 'route',
     textBadge: 'ALTERNATIVE DETOUR',
     symbol: '---',
@@ -197,7 +197,7 @@ export const DEFAULT_LEGEND_ITEMS: LegendItem[] = [
     symbol: '🏫',
     shapeDescription: 'Square green marker with building glyph',
     shapeClass: 'map-legend__shape--marker-evacuation',
-    description: 'Designated safe assembly center (Concepcion Elementary / NU Gym).',
+    description: 'Sanitized scenario evacuation or assembly marker.',
     badgeVariant: 'recommended',
   },
 ]
@@ -210,7 +210,7 @@ const CATEGORY_NAMES: Record<LegendCategory, string> = {
 }
 
 export const MapLegend: React.FC<MapLegendProps> = ({
-  items = DEFAULT_LEGEND_ITEMS,
+  items,
   activeLayerIds,
   onToggleLayer,
   status = 'ready',
@@ -220,11 +220,12 @@ export const MapLegend: React.FC<MapLegendProps> = ({
   collapsible = true,
   defaultExpanded = true,
   scenarioTimestamp,
-  sourceType = 'controlled',
+  sourceType,
   title = 'Map Legend & Hazard Severity',
   className = '',
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const legendBodyId = useId()
 
   const effectiveStatus = items.length === 0 && status === 'ready' ? 'empty' : status
 
@@ -263,7 +264,7 @@ export const MapLegend: React.FC<MapLegendProps> = ({
             className="map-legend__collapse-btn"
             onClick={() => setIsExpanded((prev) => !prev)}
             aria-expanded={isExpanded}
-            aria-controls="map-legend-body"
+            aria-controls={legendBodyId}
             aria-label={isExpanded ? 'Collapse map legend' : 'Expand map legend'}
           >
             <span aria-hidden="true">{isExpanded ? '▲' : '▼'}</span>
@@ -318,7 +319,7 @@ export const MapLegend: React.FC<MapLegendProps> = ({
 
       {/* Expandable Body */}
       {isExpanded && (
-        <div className="map-legend__body" id="map-legend-body">
+        <div className="map-legend__body" id={legendBodyId}>
           {effectiveStatus === 'loading' && (
             <div className="map-legend__loading-state" role="status" aria-live="polite">
               <span className="map-legend__loading-icon" aria-hidden="true">
@@ -341,7 +342,9 @@ export const MapLegend: React.FC<MapLegendProps> = ({
             </div>
           )}
 
-          {effectiveStatus !== 'loading' && effectiveStatus !== 'empty' && (
+          {effectiveStatus !== 'loading' &&
+            effectiveStatus !== 'empty' &&
+            effectiveStatus !== 'unavailable' && (
             <>
               {categories.map((cat) => {
                 const categoryItems = items.filter((item) => item.category === cat)
