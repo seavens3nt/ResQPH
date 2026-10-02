@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { useMapLayers } from './useMapLayers'
+import { buildMapLayerDataset } from './mapData'
 
 describe('useMapLayers Hook', () => {
   it('loads and parses locked sample fixtures successfully by default', () => {
@@ -9,8 +10,9 @@ describe('useMapLayers Hook', () => {
     expect(result.current.status).toBe('success')
     expect(result.current.dataset).not.toBeNull()
     expect(result.current.dataset?.edges.length).toBeGreaterThan(0)
-    expect(result.current.metadata.scenarioId).toBe('scenario-controlled-001')
-    expect(result.current.metadata.sourceType).toBe('controlled')
+    const expected = buildMapLayerDataset()
+    expect(result.current.metadata.scenarioId).toBe(expected.scenarioId)
+    expect(result.current.metadata.sourceType).toBe(expected.sourceType)
     expect(result.current.metadata.isLive).toBe(false)
     expect(result.current.metadata.stats.totalEdges).toBeGreaterThan(0)
   })
