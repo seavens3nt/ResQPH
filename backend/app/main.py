@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import assignments, health, missions, ml, rescue_requests
+from app.api.routes import assignments, health, missions, ml, rescue_requests, routing
 from app.core.config import settings
 from app.db.mongodb import close_mongodb, connect_mongodb, get_database
 from app.db.setup import initialize_database
@@ -49,6 +49,7 @@ app.include_router(rescue_requests.router, prefix=settings.api_prefix)
 app.include_router(assignments.router, prefix=settings.api_prefix)
 app.include_router(missions.router, prefix=settings.api_prefix)
 app.include_router(ml.router, prefix=settings.api_prefix)
+app.include_router(routing.router, prefix=settings.api_prefix)
 
 app.add_exception_handler(ServiceError, service_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
