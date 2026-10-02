@@ -43,9 +43,10 @@ python routing/scripts/build_ubelt_graph.py --force
 python -m pytest tests/ -v
 ```
 
-44 tests: extraction bounds, edge-ID format, normalization, flood join
-rejection rules, schema validation, and committed-fixture integrity. No
-network access required.
+59 tests: extraction bounds and cache behavior, edge-ID format, offline
+normalization, flood-join rejection rules, metadata consistency, schema and
+boundary validation, and committed-fixture integrity. No network access or
+private raw cache is required.
 
 ## Module layout
 
@@ -70,6 +71,8 @@ routing/src/resqph_routing/
 ## Limitations
 
 - OSM road completeness and access tags can change over time.
+- A forced rebuild uses the then-current OpenStreetMap snapshot and may not
+  reproduce the reviewed 2026-10-01 counts byte for byte.
 - No road is guaranteed passable or safe because it appears in OSM.
 - The controlled flood scenario is synthetic and explicitly labelled as such.
 - This phase does not implement final A* routing, runtime ML integration,

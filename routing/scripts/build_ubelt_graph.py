@@ -25,24 +25,24 @@ _SRC = _ROUTING_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-import osmnx as ox  # noqa: E402
+import osmnx as ox
 
-from resqph_routing import config  # noqa: E402
-from resqph_routing.extract import (  # noqa: E402
+from resqph_routing import config
+from resqph_routing.extract import (
     extract_osm_graph,
     graph_stats,
     load_study_area_polygon,
 )
-from resqph_routing.flood_join import (  # noqa: E402
+from resqph_routing.flood_join import (
     build_sample_scenario,
     join_scenario_to_edges,
 )
-from resqph_routing.normalize import (  # noqa: E402
+from resqph_routing.normalize import (
     normalize_edges,
     normalize_nodes,
     to_contract_frame,
 )
-from resqph_routing.validate import validate_edges  # noqa: E402
+from resqph_routing.validate import validate_edges
 
 logger = config.get_logger("build_ubelt_graph")
 
@@ -62,11 +62,7 @@ def main() -> int:
     logger.info("=== ResQPH U-Belt graph build ===")
 
     # ---- Extract --------------------------------------------------------
-    try:
-        raw_graph = extract_osm_graph(force=args.force)
-    except Exception as exc:
-        logger.error("Extraction failed: %s", exc)
-        return 1
+    raw_graph = extract_osm_graph(force=args.force)
 
     raw_stats = graph_stats(raw_graph)
     logger.info("--- Raw extraction statistics ---")
@@ -76,12 +72,8 @@ def main() -> int:
     # ---- Normalize ------------------------------------------------------
     # `edges` carries the full schema including `extraction_version`, which
     # validation needs. The contract-only projection happens at export time.
-    try:
-        edges = normalize_edges(raw_graph)
-        nodes = normalize_nodes(raw_graph)
-    except Exception as exc:
-        logger.error("Normalization failed: %s", exc)
-        return 1
+    edges = normalize_edges(raw_graph)
+    nodes = normalize_nodes(raw_graph)
 
     logger.info("--- Normalized statistics ---")
     logger.info("  nodes                          %d", len(nodes))
@@ -105,11 +97,7 @@ def main() -> int:
     logger.info("Wrote sample scenario to %s", sample_scenario_path)
 
     # ---- Join scenario to edges -----------------------------------------
-    try:
-        joined, report = join_scenario_to_edges(edges, sample_scenario_path)
-    except Exception as exc:
-        logger.error("Flood join failed: %s", exc)
-        return 1
+    joined, report = join_scenario_to_edges(edges, sample_scenario_path)
 
     logger.info("--- Flood join report ---")
     logger.info("  total scenario records         %d", report.total_scenario_records)

@@ -7,14 +7,19 @@ data/samples/.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import math
+
+import geopandas as gpd
+from shapely.prepared import prep
 
 from resqph_routing import config
 from resqph_routing.flood_join import load_scenario
 
 
 def test_preview_fixture_exists(committed_edges):
-    assert len(committed_edges) > 0
+    assert len(committed_edges) == 30
     assert committed_edges.crs is not None
     assert committed_edges.crs.to_string().upper() == config.WGS84_CRS
 
@@ -34,6 +39,37 @@ def test_preview_fixture_no_nulls_in_required_columns(committed_edges):
         "road_class", "flood_level", "passability", "source_type",
     ]
     assert not committed_edges[required].isna().any().any()
+
+
+def test_preview_fixture_values_follow_contract(committed_edges):
+    assert all(
+        math.isfinite(value) and value > 0
+        for value in committed_edges["length_m"]
+    )
+    assert all(
+        math.isfinite(value) and value > 0
+        for value in committed_edges["travel_time_s"]
+    )
+    assert set(committed_edges["flood_level"]).issubset(config.FLOOD_LEVELS)
+    assert set(committed_edges["passability"]).issubset(
+        config.PASSABILITY_VALUES
+    )
+    assert set(committed_edges["source_type"]).issubset(config.SOURCE_TYPES)
+
+
+def test_preview_fixture_stays_inside_study_area(
+    committed_edges,
+    study_area_polygon,
+):
+    edges_m = committed_edges.to_crs(config.PROJECTED_CRS)
+    buffered_area = (
+        gpd.GeoSeries([study_area_polygon], crs=config.WGS84_CRS)
+        .to_crs(config.PROJECTED_CRS)
+        .iloc[0]
+        .buffer(50)
+    )
+    prepared = prep(buffered_area)
+    assert all(prepared.covers(geometry) for geometry in edges_m.geometry)
 
 
 def test_preview_fixture_edge_ids_unique(committed_edges):
@@ -60,9 +96,32 @@ def test_scenario_fixture_records_reference_real_edges(committed_edges):
         assert feature["properties"]["edge_id"] in known
 
 
+def test_scenario_fixture_records_match_declared_metadata():
+    scenario = load_scenario(config.SAMPLE_FLOOD_FIXTURE)
+    metadata = scenario["scenario"]
+    for feature in scenario["features"]:
+        properties = feature["properties"]
+        assert properties["scenario_id"] == metadata["scenario_id"]
+        assert properties["scenario_timestamp"] == metadata["scenario_timestamp"]
+        assert properties["source_type"] == metadata["source_type"]
+
+
 def test_scenario_fixture_is_deterministic():
     """Re-loading the committed scenario must return identical bytes content."""
     path = config.SAMPLE_FLOOD_FIXTURE
     a = json.loads(path.read_text(encoding="utf-8"))
     b = json.loads(path.read_text(encoding="utf-8"))
     assert a == b
+
+
+def test_committed_fixture_checksums():
+    expected = {
+        config.SAMPLE_GRAPH_PREVIEW: (
+            "da80118a7f327b4834bf2c3ad61a892ba833e7f23290a54863f511a810a4d96e"
+        ),
+        config.SAMPLE_FLOOD_FIXTURE: (
+            "383263419aa8138cf3b5628f350ed88efcad01632c865235c7fcac20655a7dc7"
+        ),
+    }
+    for path, checksum in expected.items():
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == checksum

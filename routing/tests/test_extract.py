@@ -47,15 +47,20 @@ def test_graph_stats_on_committed_edges(committed_edges):
     assert "weakly_connected_components" in stats
 
 
-def test_extract_uses_cache_if_present():
-    """When the cache exists, extraction must not hit the network.
+def test_extract_uses_cache_without_network(monkeypatch, tmp_path, raw_graph):
+    """An existing cache must be loaded without calling Overpass."""
+    cache_path = tmp_path / "cached.graphml"
+    cache_path.touch()
+    monkeypatch.setattr(config, "RAW_OSM_CACHE", cache_path)
 
-    The test asserts only that the function returns a graph; if the cache
-    is missing, we skip instead of downloading.
-    """
-    if not config.RAW_OSM_CACHE.exists():
-        pytest.skip("Cache not present; skipping offline-only check")
+    import osmnx as ox
+
+    monkeypatch.setattr(ox, "load_graphml", lambda path: raw_graph)
+    monkeypatch.setattr(
+        ox,
+        "graph_from_polygon",
+        lambda *args, **kwargs: pytest.fail("network extraction was attempted"),
+    )
 
     graph = extract_osm_graph(force=False)
-    assert graph.number_of_nodes() > 0
-    assert graph.number_of_edges() > 0
+    assert graph is raw_graph

@@ -10,11 +10,9 @@ from shapely.geometry import LineString
 
 from resqph_routing import config
 from resqph_routing.flood_join import (
-    SCENARIO_REQUIRED_FIELDS,
     _validate_record,
     build_sample_scenario,
     join_scenario_to_edges,
-    load_scenario,
 )
 
 
@@ -112,6 +110,17 @@ def test_validate_record_rejects_negative_depth():
     assert _validate_record(rec) is not None
 
 
+@pytest.mark.parametrize("depth", [float("nan"), float("inf"), True])
+def test_validate_record_rejects_non_finite_or_boolean_depth(depth):
+    rec = {
+        "scenario_id": "x", "edge_id": "e1",
+        "flood_level": "low", "flood_depth_cm": depth,
+        "passability": "passable", "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z", "reason": "test",
+    }
+    assert _validate_record(rec) is not None
+
+
 # ---------------------------------------------------------------------------
 # Join behaviour
 # ---------------------------------------------------------------------------
@@ -203,6 +212,48 @@ def test_join_study_area_mismatch_raises(tiny_edges, tmp_path):
         join_scenario_to_edges(tiny_edges, path)
 
 
+def test_join_invalid_metadata_timestamp_raises(tiny_edges, tmp_path):
+    payload = {
+        "type": "FeatureCollection",
+        "name": "bad",
+        "scenario": {
+            "scenario_id": "x",
+            "scenario_timestamp": "2026-10-01T00:00:00",
+            "source_type": "controlled",
+            "study_area_id": config.STUDY_AREA_ID,
+        },
+        "features": [],
+    }
+    path = tmp_path / "bad-timestamp.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="timezone"):
+        join_scenario_to_edges(tiny_edges, path)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("scenario_id", "different-scenario"),
+        ("scenario_timestamp", "2026-10-02T00:00:00Z"),
+        ("source_type", "historical"),
+    ],
+)
+def test_join_rejects_record_metadata_mismatch(tiny_edges, tmp_path, field, value):
+    rec = {
+        "scenario_id": "scenario-test-001", "edge_id": "ubelt-v1:1:2:0",
+        "flood_level": "low", "flood_depth_cm": 10,
+        "passability": "passable", "source_type": "controlled",
+        "scenario_timestamp": "2026-10-01T00:00:00Z", "reason": "test",
+    }
+    rec[field] = value
+    scenario_path = _write_scenario(tmp_path / "sc.json", [rec])
+
+    _, report = join_scenario_to_edges(tiny_edges, scenario_path)
+
+    assert report.matched == 0
+    assert report.rejected_invalid_record == 1
+
+
 # ---------------------------------------------------------------------------
 # Sample scenario builder
 # ---------------------------------------------------------------------------
@@ -229,3 +280,8 @@ def test_build_sample_scenario_references_real_edges(tiny_edges):
 def test_build_sample_scenario_rejects_zero_count(tiny_edges):
     with pytest.raises(ValueError):
         build_sample_scenario(tiny_edges, count=0)
+
+
+def test_build_sample_scenario_rejects_count_larger_than_graph(tiny_edges):
+    with pytest.raises(ValueError, match="cannot exceed"):
+        build_sample_scenario(tiny_edges, count=4)

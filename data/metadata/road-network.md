@@ -4,7 +4,7 @@
 
 **Source:** OpenStreetMap contributors
 
-**Access method:** Overpass API for feasibility; OSMnx `graph_from_bbox` for the implementation pipeline
+**Access method:** Overpass API for feasibility; OSMnx `graph_from_polygon` for the implementation pipeline
 
 **License:** Open Database License (ODbL); attribution to OpenStreetMap contributors is required
 
@@ -86,6 +86,7 @@ Application maps, documentation, and demonstrations using OSM-derived data must 
 
 **Extraction command:** `python routing/scripts/build_ubelt_graph.py`
 **Extraction version:** `ubelt-v1`
+**Recorded extraction date:** 2026-10-01
 **OSMnx version:** 2.x (via `routing/requirements.txt`)
 **Network type:** `drive`
 **Simplification:** enabled (`simplify=True`)
@@ -100,7 +101,7 @@ Application maps, documentation, and demonstrations using OSM-derived data must 
 **Self-loops:** 0
 **Weakly connected components:** 1
 **Duplicate `edge_id` values:** 0
-**Edges outside study-area bbox (> 50 m buffer):** 0
+**Edges outside the project-defined study polygon (> 50 m tolerance):** 0
 
 ### Road-class distribution
 
@@ -115,7 +116,7 @@ Application maps, documentation, and demonstrations using OSM-derived data must 
 
 ### `edge_id` format
 
-`ubelt-v1:<u>:<v>:<key>` — where `u`, `v` are OSM node IDs and `key` is the multi-edge index. Example: `ubelt-v1:12067395:990043712:0`.
+`ubelt-v1:<u>:<v>:<key>`, where `u` and `v` are OSM node IDs and `key` is the multi-edge index. Example: `ubelt-v1:12067395:990043712:0`.
 
 ### CRS
 
@@ -125,7 +126,7 @@ Application maps, documentation, and demonstrations using OSM-derived data must 
 
 ### Committed fixtures
 
-- `data/samples/ubelt-v1-preview.geojson` — 30-edge small subset (checked into Git)
-- `data/samples/ubelt-v1-flood-join.geojson` — 10-record sample controlled scenario (checked into Git)
+- `data/samples/ubelt-v1-preview.geojson` â€” 30-edge small subset (checked into Git)
+- `data/samples/ubelt-v1-flood-join.geojson` â€” 10-record sample controlled scenario (checked into Git)
 
-Full graph and full joined edges are regenerable via the build script and are gitignored.
+Full graph and full joined edges are regenerable via the build script and are gitignored. Because OpenStreetMap changes over time, a later forced download is a new source snapshot and may produce different counts. The committed fixtures and their checksums are the reviewed Team Phase 1 snapshot.

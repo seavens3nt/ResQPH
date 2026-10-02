@@ -10,7 +10,9 @@ import sys
 from pathlib import Path
 
 import geopandas as gpd
+import networkx as nx
 import pytest
+from shapely.geometry import LineString
 
 _HERE = Path(__file__).resolve()
 _ROUTING_ROOT = _HERE.parents[1]
@@ -18,7 +20,7 @@ _SRC = _ROUTING_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from resqph_routing import config  # noqa: E402
+from resqph_routing import config
 
 
 @pytest.fixture
@@ -43,12 +45,26 @@ def committed_edges() -> gpd.GeoDataFrame:
 
 @pytest.fixture
 def raw_graph():
-    """Load the cached raw OSM graph. Skips if not built."""
-    from resqph_routing.normalize import load_raw_graph
-
-    if not config.RAW_OSM_CACHE.exists():
-        pytest.skip(
-            f"Raw graph cache not built yet: {config.RAW_OSM_CACHE}. "
-            "Run: python routing/scripts/build_ubelt_graph.py"
-        )
-    return load_raw_graph()
+    """Small deterministic OSM-like graph for offline normalization tests."""
+    graph = nx.MultiDiGraph()
+    graph.graph["crs"] = config.WGS84_CRS
+    graph.add_node(1, x=120.9900, y=14.6000)
+    graph.add_node(2, x=120.9910, y=14.6010)
+    graph.add_node(3, x=120.9920, y=14.6020)
+    graph.add_edge(
+        1,
+        2,
+        key=0,
+        highway="residential",
+        osmid=101,
+        geometry=LineString([(120.9900, 14.6000), (120.9910, 14.6010)]),
+    )
+    graph.add_edge(
+        2,
+        3,
+        key=0,
+        highway="primary",
+        osmid=102,
+        geometry=LineString([(120.9910, 14.6010), (120.9920, 14.6020)]),
+    )
+    return graph

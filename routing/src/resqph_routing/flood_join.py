@@ -7,9 +7,11 @@ Joins a controlled flood scenario onto normalized road edges by
 1. Validate the scenario and extraction versions.
 2. Reject unknown or duplicate `edge_id` values.
 3. Left-join scenario attributes to the approved road graph.
-4. Treat missing scenario records as `unknown`, not automatically safe.
-5. Apply the documented uncertainty penalty to unknown/stale records.
-6. Exclude `impassable` or `severe` edges before A*.
+4. Report unmatched records so the later routing phase can apply the
+   documented uncertainty penalty instead of treating them as verified safe.
+
+This module does not calculate route costs or exclude edges. Those behaviors
+belong to the later deterministic-routing phase.
 
 The join produces a report with matched, unmatched, and rejected counts
 alongside a joined GeoDataFrame.
@@ -17,7 +19,9 @@ alongside a joined GeoDataFrame.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -100,15 +104,37 @@ def _validate_record(props: dict[str, Any]) -> str | None:
     if props["source_type"] not in config.SOURCE_TYPES:
         return f"invalid source_type: {props['source_type']!r}"
 
+    if not isinstance(props["scenario_id"], str) or not props["scenario_id"].strip():
+        return "scenario_id must be a non-empty string"
+
+    timestamp_error = _validate_timestamp(props["scenario_timestamp"])
+    if timestamp_error:
+        return timestamp_error
+
     depth = props.get("flood_depth_cm")
     if depth is not None:
+        if isinstance(depth, bool):
+            return f"invalid flood_depth_cm: {depth!r}"
         try:
             depth_val = float(depth)
         except (TypeError, ValueError):
             return f"invalid flood_depth_cm: {depth!r}"
-        if depth_val < 0:
-            return f"negative flood_depth_cm: {depth_val}"
+        if not math.isfinite(depth_val) or depth_val < 0:
+            return f"invalid flood_depth_cm: {depth!r}"
 
+    return None
+
+
+def _validate_timestamp(value: Any) -> str | None:
+    """Return a validation error for a non-ISO or timezone-free timestamp."""
+    if not isinstance(value, str):
+        return "scenario_timestamp must be a string"
+    try:
+        parsed_timestamp = datetime.fromisoformat(value)
+    except ValueError:
+        return f"invalid scenario_timestamp: {value!r}"
+    if parsed_timestamp.tzinfo is None:
+        return "scenario_timestamp must include a timezone"
     return None
 
 
@@ -138,12 +164,21 @@ def join_scenario_to_edges(
         raise ValueError("Scenario is missing a scenario_id")
     if not report.scenario_timestamp:
         raise ValueError("Scenario is missing a scenario_timestamp")
+    timestamp_error = _validate_timestamp(report.scenario_timestamp)
+    if timestamp_error:
+        raise ValueError(f"Scenario metadata invalid: {timestamp_error}")
 
     scenario_study_area = scenario_meta.get("study_area_id")
     if scenario_study_area and scenario_study_area != config.STUDY_AREA_ID:
         raise ValueError(
             f"Scenario study_area_id '{scenario_study_area}' does not match "
             f"project '{config.STUDY_AREA_ID}'"
+        )
+
+    scenario_source_type = scenario_meta.get("source_type")
+    if scenario_source_type not in config.SOURCE_TYPES:
+        raise ValueError(
+            f"Scenario has invalid source_type: {scenario_source_type!r}"
         )
 
     # ---- Walk records: validate, reject unknown/duplicates ----
@@ -164,6 +199,27 @@ def join_scenario_to_edges(
         if reason:
             report.rejected_invalid_record += 1
             report.warnings.append(f"edge_id={edge_id} rejected: {reason}")
+            continue
+
+        if props["scenario_id"] != report.scenario_id:
+            report.rejected_invalid_record += 1
+            report.warnings.append(
+                f"edge_id={edge_id} rejected: scenario_id does not match metadata"
+            )
+            continue
+
+        if props["scenario_timestamp"] != report.scenario_timestamp:
+            report.rejected_invalid_record += 1
+            report.warnings.append(
+                f"edge_id={edge_id} rejected: scenario_timestamp does not match metadata"
+            )
+            continue
+
+        if props["source_type"] != scenario_source_type:
+            report.rejected_invalid_record += 1
+            report.warnings.append(
+                f"edge_id={edge_id} rejected: source_type does not match metadata"
+            )
             continue
 
         if edge_id in seen_edge_ids:
@@ -250,6 +306,10 @@ def build_sample_scenario(
     """
     if count < 1:
         raise ValueError("count must be at least 1")
+    if count > len(edges):
+        raise ValueError(
+            f"count ({count}) cannot exceed available edges ({len(edges)})"
+        )
 
     selected = edges.sort_values("edge_id").head(count)
 
