@@ -19,7 +19,8 @@
 - ML: `docs/ml/ML_FEASIBILITY.md` and `data/samples/ml-road-risk-contract.example.json`
 - Offline: `docs/offline/OFFLINE_CONTRACT.md`
 - UI states: `docs/ui/UI_STATES.md` and `docs/ui/WIREFRAMES.md`
-- Boundary and joins: `data/samples/study-area.geojson`, `road-edge.example.geojson`, and `flood-scenario.example.geojson`
+- Boundary and joins: `data/samples/study-area.geojson`, `ubelt-v1-preview.geojson`, and `ubelt-v1-flood-join.geojson`
+- Routing verification: `data/samples/routing-known-graph.example.json`, `route-found.example.json`, and `no-route.example.json`
 
 ## Canonical verification
 
@@ -35,8 +36,8 @@
 - Runtime model loading requires explicit enablement, SHA-256, and exact target,
   version, and ordered-feature metadata. The Ondoy artifact fails this contract
   intentionally and must remain disabled.
-- `edge_id` is the stable road/flood/routing/ML join key.
+- `edge_id` is the stable road/flood/routing/ML join key. The accepted U-Belt format is `ubelt-v1:<u>:<v>:<key>`.
 - Frontend prototype state is not proof of backend persistence or integration.
 - Runtime labels must identify controlled, simulated, historical, cached, stale, or pending-sync data accurately.
 
-Last verified against commit: `6ec4e3b` plus the current Phase 3 readiness diff.
+Last verified against commit: `7541c65` plus the Team Phase 1 gate correction.

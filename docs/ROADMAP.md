@@ -1,16 +1,15 @@
 # ResQPH project roadmap
 
-**Status:** Team Phase 1 active; Team Phase 3 early evidence package ready for review
+**Status:** Team Phase 1 completed; Team Phase 2 ready to start
 **Decision owner:** Ranee
 **Last updated:** 2026-09-29
 
 ## Delivery structure
 
-Ranee completed the Project Foundation through PR #25. The team's numbered
-roadmap begins with Mapping and Geospatial Pipeline as Team Phase 1. Only that
-active delivery phase receives implementation issues. Matthew's already
-delivered Team Phase 3 experiment is an early evidence-review exception; it
-does not activate intervening routing work.
+Ranee completed the Project Foundation through PR #25 and Team Phase 1 through
+the accepted mapping gate. Team Phase 2 is now the active delivery phase.
+Matthew's early Team Phase 3 experiment was accepted as external exploratory
+evidence with runtime integration deferred.
 
 Because delivery time is constrained, every phase must protect the smallest end-to-end demonstration. Deterministic rescue coordination and rule-based A* routing are the critical path. ML experimentation remains required, while runtime ML integration and optional data enrichment are conditional and must not block that path.
 
@@ -104,23 +103,28 @@ If capacity is lower than expected, complete one citizen request through coordin
 
 ## Team Phase 1 — Mapping and Geospatial Pipeline
 
-**Status:** In progress
+**Status:** Completed and verified through PRs #39–#43 and the Team Phase 1 gate
 **Accountable geospatial owner:** Matthew
 **Backend integration support:** Jared
 
-Prepare the bounded OSM road graph, accepted flood and optional elevation inputs, stable edge identifiers, metadata, map layers, legends, source/time labels, and small reproducible fixtures. Exit when another member can reproduce and inspect the study-area pipeline.
+The bounded OSM road graph, stable edge identifiers, controlled scenario join,
+metadata, backend loader, map layers, legends, source/time labels, and small
+reproducible fixtures are accepted. See the Team Phase 1 gate and evidence.
 
 ## Team Phase 2 — Flood-Aware Routing
 
-**Status:** Planned
+**Status:** Ready to start
 **Accountable routing owner:** Matthew
 **Backend integration support:** Jared
 
-Implement A*, baseline known-graph tests, deterministic flood/passability penalties, impassable-edge exclusion, no-route behavior, route explanations, backend adapter, and frontend route presentation.
+Implement A*, baseline known-graph tests, deterministic flood/passability
+penalties, impassable-edge exclusion, no-route behavior, route explanations,
+backend adapter, and frontend route presentation. Ranee temporarily owns
+Elle's route-data/frontend package until Ranee changes that assignment.
 
 ## Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Ready for review as an early parallel evidence package
+**Status:** Completed as early external evidence; runtime integration deferred
 **Accountable owner:** Matthew
 **Support:** Ranee and Jared
 

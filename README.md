@@ -9,10 +9,10 @@ missions during controlled or historical flood scenarios. Citizens submit
 requests, coordinators assign missions, and rescuers review assignments and
 update mission status.
 
-The foundation and core request-to-mission workflow are verified. **Team Phase
-1 — Mapping and Geospatial Pipeline** is the active delivery phase. Matthew's
-early **Team Phase 3 — AI/ML** package is ready for review as external
-exploratory evidence; its model is not enabled in the application.
+The foundation, core request-to-mission workflow, and mapping/geospatial
+pipeline are verified. **Team Phase 2 — Flood-Aware Routing** is the active
+delivery phase. Matthew's early **Team Phase 3 — AI/ML** package is accepted as
+external exploratory evidence; its model is not enabled in the application.
 
 > [!IMPORTANT]
 > ResQPH is a classroom prototype. It is not an official emergency-response
@@ -37,13 +37,13 @@ Verified now:
 - Basic citizen, coordinator, and rescuer role simulation
 - Validated rescue-request creation and status tracking
 - Atomic coordinator assignment and mission history
+- Reproducible bounded U-Belt graph and controlled-flood fixtures
+- Validated backend geospatial loader and fixture-driven accessible map layers
 - Deterministic road-risk fallback and evidence-gated ML adapter
 - Preserved and checksum-verified external XGBoost experiment
 
 Still required for the MVP:
 
-- Reproducible U-Belt OpenStreetMap and controlled-flood pipeline
-- Stable road-edge identifiers shared across map, flood, and routing records
 - Deterministic A* routing with explainable penalties and no-route behavior
 - Limited offline support for one cached mission and one queued status update
 - Final end-to-end verification and presentation evidence

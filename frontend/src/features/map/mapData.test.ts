@@ -66,17 +66,19 @@ describe('mapData - Fixture Parsing & Validation', () => {
   it('parses authoritative locked road edge fixture', () => {
     const parsed = parseRoadEdgeFixture(LOCKED_ROAD_EDGE_FIXTURE)
     expect(parsed.type).toBe('FeatureCollection')
-    expect(parsed.features.length).toBeGreaterThan(0)
-    expect(parsed.features[0].properties.edge_id).toBeTruthy()
+    expect(parsed.name).toBe('ubelt-v1-preview')
+    expect(parsed.features).toHaveLength(30)
+    expect(parsed.features[0].properties.edge_id).toMatch(/^ubelt-v1:/)
     expect(parsed.features[0].geometry.type).toBe('LineString')
+    expect(parsed.features.some((feature) => feature.properties.observed_at === 'not provided')).toBe(true)
   })
 
   it('parses authoritative locked flood scenario fixture', () => {
     const parsed = parseFloodScenarioFixture(LOCKED_FLOOD_SCENARIO_FIXTURE)
     expect(parsed.type).toBe('FeatureCollection')
-    expect(parsed.scenario?.scenario_id).toBeTruthy()
-    expect(parsed.features.length).toBeGreaterThan(0)
-    expect(parsed.features[0].properties.edge_id).toBeTruthy()
+    expect(parsed.scenario?.scenario_id).toBe('scenario-controlled-ubelt-001')
+    expect(parsed.features).toHaveLength(10)
+    expect(parsed.features[0].properties.edge_id).toMatch(/^ubelt-v1:/)
   })
 
   it('parses authoritative locked study area fixture', () => {
@@ -166,6 +168,9 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
     expect(dataset.sourceType).toBe(parsedFlood.scenario?.source_type)
     expect(dataset.isLive).toBe(false)
     expect(dataset.fixtureNotice).toBeTruthy()
+    expect(dataset.edges).toHaveLength(30)
+    expect(dataset.floodFeatures).toHaveLength(10)
+    expect(dataset.stats.unmatchedFloodCount).toBe(0)
 
     // The assertions deliberately derive from the checked-in fixtures so the
     // same test becomes the compatibility gate when Issue #32 replaces them.

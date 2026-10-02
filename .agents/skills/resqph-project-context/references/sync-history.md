@@ -53,3 +53,15 @@ approve runtime ML or replace Ranee's final gate decision.
 
 This sync records the opened phase and verified CI. It does not approve or
 merge PR #31 and does not unblock dependent work early.
+
+## 2026-10-03 — Team Phase 1 gate and Team Phase 2 activation
+
+- **Baseline commit:** `7541c65`
+- **Target:** completed Team Phase 1 gate and locked Team Phase 2 inputs
+- **Changed guidance:** Team Phase 1 is completed and verified; Team Phase 2 is active; the frontend now consumes the authoritative 30-edge/10-record fixtures; route-found and no-route responses are locked; Ranee temporarily covers Elle's route client/map-overlay package.
+- **Evidence inspected:** merged PRs #39–#43, Issues #32–#36, graph/flood metadata and checksums, routing/backend/frontend suites, fixture parsing, phase records, and live GitHub state.
+- **Verification:** routing 59 passed; backend 73 passed with 2 environment-gated skips; frontend 155 passed plus lint/build; 10 fixtures parsed.
+- **Unresolved evidence:** deterministic routing engine, route API/UI integration, persistent offline synchronization, exact course deadline, and member weekly capacity.
+
+This sync activates independently executable Team Phase 2 packages. It does
+not authorize runtime ML or change the prototype safety boundary.

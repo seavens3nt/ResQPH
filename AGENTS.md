@@ -20,9 +20,9 @@ Work follows these delivery phases:
 6. Team Phase 4 — Limited Offline Support
 7. Team Phase 5 — Integration, Testing, and Presentation
 
-Team Phase 1 is the active delivery phase. Matthew's already delivered Team
-Phase 3 package may be reviewed early as a parallel evidence closeout, but this
-does not activate Team Phase 2 or authorize runtime model integration.
+Team Phase 2 is the active delivery phase. Team Phase 1 is completed and
+verified. Matthew's early Team Phase 3 package is accepted as external
+exploratory evidence, but runtime model integration remains unapproved.
 
 ## Time-constrained delivery order
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import roadEdgeFixtureJson from '../../../../data/samples/road-edge.example.geojson?raw'
-import floodScenarioFixtureJson from '../../../../data/samples/flood-scenario.example.geojson?raw'
+import roadEdgeFixtureJson from '../../../../data/samples/ubelt-v1-preview.geojson?raw'
+import floodScenarioFixtureJson from '../../../../data/samples/ubelt-v1-flood-join.geojson?raw'
 import studyAreaFixtureJson from '../../../../data/samples/study-area.geojson?raw'
 
 /**
@@ -73,7 +73,11 @@ export const roadEdgeFeatureSchema = z.object({
     road_class: z.string().default('unclassified'),
     flood_level: floodLevelSchema.optional().default('none'),
     passability: passabilitySchema.optional().default('passable'),
-    observed_at: z.string().optional().default('not provided'),
+    observed_at: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((value) => value ?? 'not provided'),
     source_type: scenarioSourceSchema.optional().default('controlled'),
   }),
   geometry: z.object({
@@ -95,7 +99,12 @@ export const floodScenarioFeatureSchema = z.object({
     scenario_id: z.string().optional().default('scenario-controlled-001'),
     edge_id: z.string().optional(),
     flood_level: floodLevelSchema.default('none'),
-    flood_depth_cm: z.number().nonnegative().optional(),
+    flood_depth_cm: z
+      .number()
+      .nonnegative()
+      .nullable()
+      .optional()
+      .transform((value) => value ?? undefined),
     passability: passabilitySchema.default('passable'),
     source_type: scenarioSourceSchema.default('controlled'),
     scenario_timestamp: z.string().default('not provided'),
