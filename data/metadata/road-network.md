@@ -4,7 +4,7 @@
 
 **Source:** OpenStreetMap contributors
 
-**Access method:** Overpass API for feasibility; OSMnx `graph_from_bbox` for the implementation pipeline
+**Access method:** Overpass API for feasibility; OSMnx `graph_from_polygon` for the implementation pipeline
 
 **License:** Open Database License (ODbL); attribution to OpenStreetMap contributors is required
 
@@ -79,3 +79,54 @@ The pipeline must preserve the underlying OSM way identifier separately because 
 ## Attribution
 
 Application maps, documentation, and demonstrations using OSM-derived data must display: `© OpenStreetMap contributors` and link to [OpenStreetMap copyright and license](https://www.openstreetmap.org/copyright).
+
+---
+
+## Implementation results (2026-10-01)
+
+**Extraction command:** `python routing/scripts/build_ubelt_graph.py`
+**Extraction version:** `ubelt-v1`
+**Recorded extraction date:** 2026-10-01
+**OSMnx version:** 2.x (via `routing/requirements.txt`)
+**Network type:** `drive`
+**Simplification:** enabled (`simplify=True`)
+
+### Counts
+
+| Stage | Nodes | Edges |
+|---|---:|---:|
+| Raw OSM extraction (OSMnx `graph_from_polygon`) | 912 | 2,168 |
+| After normalization (contract schema projection) | 912 | 2,168 |
+
+**Self-loops:** 0
+**Weakly connected components:** 1
+**Duplicate `edge_id` values:** 0
+**Edges outside the project-defined study polygon (> 50 m tolerance):** 0
+
+### Road-class distribution
+
+| Class | Count |
+|---|---:|
+| residential | 1,043 |
+| tertiary | 680 |
+| primary | 219 |
+| secondary | 140 |
+| unclassified | 76 |
+| motorway | 10 |
+
+### `edge_id` format
+
+`ubelt-v1:<u>:<v>:<key>`, where `u` and `v` are OSM node IDs and `key` is the multi-edge index. Example: `ubelt-v1:12067395:990043712:0`.
+
+### CRS
+
+- Working CRS for distance computation: `EPSG:32651` (UTM 51N)
+- Exported CRS: `EPSG:4326` (WGS 84)
+- GeoJSON coordinate order: longitude, latitude
+
+### Committed fixtures
+
+- `data/samples/ubelt-v1-preview.geojson` — 30-edge small subset (checked into Git)
+- `data/samples/ubelt-v1-flood-join.geojson` — 10-record sample controlled scenario (checked into Git)
+
+Full graph and full joined edges are regenerable via the build script and are gitignored. Because OpenStreetMap changes over time, a later forced download is a new source snapshot and may produce different counts. The committed fixtures and their checksums are the reviewed Team Phase 1 snapshot.
