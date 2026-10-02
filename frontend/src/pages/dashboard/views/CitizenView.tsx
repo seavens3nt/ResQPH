@@ -7,8 +7,8 @@ import type { SeverityLevel } from '../../../features/missions/types'
 import { useMyRescueRequests } from '../../../features/requests/hooks'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import {
-  EmergencyHotlinesModal,
   EmergencyPreparednessGuide,
+  EmptyState,
   Section,
   LocalizedForecastWidget,
 } from './shared'
@@ -27,6 +27,57 @@ const SOS_TRIAGE_TO_FLOOD_LEVEL: Record<SeverityLevel, FloodLevel> = {
   severe: 'high',
 }
 
+function SampleRescueTrackingPreview() {
+  const steps = [
+    { label: 'Received', state: 'is-complete' },
+    { label: 'Assigned', state: 'is-complete' },
+    { label: 'En route', state: 'is-current' },
+    { label: 'Arrived', state: '' },
+  ]
+
+  return (
+    <section className="sample-rescue-tracking" aria-label="Sample rescue tracking preview" data-testid="sample-rescue-tracking">
+      <div className="sample-rescue-tracking__header">
+        <div>
+          <p className="sample-rescue-tracking__eyebrow">Sample scenario · not a live request</p>
+          <h3>Rescue tracking preview</h3>
+        </div>
+        <span className="sample-rescue-tracking__id">SAMPLE-001</span>
+      </div>
+      <p className="sample-rescue-tracking__description">
+        Example progress only. This preview is not connected to a submitted request or dispatch.
+      </p>
+      <div className="sample-rescue-tracking__steps" aria-label="Sample request progress">
+        {steps.map((step, index) => (
+          <div className={`sample-rescue-tracking__step ${step.state}`} key={step.label}>
+            <span className="sample-rescue-tracking__step-index" aria-hidden="true">{index + 1}</span>
+            <span>{step.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="sample-rescue-tracking__details">
+        <div className="sample-rescue-tracking__detail">
+          <span>Location</span>
+          <strong>Sanitized U-Belt pilot location</strong>
+        </div>
+        <div className="sample-rescue-tracking__detail">
+          <span>Reported water level</span>
+          <strong>Waist-deep · sample value</strong>
+        </div>
+        <div className="sample-rescue-tracking__detail">
+          <span>Assigned team</span>
+          <strong>Rescue Team Alpha · sample only</strong>
+        </div>
+        <div className="sample-rescue-tracking__detail">
+          <span>Team leader contact · sample</span>
+          <strong>09XX XXX XXXX</strong>
+        </div>
+      </div>
+      <p className="sample-rescue-tracking__note">No ETA shown; this is illustrative tracking data only.</p>
+    </section>
+  )
+}
+
 export function CitizenView({
   navSection = 'overview',
   onNavigateTab,
@@ -42,7 +93,6 @@ export function CitizenView({
   } = useMissions()
 
   const [showSosTriage, setShowSosTriage] = useState(false)
-  const [showHotlinesModal, setShowHotlinesModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
 
   const [stepA_severity, setStepA_severity] = useState<SeverityLevel>('moderate')
@@ -145,51 +195,12 @@ export function CitizenView({
                 Submits sanitized location and household details to the prototype coordinator workflow.
               </p>
 
-              <button
-                type="button"
-                style={{ background: '#ffffff', padding: '0.55rem 1.1rem', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 600, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
-                onClick={() => setShowHotlinesModal(true)}
-              >
-                <Icon name="phone" size={14} style={{ color: '#dc2626' }} />
-                <span>Direct 911 Hotline</span>
-              </button>
-            </div>
-
-            {/* Request Assistance Services Grid */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Request Assistance
-                </h3>
-                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>4 Service Types</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-                {[
-                  { name: 'Flood Rescue', tag: 'Boat Team', icon: 'shield' },
-                  { name: 'Evacuation', tag: 'Transport', icon: 'map-fold' },
-                  { name: 'Medical Aid', tag: 'First Response', icon: 'heart' },
-                  { name: 'Relief Goods', tag: 'Supplies', icon: 'package' },
-                ].map((service) => (
-                  <div
-                    key={service.name}
-                    className="neu-red-card"
-                    style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left', background: '#ffffff', cursor: 'default' }}
-                  >
-                    <div style={{ color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                      <Icon name={service.icon as any} size={20} />
-                    </div>
-                    <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{service.name}</strong>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b' }}>{service.tag}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Nearest Responders */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#f8fafc', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Simulated Responders
                 </h3>
                 <button
@@ -197,7 +208,7 @@ export function CitizenView({
                   style={{ border: 'none', background: 'transparent', color: '#dc2626', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                   onClick={() => onNavigateTab?.('map')}
                 >
-                  <span>Hazard map</span>
+                  <span>Team location</span>
                   <Icon name="arrow-up-right" size={13} />
                 </button>
               </div>
@@ -229,7 +240,7 @@ export function CitizenView({
             {/* Controlled scenario notices */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#f8fafc', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Scenario Notices
                 </h3>
                 <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Simulated data</span>
@@ -330,17 +341,19 @@ export function CitizenView({
                     Retry
                   </Button>
                 </div>
+                <SampleRescueTrackingPreview />
               </Section>
             )}
 
             {!apiRequestId && !isRequestListLoading && !isRequestListError && (
               <Section title="Rescue Tracking" subtitle="No persisted rescue request was returned by the API.">
-                <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
-                  <p style={{ color: '#64748b', fontWeight: 600, margin: '0 0 1rem' }}>No rescue requests found.</p>
-                  <Button variant="primary" size="sm" onClick={() => onNavigateTab?.('overview')}>
-                    Start a rescue request
-                  </Button>
-                </div>
+                <EmptyState
+                  icon="report"
+                  title="No rescue requests yet"
+                  description="Requests you submit will appear here so you can follow their status."
+                  action={<Button variant="primary" size="sm" onClick={() => onNavigateTab?.('overview')}>Start a rescue request</Button>}
+                />
+                <SampleRescueTrackingPreview />
               </Section>
             )}
 
@@ -494,9 +507,11 @@ export function CitizenView({
               </Section>
             ) : (
               <Section title="Rescue Tracking" subtitle="Prototype status tracking for your rescue request.">
-                <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
-                  <p style={{ color: '#64748b', fontWeight: 600, margin: 0 }}>No active rescue requests.</p>
-                </div>
+                <EmptyState
+                  icon="pin"
+                  title="No active rescue requests"
+                  description="When you submit a rescue request, its progress will be shown here."
+                />
               </Section>
             ))}
           </div>
@@ -505,7 +520,10 @@ export function CitizenView({
         {/* ── MAP TAB ─────────────────────────────────────────────────── */}
         {navSection === 'map' && (
           <div style={{ width: '100%' }}>
-            <Section title="Flood-Aware Rescue Map" subtitle="Controlled-scenario visualization; not live navigation data.">
+            <Section
+              title="Rescue Team Location"
+              subtitle="Sample team position and route relative to the sanitized target; not live GPS tracking."
+            >
               <InteractiveFloodMap
                 activeStage={activeReq ? (activeReq.status as any) : 'en-route'}
                 showAlternatives
@@ -622,10 +640,6 @@ export function CitizenView({
         </div>
       </Modal>
 
-      <EmergencyHotlinesModal
-        isOpen={showHotlinesModal}
-        onClose={() => setShowHotlinesModal(false)}
-      />
     </div>
   )
 }

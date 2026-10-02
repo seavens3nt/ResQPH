@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { AuthUser, ProfileUpdate, UserRole } from './types'
+import type { AuthUser, ProfileUpdate, SignupRole, UserRole } from './types'
 
 /*
  * Prototype-only client auth. This is NOT real authentication: it persists a
@@ -10,11 +10,13 @@ import type { AuthUser, ProfileUpdate, UserRole } from './types'
  */
 
 const STORAGE_KEY = 'resqph.auth.user'
+const RESCUER_ROSTER_KEY = 'resqph.auth.rescuer-roster'
 
 interface AuthContextValue {
   user: AuthUser | null
+  rescuers: AuthUser[]
   login: (input: { email: string; role: UserRole; name?: string }) => void
-  signup: (input: ProfileUpdate & { role: UserRole; locationPermission?: boolean }) => void
+  signup: (input: ProfileUpdate & { role: SignupRole; locationPermission?: boolean }) => void
   updateProfile: (input: ProfileUpdate) => void
   logout: () => void
 }
@@ -33,6 +35,16 @@ function readStored(): AuthUser | null {
   }
 }
 
+function readRescuerRoster(): AuthUser[] {
+  try {
+    const raw = localStorage.getItem(RESCUER_ROSTER_KEY)
+    const parsed = raw ? JSON.parse(raw) as AuthUser[] : []
+    return Array.isArray(parsed) ? parsed.filter((profile) => profile?.role === 'rescuer' && profile.email) : []
+  } catch {
+    return []
+  }
+}
+
 function nameFromEmail(email: string): string {
   const handle = email.split('@')[0] ?? 'Responder'
   return handle
@@ -44,6 +56,7 @@ function nameFromEmail(email: string): string {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => readStored())
+  const [rescuers, setRescuers] = useState<AuthUser[]>(() => readRescuerRoster())
 
   useEffect(() => {
     if (user) {
@@ -53,8 +66,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  useEffect(() => {
+    localStorage.setItem(RESCUER_ROSTER_KEY, JSON.stringify(rescuers))
+  }, [rescuers])
+
+  const rememberRescuer = useCallback((profile: AuthUser) => {
+    if (profile.role !== 'rescuer') return
+    setRescuers((current) => [profile, ...current.filter((item) => item.email.toLowerCase() !== profile.email.toLowerCase())])
+  }, [])
+
+  useEffect(() => {
+    if (user?.role === 'rescuer') rememberRescuer(user)
+  }, [user, rememberRescuer])
+
   const login = useCallback<AuthContextValue['login']>(({ email, role, name }) => {
-    setUser({ email, role, name: name?.trim() || nameFromEmail(email) })
+    const profile = { email, role, name: name?.trim() || nameFromEmail(email) }
+    setUser(profile)
   }, [])
 
   const signup = useCallback<AuthContextValue['signup']>(({
@@ -67,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     medicalInfo,
     locationPermission,
   }) => {
-    setUser({
+    const profile: AuthUser = {
       name: name.trim() || nameFromEmail(email),
       email: email.trim(),
       role,
@@ -76,7 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       emergencyContact: emergencyContact ?? undefined,
       medicalInfo: medicalInfo ?? undefined,
       locationPermission: locationPermission ?? false,
-    })
+    }
+    setUser(profile)
   }, [])
 
   const updateProfile = useCallback<AuthContextValue['updateProfile']>((input) => {
@@ -90,13 +118,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         : current,
     )
-  }, [])
+    setRescuers((current) => current.map((profile) =>
+      profile.email.toLowerCase() === (user?.email ?? input.email).toLowerCase()
+        ? { ...profile, ...input, name: input.name.trim() || profile.name, email: input.email.trim() }
+        : profile,
+    ))
+  }, [user?.email])
 
   const logout = useCallback(() => setUser(null), [])
 
   const value = useMemo(
-    () => ({ user, login, signup, updateProfile, logout }),
-    [user, login, signup, updateProfile, logout],
+    () => ({ user, rescuers, login, signup, updateProfile, logout }),
+    [user, rescuers, login, signup, updateProfile, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

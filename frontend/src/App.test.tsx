@@ -49,7 +49,10 @@ describe('App', () => {
   it('renders the signup page at /signup', () => {
     renderApp('/signup')
     expect(screen.getByRole('heading', { name: /Create an account/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument()
+    const roleGroup = screen.getByRole('group', { name: 'Choose account type' })
+    expect(screen.getByRole('button', { name: 'Citizen' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescuer' })).toBeInTheDocument()
+    expect(roleGroup.querySelectorAll('button')).toHaveLength(2)
   })
 
   it('redirects /dashboard to /login when not authenticated', () => {

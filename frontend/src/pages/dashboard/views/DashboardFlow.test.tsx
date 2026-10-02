@@ -4,6 +4,14 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider } from '../../../features/auth/AuthContext'
 import { MissionProvider } from '../../../features/missions/MissionContext'
+import {
+  DEFAULT_ALTERNATIVE_ROUTE,
+  DEFAULT_IMPASSABLE_ROAD,
+  DEFAULT_PRIMARY_ROUTE,
+  INITIAL_REQUESTS,
+  INITIAL_TEAMS,
+} from '../../../features/missions/mockData'
+import type { RescueMission } from '../../../features/missions/types'
 import { CitizenView } from './CitizenView'
 import { RescuerView } from './RescuerView'
 import { CoordinatorView } from './CoordinatorView'
@@ -47,7 +55,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // 2. Primary emergency actions
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Direct 911 Hotline/i })).not.toBeInTheDocument()
   })
 
   it('does NOT render the rescue-teams-deployed stat card (removed)', () => {
@@ -70,15 +78,15 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // Emergency actions
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Direct 911 Hotline/i })).not.toBeInTheDocument()
 
-    // 4 Services
-    expect(screen.getByText(/Request Assistance/i)).toBeInTheDocument()
-    expect(screen.getByText(/4 Service Types/i)).toBeInTheDocument()
-    expect(screen.getByText('Flood Rescue')).toBeInTheDocument()
-    expect(screen.getByText('Evacuation')).toBeInTheDocument()
-    expect(screen.getByText('Medical Aid')).toBeInTheDocument()
-    expect(screen.getByText('Relief Goods')).toBeInTheDocument()
+    // The redundant service-type panel is not shown on the overview.
+    expect(screen.queryByText(/Request Assistance/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/4 Service Types/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Flood Rescue')).not.toBeInTheDocument()
+    expect(screen.queryByText('Evacuation')).not.toBeInTheDocument()
+    expect(screen.queryByText('Medical Aid')).not.toBeInTheDocument()
+    expect(screen.queryByText('Relief Goods')).not.toBeInTheDocument()
 
     // Controlled responder fixtures must not present operational ETAs.
     expect(screen.getByText(/Simulated Responders/i)).toBeInTheDocument()
@@ -96,8 +104,17 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // Portal navigation
     expect(screen.getByRole('button', { name: 'Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Inquiries' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Hazard Map' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescue Tracking' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescue Team Location' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Hazard Map' })).not.toBeInTheDocument()
+  })
+
+  it('describes the citizen map as a simulated rescue team location view', () => {
+    renderWithProviders(<DashboardPage />, 'citizen')
+    fireEvent.click(screen.getByRole('button', { name: 'Rescue Team Location' }))
+
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Rescue Team Location')
+    expect(screen.getByText(/Sample team position and route relative to the sanitized target; not live GPS tracking/i)).toBeInTheDocument()
   })
 
   it('renders localized rainfall forecast widget', () => {
@@ -105,6 +122,8 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText(/U-Belt Pilot Area/i)).toBeInTheDocument()
     expect(screen.getByText(/Controlled rainfall scenario · demonstration data/i)).toBeInTheDocument()
     expect(screen.getByText(/Hourly Intensity/i)).toBeInTheDocument()
+    expect(screen.getByText(/H=31°/i)).toBeInTheDocument()
+    expect(screen.getByText(/P=90%/i)).toBeInTheDocument()
   })
 
   it('renders emergency preparedness guide with 5 survival rules', () => {
@@ -123,7 +142,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     // Verify OpenStreetMap HUD indicator and layer buttons
     expect(screen.getByText(/OpenStreetMap · U-Belt controlled scenario/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'OpenStreetMap' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tactical Dark' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tactical Dark' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Satellite View' })).toBeInTheDocument()
 
     // Verify OpenStreetMap container element
@@ -184,8 +203,97 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
   })
 })
 describe('Field Rescuer Mobile Dashboard Flows', () => {
+  it('keeps a large open-mission queue compact until expanded', () => {
+    const missions: RescueMission[] = Array.from({ length: 5 }, (_, index) => ({
+      id: `MSN-QUEUE-${index + 1}`,
+      requestId: index === 0 ? 'RQ-0042' : `RQ-OPEN-${index + 1}`,
+      teamId: 'team-alpha',
+      status: index === 0 ? 'en-route' : 'assigned',
+      suggestedRoute: {
+        primary: DEFAULT_PRIMARY_ROUTE,
+        alternative: DEFAULT_ALTERNATIVE_ROUTE,
+        impassable: DEFAULT_IMPASSABLE_ROAD,
+      },
+      activeRouteName: DEFAULT_PRIMARY_ROUTE.name,
+      isManualOverride: false,
+      routeDelayExplanation: 'Controlled scenario test mission.',
+      etaMinutes: 9,
+      liveStatusUpdates: [],
+      startedAt: index === 0 ? 'Just now' : undefined,
+    }))
+    localStorage.setItem('resqph.state.v2.missions', JSON.stringify(missions))
+    localStorage.setItem('resqph.state.v2.requests', JSON.stringify(INITIAL_REQUESTS))
+    localStorage.setItem('resqph.state.v2.teams', JSON.stringify(INITIAL_TEAMS))
+
+    const { container } = renderWithProviders(<DashboardPage />, 'rescuer')
+    const missionList = container.querySelector('.rescuer-open-mission-list')
+
+    expect(missionList?.querySelectorAll('li')).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'Show all 5 missions' })).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 5 missions' }))
+
+    expect(missionList?.querySelectorAll('li')).toHaveLength(5)
+    expect(screen.getByRole('button', { name: 'Show fewer missions' })).toHaveAttribute('aria-expanded', 'true')
+    localStorage.removeItem('resqph.state.v2.missions')
+    localStorage.removeItem('resqph.state.v2.requests')
+    localStorage.removeItem('resqph.state.v2.teams')
+  })
+
+  it('keeps mission, target, and combined navigation in separate console tabs', () => {
+    renderWithProviders(<DashboardPage />, 'rescuer')
+
+    expect(screen.getByRole('button', { name: 'Assigned Team & Progress' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescue Target Details' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Flood-Aware Navigation' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescue Records' })).toBeInTheDocument()
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Assigned Team & Progress')
+    expect(screen.getAllByRole('heading', { name: 'Assigned Team & Progress' }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('button', { name: 'Routes' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Map' })).not.toBeInTheDocument()
+    expect(screen.getByText(/4 responders/i)).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Mission progress' })).toBeInTheDocument()
+    expect(screen.getByText('Team Alpha')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Open Missions' })).toBeInTheDocument()
+    expect(screen.getByText('MSN-0042')).toBeInTheDocument()
+    expect(screen.queryByText('Mission Status')).not.toBeInTheDocument()
+    expect(screen.queryByText('Estimated Transit')).not.toBeInTheDocument()
+    expect(screen.queryByText('Target Flood Depth')).not.toBeInTheDocument()
+    expect(screen.queryByText('Evacuees Count')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Emergency Hotlines/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/CONTROLLED FLOOD SCENARIO/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/House & Location Description/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescue Target Details' }))
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Rescue Target Details')
+    expect(screen.getByText(/House & Location Description/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Flood-Aware Navigation & Rerouting Engine/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Flood-Aware Navigation' }))
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Flood-Aware Navigation')
+    expect(screen.getByText(/Flood-Aware Navigation & Rerouting Engine/i)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Interactive Realistic Flood-Aware Rescue Map' })).toBeInTheDocument()
+    expect(screen.queryByText(/SIMULATED EN ROUTE ADVISORY/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Controlled-Scenario Routing Rationale/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/House & Location Description/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescue Records' }))
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Rescue Records')
+    expect(screen.getAllByRole('heading', { name: 'Rescue Records' }).length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { name: 'Field Reports' })).toBeInTheDocument()
+    expect(screen.getByText('MSN-0038')).toBeInTheDocument()
+    expect(screen.getByText('RQ-0040')).toBeInTheDocument()
+    expect(screen.getByText('Capt. R. Santos, Team Alpha')).toBeInTheDocument()
+    expect(screen.getByText('6')).toBeInTheDocument()
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getByText('Field Notes')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Completed Tickets' })).not.toBeInTheDocument()
+    expect(screen.getAllByText(/Successful/).length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByText(/Flood-Aware Navigation & Rerouting Engine/i)).not.toBeInTheDocument()
+  })
+
   it('renders target details panel, medical alerts, and flood severity status', () => {
-    renderWithProviders(<RescuerView />, 'rescuer')
+    renderWithProviders(<RescuerView navSection="inquiries" />, 'rescuer')
 
     // Target location and landmark
     expect(screen.getByText(/House & Location Description/i)).toBeInTheDocument()
@@ -196,13 +304,20 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
   })
 
   it('renders flood-aware route engine with avoided Loyola St and recommended Jhocson St', () => {
-    renderWithProviders(<RescuerView />, 'rescuer')
+    renderWithProviders(<RescuerView navSection="missions" />, 'rescuer')
 
     // Impassable warning
     expect(screen.getByText(/LOYOLA ST\. — IMPASSABLE/i)).toBeInTheDocument()
     expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/Jhocson St\. Recommended Corridor/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Gerardo St\. Detour/i)).toBeInTheDocument()
+
+    const recommendedRoute = screen.getByRole('button', { name: /Select recommended route/i })
+    const alternativeRoute = screen.getByRole('button', { name: /Select alternative route/i })
+    expect(recommendedRoute).toHaveAttribute('aria-pressed', 'true')
+    expect(alternativeRoute).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.keyDown(alternativeRoute, { key: 'Enter' })
+    expect(alternativeRoute).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('shows active prototype en route status advisory on rescuer view', () => {
@@ -215,6 +330,52 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
   })
 })
 describe('Dispatcher / Coordinator Dashboard Flows', () => {
+  it('separates dispatcher overview, requests, responses, teams, map, and records tabs', () => {
+    renderWithProviders(<DashboardPage />, 'coordinator')
+
+    for (const tab of [
+      'Dispatch Overview',
+      'Rescue Request Queue',
+      'Active Responses',
+      'Rescue Fleet Status',
+      'Hazard Map & Route Oversight',
+      'Incident Reports',
+    ]) {
+      expect(screen.getByRole('button', { name: tab })).toBeInTheDocument()
+    }
+    expect(screen.getByRole('heading', { name: 'Dispatch Overview' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Active Responses' })).toBeInTheDocument()
+    expect(screen.queryByText(/Citizen Rescue Inquiries/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescue Request Queue' }))
+    expect(screen.getByRole('heading', { name: 'Rescue Request Queue' })).toBeInTheDocument()
+    expect(screen.getByText(/Citizen Rescue Inquiries/i)).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Active Responses' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescue Fleet Status' }))
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Rescue Fleet Status')
+    expect(screen.getAllByRole('heading', { name: 'Rescue Fleet Status' }).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/Citizen Rescue Inquiries/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Incident Reports' }))
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Incident Reports')
+    expect(screen.getByRole('heading', { name: 'Completed Tickets' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Field Reports' })).toBeInTheDocument()
+  })
+
+  it('shows the selected operation details with the hazard map on the dispatcher map tab', () => {
+    renderWithProviders(<DashboardPage />, 'coordinator')
+    fireEvent.click(screen.getByRole('button', { name: 'Hazard Map & Route Oversight' }))
+
+    expect(document.querySelector('.header-page-title')).toHaveTextContent('Hazard Map & Route Oversight')
+    expect(screen.getByRole('heading', { name: 'Citizen Rescue Operation Route' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Select active rescue operation' })).toBeInTheDocument()
+    expect(screen.getByText('SELECTED DISPATCH')).toBeInTheDocument()
+    expect(screen.getByText('Team Alpha')).toBeInTheDocument()
+    expect(screen.getByText(/Jhocson St\. Recommended Corridor/i)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Interactive Realistic Flood-Aware Rescue Map' })).toBeInTheDocument()
+  })
+
   it('renders incoming rescue inquiry queue and situation inspector', () => {
     renderWithProviders(<CoordinatorView navSection="inquiries" />, 'coordinator')
 
@@ -247,10 +408,17 @@ describe('Dispatcher / Coordinator Dashboard Flows', () => {
 
 
 describe('Dashboard Prototype Controls', () => {
-  it('renders current portal view and provides portal switcher', () => {
+  it('renders the citizen portal without volunteer controls or prototype header suffix', () => {
     renderWithProviders(<DashboardPage />, 'citizen')
 
-    expect(screen.getByText(/Citizen Distress & Volunteer Portal/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Switch portal/i })).toBeInTheDocument()
+    expect(screen.getByText('Citizen Distress Portal')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'ResQPH Logo' })).toHaveAttribute('src', '/logo.png')
+    expect(document.querySelector('.brand-title')).toHaveTextContent('ResQPH')
+    expect(document.querySelector('.brand-title__p')).toHaveTextContent('P')
+    expect(document.querySelector('.brand-title__h')).toHaveTextContent('H')
+    expect(screen.queryByText(/U-Belt Pilot · Academic Prototype/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Volunteer')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Switch portal/i })).not.toBeInTheDocument()
+    expect(document.querySelector('.header-center')).not.toBeInTheDocument()
   })
 })

@@ -12,8 +12,8 @@
 
 .modal-card {
   width: 100%;
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: #111827;
+  border: 1px solid #263244;
   border-radius: 16px;
   box-shadow: 0 24px 60px rgb(0 0 0 / 60%);
   display: flex;
@@ -21,6 +21,8 @@
   max-height: 90vh;
   overflow: hidden;
   animation: slideUp 0.22s var(--ease);
+  /* Force all text in modal to be readable on dark background */
+  color: #e2e8f0;
 }
 
 .modal-header {
@@ -29,21 +31,21 @@
   align-items: flex-start;
   gap: 16px;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-elevated);
+  border-bottom: 1px solid #263244;
+  background: #1e293b;
 }
 
 .modal-title {
-  font-family: var(--font-display);
+  font-family: var(--font-display, system-ui, -apple-system, sans-serif);
   font-size: 1.35rem;
   font-weight: 400;
-  color: var(--text-primary);
+  color: #f8fafc;
   letter-spacing: 0.03em;
 }
 
 .modal-subtitle {
   font-size: 0.8rem;
-  color: var(--text-tertiary);
+  color: #94a3b8;
   margin-top: 4px;
 }
 
@@ -54,14 +56,14 @@
   height: 32px;
   border: none;
   border-radius: 8px;
-  background: var(--border-subtle);
-  color: var(--text-tertiary);
+  background: #263244;
+  color: #94a3b8;
   cursor: pointer;
   transition: all 0.18s var(--ease);
 }
 .modal-close:hover {
-  background: var(--color-brand-subtle);
-  color: var(--color-brand-hover);
+  background: #dc2626;
+  color: #f8fafc;
 }
 
 .modal-body {
@@ -71,12 +73,73 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  color: #e2e8f0;
+}
+
+/* ── Force readable colors inside modal for light-mode inline styles ── */
+.modal-body label,
+.modal-body legend,
+.modal-body summary {
+  color: #cbd5e1 !important;
+}
+
+.modal-body strong,
+.modal-body b {
+  color: #f1f5f9 !important;
+}
+
+.modal-body p,
+.modal-body span:not([class]),
+.modal-body li {
+  color: #cbd5e1 !important;
+}
+
+/* Sub-text / muted helper text */
+.modal-body .modal-hint,
+.modal-body [style*="color: #64748b"],
+.modal-body [style*="color: #475569"],
+.modal-body [style*="color: #94a3b8"] {
+  color: #94a3b8 !important;
+}
+
+/* Near-black text that becomes invisible on dark – override forcibly */
+.modal-body [style*="color: #0f172a"],
+.modal-body [style*="color: #1e293b"],
+.modal-body [style*="color: #334155"],
+.modal-body [style*="color: #374151"] {
+  color: #f1f5f9 !important;
+}
+
+/* Inputs and selects inside modals */
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+.modal-body input::placeholder,
+.modal-body textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Details/summary panels inside modals */
+.modal-body details {
+  border-color: #334155 !important;
+  background: #0d1525;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+}
+
+.modal-body fieldset {
+  border-color: #334155 !important;
 }
 
 .modal-footer {
   padding: 16px 24px;
-  border-top: 1px solid var(--border-subtle);
-  background: var(--surface-elevated);
+  border-top: 1px solid #263244;
+  background: #1e293b;
   display: flex;
   justify-content: flex-end;
   gap: 10px;

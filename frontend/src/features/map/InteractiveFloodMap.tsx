@@ -1,17 +1,40 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Icon } from '../../components/art/Icon'
+import { NON_LIVE_DATA_DISCLAIMER } from './mapData'
+import { useMapLayers, type UseMapLayersOptions } from './useMapLayers'
 import './map.css'
 
-interface MapProps {
-  activeStage?: 'pending' | 'assigned' | 'en-route' | 'arrived' | 'completed' | 'all'
+export interface MapProps extends UseMapLayersOptions {
+  activeStage?: 'pending' | 'assigned' | 'en-route' | 'arrived' | 'completed' | 'all' | 'none'
   highlightStreet?: string
   showAlternatives?: boolean
   selectedRoute?: 'primary' | 'alternative' | 'override'
   onSelectRoute?: (route: 'primary' | 'alternative') => void
+  showRouteAdvisory?: boolean
+  showRouteRationale?: boolean
   routeExplanation?: string
   etaMinutes?: number
+  operationContext?: {
+    requestId: string
+    address: string
+    headcount: number
+    teamName: string
+    status: string
+    routeName: string
+  }
+}
+
+function escapeHtml(value: string) {
+  const entities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }
+  return value.replace(/[&<>"']/g, (character) => entities[character])
 }
 
 const TILE_PROVIDERS = {
@@ -19,12 +42,6 @@ const TILE_PROVIDERS = {
     name: 'OpenStreetMap',
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  },
-  dark: {
-    name: 'Tactical Dark OSM',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; CARTO',
     maxZoom: 19,
   },
   satellite: {
@@ -35,68 +52,67 @@ const TILE_PROVIDERS = {
   },
 }
 
+// Sanitized pilot mission route coordinates in U-Belt
+const CITIZEN_TARGET: [number, number] = [14.6042, 120.9946]
+
+const SAFE_CORRIDOR_COORDS: [number, number][] = [
+  [14.6005, 120.9875], // Simulated dispatch hub
+  [14.6018, 120.9892], // Waypoint 1
+  [14.6028, 120.9910], // Waypoint 2
+  [14.6036, 120.9930], // Approach corridor
+  [14.6042, 120.9946], // Sanitized destination
+]
+
+const DETOUR_COORDS: [number, number][] = [
+  [14.6005, 120.9875],
+  [14.6020, 120.9905],
+  [14.6050, 120.9930],
+  [14.6042, 120.9946],
+]
+
 export function InteractiveFloodMap({
   activeStage = 'en-route',
   showAlternatives = true,
   selectedRoute = 'primary',
   onSelectRoute,
-  routeExplanation = 'Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and needs to head another alternative routes "Loyola St.".',
+  showRouteAdvisory = false,
+  routeExplanation = 'Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and team is using Jhocson St.',
   etaMinutes = 9,
+  operationContext,
+  roadFixture,
+  floodFixture,
+  studyAreaFixture,
+  simulatedState,
 }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
   const currentTileLayerRef = useRef<L.TileLayer | null>(null)
   const overlaysLayerGroupRef = useRef<L.LayerGroup | null>(null)
+  const uid = useId()
 
-  const [mapLayerMode, setMapLayerMode] = useState<'osm' | 'dark' | 'satellite'>('osm')
-  const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(true)
+  const [mapLayerMode, setMapLayerMode] = useState<'osm' | 'satellite'>('osm')
+  const [showTextAlt, setShowTextAlt] = useState(false)
 
-  // Sanitized citizen distress target inside the approved U-Belt pilot boundary
-  const citizenTarget: [number, number] = [14.6042, 120.9946]
-
-  // Recommended corridor for the controlled scenario
-  const safeCorridorCoords: [number, number][] = [
-    [14.6005, 120.9875], // Simulated dispatch hub
-    [14.6018, 120.9892], // Waypoint 1
-    [14.6028, 120.9910], // Waypoint 2
-    [14.6036, 120.9930], // Approach corridor
-    [14.6042, 120.9946], // Sanitized destination
-  ]
-
-  // Alternative Detour coordinates
-  const detourCoords: [number, number][] = [
-    [14.6005, 120.9875],
-    [14.6020, 120.9905],
-    [14.6050, 120.9930],
-    [14.6042, 120.9946],
-  ]
-
-  // Impassable Street Segment (Loyola St.)
-  const impassableStreetCoords: [number, number][] = [
-    [14.6015, 120.9890],
-    [14.6030, 120.9910],
-    [14.6040, 120.9930],
-  ]
-
-  // Synthetic flood polygons for the controlled academic scenario
-  const severeFloodPolygon: [number, number][] = [
-    [14.6050, 120.9910],
-    [14.6055, 120.9950],
-    [14.6025, 120.9950],
-    [14.6015, 120.9915],
-    [14.6035, 120.9905],
-  ]
-
-  const moderateFloodPolygon: [number, number][] = [
-    [14.6000, 120.9865],
-    [14.6025, 120.9895],
-    [14.6005, 120.9920],
-    [14.5985, 120.9880],
-  ]
+  // Fixture-driven layer state hook
+  const {
+    status: layerStatus,
+    errorMessage,
+    dataset,
+    metadata,
+    layerVisibility,
+    toggleLayer,
+  } = useMapLayers({
+    roadFixture,
+    floodFixture,
+    studyAreaFixture,
+    simulatedState,
+  })
 
   // Vehicle progress based on active stage
   const progressIdx =
-    activeStage === 'pending'
+    activeStage === 'none'
+      ? -1
+      : activeStage === 'pending'
       ? 0
       : activeStage === 'assigned'
         ? 1
@@ -106,15 +122,14 @@ export function InteractiveFloodMap({
             ? 3
             : 4
 
-  const boatCurrentPos = safeCorridorCoords[progressIdx]
+  const boatCurrentPos = SAFE_CORRIDOR_COORDS[progressIdx]
 
-  // Initialize Leaflet Map with OpenStreetMap
+  // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return
     if (mapInstanceRef.current) return
 
     try {
-      // Fix default marker icon issues in Leaflet when bundled with Vite
       delete (L.Icon.Default.prototype as any)._getIconUrl
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -128,7 +143,6 @@ export function InteractiveFloodMap({
         zoomControl: false,
       })
 
-      // Add OpenStreetMap base tile layer
       const defaultProvider = TILE_PROVIDERS.osm
       const initialTile = L.tileLayer(defaultProvider.url, {
         attribution: defaultProvider.attribution,
@@ -136,10 +150,8 @@ export function InteractiveFloodMap({
       }).addTo(map)
       currentTileLayerRef.current = initialTile
 
-      // Add Zoom control at top-right
       L.control.zoom({ position: 'topright' }).addTo(map)
 
-      // Add overlay group
       const overlayGroup = L.layerGroup().addTo(map)
       overlaysLayerGroupRef.current = overlayGroup
 
@@ -156,7 +168,7 @@ export function InteractiveFloodMap({
     }
   }, [])
 
-  // Switch Base Tile Layer when mapLayerMode changes
+  // Switch Tile Layer
   useEffect(() => {
     const map = mapInstanceRef.current
     if (!map) return
@@ -178,7 +190,7 @@ export function InteractiveFloodMap({
     }
   }, [mapLayerMode])
 
-  // Update Map Overlays (Markers, Polylines, Flood Polygons)
+  // Update Dynamic Map Overlays from Adapter Dataset
   useEffect(() => {
     const map = mapInstanceRef.current
     const overlayGroup = overlaysLayerGroupRef.current
@@ -187,164 +199,202 @@ export function InteractiveFloodMap({
     try {
       overlayGroup.clearLayers()
 
-      // 1. Synthetic controlled-scenario flood polygons
-      if (showFloodDepthLayer) {
-        const severePoly = L.polygon(severeFloodPolygon, {
-          color: '#dc2626',
+      // 1. Study Area Pilot Boundary Polygon
+      if (layerVisibility.boundary && dataset?.studyArea.leafletPolygon.length) {
+        const boundaryPoly = L.polygon(dataset.studyArea.leafletPolygon, {
+          color: '#3b82f6',
           weight: 2,
-          fillColor: '#ef4444',
-          fillOpacity: 0.42,
-          dashArray: '4, 4',
-        }).bindPopup(`
-          <div class="leaflet-popup-flood">
-            <strong style="color:#ef4444;">CRITICAL FLOOD ZONE (>1.5m)</strong><br/>
-            <span>Controlled U-Belt flood scenario · Impassable in this demonstration</span>
-          </div>
-        `)
-        overlayGroup.addLayer(severePoly)
-
-        const moderatePoly = L.polygon(moderateFloodPolygon, {
-          color: '#f59e0b',
-          weight: 1.5,
-          fillColor: '#f59e0b',
-          fillOpacity: 0.32,
-        }).bindPopup(`
-          <div class="leaflet-popup-flood">
-            <strong style="color:#f59e0b;">MODERATE FLOOD PONDING (0.5m - 0.8m)</strong><br/>
-            <span>Knee-deep to waist-deep backflow</span>
-          </div>
-        `)
-        overlayGroup.addLayer(moderatePoly)
-      }
-
-      // 2. Recommended eligible corridor polyline
-      const safeLine = L.polyline(safeCorridorCoords, {
-        color: selectedRoute === 'primary' ? '#22c55e' : '#16a34a',
-        weight: selectedRoute === 'primary' ? 6 : 4,
-        opacity: 0.9,
-        dashArray: '8, 6',
-      }).bindPopup(`
-        <div class="leaflet-popup-route">
-          <strong style="color:#22c55e;">RECOMMENDED ROUTE</strong><br/>
-          <span>Jhocson St. corridor · Avoids an impassable controlled-scenario edge</span><br/>
-          <span>ETA: ${etaMinutes} minutes</span>
-        </div>
-      `)
-      safeLine.on('click', () => onSelectRoute?.('primary'))
-      overlayGroup.addLayer(safeLine)
-
-      // 3. Alternative Detour Polyline (Amber dashed line)
-      if (showAlternatives) {
-        const detourLine = L.polyline(detourCoords, {
-          color: selectedRoute === 'alternative' ? '#f59e0b' : 'rgba(245, 158, 11, 0.55)',
-          weight: selectedRoute === 'alternative' ? 6 : 3.5,
+          fillColor: '#3b82f6',
+          fillOpacity: 0.04,
           dashArray: '6, 6',
         }).bindPopup(`
-          <div class="leaflet-popup-route">
-            <strong style="color:#f59e0b;">ALTERNATIVE DETOUR: GERARDO ST.</strong><br/>
-            <span>Moderate water ponding (0.4m) · Secondary route</span>
+          <div class="leaflet-popup-edge">
+            <strong style="color:#60a5fa;">${escapeHtml(dataset.studyArea.name)}</strong><br/>
+            <span>Approved WGS 84 Pilot Boundary (EPSG:4326)</span><br/>
+            <span>Approved: ${escapeHtml(dataset.studyArea.approvedOn)}</span>
           </div>
         `)
-        detourLine.on('click', () => onSelectRoute?.('alternative'))
-        overlayGroup.addLayer(detourLine)
+        overlayGroup.addLayer(boundaryPoly)
       }
 
-      // 4. Impassable Loyola St. Barrier Polyline
-      const impassableLine = L.polyline(impassableStreetCoords, {
-        color: '#dc2626',
-        weight: 8,
-        opacity: 0.95,
-      }).bindPopup(`
-        <div class="leaflet-popup-route">
-          <strong style="color:#dc2626;">LOYOLA ST. — IMPASSABLE (1.4m DEPTH)</strong><br/>
-          <span>Road blocked by torrential water depth. Automatically avoided.</span>
-        </div>
-      `)
-      overlayGroup.addLayer(impassableLine)
+      // 2. Fixture-driven Road Network Edges
+      if (layerVisibility.roads && dataset?.edges.length) {
+        for (const edge of dataset.edges) {
+          const isImpassable = edge.passability === 'impassable'
+          const isRestricted = edge.passability === 'restricted'
 
-      // 5. Citizen Distress Beacon Marker
-      const citizenIcon = L.divIcon({
-        className: 'leaflet-custom-marker',
-        html: `
-          <div class="pin-beacon-wrapper">
-            <div class="pin-beacon-pulse"></div>
-            <div class="pin-beacon-center red-beacon">
-              <span>🚨</span>
+          const edgeColor = isImpassable ? '#dc2626' : isRestricted ? '#f59e0b' : '#22c55e'
+          const edgeWeight = isImpassable ? 6 : isRestricted ? 5 : 4
+          const dashArray = isRestricted ? '6, 4' : undefined
+
+          const polyline = L.polyline(edge.leafletCoordinates, {
+            color: edgeColor,
+            weight: edgeWeight,
+            opacity: 0.9,
+            dashArray,
+          }).bindPopup(`
+            <div class="leaflet-popup-edge">
+              <strong style="color:${edgeColor};">${escapeHtml(edge.edgeId)} (${escapeHtml(edge.roadClass)})</strong><br/>
+              <span>Length: ${edge.lengthM}m · Nodes: ${escapeHtml(edge.fromNode)} &rarr; ${escapeHtml(edge.toNode)}</span><br/>
+              <span>Passability: <strong>${edge.passability.toUpperCase()}</strong></span><br/>
+              <span>Flood: ${escapeHtml(edge.floodLevel)}${edge.floodDepthCm ? ` (${edge.floodDepthCm}cm depth)` : ''}</span><br/>
+              <span>Source: ${escapeHtml(edge.sourceType)} · ${escapeHtml(edge.observedAt)}</span>
+              ${edge.reason ? `<br/><em>${escapeHtml(edge.reason)}</em>` : ''}
             </div>
+          `)
+          overlayGroup.addLayer(polyline)
+        }
+      }
+
+      // 3. Controlled-Scenario Flood Polygons / Flood Lines
+      if (layerVisibility.flood && dataset?.floodFeatures.length) {
+        for (const flood of dataset.floodFeatures) {
+          if (flood.geometryType === 'Polygon' && Array.isArray(flood.leafletCoordinates)) {
+            const isCritical = flood.passability === 'impassable' || flood.floodLevel === 'severe'
+            const poly = L.polygon(flood.leafletCoordinates, {
+              color: isCritical ? '#dc2626' : '#f59e0b',
+              weight: 2,
+              fillColor: isCritical ? '#ef4444' : '#f59e0b',
+              fillOpacity: isCritical ? 0.42 : 0.3,
+              dashArray: isCritical ? '4, 4' : undefined,
+            }).bindPopup(`
+              <div class="leaflet-popup-flood">
+                <strong style="color:${isCritical ? '#ef4444' : '#f59e0b'};">
+                  ${isCritical ? 'CRITICAL FLOOD ZONE' : 'MODERATE FLOOD PONDING'}
+                </strong><br/>
+                <span>${escapeHtml(flood.floodLevel)} · ${flood.floodDepthCm ? `${flood.floodDepthCm} cm depth` : 'Controlled depth'}</span><br/>
+                <span>Passability: ${escapeHtml(flood.passability)}</span>
+                ${flood.reason ? `<br/><span>${escapeHtml(flood.reason)}</span>` : ''}
+              </div>
+            `)
+            overlayGroup.addLayer(poly)
+          }
+        }
+      }
+
+      // 4. Mission Route & Vehicle Overlay
+      if (layerVisibility.route) {
+        // Safe Recommended Route Line
+        const safeLine = L.polyline(SAFE_CORRIDOR_COORDS, {
+          color: selectedRoute === 'primary' ? '#22c55e' : '#16a34a',
+          weight: selectedRoute === 'primary' ? 6 : 4,
+          opacity: 0.9,
+          dashArray: '8, 6',
+        }).bindPopup(`
+          <div class="leaflet-popup-route">
+            <strong style="color:#22c55e;">RECOMMENDED ROUTE</strong><br/>
+            <span>Jhocson St. corridor · Avoids an impassable controlled-scenario edge</span><br/>
+            <span>ETA: ${etaMinutes} minutes</span>
           </div>
-        `,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
-      })
+        `)
+        safeLine.on('click', () => onSelectRoute?.('primary'))
+        overlayGroup.addLayer(safeLine)
 
-      const citizenMarker = L.marker(citizenTarget, { icon: citizenIcon }).bindPopup(`
-        <div class="leaflet-popup-citizen">
-          <strong style="color:#ef4444;">DISTRESS TARGET (BRGY. TUMANA)</strong><br/>
-          <span>Coordinates: 14.6532° N, 121.0912° E</span><br/>
-          <span>Headcount: 4 persons · Chest-deep flood</span>
-        </div>
-      `)
-      overlayGroup.addLayer(citizenMarker)
-
-      // 6. Rescue Unit / Boat Marker
-      const boatIcon = L.divIcon({
-        className: 'leaflet-custom-marker',
-        html: `
-          <div class="pin-beacon-wrapper">
-            <div class="pin-beacon-center boat-beacon">
-              <span>🚤</span>
+        // Alternative Detour Line
+        if (showAlternatives) {
+          const detourLine = L.polyline(DETOUR_COORDS, {
+            color: selectedRoute === 'alternative' ? '#f59e0b' : 'rgba(245, 158, 11, 0.55)',
+            weight: selectedRoute === 'alternative' ? 6 : 3.5,
+            dashArray: '6, 6',
+          }).bindPopup(`
+            <div class="leaflet-popup-route">
+              <strong style="color:#f59e0b;">ALTERNATIVE DETOUR: GERARDO ST.</strong><br/>
+              <span>Moderate water ponding (0.4m) · Secondary route</span>
             </div>
-          </div>
-        `,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
-      })
+          `)
+          detourLine.on('click', () => onSelectRoute?.('alternative'))
+          overlayGroup.addLayer(detourLine)
+        }
 
-      const boatMarker = L.marker(boatCurrentPos, { icon: boatIcon }).bindPopup(`
-        <div class="leaflet-popup-rescuer">
-          <strong style="color:#38bdf8;">Rescue Team Alpha (Boat Unit)</strong><br/>
-          <span>Status: En Route · Recommended Corridor</span><br/>
-          <span>ETA: ${etaMinutes} minutes</span>
-        </div>
-      `)
-      overlayGroup.addLayer(boatMarker)
-
-      // 7. Evacuation Center Marker (Concepcion / NU Gym)
-      const evacIcon = L.divIcon({
-        className: 'leaflet-custom-marker',
-        html: `
-          <div class="pin-beacon-wrapper">
-            <div class="pin-beacon-center evac-beacon">
-              <span>🏫</span>
+        // Citizen Distress Beacon Marker
+        const citizenIcon = L.divIcon({
+          className: 'leaflet-custom-marker',
+          html: `
+            <div class="pin-beacon-wrapper">
+              <div class="pin-beacon-pulse"></div>
+              <div class="pin-beacon-center red-beacon">
+                <span>🚨</span>
+              </div>
             </div>
-          </div>
-        `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-      })
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+        })
 
-      const evacMarker = L.marker([14.6510, 121.0990], { icon: evacIcon }).bindPopup(`
-        <div class="leaflet-popup-evac">
-          <strong style="color:#22c55e;">Evacuation Center (Concepcion Elementary)</strong><br/>
-          <span>Capacity: 70% occupied · Hot meals & medical staff</span>
-        </div>
-      `)
-      overlayGroup.addLayer(evacMarker)
+        const citizenMarker = L.marker(CITIZEN_TARGET, { icon: citizenIcon }).bindPopup(`
+          <div class="leaflet-popup-citizen">
+            <strong style="color:#ef4444;">${operationContext ? `RESCUE TARGET · ${escapeHtml(operationContext.requestId)}` : 'SANITIZED U-BELT STUDY TARGET'}</strong><br/>
+            <span>${operationContext ? escapeHtml(operationContext.address) : 'Controlled U-Belt pilot location'}</span><br/>
+            <span>${operationContext ? `${operationContext.headcount} people · ${escapeHtml(operationContext.status.replace('-', ' '))}` : 'Sanitized demonstration target'}</span>
+          </div>
+        `)
+        overlayGroup.addLayer(citizenMarker)
+
+        // Rescue Boat Marker
+        if (boatCurrentPos) {
+          const boatIcon = L.divIcon({
+            className: 'leaflet-custom-marker',
+            html: `
+              <div class="pin-beacon-wrapper">
+                <div class="pin-beacon-center boat-beacon">
+                  <span>🚤</span>
+                </div>
+              </div>
+            `,
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+          })
+
+          const boatMarker = L.marker(boatCurrentPos, { icon: boatIcon }).bindPopup(`
+            <div class="leaflet-popup-rescuer">
+              <strong style="color:#38bdf8;">${operationContext ? escapeHtml(operationContext.teamName) : 'Simulated Rescue Unit'}</strong><br/>
+              <span>${operationContext ? `Status: ${escapeHtml(operationContext.status.replace('-', ' '))} · Assigned route` : 'Status: Controlled scenario only'}</span><br/>
+              <span>ETA: ${etaMinutes} minutes</span>
+            </div>
+          `)
+          overlayGroup.addLayer(boatMarker)
+        }
+
+        // Evacuation Center Marker
+        const evacIcon = L.divIcon({
+          className: 'leaflet-custom-marker',
+          html: `
+            <div class="pin-beacon-wrapper">
+              <div class="pin-beacon-center evac-beacon">
+                <span>🏫</span>
+              </div>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        })
+
+        const evacMarker = L.marker([14.6050, 120.9930], { icon: evacIcon }).bindPopup(`
+          <div class="leaflet-popup-evac">
+            <strong style="color:#22c55e;">Evacuation Center (Sanitized U-Belt Pilot)</strong><br/>
+            <span>Capacity: 70% occupied · Hot meals & medical staff</span>
+          </div>
+        `)
+        overlayGroup.addLayer(evacMarker)
+      }
     } catch (err) {
       console.warn('Error rendering Leaflet overlays:', err)
     }
   }, [
-    showFloodDepthLayer,
+    dataset,
+    layerVisibility,
     showAlternatives,
     selectedRoute,
     activeStage,
     etaMinutes,
+    operationContext,
     onSelectRoute,
+    boatCurrentPos,
   ])
 
   function handleRecenter() {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView([14.6485, 121.0860], 14)
+      mapInstanceRef.current.setView([14.6042, 120.9946], 15)
     }
   }
 
@@ -352,112 +402,209 @@ export function InteractiveFloodMap({
     <div className="flood-map-container" role="region" aria-label="Interactive Realistic Flood-Aware Rescue Map">
       {/* Top Map HUD & Cartography Controls */}
       <div className="flood-map-controls">
-        <div className="flood-map-legend-items">
-          <span className="legend-tag legend-study">
-            🗺️ OpenStreetMap · U-Belt controlled scenario · 14.6042° N, 120.9946° E
-          </span>
-          <span className="legend-tag legend-safe">
-            ● Safe Transit (Jhocson Corridor · {etaMinutes}m ETA)
-          </span>
-          <span className="legend-tag legend-impassable">
-            ✕ Loyola St. (Impassable: 1.4m Depth)
-          </span>
+        <div className="flood-map-controls__summary">
+          <div className="flood-map-location">
+            <span className="flood-map-location__eyebrow">CONTROLLED STUDY AREA</span>
+            <strong>U-Belt Pilot · 14.6042° N, 120.9946° E</strong>
+          </div>
+          <div className="flood-map-legend-items" aria-label="Road passability legend">
+            <span className="legend-tag legend-study">🗺️ OpenStreetMap · U-Belt controlled scenario</span>
+            <span className="legend-tag legend-safe">● Passable ({metadata.stats.passableCount})</span>
+            <span className="legend-tag legend-restricted">▲ Restricted ({metadata.stats.restrictedCount})</span>
+            <span className="legend-tag legend-impassable">✕ Impassable ({metadata.stats.impassableCount})</span>
+          </div>
         </div>
 
-        <div className="flood-map-toggles">
+        <div className="map-control-row">
+          <div className="map-base-layers" role="group" aria-label="Map style">
+            <button
+              type="button"
+              className={`map-mode-btn ${mapLayerMode === 'osm' ? 'is-active' : ''}`}
+              aria-pressed={mapLayerMode === 'osm'}
+              onClick={() => setMapLayerMode('osm')}
+              title="Standard OpenStreetMap Cartography"
+            >
+              OpenStreetMap
+            </button>
+            <button
+              type="button"
+              className={`map-mode-btn ${mapLayerMode === 'satellite' ? 'is-active' : ''}`}
+              aria-pressed={mapLayerMode === 'satellite'}
+              onClick={() => setMapLayerMode('satellite')}
+              title="Satellite Aerial Imagery"
+            >
+              Satellite View
+            </button>
+          </div>
+
+          <div className="flood-map-toggles" role="group" aria-label="Map overlays and view controls">
+            <button
+              type="button"
+              className={`map-toggle-btn ${layerVisibility.roads ? 'is-active' : ''}`}
+              aria-pressed={layerVisibility.roads}
+              onClick={() => toggleLayer('roads')}
+              title="Toggle Road Network Layer"
+            >
+              Roads: {layerVisibility.roads ? 'ON' : 'OFF'}
+            </button>
+            <button
+              type="button"
+              className={`map-toggle-btn ${layerVisibility.flood ? 'is-active' : ''}`}
+              aria-pressed={layerVisibility.flood}
+              onClick={() => toggleLayer('flood')}
+              title="Toggle Flood Scenario Layer"
+            >
+              Flood Hazard: {layerVisibility.flood ? 'ON' : 'OFF'}
+            </button>
+            <button
+              type="button"
+              className={`map-toggle-btn ${layerVisibility.boundary ? 'is-active' : ''}`}
+              aria-pressed={layerVisibility.boundary}
+              onClick={() => toggleLayer('boundary')}
+              title="Toggle U-Belt Pilot Boundary"
+            >
+              Boundary: {layerVisibility.boundary ? 'ON' : 'OFF'}
+            </button>
+            <button
+              type="button"
+              className="map-toggle-btn map-recenter-btn"
+              aria-label="Recenter map on study area"
+              onClick={handleRecenter}
+              title="Recenter Map on Target"
+            >
+              Recenter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scenario Metadata & Non-live Disclaimer Sub-bar */}
+      <div className="map-metadata-bar">
+        <div className="map-metadata-left">
+          <span className="map-meta-item">
+            <span>Scenario:</span>
+            <strong className="map-meta-tag">{metadata.scenarioId}</strong>
+          </span>
+          <span className="map-meta-item">
+            <span>Source:</span>
+            <strong className="map-meta-tag">{metadata.sourceType.toUpperCase()}</strong>
+          </span>
+          <span className="map-meta-item">
+            <span>Timestamp:</span>
+            <strong className="map-meta-tag">{metadata.scenarioTimestamp}</strong>
+          </span>
+        </div>
+        <div className="map-metadata-right">
+          <span className="map-disclaimer-notice">
+            <Icon name="alert" size={14} />
+            <span>{NON_LIVE_DATA_DISCLAIMER}</span>
+          </span>
           <button
             type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'osm' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('osm')}
-            title="Standard OpenStreetMap Cartography"
+            className={`map-toggle-btn ${showTextAlt ? 'is-active' : ''}`}
+            onClick={() => setShowTextAlt((v) => !v)}
+            aria-expanded={showTextAlt}
+            aria-controls={`${uid}-map-table`}
           >
-            OpenStreetMap
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'dark' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('dark')}
-            title="Tactical Night Response OpenStreetMap"
-          >
-            Tactical Dark
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'satellite' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('satellite')}
-            title="Satellite Aerial Imagery"
-          >
-            Satellite View
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${showFloodDepthLayer ? 'is-active' : ''}`}
-            onClick={() => setShowFloodDepthLayer((v) => !v)}
-            title="Toggle synthetic controlled-scenario flood polygons"
-          >
-            Scenario Flood Depth: {showFloodDepthLayer ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
-            className="map-toggle-btn"
-            onClick={handleRecenter}
-            title="Recenter Map on Target"
-          >
-            Recenter
+            {showTextAlt ? 'Hide Text Alternative' : 'View Text Alternative'}
           </button>
         </div>
       </div>
 
-      {/* Simulated route advisory over the map */}
-      <div className="map-realtime-routing-banner">
-        <div className="banner-pulse-icon">
-          <Icon name="route" size={18} />
+      {/* State Banners (Loading, Empty, Error) */}
+      {layerStatus === 'loading' && (
+        <div className="map-state-banner is-loading" role="status">
+          <Icon name="clock" size={16} />
+          <span>Loading road network and flood scenario map layers…</span>
         </div>
-        <div className="banner-text">
-          <strong>SIMULATED EN ROUTE ADVISORY:</strong>{' '}
-          <span>{routeExplanation}</span>
-        </div>
-        <span className="banner-eta-badge font-mono">ETA: {etaMinutes} MINS</span>
-      </div>
+      )}
 
-      {/* OpenStreetMap Leaflet canvas with controlled scenario overlays */}
+      {layerStatus === 'empty' && (
+        <div className="map-state-banner is-empty" role="status">
+          <Icon name="alert" size={16} />
+          <span>No road edges or flood scenario records found in this fixture. Showing base cartography.</span>
+        </div>
+      )}
+
+      {layerStatus === 'error' && (
+        <div className="map-state-banner is-error" role="alert">
+          <Icon name="alert" size={16} />
+          <span>
+            <strong>Map Layer Warning:</strong> {errorMessage || 'Failed to load geospatial layers.'} Showing base map.
+          </span>
+        </div>
+      )}
+
+      {/* OpenStreetMap Leaflet Canvas */}
       <div className="flood-map-leaflet-wrapper">
         <div
           ref={mapContainerRef}
-          className={`flood-map-leaflet-canvas ${mapLayerMode === 'dark' ? 'leaflet-theme-dark' : ''}`}
+          className="flood-map-leaflet-canvas"
           id="openmap-hazard-map"
           style={{ width: '100%', height: '460px' }}
         />
       </div>
 
-      {/* Map Bottom Rationale Drawer */}
-      <div className="flood-map-explanation">
-        <div className="explanation-head">
-          <div className="explanation-title">
-            <Icon name="shield" size={16} />
-            <span>Controlled-Scenario Routing Rationale</span>
-          </div>
-          <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--color-brand-hover)' }}>
-            LiPAD Hazard & Elevation Matrix Active
-          </span>
-        </div>
-        <div className="explanation-body">
-          <div className="explanation-row">
-            <span className="exp-badge exp-avoided">AVOIDED SHORTCUT</span>
-            <span className="exp-text">
-              <strong>Loyola St. Shortcut:</strong> Water depth reaches <strong>1.40 m</strong> (waist/chest current),
-              which exceeds the safe rescue craft threshold (<strong>0.30 m</strong>). High probability of engine stall.
+      {/* Accessible Text / Table Alternative for Essential Geospatial Data */}
+      {showTextAlt && (
+        <div id={`${uid}-map-table`} className="map-text-alternative" aria-label="Accessible Road Network Data Table">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <strong style={{ fontSize: '0.84rem', color: '#f4f4f5' }}>
+              Accessible Road Network & Flood Passability Summary ({metadata.scenarioId})
+            </strong>
+            <span style={{ fontSize: '0.72rem', color: '#a1a1aa' }}>
+              Study Area: {metadata.studyAreaName}
             </span>
           </div>
-          <div className="explanation-row">
-            <span className="exp-badge exp-selected">RECOMMENDED ROUTE</span>
-            <span className="exp-text">
-              <strong>Jhocson St. Corridor:</strong> Lower controlled-scenario penalty and no impassable edge.
-              Safety Score: <strong>94/100</strong>. Unit ETA: <strong>{etaMinutes} minutes</strong>.
-            </span>
-          </div>
+          {dataset?.edges.length ? (
+            <table className="map-text-alt-table">
+              <thead>
+                <tr>
+                  <th>Edge ID</th>
+                  <th>Road Class</th>
+                  <th>Length</th>
+                  <th>Passability</th>
+                  <th>Flood Level</th>
+                  <th>Depth</th>
+                  <th>Observed Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dataset.edges.map((edge) => (
+                  <tr key={edge.edgeId}>
+                    <td className="font-mono">{edge.edgeId}</td>
+                    <td>{edge.roadClass}</td>
+                    <td>{edge.lengthM}m</td>
+                    <td>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            edge.passability === 'impassable'
+                              ? '#f87171'
+                              : edge.passability === 'restricted'
+                                ? '#fbbf24'
+                                : '#4ade80',
+                        }}
+                      >
+                        {edge.passability.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>{edge.floodLevel}</td>
+                    <td>{edge.floodDepthCm !== undefined ? `${edge.floodDepthCm} cm` : '—'}</td>
+                    <td className="font-mono">{edge.observedAt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p style={{ fontSize: '0.78rem', color: '#a1a1aa', margin: '8px 0 0' }}>
+              No road records available to display.
+            </p>
+          )}
         </div>
-      </div>
+      )}
+
     </div>
   )
 }

@@ -43,6 +43,9 @@ interface MissionContextValue {
   pendingSyncCount: number
   toggleOffline: () => void
   createRescueRequest: (req: Omit<RescueRequest, 'id' | 'status' | 'submittedAt'>) => RescueRequest
+  createRescueTeam: (team: Omit<RescueTeam, 'id'>) => RescueTeam
+  updateRescueTeam: (id: string, team: Omit<RescueTeam, 'id'>) => void
+  deleteRescueTeam: (id: string) => void
   updateRequestStatus: (id: string, status: RequestStatus) => void
   cancelRescueRequest: (id: string) => void
   assignMission: (
@@ -74,7 +77,14 @@ interface MissionContextValue {
   resetToInitialData: () => void
 }
 
-const STORAGE_PREFIX = 'resqph.state.v2.'
+const STORAGE_PREFIX = 'resqph.state.v4.'
+
+// Wipe any stale keys from older versions so they never shadow fresh mock data
+;['resqph.state.v1.', 'resqph.state.v2.', 'resqph.state.v3.'].forEach((oldPrefix) => {
+  Object.keys(localStorage)
+    .filter((k) => k.startsWith(oldPrefix))
+    .forEach((k) => localStorage.removeItem(k))
+})
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -111,6 +121,130 @@ const INITIAL_DEFAULT_MISSIONS: RescueMission[] = [
     etaMinutes: 9,
     liveStatusUpdates: INITIAL_MISSION_UPDATES,
     startedAt: '12 min ago',
+  },
+  {
+    id: 'MSN-0041',
+    requestId: 'RQ-0041',
+    teamId: 'team-bravo',
+    status: 'assigned',
+    suggestedRoute: {
+      primary: DEFAULT_PRIMARY_ROUTE,
+      alternative: DEFAULT_ALTERNATIVE_ROUTE,
+      impassable: DEFAULT_IMPASSABLE_ROAD,
+    },
+    activeRouteName: DEFAULT_PRIMARY_ROUTE.name,
+    isManualOverride: false,
+    routeDelayExplanation: 'Team Bravo en route via España Blvd. Estimated arrival: 10 minutes.',
+    etaMinutes: 10,
+    liveStatusUpdates: [
+      {
+        id: 'upd-msn41-1',
+        time: '10:30 AM',
+        author: 'Central Dispatch',
+        message: 'Mission MSN-0041 dispatched to Team Bravo (High-Clearance Truck).',
+        type: 'dispatch',
+      },
+    ],
+  },
+  {
+    id: 'MSN-0039',
+    requestId: 'RQ-0039',
+    teamId: 'team-charlie',
+    status: 'assigned',
+    suggestedRoute: {
+      primary: DEFAULT_PRIMARY_ROUTE,
+      alternative: DEFAULT_ALTERNATIVE_ROUTE,
+      impassable: DEFAULT_IMPASSABLE_ROAD,
+    },
+    activeRouteName: DEFAULT_PRIMARY_ROUTE.name,
+    isManualOverride: false,
+    routeDelayExplanation: 'Team Charlie dispatched via Dapitan St. Medical unit on standby. Estimated arrival: 7 minutes.',
+    etaMinutes: 7,
+    liveStatusUpdates: [
+      {
+        id: 'upd-msn39-1',
+        time: '10:37 AM',
+        author: 'Central Dispatch',
+        message: 'Mission MSN-0039 dispatched to Team Charlie (Amphibious Unit + Medical).',
+        type: 'dispatch',
+      },
+    ],
+  },
+  {
+    id: 'MSN-0038',
+    requestId: 'RQ-0040',
+    teamId: 'team-alpha',
+    status: 'completed',
+    suggestedRoute: {
+      primary: DEFAULT_PRIMARY_ROUTE,
+      alternative: DEFAULT_ALTERNATIVE_ROUTE,
+      impassable: DEFAULT_IMPASSABLE_ROAD,
+    },
+    activeRouteName: DEFAULT_PRIMARY_ROUTE.name,
+    isManualOverride: false,
+    routeDelayExplanation: 'Rescue Team arrival: 9 minutes. Rerouted via Jhocson St. after Loyola St. impassable.',
+    etaMinutes: 9,
+    liveStatusUpdates: INITIAL_MISSION_UPDATES,
+    startedAt: '09:20 AM',
+    arrivedAt: '09:29 AM',
+    completedAt: '09:45 AM',
+    rescuerNotes: 'All 6 occupants evacuated. Hypothermic child treated en route. Transferred to NU Gymnasium shelter.',
+  },
+  {
+    id: 'MSN-0036',
+    requestId: 'RQ-0038',
+    teamId: 'team-bravo',
+    status: 'completed',
+    suggestedRoute: {
+      primary: DEFAULT_PRIMARY_ROUTE,
+      alternative: DEFAULT_ALTERNATIVE_ROUTE,
+      impassable: DEFAULT_IMPASSABLE_ROAD,
+    },
+    activeRouteName: DEFAULT_PRIMARY_ROUTE.name,
+    isManualOverride: false,
+    routeDelayExplanation: 'Team Bravo via España Blvd. Minor congestion near Welcome Rotonda.',
+    etaMinutes: 8,
+    liveStatusUpdates: [
+      {
+        id: 'upd-msn36-1',
+        time: '08:10 AM',
+        author: 'Central Dispatch',
+        message: 'Mission MSN-0036 dispatched to Team Bravo (High-Clearance Truck).',
+        type: 'dispatch',
+      },
+    ],
+    startedAt: '08:10 AM',
+    arrivedAt: '08:18 AM',
+    completedAt: '08:30 AM',
+    rescuerNotes: '3 occupants transported to España Blvd evacuation center. No injuries.',
+  },
+  {
+    id: 'MSN-0034',
+    requestId: 'RQ-0036',
+    teamId: 'team-charlie',
+    status: 'completed',
+    suggestedRoute: {
+      primary: DEFAULT_PRIMARY_ROUTE,
+      alternative: DEFAULT_ALTERNATIVE_ROUTE,
+      impassable: DEFAULT_IMPASSABLE_ROAD,
+    },
+    activeRouteName: DEFAULT_PRIMARY_ROUTE.name,
+    isManualOverride: false,
+    routeDelayExplanation: 'Team Charlie via Dapitan St. Debris on Earnshaw St. navigated around.',
+    etaMinutes: 6,
+    liveStatusUpdates: [
+      {
+        id: 'upd-msn34-1',
+        time: '07:05 AM',
+        author: 'Central Dispatch',
+        message: 'Mission MSN-0034 dispatched to Team Charlie (Amphibious + Medical). Obstetric emergency flagged.',
+        type: 'dispatch',
+      },
+    ],
+    startedAt: '07:05 AM',
+    arrivedAt: '07:11 AM',
+    completedAt: '07:15 AM',
+    rescuerNotes: 'Pregnant patient safely evacuated. Transferred to Manila Doctors Hospital. All 5 occupants safe.',
   },
 ]
 
@@ -180,6 +314,23 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     },
     [requests.length, isOffline],
   )
+
+  const createRescueTeam = useCallback((input: Omit<RescueTeam, 'id'>): RescueTeam => {
+    const team: RescueTeam = { ...input, id: `team-${Date.now()}` }
+    setTeams((current) => [team, ...current])
+    if (isOffline) setPendingSyncCount((count) => count + 1)
+    return team
+  }, [isOffline])
+
+  const updateRescueTeam = useCallback((id: string, input: Omit<RescueTeam, 'id'>) => {
+    setTeams((current) => current.map((team) => team.id === id ? { ...input, id } : team))
+    if (isOffline) setPendingSyncCount((count) => count + 1)
+  }, [isOffline])
+
+  const deleteRescueTeam = useCallback((id: string) => {
+    setTeams((current) => current.filter((team) => team.id !== id))
+    if (isOffline) setPendingSyncCount((count) => count + 1)
+  }, [isOffline])
 
   const updateRequestStatus = useCallback(
     (id: string, status: RequestStatus) => {
@@ -483,6 +634,9 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       pendingSyncCount,
       toggleOffline,
       createRescueRequest,
+      createRescueTeam,
+      updateRescueTeam,
+      deleteRescueTeam,
       updateRequestStatus,
       cancelRescueRequest,
       assignMission,
@@ -508,6 +662,9 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       pendingSyncCount,
       toggleOffline,
       createRescueRequest,
+      createRescueTeam,
+      updateRescueTeam,
+      deleteRescueTeam,
       updateRequestStatus,
       cancelRescueRequest,
       assignMission,

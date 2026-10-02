@@ -1,4 +1,5 @@
 export type UserRole = 'citizen' | 'coordinator' | 'rescuer'
+export type SignupRole = Extract<UserRole, 'citizen' | 'rescuer'>
 
 export interface EmergencyContact {
   name: string

@@ -62,7 +62,9 @@ export function LocalizedForecastWidget({ hourly = [] }: LocalizedForecastWidget
             <span className="forecast-degrees">{currentWeather.temp}°</span>
             <div className="forecast-condition-wrap">
               <span className="forecast-condition">{currentWeather.condition}</span>
-              <span className="forecast-hilo">H: {currentWeather.high}° · L: {currentWeather.low}°</span>
+              <span className="forecast-hilo">
+                <span className="forecast-high">H={currentWeather.high}°</span> · L={currentWeather.low}°
+              </span>
             </div>
           </div>
         </div>
@@ -96,7 +98,7 @@ export function LocalizedForecastWidget({ hourly = [] }: LocalizedForecastWidget
               <span className="hourly-cell__time">{item.time}</span>
               <span className="hourly-cell__icon">{item.icon || '🌧️'}</span>
               <span className="hourly-cell__temp">{item.temp ?? 28}°</span>
-              <span className="hourly-cell__pop">{item.pop || (item.rainMm ? `${item.rainMm}mm` : '80%')}</span>
+              <span className="hourly-cell__pop">P={item.pop || (item.rainMm ? `${item.rainMm}mm` : '80%')}</span>
             </div>
           ))}
         </div>

@@ -5,15 +5,16 @@ import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
 import type { RescueRequest } from '../../../features/missions/types'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
-import { CoordinatorPendingQueue } from './coordinator/CoordinatorPendingQueue'
+import './coordinator/CoordinatorPendingQueue.css'
 import { CoordinatorAssignModal } from './coordinator/CoordinatorAssignModal'
+import { CreateRescueTeamTab } from './coordinator/CreateRescueTeamTab'
 import type { ApiRescueRequestSummary } from '../../../api/assignments'
 import {
+  EmptyState,
   Section,
   StatCard,
   StatusBadge,
   VulnerabilitiesBadges,
-  WeatherAlertBanner,
   SEVERITY_CONFIG,
 } from './shared'
 
@@ -28,14 +29,11 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
     hazardReports,
     assignMission,
     updateRequestStatus,
-    updateMissionStatus,
     overrideRoute,
-    updateRouteDelayExplanation,
-    submitIncidentReport,
   } = useMissions()
 
   // Selection & Modal states
-  const [selectedRequest, setSelectedRequest] = useState<RescueRequest | null>(requests[0] || null)
+  const [selectedRequest, setSelectedRequest] = useState<RescueRequest | null>(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [targetReqForAssign, setTargetReqForAssign] = useState<RescueRequest | null>(null)
 
@@ -55,28 +53,9 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
   const [overrideJustification, setOverrideJustification] = useState<string>('')
   const [overrideLiabilityAcknowledged, setOverrideLiabilityAcknowledged] = useState(false)
 
-  // Incident Documentation Form Modal
-  const [showIncidentModal, setShowIncidentModal] = useState(false)
-  const [incidentMissionId, setIncidentMissionId] = useState<string>('')
-  const [incidentOutcome, setIncidentOutcome] = useState<'Successful' | 'Partially Completed' | 'Rerouted' | 'Evacuated to Shelter'>('Successful')
-  const [incidentCasualties, setIncidentCasualties] = useState<number>(0)
-  const [incidentDelays, setIncidentDelays] = useState<string>('Overturned debris on Loyola St caused detour to Jhocson St (+4 mins).')
-  const [incidentNotes, setIncidentNotes] = useState<string>('All 4 family members in stable condition at NU Evacuation Center.')
-  const [incidentSuggestions, setIncidentSuggestions] = useState<string>('Pre-position additional inflatable rubber boats near España Blvd during monsoon peak.')
-
-
-  // Dispatcher Route Delay & ETA Update tool
-  const [delayMissionId, setDelayMissionId] = useState<string>('')
-  const [delayEtaMinutes, setDelayEtaMinutes] = useState<number>(9)
-  const [delayExplanation, setDelayExplanation] = useState<string>('')
-  const [delaySentAlert, setDelaySentAlert] = useState(false)
-
-  // Filter tabs — derived from navSection now; keep for modal-driven jumps
-  const activeTab: 'queue' | 'missions' | 'incidents' =
-    navSection === 'inquiries' ? 'queue'
-    : navSection === 'missions' ? 'missions'
-    : navSection === 'incidents' ? 'incidents'
-    : 'queue'
+  const [selectedMapMissionId, setSelectedMapMissionId] = useState(
+    missions.find((mission) => !['completed', 'cancelled'].includes(mission.status))?.id ?? '',
+  )
 
   // Open Assign Modal
   function handleOpenAssign(req: RescueRequest) {
@@ -94,6 +73,12 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
       assignedRescuerCount,
       attachMedicalUnit,
     )
+    setSelectedRequest({
+      ...targetReqForAssign,
+      status: 'assigned',
+      assignedTeamId: selectedTeamId,
+      assignedTeamName: teams.find((team) => team.id === selectedTeamId)?.name,
+    })
     setShowAssignModal(false)
     setTargetReqForAssign(null)
   }
@@ -111,158 +96,176 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
     setShowOverrideModal(false)
   }
 
-  function handleOpenIncidentModal(missionId: string) {
-    setIncidentMissionId(missionId)
-    setShowIncidentModal(true)
-  }
-
-  function handleSaveIncident(e: React.FormEvent) {
-    e.preventDefault()
-    const mis = missions.find((m) => m.id === incidentMissionId)
-    const linkedReq = requests.find((r) => r.id === mis?.requestId)
-    submitIncidentReport({
-      missionId: incidentMissionId,
-      requestId: linkedReq?.id || 'RQ-UNKNOWN',
-      teamName: mis?.suggestedRoute.primary.name || 'Assigned Rescue Unit',
-      outcome: incidentOutcome,
-      evacuatedCount: linkedReq?.headcount || 4,
-      casualtiesCount: incidentCasualties,
-      delaysOrComplications: incidentDelays,
-      operationalNotes: incidentNotes,
-      futureSuggestions: incidentSuggestions,
-      dispatcherName: 'Coordinator Elle / Ranee (Central Dispatch)',
-    })
-    setShowIncidentModal(false)
-  }
-
-
-  function handleSendDelayUpdate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!delayExplanation.trim() || !delayMissionId) return
-    updateRouteDelayExplanation(delayMissionId, delayEtaMinutes, delayExplanation, 'Central Dispatch')
-    setDelaySentAlert(true)
-    setDelayExplanation('')
-    setTimeout(() => setDelaySentAlert(false), 5000)
-  }
 
   const pendingRequests = requests.filter((r) => r.status === 'pending')
   const activeMissionsList = missions.filter((m) => m.status !== 'completed')
+  const selectedMapMission = missions.find((m) => m.id === selectedMapMissionId) ?? activeMissionsList[0]
+  const selectedMapRequest = requests.find((r) => r.id === selectedMapMission?.requestId)
+  const selectedMapTeam = teams.find((t) => t.id === selectedMapMission?.teamId)
+  const inspectorRequest = requests.find((request) => request.id === selectedRequest?.id) ?? null
 
   return (
     <div className="coordinator-view">
-      <WeatherAlertBanner />
-
-      {/* 1. Real-time Incoming Alert Bar */}
-      {pendingRequests.length > 0 && (
-        <div className="incoming-inquiry-alert-bar" role="alert">
-          <div className="inquiry-alert-left">
-            <span className="inquiry-pulse">
-              <Icon name="alert" size={20} />
-            </span>
-            <div>
-              <strong>
-                {pendingRequests.length} INCOMING RESCUE INQUIRY WAITING FOR DISPATCH
-              </strong>
-              <p>
-                Latest: <strong>{pendingRequests[0].id}</strong> ({pendingRequests[0].citizenName} ·{' '}
-                {pendingRequests[0].severity.toUpperCase()} SEVERITY · {pendingRequests[0].location.address})
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => handleOpenAssign(pendingRequests[0])}
-          >
-            Review & Assign Now →
-          </Button>
-        </div>
-      )}
-
-      {/* OVERVIEW — Stats always visible on overview, alert bar everywhere */}
+      {/* OVERVIEW — Stats and summary */}
       {navSection === 'overview' && (
-        <>
-        <div className="stat-row">
-          <StatCard
-            label="Pending Dispatch"
-            value={pendingRequests.length}
-            icon="alert"
-            accent={pendingRequests.length > 0}
-            subtext="Requires immediate triage"
-          />
-          <StatCard
-            label="Active Missions"
-            value={activeMissionsList.length}
-            icon="route"
-            subtext="Under automated route oversight"
-          />
-          <StatCard
-            label="Rescue Teams Ready"
-            value={teams.filter((t) => t.status === 'available').length}
-            icon="volunteers"
-            subtext="1 Boat, 1 Truck, 1 Amphibious"
-          />
-          <StatCard
-            label="Crowdsourced Hazards"
-            value={hazardReports.length}
-            icon="shield"
-            subtext="Fed into routing cost function"
-          />
-        </div>
+        <div className="coordinator-overview-stack">
+          <Section
+            title="Dispatch Overview"
+            subtitle="Real-time operational summary of emergency response in the U-Belt pilot zone."
+          >
+            <div className="stat-row">
+              <StatCard
+                label="Pending Dispatch"
+                value={pendingRequests.length}
+                icon="alert"
+                accent={pendingRequests.length > 0}
+                subtext="Requires immediate triage"
+              />
+              <StatCard
+                label="Active Missions"
+                value={activeMissionsList.length}
+                icon="route"
+                subtext="Under automated route oversight"
+              />
+              <StatCard
+                label="Rescue Teams Ready"
+                value={teams.filter((t) => t.status === 'available').length}
+                icon="volunteers"
+                subtext="1 Boat, 1 Truck, 1 Amphibious"
+              />
+              <StatCard
+                label="Crowdsourced Hazards"
+                value={hazardReports.length}
+                icon="shield"
+                subtext="Fed into routing cost function"
+              />
+            </div>
+          </Section>
 
-        </>
+          <Section
+            title="Active Responses"
+            subtitle="Field units currently deployed across monitored flood corridors."
+          >
+            <div className="item-list">
+              {activeMissionsList.map((mis) => {
+                const req = requests.find((r) => r.id === mis.requestId)
+                const team = teams.find((t) => t.id === mis.teamId)
+                return (
+                  <div key={mis.id} className="item-card mission-coord-card">
+                    <span className="item-card__icon">
+                      <Icon name="boat" size={20} />
+                    </span>
+                    <div className="item-card__body">
+                      <div className="item-card__head">
+                        <span className="item-card__title">{mis.id} → {mis.requestId}</span>
+                        <StatusBadge status={mis.status} />
+                      </div>
+                      <div className="item-card__meta">
+                        <span>📍 {req?.location.address}</span>
+                        <span>👥 Unit: <strong>{team?.name || mis.teamId}</strong></span>
+                        <span>🛣️ Corridor: <strong>{mis.activeRouteName}</strong></span>
+                        <span>⏱️ ETA: {mis.etaMinutes} mins</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </Section>
+        </div>
       )}
 
       {/* INQUIRIES — Rescue inquiry queue & detail inspector */}
-      {activeTab === 'queue' && (
-        <div className="dash-grid-2">
-          {/*
-           * Phase 2: API-backed pending queue.
-           * CoordinatorPendingQueue calls GET /rescue-requests?status=pending and
-           * handles Loading / Empty / 403 / 409 / 503 states automatically.
-           * The legacy mock-context list below remains visible only when the backend
-           * returns no items (i.e. backend unavailable or all requests assigned).
-           */}
+      {navSection === 'inquiries' && (
+        <div className="dash-grid-2 coord-inquiries-grid">
           <Section
-            title="Citizen Rescue Inquiries"
+            title="Rescue Request Queue"
             subtitle="Analyze incoming distress calls by severity tier and assign specialized rescue units."
           >
-            {/* Real API queue — shown first; falls back gracefully on error */}
-            <CoordinatorPendingQueue
-              selectedId={apiTargetRequest?.id ?? null}
-              onSelect={(req) => {
-                setApiTargetRequest(req)
-                const matched = requests.find((r) => r.id === req.id)
-                if (matched) setSelectedRequest(matched)
-              }}
-              onAssign={(req) => {
-                setApiTargetRequest(req)
-                setShowApiAssignModal(true)
-              }}
-            />
+            <div className="coord-queue-section-inner">
+              <h3 className="section-inner-title" style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                Citizen Rescue Inquiries
+              </h3>
+              <div className="coord-queue">
+                <div className="coord-queue__header">
+                  <span className="coord-queue__count">
+                    {pendingRequests.length} pending request{pendingRequests.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+                {pendingRequests.length > 0 ? (
+                  <div className="item-list" role="list" aria-label="Pending rescue requests">
+                    {pendingRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        role="listitem"
+                        className={`item-card coord-req-card ${selectedRequest?.id === request.id ? 'is-selected' : ''}`}
+                        onClick={() => setSelectedRequest(request)}
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') setSelectedRequest(request)
+                        }}
+                        aria-selected={selectedRequest?.id === request.id}
+                      >
+                        <span className="item-card__icon"><Icon name="alert" size={18} /></span>
+                        <div className="item-card__body">
+                          <div className="item-card__head">
+                            <span className="item-card__title">{request.id}</span>
+                            <span className={`severity-tag severity-${request.severity}`}>{request.severity}</span>
+                          </div>
+                          <div className="item-card__meta">
+                            <span><Icon name="pin" size={12} /> {request.location.address}</span>
+                            <span>{request.headcount} people</span>
+                            {request.medicalNeeds && <span className="coord-req-medical">Medical needed</span>}
+                          </div>
+                        </div>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleOpenAssign(request)
+                          }}
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon="shield"
+                    title="No pending requests"
+                    description="Unassigned demo rescue requests will appear here when available."
+                  />
+                )}
+              </div>
+            </div>
           </Section>
 
           {/* 2. Inquiry Review & Processing Pane */}
-          <Section
+          <Modal
+            isOpen={Boolean(inspectorRequest)}
+            onClose={() => setSelectedRequest(null)}
             title="Inquiry Detail Inspector"
             subtitle="Sanitized request details, vulnerabilities, and controlled-scenario context."
+            maxWidth="1040px"
           >
-            {selectedRequest ? (
+            {inspectorRequest ? (
               <div className="inspector-panel">
                 <div className="inspector-header">
                   <div>
-                    <h3>{selectedRequest.id} — {selectedRequest.citizenName}</h3>
-                    <p className="inspector-phone">{selectedRequest.citizenPhone}</p>
+                    <h3>{inspectorRequest.id} — {inspectorRequest.citizenName}</h3>
+                    <p className="inspector-phone">{inspectorRequest.citizenPhone}</p>
                   </div>
                   <div className="inspector-tags">
-                    <span className={`severity-tag severity-${selectedRequest.severity}`}>
-                      {selectedRequest.severity.toUpperCase()} SEVERITY
+                    <span className={`severity-tag severity-${inspectorRequest.severity}`}>
+                      {inspectorRequest.severity.toUpperCase()} SEVERITY
                     </span>
-                    <StatusBadge status={selectedRequest.status} />
+                    <StatusBadge status={inspectorRequest.status} />
                   </div>
                 </div>
 
-                {selectedRequest.isAutoPulledProfile && (
+                {inspectorRequest.isAutoPulledProfile && (
                   <div className="fast-track-banner" style={{ margin: '14px 0' }}>
                     <Icon name="shield" size={18} />
                     <span>
@@ -275,35 +278,35 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
                 <div className="inspector-grid">
                   <div className="inspector-row">
                     <span className="inspector-label">Target Address</span>
-                    <span className="inspector-value">{selectedRequest.location.address}</span>
+                    <span className="inspector-value">{inspectorRequest.location.address}</span>
                   </div>
 
-                  {selectedRequest.location.landmark && (
+                  {inspectorRequest.location.landmark && (
                     <div className="inspector-row">
                       <span className="inspector-label">Landmark</span>
-                      <span className="inspector-value">{selectedRequest.location.landmark}</span>
+                      <span className="inspector-value">{inspectorRequest.location.landmark}</span>
                     </div>
                   )}
 
-                  {selectedRequest.location.houseDescription && (
+                  {inspectorRequest.location.houseDescription && (
                     <div className="inspector-row">
                       <span className="inspector-label">House Description</span>
-                      <span className="inspector-value">{selectedRequest.location.houseDescription}</span>
+                      <span className="inspector-value">{inspectorRequest.location.houseDescription}</span>
                     </div>
                   )}
 
                   <div className="inspector-row">
                     <span className="inspector-label">Observed Flood Depth</span>
                     <span className="inspector-value font-mono">
-                      {selectedRequest.floodDepth} ({SEVERITY_CONFIG[selectedRequest.severity]?.description || 'Critical'})
+                      {inspectorRequest.floodDepth} ({SEVERITY_CONFIG[inspectorRequest.severity]?.description || 'Critical'})
                     </span>
                   </div>
 
                   <div className="inspector-row">
                     <span className="inspector-label">Headcount & Vulnerabilities</span>
                     <span className="inspector-value">
-                      <strong>{selectedRequest.headcount} Persons</strong>
-                      <VulnerabilitiesBadges vulns={selectedRequest.vulnerabilities} />
+                      <strong>{inspectorRequest.headcount} Persons</strong>
+                      <VulnerabilitiesBadges vulns={inspectorRequest.vulnerabilities} />
                     </span>
                   </div>
 
@@ -311,62 +314,46 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
                     <span className="inspector-label">Medical Alerts</span>
                     <span
                       className="inspector-value"
-                      style={{ color: selectedRequest.medicalNeeds ? 'var(--color-danger-text)' : 'inherit' }}
+                      style={{ color: inspectorRequest.medicalNeeds ? 'var(--color-danger-text)' : 'inherit' }}
                     >
-                      {selectedRequest.medicalNeeds
-                        ? `🚨 YES: ${selectedRequest.medicalDetails || 'Urgent medical assistance requested'}`
+                      {inspectorRequest.medicalNeeds
+                        ? `🚨 YES: ${inspectorRequest.medicalDetails || 'Urgent medical assistance requested'}`
                         : 'None reported'}
                     </span>
                   </div>
                 </div>
 
                 <div className="inspector-actions">
-                  {selectedRequest.status === 'pending' && (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      onClick={() => handleOpenAssign(selectedRequest)}
-                    >
-                      <Icon name="volunteers" size={18} />
-                      <span>Assign Rescue Team</span>
-                    </Button>
-                  )}
-
-                  {selectedRequest.status === 'assigned' && (
+                  {inspectorRequest.status === 'assigned' && (
                     <Button
                       variant="outline"
-                      onClick={() => updateRequestStatus(selectedRequest.id, 'en-route')}
+                      onClick={() => updateRequestStatus(inspectorRequest.id, 'en-route')}
                     >
                       Mark Departed (En Route)
                     </Button>
                   )}
 
-                  {selectedRequest.status === 'en-route' && (
+                  {inspectorRequest.status === 'en-route' && (
                     <Button
                       variant="outline"
-                      onClick={() => updateRequestStatus(selectedRequest.id, 'arrived')}
+                      onClick={() => updateRequestStatus(inspectorRequest.id, 'arrived')}
                     >
                       Confirm Arrived at Scene
                     </Button>
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="empty-state">
-                <Icon name="pin" size={32} />
-                <p>Select any citizen inquiry from the left to inspect situation details and assign responders.</p>
-              </div>
-            )}
-          </Section>
+            ) : null}
+          </Modal>
         </div>
       )}
 
       {/* MISSIONS — Active missions & routing oversight */}
-      {activeTab === 'missions' && (
+      {false && navSection === 'missions' && (
         <div className="dash-grid-2">
           {/* Mission Tracking List */}
           <Section
-            title="Mission Status Oversight"
+            title="Active Responses"
             subtitle="Standard automated routing oversight with restricted manual override capability."
           >
             <div className="item-list">
@@ -391,24 +378,6 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
                         <span>⏱️ ETA: {req?.eta || '5 mins'}</span>
                       </div>
 
-                      {/* En Route Advisory Strip — visible only while mission is en-route */}
-                      {mis.status === 'en-route' && (
-                        <div className="mission-enroute-advisory-strip">
-                          <div className="advisory-strip-header">
-                            <span className="live-indicator-dot" />
-                            <span className="advisory-strip-label">SIMULATED ROUTE ADVISORY</span>
-                            <span className="advisory-strip-source">Prototype Coordinator · Routing Engine</span>
-                          </div>
-                          <p className="advisory-strip-message">
-                            "{mis.routeDelayExplanation}"
-                          </p>
-                          <div className="advisory-strip-meta">
-                            <span>⏱️ Arrival target: <strong>{mis.etaMinutes} min</strong></span>
-                            <span>🛣️ Corridor: <strong>{mis.activeRouteName}</strong></span>
-                          </div>
-                        </div>
-                      )}
-
                       {mis.overrideReason && (
                         <p className="override-note">
                           <strong>Override Justification:</strong> {mis.overrideReason}
@@ -428,104 +397,11 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
                         </Button>
                       )}
 
-                      {mis.status === 'arrived' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => updateMissionStatus(mis.id, 'completed')}
-                        >
-                          Mark Completed
-                        </Button>
-                      )}
-
-                      {mis.status === 'completed' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenIncidentModal(mis.id)}
-                        >
-                          Document Incident
-                        </Button>
-                      )}
+                      {mis.status === 'arrived' && <span className="dispatcher-ticket__report">Awaiting rescuer field report</span>}
                     </div>
                   </div>
                 )
               })}
-            </div>
-
-            {/* Prototype route-delay message */}
-            <div className="dispatcher-delay-updater">
-              <h5>🛣️ Simulated Route Delay &amp; ETA Message</h5>
-              <p>
-                Share a controlled-scenario route explanation with the Citizen and Rescuer prototype views. This is demonstration state, not an official dispatch broadcast.
-              </p>
-
-              {delaySentAlert && (
-                <div className="alert-banner-success" style={{ padding: '8px 12px', fontSize: '0.8rem' }}>
-                  ✓ Route delay advisory pushed to Citizen and Rescue Team views!
-                </div>
-              )}
-
-              {/* Quick Preset Messages */}
-              <div className="delay-presets-grid">
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>QUICK PRESETS:</span>
-                {[
-                  { label: '9 min · Loyola impassable → Jhocson alt', eta: 9, msg: 'Controlled scenario: Loyola St. is impassable. The prototype recommends the Jhocson St. corridor with an estimated 9-minute travel time.' },
-                  { label: '12 min · España overflow, taking Gerardo detour', eta: 12, msg: 'Rescue Team arrival: 12 minutes. España Blvd overflow (0.9m depth) forces rerouting via Gerardo St. Detour. All shortcuts submerged — navigating carefully.' },
-                  { label: '15 min · Multiple road blockages, alternate corridor found', eta: 15, msg: 'Rescue Team arrival: 15 minutes. Multiple road blockages detected on primary and secondary routes. Unit is navigating via España North Access corridor. Stay on 2nd floor and signal with flashlight.' },
-                ].map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    className="preset-btn"
-                    onClick={() => {
-                      setDelayExplanation(preset.msg)
-                      setDelayEtaMinutes(preset.eta)
-                      if (activeMissionsList[0]) setDelayMissionId(activeMissionsList[0].id)
-                    }}
-                  >
-                    ⚡ {preset.label}
-                  </button>
-                ))}
-              </div>
-
-              <form onSubmit={handleSendDelayUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div className="field">
-                  <label className="field__label">Target Mission ID</label>
-                  <select
-                    value={delayMissionId}
-                    onChange={(e) => setDelayMissionId(e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="">— Select active mission —</option>
-                    {activeMissionsList.map((m) => (
-                      <option key={m.id} value={m.id}>{m.id} → {m.requestId} ({m.status})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label className="field__label">Updated ETA (minutes)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={delayEtaMinutes}
-                    onChange={(e) => setDelayEtaMinutes(parseInt(e.target.value, 10) || 9)}
-                  />
-                </div>
-                <div className="field">
-                  <label className="field__label">Route Delay Explanation Message</label>
-                  <textarea
-                    rows={3}
-                    placeholder='E.g., "Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and needs to head another alternative routes &quot;Loyola St.&quot;."'
-                    value={delayExplanation}
-                    onChange={(e) => setDelayExplanation(e.target.value)}
-                  />
-                </div>
-                <Button variant="primary" size="sm" type="submit">
-                  <Icon name="route" size={15} /> Push Route Advisory to All Screens
-                </Button>
-              </form>
             </div>
 
           </Section>
@@ -546,91 +422,138 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
       )}
 
       {/* INCIDENTS — Incident documentation & reporting */}
-      {activeTab === 'incidents' && (
-        <Section
-          title="Incident Documentation & Post-Rescue Coordination"
-          subtitle="Formal operational record of mission outcomes, casualties, complications, and future notes."
-        >
-          {incidentReports.length === 0 ? (
-            <div className="empty-state">
-              <Icon name="shield" size={32} />
-              <p>No formal incident logs recorded yet. Document completed missions using the button below.</p>
-            </div>
-          ) : (
-            <div className="incident-grid">
-              {incidentReports.map((inc) => (
-                <div key={inc.id} className="incident-card">
-                  <div className="incident-card-head">
+      {navSection === 'incidents' && (
+        <div className="coordinator-incidents-stack">
+          <Section
+            title="Completed Tickets"
+            subtitle="Archive of finalized rescue operations and dispatched teams."
+          >
+            <div className="completed-tickets-list">
+              {missions
+                .filter((m) => m.status === 'completed' || m.id === 'MSN-0038' || m.id === 'MSN-0036' || m.id === 'MSN-0034')
+                .map((m) => (
+                  <div key={m.id} className="completed-ticket-card" style={{ padding: '1rem', background: 'var(--surface-raised)', borderRadius: '10px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <span className="incident-id">{inc.id}</span>
-                      <h4>Mission: {inc.missionId} (Request: {inc.requestId})</h4>
+                      <strong>{m.id}</strong> · Request: {m.requestId}
+                      <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Status: Resolved · Evacuation Successful</p>
                     </div>
-                    <span className="incident-outcome-badge">{inc.outcome}</span>
+                    <span className="status-badge" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)' }}>Completed</span>
                   </div>
-
-                  <div className="incident-metrics-row">
-                    <span>👤 Evacuated: <strong>{inc.evacuatedCount}</strong></span>
-                    <span>⚠️ Casualties: <strong>{inc.casualtiesCount}</strong></span>
-                    <span>🕒 Documented: <strong>{inc.documentedAt}</strong></span>
-                    <span>✍️ Officer: <strong>{inc.dispatcherName}</strong></span>
-                  </div>
-
-                  <div className="incident-section">
-                    <span className="inc-sec-title">Delays & Complications</span>
-                    <p>{inc.delaysOrComplications}</p>
-                  </div>
-
-                  <div className="incident-section">
-                    <span className="inc-sec-title">Operational Notes & Medical Care</span>
-                    <p>{inc.operationalNotes}</p>
-                  </div>
-
-                  <div className="incident-section">
-                    <span className="inc-sec-title">Suggestions for Future Rescue Operations</span>
-                    <p>{inc.futureSuggestions}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
-          )}
-        </Section>
+          </Section>
+
+          <Section
+            title="Incident Transactions"
+            subtitle="A chronological ledger of completed rescue reports and their recorded outcomes."
+          >
+            {incidentReports.length === 0 ? (
+              <EmptyState
+                icon="report"
+                title="No field reports yet"
+                description="Reports will appear here after an assigned team submits its mission completion notes."
+              />
+            ) : (
+              <div className="incident-transaction-list" role="list" aria-label="Incident report transactions">
+                {incidentReports.map((inc) => (
+                  <article key={inc.id} className="incident-transaction" role="listitem">
+                    <div className="incident-transaction__main">
+                      <div className="incident-transaction__identity">
+                        <span className="incident-id">{inc.id}</span>
+                        <span className="incident-outcome-badge">{inc.outcome}</span>
+                      </div>
+                      <div className="incident-transaction__fields">
+                        <div><span>Mission / Request</span><strong>{inc.missionId} / {inc.requestId}</strong></div>
+                        <div><span>Recorded</span><strong>{inc.documentedAt}</strong></div>
+                        <div><span>Reported by</span><strong>{inc.reportedBy}</strong></div>
+                        <div><span>People evacuated</span><strong>{inc.evacuatedCount}</strong></div>
+                        <div><span>Casualties</span><strong>{inc.casualtiesCount}</strong></div>
+                      </div>
+                    </div>
+
+                    <details className="incident-transaction__details">
+                      <summary>View report details</summary>
+                      <div className="incident-transaction__notes">
+                        <div><span>Delays &amp; complications</span><p>{inc.delaysOrComplications}</p></div>
+                        <div><span>Operational notes &amp; medical care</span><p>{inc.operationalNotes}</p></div>
+                        <div><span>Suggestions for future operations</span><p>{inc.futureSuggestions}</p></div>
+                      </div>
+                    </details>
+                  </article>
+                ))}
+              </div>
+            )}
+          </Section>
+        </div>
       )}
 
-      {/* TEAMS — Rescue fleet status */}
-      {navSection === 'teams' && (
-        <Section title="Rescue Fleet Status" subtitle="Overview of deployed and standby units in Sampaloc.">
-          <div className="teams-grid">
-            {teams.map((t) => (
-              <div key={t.id} className="team-fleet-card">
-                <div className="fleet-head">
-                  <span className="fleet-name">{t.name}</span>
-                  <span className={`fleet-status status-${t.status}`}>{t.status.toUpperCase()}</span>
-                </div>
-                <p className="fleet-type">{t.unitType} · {t.membersCount} Crew Members</p>
-                <div className="fleet-details">
-                  <span>Lead: {t.leadRescuer}</span>
-                  <span>{t.hasMedicalUnit ? '🩺 Medical Unit Attached' : 'Standard First Aid'}</span>
-                  <span className="font-mono">{t.contactPhone}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
+      {/* TEAMS — Rescue team roster management */}
+      {navSection === 'teams' && <CreateRescueTeamTab />}
 
       {/* MAP — Flood-aware routing oversight map */}
       {navSection === 'map' && (
-        <Section
-          title="Flood-Aware Routing Oversight"
-          subtitle="Rule-based costs exclude an impassable controlled-scenario edge and recommend an eligible corridor."
-        >
-          <InteractiveFloodMap
-            activeStage="en-route"
-            showAlternatives
-            routeExplanation={activeMissionsList[0]?.routeDelayExplanation}
-            etaMinutes={activeMissionsList[0]?.etaMinutes}
-          />
-        </Section>
+        <div className="dispatcher-map-workspace">
+          <Section
+            title="Citizen Rescue Operation Route"
+            subtitle="Select an active dispatch to inspect its assigned unit, destination, and controlled-scenario route."
+          >
+            {activeMissionsList.length > 0 ? (
+              <>
+                <label className="dispatcher-operation-picker">
+                  <span>Active rescue operation</span>
+                  <select
+                    value={selectedMapMission?.id ?? ''}
+                    onChange={(event) => setSelectedMapMissionId(event.target.value)}
+                    aria-label="Select active rescue operation"
+                  >
+                    {activeMissionsList.map((mission) => (
+                      <option key={mission.id} value={mission.id}>
+                        {mission.id} · {mission.requestId} · {mission.status}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {selectedMapMission && (
+                  <div className="dispatcher-selected-operation">
+                    <div className="dispatcher-selected-operation__head">
+                      <div>
+                        <span>SELECTED DISPATCH</span>
+                        <strong>{selectedMapMission.id} · {selectedMapMission.requestId}</strong>
+                      </div>
+                      <StatusBadge status={selectedMapMission.status} />
+                    </div>
+                    <div className="dispatcher-selected-operation__facts">
+                      <div>
+                        <span>Citizen</span>
+                        <strong>{selectedMapRequest?.citizenName ?? 'Unknown citizen'}</strong>
+                      </div>
+                      <div>
+                        <span>Assigned Unit</span>
+                        <strong>{selectedMapTeam?.name ?? selectedMapMission.teamId}</strong>
+                      </div>
+                      <div>
+                        <span>Recommended Corridor</span>
+                        <strong>{selectedMapMission.suggestedRoute.primary.name}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <EmptyState
+                icon="route"
+                title="No dispatches to inspect"
+                description="Assigned rescue routes will be available here for inspection."
+              />
+            )}
+            <InteractiveFloodMap
+              activeStage={selectedMapMission?.status === 'cancelled' ? undefined : selectedMapMission?.status}
+              showAlternatives
+              routeExplanation={selectedMapMission?.routeDelayExplanation}
+              etaMinutes={selectedMapMission?.etaMinutes}
+            />
+          </Section>
+        </div>
       )}
 
       {/* 3. RESCUE TEAM ASSIGNMENT MODAL */}
@@ -639,6 +562,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
         onClose={() => setShowAssignModal(false)}
         title="Assign Rescue Team & Personnel"
         subtitle={`Deploy response unit to Request ${targetReqForAssign?.id} (${targetReqForAssign?.location.address})`}
+        maxWidth="560px"
       >
         <div className="assign-modal-body">
           {targetReqForAssign?.medicalNeeds && (
@@ -685,7 +609,7 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
             <span className="field__label">Attach Dedicated Medical Unit / Paramedic</span>
           </label>
 
-          <div className="modal-footer" style={{ padding: 0, marginTop: 14 }}>
+          <div className="assign-modal-actions">
             <Button variant="ghost" onClick={() => setShowAssignModal(false)}>
               Cancel
             </Button>
@@ -768,79 +692,6 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
             </Button>
           </div>
         </div>
-      </Modal>
-
-      {/* 7. INCIDENT DOCUMENTATION MODAL */}
-      <Modal
-        isOpen={showIncidentModal}
-        onClose={() => setShowIncidentModal(false)}
-        title="Document Mission Incident & Outcome"
-        subtitle="Mandatory reporting for post-rescue evaluation and AI routing dataset refinement."
-      >
-        <form onSubmit={handleSaveIncident} className="incident-form">
-          <div className="field">
-            <label className="field__label">Operational Outcome</label>
-            <select
-              value={incidentOutcome}
-              onChange={(e) => setIncidentOutcome(e.target.value as any)}
-              className="form-select"
-            >
-              <option value="Successful">Successful — All victims evacuated</option>
-              <option value="Partially Completed">Partially Completed — Second wave needed</option>
-              <option value="Rerouted">Rerouted — Alternate craft required</option>
-              <option value="Evacuated to Shelter">Evacuated to Shelter directly</option>
-            </select>
-          </div>
-
-          <div className="field">
-            <label className="field__label">Casualties Count (if any)</label>
-            <input
-              type="number"
-              min="0"
-              value={incidentCasualties}
-              onChange={(e) => setIncidentCasualties(parseInt(e.target.value, 10) || 0)}
-            />
-          </div>
-
-          <div className="field">
-            <label className="field__label">Delays, Obstacles, or Route Complications</label>
-            <textarea
-              rows={2}
-              value={incidentDelays}
-              onChange={(e) => setIncidentDelays(e.target.value)}
-              placeholder="E.g., Submerged transformer or stranded car forced reroute..."
-            />
-          </div>
-
-          <div className="field">
-            <label className="field__label">Operational Notes & Medical Outcomes</label>
-            <textarea
-              rows={2}
-              value={incidentNotes}
-              onChange={(e) => setIncidentNotes(e.target.value)}
-              placeholder="E.g., Medical unit administered oxygen to senior citizen..."
-            />
-          </div>
-
-          <div className="field">
-            <label className="field__label">Suggestions for Future Rescue Operations</label>
-            <textarea
-              rows={2}
-              value={incidentSuggestions}
-              onChange={(e) => setIncidentSuggestions(e.target.value)}
-              placeholder="Recommendations for team staging, equipment, or hazard maps..."
-            />
-          </div>
-
-          <div className="modal-footer" style={{ padding: 0, marginTop: 14 }}>
-            <Button variant="ghost" type="button" onClick={() => setShowIncidentModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit">
-              Save Incident Record
-            </Button>
-          </div>
-        </form>
       </Modal>
 
       {/* Phase 2: API-backed assignment modal — triggered from CoordinatorPendingQueue */}

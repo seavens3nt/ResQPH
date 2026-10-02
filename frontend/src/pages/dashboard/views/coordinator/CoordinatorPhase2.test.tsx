@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CoordinatorPendingQueue } from './CoordinatorPendingQueue'
 import { CoordinatorAssignModal } from './CoordinatorAssignModal'
@@ -160,8 +160,20 @@ describe('Coordinator Phase 2 UI States', () => {
       )
 
       expect(screen.getByText(/Prototype:/i)).toBeInTheDocument()
-      expect(screen.getByText(/Medical Emergency Flagged!/i)).toBeInTheDocument()
+      expect(screen.getByText(/Medical unit requested/i)).toBeInTheDocument()
+      expect(screen.getByText(/people need assistance/i)).toBeInTheDocument()
+      expect(screen.getByText('2')).toBeInTheDocument()
+        const teamOptions = screen.getByRole('radiogroup', { name: /Available rescue teams/i })
+        expect(teamOptions).toBeInTheDocument()
+      expect(screen.getByText(/4 crew members/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Medical unit/i).length).toBeGreaterThan(0)
       expect(screen.getByRole('button', { name: /Confirm Dispatch Assignment/i })).toBeInTheDocument()
+        const teamAlpha = within(teamOptions).getByRole('radio', { name: /Team Alpha/i })
+        const teamBravo = within(teamOptions).getByRole('radio', { name: /Team Bravo/i })
+        expect(teamAlpha).toBeChecked()
+        fireEvent.click(teamBravo)
+        expect(teamBravo).toBeChecked()
+        expect(screen.getByText(/3 rescuers · High-Clearance Truck/i)).toBeInTheDocument()
     })
 
     it('displays 409 conflict banner when assignTeam returns 409 conflict', async () => {

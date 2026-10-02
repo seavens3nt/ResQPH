@@ -155,7 +155,7 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>
+          <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', fontFamily: 'monospace' }}>
             Request {id}
           </h3>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -175,12 +175,12 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
               style={{
                 padding: '3px 10px',
                 borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                background: '#f8fafc',
+                border: '1px solid #334155',
+                background: '#1e293b',
                 fontSize: '0.78rem',
                 fontWeight: 600,
                 cursor: 'pointer',
-                color: '#475569',
+                color: '#94a3b8',
               }}
             >
               Refresh
@@ -191,15 +191,15 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         <StatusBadge status={status as RequestStatus} large />
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.78rem', color: '#64748b' }}>
-          <span>Last updated (server): <strong style={{ color: '#0f172a' }}>{serverUpdated}</strong></span>
-          <span>Last fetched: <strong style={{ color: '#0f172a' }}>{lastUpdated}</strong></span>
+          <span>Last updated (server): <strong style={{ color: '#f1f5f9' }}>{serverUpdated}</strong></span>
+          <span>Last fetched: <strong style={{ color: '#f1f5f9' }}>{lastUpdated}</strong></span>
         </div>
 
         {/* Data source notice — required by wireframe */}
         <div
           style={{
             padding: '4px 8px',
-            background: '#f1f5f9',
+            background: '#0d1525',
             borderRadius: '4px',
             fontSize: '0.72rem',
             color: '#64748b',
@@ -262,7 +262,7 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
                     style={{
                       fontSize: '0.75rem',
                       fontWeight: isCurrent ? 700 : 500,
-                      color: isCurrent ? '#dc2626' : '#0f172a',
+                      color: isCurrent ? '#ef4444' : '#cbd5e1',
                     }}
                   >
                     {STAGE_LABELS[stage]}
@@ -279,17 +279,17 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         className="modern-clean-card"
         style={{ padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.85rem' }}
       >
-        <div>
+          <div>
           <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Location</span>
-          <strong style={{ color: '#0f172a' }}>{location.address}</strong>
+          <strong style={{ color: '#f1f5f9' }}>{location.address}</strong>
         </div>
         <div>
           <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>People</span>
-          <strong style={{ color: '#0f172a' }}>{headcount}</strong>
+          <strong style={{ color: '#f1f5f9' }}>{headcount}</strong>
         </div>
         <div>
           <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Reported flood level</span>
-          <strong style={{ color: '#0f172a', textTransform: 'capitalize' }}>{reported_flood_level}</strong>
+          <strong style={{ color: '#f1f5f9', textTransform: 'capitalize' }}>{reported_flood_level}</strong>
         </div>
       </div>
 
@@ -300,12 +300,12 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
         >
           <div>
             <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Assigned team</span>
-            <strong style={{ color: '#0f172a' }}>{data.assigned_team_id}</strong>
+            <strong style={{ color: '#f1f5f9' }}>{data.assigned_team_id}</strong>
             <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
               Simulated team contact for this prototype
             </span>
           </div>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#cbd5e1' }}>
             Contact: 09XX XXX XXXX
           </span>
         </div>
@@ -317,7 +317,7 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
           className="modern-clean-card"
           style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
         >
-          <h4 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <h4 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Status history
           </h4>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -326,11 +326,11 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
                 key={idx}
                 style={{ display: 'flex', gap: '10px', fontSize: '0.8rem', alignItems: 'baseline' }}
               >
-                <span style={{ color: '#94a3b8', fontFamily: 'monospace', flexShrink: 0 }}>
+                <span style={{ color: '#64748b', fontFamily: 'monospace', flexShrink: 0 }}>
                   {new Date(entry.occurred_at).toLocaleString()}
                 </span>
                 <span style={{ color: '#475569' }}>—</span>
-                <span style={{ color: '#0f172a', fontWeight: 600, textTransform: 'capitalize' }}>
+                <span style={{ color: '#f1f5f9', fontWeight: 600, textTransform: 'capitalize' }}>
                   {entry.status}
                 </span>
                 {entry.note && (
@@ -351,9 +351,9 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
             alignSelf: 'flex-start',
             padding: '6px 14px',
             borderRadius: '7px',
-            border: '1px solid #e2e8f0',
-            background: '#fff',
-            color: '#475569',
+            border: '1px solid #334155',
+            background: '#1e293b',
+            color: '#94a3b8',
             fontWeight: 600,
             fontSize: '0.82rem',
             cursor: 'pointer',
@@ -369,19 +369,19 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
           aria-label="Cancel request confirmation"
           style={{
             padding: '0.85rem 1rem',
-            background: '#fff7ed',
-            border: '1px solid #fed7aa',
+            background: '#1a0f07',
+            border: '1px solid #7c3f1a',
             borderRadius: '8px',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.6rem',
           }}
         >
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#7c2d12' }}>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: '#fcd34d' }}>
             <strong>Cancel this request?</strong> If you are in immediate danger, keep the request active or call 911.
           </p>
           {cancelError && (
-            <p role="alert" style={{ margin: 0, fontSize: '0.8rem', color: '#dc2626' }}>
+            <p role="alert" style={{ margin: 0, fontSize: '0.8rem', color: '#f87171' }}>
               {cancelError}
             </p>
           )}
@@ -391,8 +391,8 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
               onClick={() => { setShowCancelConfirm(false); setCancelError(null) }}
               disabled={isCancelling}
               style={{
-                padding: '4px 12px', borderRadius: '6px', border: '1px solid #fed7aa',
-                background: '#fff', color: '#7c2d12', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
+                padding: '4px 12px', borderRadius: '6px', border: '1px solid #7c3f1a',
+                background: '#1e293b', color: '#fcd34d', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
               }}
             >
               Keep active
