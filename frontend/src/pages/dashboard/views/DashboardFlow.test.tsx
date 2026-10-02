@@ -117,7 +117,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.getByText(/Avoid Floodwater Contamination/i)).toBeInTheDocument()
   })
 
-  it('renders OpenStreetMap controlled-scenario map and routing rationale', () => {
+  it('renders the controlled-scenario map without inventing a calculated route', () => {
     renderWithProviders(<CitizenView navSection="map" />, 'citizen')
 
     // Verify OpenStreetMap HUD indicator and layer buttons
@@ -129,10 +129,9 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     // Verify OpenStreetMap container element
     expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
 
-    // Verify controlled-scenario rationale drawer
-    expect(screen.getByText(/Controlled-Scenario Routing Rationale/i)).toBeInTheDocument()
-    expect(screen.getByText(/AVOIDED SHORTCUT/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/No route has been calculated/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Safety Score/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/RECOMMENDED ROUTE/i)).not.toBeInTheDocument()
   })
 
 
@@ -174,13 +173,12 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.queryByText('Rescuer Assigned')).not.toBeInTheDocument()
   })
 
-  it('shows the simulated route delay explanation only in the controlled map view', () => {
+  it('does not present mock mission copy as a calculated route', () => {
     renderWithProviders(<CitizenView navSection="map" />, 'citizen')
 
-    // The default mission is en-route, so the advisory card should be visible
-    expect(screen.getByText(/SIMULATED EN ROUTE ADVISORY/i)).toBeInTheDocument()
-    // The controlled map retains the route explanation after the mock tracking panel is disabled.
-    expect(screen.getAllByText(/All possible shortcuts are flooded/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/No route has been calculated/i)).toBeInTheDocument()
+    expect(screen.queryByText(/SIMULATED EN ROUTE ADVISORY/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/All possible shortcuts are flooded/i)).not.toBeInTheDocument()
   })
 })
 describe('Field Rescuer Mobile Dashboard Flows', () => {
