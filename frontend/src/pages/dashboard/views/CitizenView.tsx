@@ -7,8 +7,8 @@ import type { SeverityLevel } from '../../../features/missions/types'
 import { useMyRescueRequests } from '../../../features/requests/hooks'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import {
-  EmergencyHotlinesModal,
   EmergencyPreparednessGuide,
+  EmptyState,
   Section,
   LocalizedForecastWidget,
 } from './shared'
@@ -93,7 +93,6 @@ export function CitizenView({
   } = useMissions()
 
   const [showSosTriage, setShowSosTriage] = useState(false)
-  const [showHotlinesModal, setShowHotlinesModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
 
   const [stepA_severity, setStepA_severity] = useState<SeverityLevel>('moderate')
@@ -147,12 +146,11 @@ export function CitizenView({
   }
 
   return (
-    <div className="resq-citizen-workspace citizen-view">
+    <div className="resq-citizen-workspace">
       <div className="citizen-flow-stack" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
         {/* ── OVERVIEW TAB ─────────────────────────────────────────────── */}
         {navSection === 'overview' && (
-          <div className="overview-container">
-
+          <div className="citizen-overview-layout" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
             <LocalizedForecastWidget />
             {/* Location & GPS Status Bar */}
             <div className="modern-clean-card" style={{ padding: '0.9rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -161,18 +159,18 @@ export function CitizenView({
                   <Icon name="navigation" size={18} />
                 </span>
                 <div>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                     Sanitized address, Jhocson St., U-Belt pilot
                   </h3>
-                  <span className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                  <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b' }}>
                     14.6042 N · 120.9946 E
                   </span>
                 </div>
               </div>
 
-              <div style={{ padding: '3px 9px', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.35)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }} />
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#86efac', textTransform: 'uppercase' }}>Demo Location</span>
+              <div style={{ padding: '3px 9px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>Demo Location</span>
               </div>
             </div>
 
@@ -193,24 +191,16 @@ export function CitizenView({
                 <span style={{ fontSize: '0.62rem', fontWeight: 700, opacity: 0.9, letterSpacing: '0.04em', marginTop: '4px' }}>DISPATCH</span>
               </button>
 
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-tertiary)', maxWidth: '380px', margin: 0 }}>
+              <p style={{ fontSize: '0.88rem', color: '#64748b', maxWidth: '380px', margin: 0 }}>
                 Submits sanitized location and household details to the prototype coordinator workflow.
               </p>
 
-              <button
-                type="button"
-                style={{ background: 'var(--surface-elevated)', padding: '0.55rem 1.1rem', borderRadius: '8px', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
-                onClick={() => setShowHotlinesModal(true)}
-              >
-                <Icon name="phone" size={14} style={{ color: '#dc2626' }} />
-                <span>Direct 911 Hotline</span>
-              </button>
             </div>
 
             {/* Nearest Responders */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#f8fafc', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Simulated Responders
                 </h3>
                 <button
@@ -234,12 +224,12 @@ export function CitizenView({
                         <Icon name="map-fold" size={18} />
                       </span>
                       <div>
-                        <strong style={{ display: 'block', fontSize: '0.88rem', color: 'var(--text-primary)' }}>{responder.name}</strong>
-                        <span className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>{responder.distance}</span>
+                        <strong style={{ display: 'block', fontSize: '0.88rem', color: '#0f172a' }}>{responder.name}</strong>
+                        <span className="font-mono" style={{ fontSize: '0.72rem', color: '#64748b' }}>{responder.distance}</span>
                       </div>
                     </div>
 
-                    <span className="font-mono" style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', background: 'var(--surface-elevated)', padding: '3px 8px', borderRadius: '6px' }}>
+                    <span className="font-mono" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0f172a', background: '#f1f5f9', padding: '3px 8px', borderRadius: '6px' }}>
                       {responder.eta}
                     </span>
                   </div>
@@ -250,7 +240,7 @@ export function CitizenView({
             {/* Controlled scenario notices */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#f8fafc', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Scenario Notices
                 </h3>
                 <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Simulated data</span>
@@ -259,29 +249,29 @@ export function CitizenView({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div className="neu-red-card" style={{ padding: '0.85rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Critical</span>
-                    <span className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>2 MIN AGO</span>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#b91c1c', background: '#fee2e2', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Critical</span>
+                    <span className="font-mono" style={{ fontSize: '0.7rem', color: '#64748b' }}>2 MIN AGO</span>
                   </div>
-                  <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>Controlled flood scenario active</strong>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>U-Belt pilot · synthetic scenario values</span>
+                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Controlled flood scenario active</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>U-Belt pilot · synthetic scenario values</span>
                 </div>
 
                 <div className="neu-red-card" style={{ padding: '0.85rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#fde68a', background: 'rgba(245,158,11,0.2)', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Warning</span>
-                    <span className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>18 MIN AGO</span>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#92400e', background: '#fef3c7', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Warning</span>
+                    <span className="font-mono" style={{ fontSize: '0.7rem', color: '#64748b' }}>18 MIN AGO</span>
                   </div>
-                  <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>Heavy-rain demonstration condition</strong>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>Not a live or official weather warning</span>
+                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Heavy-rain demonstration condition</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Not a live or official weather warning</span>
                 </div>
 
                 <div className="neu-red-card" style={{ padding: '0.85rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#86efac', background: 'rgba(34,197,94,0.2)', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Advisory</span>
-                    <span className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>41 MIN AGO</span>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '2px 7px', borderRadius: '4px', textTransform: 'uppercase' }}>Advisory</span>
+                    <span className="font-mono" style={{ fontSize: '0.7rem', color: '#64748b' }}>41 MIN AGO</span>
                   </div>
-                  <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>Evacuation center at 70% capacity</strong>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>Concepcion Elementary School</span>
+                  <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>Evacuation center at 70% capacity</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Concepcion Elementary School</span>
                 </div>
               </div>
             </div>
@@ -357,12 +347,12 @@ export function CitizenView({
 
             {!apiRequestId && !isRequestListLoading && !isRequestListError && (
               <Section title="Rescue Tracking" subtitle="No persisted rescue request was returned by the API.">
-                <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
-                  <p style={{ color: '#64748b', fontWeight: 600, margin: '0 0 1rem' }}>No rescue requests found.</p>
-                  <Button variant="primary" size="sm" onClick={() => onNavigateTab?.('overview')}>
-                    Start a rescue request
-                  </Button>
-                </div>
+                <EmptyState
+                  icon="report"
+                  title="No rescue requests yet"
+                  description="Requests you submit will appear here so you can follow their status."
+                  action={<Button variant="primary" size="sm" onClick={() => onNavigateTab?.('overview')}>Start a rescue request</Button>}
+                />
                 <SampleRescueTrackingPreview />
               </Section>
             )}
@@ -421,13 +411,13 @@ export function CitizenView({
                                 justifyContent: 'center',
                                 fontSize: '0.72rem',
                                 fontWeight: 700,
-                                background: isCurrent ? '#dc2626' : isPast ? 'rgba(255,255,255,0.85)' : 'var(--surface-elevated)',
-                                color: isPast ? '#120808' : 'var(--text-tertiary)',
+                                background: isCurrent ? '#dc2626' : isPast ? '#0f172a' : '#e2e8f0',
+                                color: isPast ? '#ffffff' : '#64748b',
                               }}
                             >
                               {s.num}
                             </span>
-                            <span style={{ fontSize: '0.75rem', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? '#dc2626' : 'var(--text-primary)' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? '#dc2626' : '#0f172a' }}>
                               {s.title}
                             </span>
                           </div>
@@ -439,16 +429,16 @@ export function CitizenView({
                   {/* Request summary info */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', fontSize: '0.85rem' }}>
                     <div>
-                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', display: 'block' }}>Location</span>
-                      <strong style={{ color: 'var(--text-primary)' }}>{activeReq.location.address}</strong>
+                      <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Location</span>
+                      <strong style={{ color: '#0f172a' }}>{activeReq.location.address}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', display: 'block' }}>Occupants</span>
-                      <strong style={{ color: 'var(--text-primary)' }}>{activeReq.headcount} Persons</strong>
+                      <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Occupants</span>
+                      <strong style={{ color: '#0f172a' }}>{activeReq.headcount} Persons</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', display: 'block' }}>Flood Severity</span>
-                      <strong style={{ color: '#f87171' }}>{activeReq.severity.toUpperCase()} ({activeReq.floodDepth})</strong>
+                      <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Flood Severity</span>
+                      <strong style={{ color: '#dc2626' }}>{activeReq.severity.toUpperCase()} ({activeReq.floodDepth})</strong>
                     </div>
                   </div>
 
@@ -458,13 +448,13 @@ export function CitizenView({
                       style={{ padding: '0.9rem 1rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}
                     >
                       <div>
-                        <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.86rem' }}>
+                        <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.86rem' }}>
                           Assigned team: {activeCitizenTeam.name} ({activeCitizenTeam.unitType})
                         </strong>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#334155', marginTop: '0.25rem' }}>
                           Team leader: {activeReq.assignedTeamName || activeCitizenTeam.leadRescuer || 'Not assigned'}
                         </span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
                           Simulated team contact for this prototype. X characters mask the number.
                         </span>
                       </div>
@@ -517,9 +507,11 @@ export function CitizenView({
               </Section>
             ) : (
               <Section title="Rescue Tracking" subtitle="Prototype status tracking for your rescue request.">
-                <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
-                  <p style={{ color: '#64748b', fontWeight: 600, margin: 0 }}>No active rescue requests.</p>
-                </div>
+                <EmptyState
+                  icon="pin"
+                  title="No active rescue requests"
+                  description="When you submit a rescue request, its progress will be shown here."
+                />
               </Section>
             ))}
           </div>
@@ -577,7 +569,7 @@ export function CitizenView({
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e2e8f0' }}>
+              <label style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
                 Step A — How severe is the flooding at your location?
               </label>
 
@@ -596,22 +588,21 @@ export function CitizenView({
                     style={{
                       padding: '0.75rem 1rem',
                       borderRadius: '8px',
-                      border: `1px solid ${stepA_severity === s.key ? '#ef4444' : '#2d3748'}`,
-                      background: stepA_severity === s.key ? 'rgba(239, 68, 68, 0.12)' : '#111827',
+                      border: `1px solid ${stepA_severity === s.key ? '#dc2626' : '#e2e8f0'}`,
+                      background: stepA_severity === s.key ? 'rgba(220, 38, 38, 0.05)' : '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
                       textAlign: 'left',
-                      transition: 'border-color 0.15s, background 0.15s',
                     }}
                   >
                     <div>
-                      <strong style={{ fontSize: '0.88rem', color: '#f1f5f9', display: 'block' }}>{s.depth}</strong>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{s.desc}</span>
+                      <strong style={{ fontSize: '0.88rem', color: '#0f172a', display: 'block' }}>{s.depth}</strong>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{s.desc}</span>
                     </div>
                     {stepA_severity === s.key && (
-                      <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '1rem' }}>✓</span>
+                      <span style={{ color: '#dc2626', fontWeight: 700 }}>✓</span>
                     )}
                   </button>
                 ))}
@@ -625,7 +616,6 @@ export function CitizenView({
         </div>
       </Modal>
 
-
       {/* CANCEL CONFIRMATION MODAL */}
       <Modal
         isOpen={showCancelModal}
@@ -633,7 +623,7 @@ export function CitizenView({
         title="Cancel Rescue Request?"
         subtitle="This removes your request from the active dispatch queue."
       >
-        <p style={{ fontSize: '0.88rem', color: '#94a3b8', margin: '0 0 1.25rem 0' }}>
+        <p style={{ fontSize: '0.88rem', color: '#475569', margin: '0 0 1.25rem 0' }}>
           Are you sure you want to cancel this distress request? If you are in immediate danger, please keep the request active or call 911.
         </p>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -650,10 +640,6 @@ export function CitizenView({
         </div>
       </Modal>
 
-      <EmergencyHotlinesModal
-        isOpen={showHotlinesModal}
-        onClose={() => setShowHotlinesModal(false)}
-      />
     </div>
   )
 }

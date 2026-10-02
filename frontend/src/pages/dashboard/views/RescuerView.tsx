@@ -21,6 +21,7 @@ import {
 } from '../../../api/missions'
 import type { OfflineQueueEntry } from '../../../api/missions'
 import {
+  EmptyState,
   Section,
   StatusBadge,
   SeverityTag,
@@ -35,93 +36,58 @@ interface RescuerOverviewMission {
   location?: string
 }
 
-interface CompletedRescueTicket {
-  missionId: string
-  requestId: string
-  location?: string
-  completedAt?: string
-  notes?: string
-}
-
 function RescuerRecordsView({
-  tickets,
   reports,
 }: {
-  tickets: CompletedRescueTicket[]
   reports: IncidentReport[]
 }) {
-  const [visibleTickets, setVisibleTickets] = useState(tickets)
-
-  function deleteTicket(missionId: string) {
-    setVisibleTickets((prev) => prev.filter((t) => t.missionId !== missionId))
-  }
-
   return (
     <div className="rescuer-records-container">
-      <Section title="Rescue Records" subtitle="Operational records and completed rescue mission logs.">
-        <p className="rescuer-records-note" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-          Archived rescue operations with validated situational data and post-dispatch reports.
-        </p>
+      <Section title="Rescue Records" subtitle="Operational records and completed rescue mission logs." action={<span className="records-head-icon" aria-hidden="true"><Icon name="shield" size={22} /></span>}>
+        <div className="rescuer-records-note">
+          <span className="rescuer-records-note__icon"><Icon name="report" size={17} /></span>
+          <p>Review completed missions and field reports from this controlled demonstration.</p>
+        </div>
       </Section>
 
-      <Section title="Completed Tickets" subtitle="Completed rescue tickets. Controlled demonstration data only.">
-        {visibleTickets.length === 0 ? (
-          <p className="rescuer-records-empty">No completed rescue tickets recorded.</p>
-        ) : (
-          <div className="rescuer-records-list">
-            {visibleTickets.map((ticket) => (
-              <details className="rescuer-record-ticket" key={ticket.missionId}>
-                <summary>
-                  <span>
-                    <strong>{ticket.missionId}</strong>
-                    <small>Request {ticket.requestId}</small>
-                  </span>
-                  <div className="rescuer-record-summary-actions">
-                    <span className="rescuer-record-status">Successful (Completed)</span>
-                    <button
-                      type="button"
-                      className="rescuer-record-delete-btn"
-                      aria-label={`Delete record ${ticket.missionId}`}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        deleteTicket(ticket.missionId)
-                      }}
-                    >
-                      <Icon name="warning" size={13} />
-                      Delete
-                    </button>
-                  </div>
-                </summary>
-                <div className="rescuer-record-ticket__details">
-                  {ticket.location && <p><strong>Location:</strong> {ticket.location}</p>}
-                  {ticket.completedAt && (
-                    <p><strong>Completed:</strong> {ticket.completedAt}</p>
-                  )}
-                  <p><strong>Field notes:</strong> {ticket.notes || 'No field notes recorded.'}</p>
-                </div>
-              </details>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      <Section title="Field Reports" subtitle="Field reports filed by rescuer units upon mission completion.">
+      <Section title="Incident Transactions" subtitle="Completed mission reports and their recorded outcomes" action={<span className="records-count-badge"><Icon name="report" size={15} /> {reports.length} {reports.length === 1 ? 'REPORT' : 'REPORTS'}</span>}>
         {reports.length === 0 ? (
-          <p className="rescuer-records-empty">No field reports filed yet.</p>
+          <EmptyState icon="report" title="No field reports yet" description="Mission completion reports will appear here after your team files them." />
         ) : (
-          <div className="rescuer-reports-list">
+          <div className="rescuer-reports-list" role="list" aria-label="Field report transactions">
             {reports.map((rep) => (
-              <div key={rep.id} className="rescuer-report-card" style={{ padding: '1rem', background: 'var(--surface-raised)', borderRadius: '8px', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <strong>{rep.id} — Mission {rep.missionId}</strong>
-                  <span className="status-badge" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>{rep.outcome}</span>
+              <article key={rep.id} className="rescuer-report-card" role="listitem">
+                <div className="rescuer-report-card__main">
+                  <div className="rescuer-report-card__banner">
+                    <span className="rescuer-report-card__icon"><Icon name="report" size={19} /></span>
+                    <span>AFTER-ACTION REPORT</span>
+                  </div>
+                  <div className="rescuer-record-transaction__identity">
+                    <div><strong className="rescuer-record-id">{rep.id}</strong><span className="rescuer-record-request">Mission {rep.missionId}</span></div>
+                    <span className="rescuer-record-status">{rep.outcome}</span>
+                  </div>
+                  <div className="rescuer-record-transaction__fields">
+                    <div><span><Icon name="route" size={13} /> Mission / Request</span><strong>{rep.missionId} / {rep.requestId}</strong></div>
+                    <div><span><Icon name="clock" size={13} /> Recorded</span><strong>{rep.documentedAt}</strong></div>
+                    <div><span><Icon name="user" size={13} /> Reported by</span><strong>{rep.reportedBy}</strong></div>
+                    <div><span><Icon name="volunteers" size={13} /> People evacuated</span><strong>{rep.evacuatedCount}</strong></div>
+                    <div><span><Icon name="alert" size={13} /> Casualties</span><strong>{rep.casualtiesCount}</strong></div>
+                  </div>
                 </div>
-                <p style={{ margin: '4px 0', fontSize: '0.84rem' }}>{rep.operationalNotes}</p>
-              </div>
+                <details className="rescuer-record-transaction__details">
+                  <summary><Icon name="report" size={15} /> View field report details</summary>
+                  <div className="rescuer-record-transaction__notes">
+                    <div><span>Delays &amp; complications</span><p>{rep.delaysOrComplications || 'None recorded.'}</p></div>
+                    <div><span>Operational notes &amp; medical care</span><p>{rep.operationalNotes || 'None recorded.'}</p></div>
+                    <div><span>Suggestions for future operations</span><p>{rep.futureSuggestions || 'None recorded.'}</p></div>
+                  </div>
+                </details>
+              </article>
             ))}
           </div>
         )}
       </Section>
+
     </div>
   )
 }
@@ -161,6 +127,10 @@ function RescuerOverviewCards({
   const members = team?.members && team.members.length > 0
     ? team.members
     : ['Capt. R. Santos', 'PFC. J. Reyes', 'PFC. M. Cruz', 'Cpl. A. Garcia']
+  const [memberSearch, setMemberSearch] = useState('')
+  const filteredMembers = members.filter((member) =>
+    member.toLowerCase().includes(memberSearch.trim().toLowerCase()),
+  )
 
   return (
     <div className="rescuer-overview-wrapper">
@@ -267,8 +237,19 @@ function RescuerOverviewCards({
             {team?.name || 'Team Alpha'} · {team?.membersCount || 4} responders on duty
           </span>
         </div>
+        <div className="teammates-search-box">
+          <label htmlFor="rescuer-member-search">Search team members</label>
+          <input
+            id="rescuer-member-search"
+            type="search"
+            value={memberSearch}
+            onChange={(event) => setMemberSearch(event.target.value)}
+            placeholder="Search by name"
+          />
+        </div>
         <div className="teammates-grid">
-          {members.map((member, idx) => {
+          {filteredMembers.length > 0 ? filteredMembers.map((member) => {
+            const idx = members.indexOf(member)
             const isLead =
               idx === 0 ||
               (team?.leadRescuer &&
@@ -294,7 +275,9 @@ function RescuerOverviewCards({
                 </div>
               </div>
             )
-          })}
+          }) : (
+            <p className="teammates-search-empty">No team members match “{memberSearch}”.</p>
+          )}
         </div>
       </div>
     </div>
@@ -345,10 +328,7 @@ function RescueDetailsList({
       subtitle="Active assignments only — completed missions appear in Records"
     >
       {activeRequests.length === 0 ? (
-        <div className="rescue-details-empty">
-          <Icon name="pin" size={32} />
-          <p>No active rescue targets assigned</p>
-        </div>
+        <EmptyState icon="pin" title="No active rescue targets" description="Assigned rescue requests will appear here when your team receives a mission." />
       ) : (
         <div className="rescue-inquiries-layout">
 
@@ -631,24 +611,6 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
           status: openMission.status,
           location: requests.find((request) => request.id === openMission.requestId)?.location.address,
         }))
-  const completedTickets: CompletedRescueTicket[] = apiMissionsData && apiMissionsData.length > 0
-    ? apiMissionsData
-        .filter((completedMission) => completedMission.status === 'completed')
-        .map((completedMission) => ({
-          missionId: completedMission.id,
-          requestId: completedMission.request_id,
-          location: completedMission.request_summary?.location.address,
-          completedAt: completedMission.completed_at ?? undefined,
-        }))
-    : missions
-        .filter((completedMission) => completedMission.status === 'completed')
-        .map((completedMission) => ({
-          missionId: completedMission.id,
-          requestId: completedMission.requestId,
-          location: requests.find((request) => request.id === completedMission.requestId)?.location.address,
-          completedAt: completedMission.completedAt,
-          notes: completedMission.rescuerNotes,
-        }))
   const teamReports = rescuerTeam
     ? incidentReports.filter((report) => report.teamName.toLowerCase().includes(rescuerTeam.name.toLowerCase()))
     : incidentReports
@@ -724,10 +686,8 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
   }
 
   // UI States
-  const [showIncomingModal, setShowIncomingModal] = useState(
-    Boolean(mission && mission.status === 'assigned' && !mission.startedAt),
-  )
   const [selectedRouteKey, setSelectedRouteKey] = useState<'primary' | 'alternative'>('primary')
+  const [showRouteDetails, setShowRouteDetails] = useState(false)
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
   const [evacuatedCount, setEvacuatedCount] = useState(
     targetRequest ? String(targetRequest.headcount) : '4',
@@ -857,7 +817,7 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
           </Section>
         )}
         {navSection === 'incidents' && (
-          <RescuerRecordsView tickets={completedTickets} reports={teamReports} />
+          <RescuerRecordsView reports={teamReports} />
         )}
       </div>
     )
@@ -884,7 +844,7 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
             </Section>
           </>
         ) : navSection === 'incidents' ? (
-          <RescuerRecordsView tickets={completedTickets} reports={teamReports} />
+          <RescuerRecordsView reports={teamReports} />
         ) : (
           <Section title={navSection === 'inquiries' ? 'Rescue Target' : 'Navigation'}>
             <div className="rescuer-tab-note">
@@ -898,12 +858,6 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
   }
 
   // 1. Mission Execution actions (mock context — preserved for existing view JSX)
-  function handleAcceptMission() {
-    if (!mission) return
-    contextUpdateMissionStatus(mission.id, 'assigned')
-    setShowIncomingModal(false)
-  }
-
   function handleStartEnRoute() {
     if (!mission) return
     // Try real API first; fall back to context for demo mode
@@ -949,11 +903,11 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
   const navImpassableRoad = selectedNavMission.suggestedRoute.impassable
 
   function selectRoute(routeKey: 'primary' | 'alternative') {
-    if (!mission) return
-    const route = routeKey === 'primary' ? primaryRoute : alternativeRoute
+    const route = routeKey === 'primary' ? navPrimaryRoute : navAlternativeRoute
     setSelectedRouteKey(routeKey)
+    setShowRouteDetails(true)
     overrideRoute(
-      mission.id,
+      selectedNavMission.id,
       route.name,
       routeKey === 'primary'
         ? 'Selected primary recommended corridor'
@@ -1013,37 +967,6 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
             />
           )}
 
-          {/* 1. INCOMING MISSION NOTIFICATION BANNER (IF PENDING ACCEPTANCE) */}
-          {showIncomingModal && (
-            <div className="incoming-mission-banner" role="alert">
-              <div className="incoming-banner-left">
-                <span className="incoming-pulse-icon">
-                  <Icon name="alert" size={24} />
-                </span>
-                <div>
-                  <div className="incoming-banner-badge">🚨 NEW RESCUE DISPATCH ASSIGNMENT</div>
-                  <h3>{mission.id} → {targetRequest.location.address}</h3>
-                  <p>
-                    <strong>{targetRequest.headcount} Persons</strong> · Severity:{' '}
-                    <strong>{targetRequest.severity.toUpperCase()}</strong> ({targetRequest.floodDepth})
-                    {targetRequest.medicalNeeds ? ' · 🩺 ACTIVE MEDICAL NEED' : ''}
-                  </p>
-                </div>
-              </div>
-              <div className="incoming-banner-actions">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="btn-danger-emergency"
-                  onClick={handleAcceptMission}
-                >
-                  <Icon name="check" size={18} />
-                  <span>ACCEPT MISSION</span>
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Rescuer Operational Stats */}
           <Section
             title="Assigned Team & Progress"
@@ -1097,17 +1020,6 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
                   <span>🛣️ Active Corridor: <strong>{mission.activeRouteName}</strong></span>
                 </div>
               </div>
-            ) : mission.status === 'assigned' ? (
-              <div className="enroute-reroute-explanation-card enroute-advisory--standby">
-                <div className="reroute-header">
-                  <span className="advisory-status-icon">🟡</span>
-                  <span className="reroute-title">AWAITING DEPARTURE</span>
-                  <span className="reroute-source">Prototype status shared across role views</span>
-                </div>
-                <p className="reroute-message">
-                  {mission.routeDelayExplanation || 'Mission assigned. Prepare craft and crew for departure.'}
-                </p>
-              </div>
             ) : null}
           </Section>
 
@@ -1116,7 +1028,7 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
             subtitle="Missions queued and assigned to this emergency response team."
           >
             {openMissions.length === 0 ? (
-              <p className="rescuer-missions-empty">No open missions assigned.</p>
+              <EmptyState icon="boat" title="No open missions" description="Missions assigned to your team will appear here." />
             ) : (
               <div className="open-missions-container">
                 <ol className="rescuer-open-mission-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -1161,8 +1073,9 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
         title="Flood-Aware Navigation & Rerouting Engine"
         subtitle="Deterministic route costs using controlled flood and passability rules."
       >
+        <div className="flood-navigation-panel">
         {/* Mission picker dropdown */}
-        <div className="rescue-ticket-select-row" style={{ marginBottom: '0.5rem' }}>
+        <div className="rescue-ticket-select-row flood-navigation-mission-picker">
           <label htmlFor="nav-mission-select" className="rescue-ticket-select-label">
             <Icon name="alert" size={14} /> Select Mission
           </label>
@@ -1170,7 +1083,11 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
             id="nav-mission-select"
             className="rescue-ticket-select"
             value={selectedNavMissionId}
-            onChange={(e) => setSelectedNavMissionId(e.target.value)}
+            onChange={(e) => {
+              setSelectedNavMissionId(e.target.value)
+              setSelectedRouteKey('primary')
+              setShowRouteDetails(false)
+            }}
           >
             {activeMissions.map((m) => {
               const req = requests.find((r) => r.id === m.requestId)
@@ -1184,78 +1101,110 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
         </div>
 
         {selectedNavRequest && (
-          <p className="rescuer-tab-note" style={{ marginBottom: '0.75rem' }}>
+          <p className="rescuer-tab-note flood-navigation-target">
             Showing route for <strong>{selectedNavRequest.citizenName}</strong> · {selectedNavRequest.location.address}
           </p>
         )}
 
         {/* Impassable Alert Box */}
-        <div className="impassable-alert-box">
+        <div className="impassable-alert-box flood-navigation-hazard">
           <div className="impassable-icon">
             <Icon name="warning" size={24} />
           </div>
           <div className="impassable-body">
-            <div className="impassable-tag">HAZARD DETECTED · ROAD EXCLUDED</div>
-            <h4>{navImpassableRoad.name} — IMPASSABLE TO RESCUE VEHICLES</h4>
+            <div className="impassable-tag">HAZARD · ROAD EXCLUDED</div>
+            <h4>{navImpassableRoad.name} — impassable</h4>
             <p>
-              Controlled-scenario depth is <strong>{navImpassableRoad.waterDepth}</strong>, exceeding the configured
-              prototype threshold of <strong>{navImpassableRoad.threshold}</strong>. The deterministic engine excludes
-              this edge and selects another eligible corridor.
+              Controlled-scenario depth: <strong>{navImpassableRoad.waterDepth}</strong> · vehicle limit:{' '}
+              <strong>{navImpassableRoad.threshold}</strong>. This road is excluded.
             </p>
           </div>
         </div>
 
-        {/* Route Comparison Options */}
-        <div className="route-comparison-grid" role="group" aria-label="Select rescue route">
-          <div
-            className={`route-card ${selectedRouteKey === 'primary' ? 'is-selected' : ''}`}
-            role="button"
-            tabIndex={0}
-            aria-label={`Select recommended route: ${navPrimaryRoute.name}, scenario score ${navPrimaryRoute.safetyScore} out of 100`}
-            aria-pressed={selectedRouteKey === 'primary'}
-            onClick={() => selectRoute('primary')}
-            onKeyDown={(event) => handleRouteCardKeyDown(event, 'primary')}
-          >
-            <div className="route-card-head">
-              <span className="route-badge-recommended">RECOMMENDED ROUTE</span>
-              <span className="route-score">Scenario score: {navPrimaryRoute.safetyScore}/100</span>
+        {!showRouteDetails ? (
+          <div className="route-reveal-prompt">
+            <div>
+              <strong>Alternate corridor available</strong>
+              <span>{navImpassableRoad.name} is excluded in this controlled scenario.</span>
             </div>
-            <h4>{navPrimaryRoute.name}</h4>
-            <div className="route-metrics">
-              <span>⏱️ {navPrimaryRoute.estimatedMinutes} mins transit</span>
-              <span>🌊 {navPrimaryRoute.waterDepth}</span>
-              <span>⛰️ Elevation: {navPrimaryRoute.elevation}</span>
-            </div>
-            <p className="route-explanation">{navPrimaryRoute.explanation}</p>
+            <Button variant="primary" onClick={() => selectRoute('primary')}>
+              Use recommended route
+            </Button>
           </div>
+        ) : (
+          <>
+            <div className="route-selection-confirmation" role="status">
+              <span>
+                ✓ {selectedRouteKey === 'primary' ? 'Recommended route' : 'Alternative detour'} selected
+              </span>
+              <button type="button" onClick={() => setShowRouteDetails(false)}>
+                Hide route details
+              </button>
+            </div>
 
-          <div
-            className={`route-card ${selectedRouteKey === 'alternative' ? 'is-selected' : ''}`}
-            role="button"
-            tabIndex={0}
-            aria-label={`Select alternative route: ${navAlternativeRoute.name}, safety score ${navAlternativeRoute.safetyScore} out of 100`}
-            aria-pressed={selectedRouteKey === 'alternative'}
-            onClick={() => selectRoute('alternative')}
-            onKeyDown={(event) => handleRouteCardKeyDown(event, 'alternative')}
-          >
-            <div className="route-card-head">
-              <span className="route-badge-alternative">ALTERNATIVE DETOUR</span>
-              <span className="route-score">Safety: {navAlternativeRoute.safetyScore}/100</span>
+            {/* Route Comparison Options */}
+            <div className="route-comparison-grid" role="group" aria-label="Select rescue route">
+              <div
+                className={`route-card ${selectedRouteKey === 'primary' ? 'is-selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select recommended route: ${navPrimaryRoute.name}, scenario score ${navPrimaryRoute.safetyScore} out of 100`}
+                aria-pressed={selectedRouteKey === 'primary'}
+                onClick={() => selectRoute('primary')}
+                onKeyDown={(event) => handleRouteCardKeyDown(event, 'primary')}
+              >
+                <div className="route-card-head">
+                  <span className="route-badge-recommended">RECOMMENDED ROUTE</span>
+                  <span className="route-score">
+                    <small>SCENARIO SCORE</small>{navPrimaryRoute.safetyScore}<span>/100</span>
+                  </span>
+                </div>
+                <h4>{navPrimaryRoute.name}</h4>
+                <div className="route-metrics">
+                  <span><small>ESTIMATED TIME</small><strong>{navPrimaryRoute.estimatedMinutes} min</strong></span>
+                  <span><small>WATER DEPTH</small><strong>{navPrimaryRoute.waterDepth}</strong></span>
+                  <span><small>ELEVATION</small><strong>{navPrimaryRoute.elevation}</strong></span>
+                </div>
+                <p className="route-explanation">{navPrimaryRoute.explanation}</p>
+              </div>
+
+              <div
+                className={`route-card ${selectedRouteKey === 'alternative' ? 'is-selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select alternative route: ${navAlternativeRoute.name}, scenario score ${navAlternativeRoute.safetyScore} out of 100`}
+                aria-pressed={selectedRouteKey === 'alternative'}
+                onClick={() => selectRoute('alternative')}
+                onKeyDown={(event) => handleRouteCardKeyDown(event, 'alternative')}
+              >
+                <div className="route-card-head">
+                  <span className="route-badge-alternative">ALTERNATIVE DETOUR</span>
+                  <span className="route-score">
+                    <small>SCENARIO SCORE</small>{navAlternativeRoute.safetyScore}<span>/100</span>
+                  </span>
+                </div>
+                <h4>{navAlternativeRoute.name}</h4>
+                <div className="route-metrics">
+                  <span><small>ESTIMATED TIME</small><strong>{navAlternativeRoute.estimatedMinutes} min</strong></span>
+                  <span><small>WATER DEPTH</small><strong>{navAlternativeRoute.waterDepth}</strong></span>
+                  <span><small>ELEVATION</small><strong>{navAlternativeRoute.elevation}</strong></span>
+                </div>
+                <p className="route-explanation">{navAlternativeRoute.explanation}</p>
+              </div>
             </div>
-            <h4>{navAlternativeRoute.name}</h4>
-            <div className="route-metrics">
-              <span>⏱️ {navAlternativeRoute.estimatedMinutes} mins transit</span>
-              <span>🌊 {navAlternativeRoute.waterDepth}</span>
-              <span>⛰️ Elevation: {navAlternativeRoute.elevation}</span>
-            </div>
-            <p className="route-explanation">{navAlternativeRoute.explanation}</p>
-          </div>
+          </>
+        )}
         </div>
-
       </Section>}
 
-      {navSection === 'missions' && <div className="rescuer-navigation-map-note">
-        <p>Map visualization uses controlled U-Belt scenario data. It is not live GPS tracking or guaranteed-safe navigation.</p>
+      {navSection === 'missions' && showRouteDetails && <div className="rescuer-navigation-map-note">
+        <div className="rescuer-navigation-map-heading">
+          <div>
+            <span className="rescuer-navigation-map-kicker">ROUTE PREVIEW</span>
+          <h3>Selected route map</h3>
+          </div>
+          <p>Controlled U-Belt scenario · Hindi live GPS o garantisadong ligtas na nabigasyon</p>
+        </div>
         <InteractiveFloodMap
           activeStage={selectedNavMission.status === 'cancelled' ? undefined : selectedNavMission.status}
           selectedRoute={selectedRouteKey}
@@ -1268,7 +1217,7 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
       </div>}
 
       {navSection === 'incidents' && (
-        <RescuerRecordsView tickets={completedTickets} reports={teamReports} />
+        <RescuerRecordsView reports={teamReports} />
       )}
 
       {/* 4. Complete Rescue Confirmation Modal */}
@@ -1277,21 +1226,25 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
         onClose={() => setShowCompleteConfirm(false)}
         title="Confirm Rescue Completion"
         subtitle="Verify all affected citizens are safely secured and transferred."
+        maxWidth="600px"
       >
         <div className="complete-modal-content">
-          <div className="field">
-            <label className="field__label">Confirmed Number of Evacuees Rescued</label>
+          <div className="complete-modal-field complete-modal-count-field">
+            <label className="field__label" htmlFor="evacuated-count">Confirmed number of evacuees rescued</label>
             <input
+              id="evacuated-count"
               type="number"
               value={evacuatedCount}
               onChange={(e) => setEvacuatedCount(e.target.value)}
               min="1"
+              inputMode="numeric"
             />
           </div>
 
-          <div className="field">
-            <label className="field__label">Field Notes / Evacuation Observations</label>
+          <div className="complete-modal-field">
+            <label className="field__label" htmlFor="rescuer-field-notes">Field notes and evacuation observations</label>
             <textarea
+              id="rescuer-field-notes"
               rows={3}
               placeholder="E.g., All 4 family members secured. Minor asthma symptoms treated with onboard inhaler. Transferred to NU Gymnasium evacuation center."
               value={rescuerFieldNotes}
@@ -1299,12 +1252,15 @@ export function RescuerView({ navSection = 'overview' }: { navSection?: NavSecti
             />
           </div>
 
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-            Closing this prototype mission will update the shared demonstration state and reset your craft
-            status to <strong>AVAILABLE</strong>.
-          </p>
+          <div className="complete-modal-state-notice" role="note">
+            <Icon name="alert" size={16} />
+            <p>
+              Closing this prototype mission updates the shared demonstration state and resets your craft status to{' '}
+              <strong>AVAILABLE</strong>.
+            </p>
+          </div>
 
-          <div className="modal-footer" style={{ padding: 0, marginTop: 16 }}>
+          <div className="modal-footer">
             <Button variant="ghost" onClick={() => setShowCompleteConfirm(false)}>
               Cancel
             </Button>

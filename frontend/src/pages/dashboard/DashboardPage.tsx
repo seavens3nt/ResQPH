@@ -115,8 +115,7 @@ export function DashboardPage() {
       ? [
           { section: 'overview', label: 'Dispatch Overview', icon: 'pin' },
           { section: 'inquiries', label: 'Rescue Request Queue', icon: 'alert' },
-          { section: 'missions', label: 'Active Responses', icon: 'route' },
-          { section: 'teams', label: 'Rescue Fleet Status', icon: 'user' },
+          { section: 'teams', label: 'Create Rescue Team', icon: 'user' },
           { section: 'map', label: 'Hazard Map & Route Oversight', icon: 'navigation' },
           { section: 'incidents', label: 'Incident Reports', icon: 'check' },
         ]
@@ -135,8 +134,7 @@ export function DashboardPage() {
     coordinator: {
       overview: 'Central Dispatch Console',
       inquiries: 'Dispatch Request Queue',
-      missions: 'Active Responses',
-      teams: 'Rescue Fleet Status',
+      teams: 'Create Rescue Team',
       map: 'Hazard Map & Route Oversight',
       incidents: 'Incident Reports',
     },
@@ -230,12 +228,15 @@ export function DashboardPage() {
             >
               <Icon name="menu" size={20} />
             </button>
-
+            <div className="header-title-group">
+              <span className="header-subtitle">
+                {ROLE_LABELS[user.role]} Console · U-Belt Pilot
+              </span>
+              <h1 className="header-page-title">
+                {pageTitles[user.role][activeNav] ?? ROLE_LABELS[user.role]}
+              </h1>
+            </div>
           </div>
-
-          <h1 className="header-page-title visually-hidden">
-            {pageTitles[user.role][activeNav] ?? ROLE_LABELS[user.role]}
-          </h1>
 
           <div className="header-right">
             <button className="avatar-badge" type="button" onClick={openProfile} aria-label="Edit profile">
@@ -246,7 +247,11 @@ export function DashboardPage() {
 
         <OfflineIndicator />
 
-        <main className="dash__content">{view}</main>
+        <main className="dash__content">
+          <div key={`${user.role}-${activeNav}`} className="dash-view-transition">
+            {view}
+          </div>
+        </main>
       </div>
 
       {/* PROFILE MODAL */}

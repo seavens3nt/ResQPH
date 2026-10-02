@@ -43,6 +43,9 @@ interface MissionContextValue {
   pendingSyncCount: number
   toggleOffline: () => void
   createRescueRequest: (req: Omit<RescueRequest, 'id' | 'status' | 'submittedAt'>) => RescueRequest
+  createRescueTeam: (team: Omit<RescueTeam, 'id'>) => RescueTeam
+  updateRescueTeam: (id: string, team: Omit<RescueTeam, 'id'>) => void
+  deleteRescueTeam: (id: string) => void
   updateRequestStatus: (id: string, status: RequestStatus) => void
   cancelRescueRequest: (id: string) => void
   assignMission: (
@@ -311,6 +314,23 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     },
     [requests.length, isOffline],
   )
+
+  const createRescueTeam = useCallback((input: Omit<RescueTeam, 'id'>): RescueTeam => {
+    const team: RescueTeam = { ...input, id: `team-${Date.now()}` }
+    setTeams((current) => [team, ...current])
+    if (isOffline) setPendingSyncCount((count) => count + 1)
+    return team
+  }, [isOffline])
+
+  const updateRescueTeam = useCallback((id: string, input: Omit<RescueTeam, 'id'>) => {
+    setTeams((current) => current.map((team) => team.id === id ? { ...input, id } : team))
+    if (isOffline) setPendingSyncCount((count) => count + 1)
+  }, [isOffline])
+
+  const deleteRescueTeam = useCallback((id: string) => {
+    setTeams((current) => current.filter((team) => team.id !== id))
+    if (isOffline) setPendingSyncCount((count) => count + 1)
+  }, [isOffline])
 
   const updateRequestStatus = useCallback(
     (id: string, status: RequestStatus) => {
@@ -614,6 +634,9 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       pendingSyncCount,
       toggleOffline,
       createRescueRequest,
+      createRescueTeam,
+      updateRescueTeam,
+      deleteRescueTeam,
       updateRequestStatus,
       cancelRescueRequest,
       assignMission,
@@ -639,6 +662,9 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       pendingSyncCount,
       toggleOffline,
       createRescueRequest,
+      createRescueTeam,
+      updateRescueTeam,
+      deleteRescueTeam,
       updateRequestStatus,
       cancelRescueRequest,
       assignMission,

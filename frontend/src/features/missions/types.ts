@@ -132,7 +132,7 @@ export interface IncidentReport {
   operationalNotes: string
   futureSuggestions: string
   documentedAt: string
-  dispatcherName: string
+  reportedBy: string
 }
 
 export interface ForecastHour {

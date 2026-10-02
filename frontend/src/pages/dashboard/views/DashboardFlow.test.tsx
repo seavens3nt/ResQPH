@@ -55,7 +55,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // 2. Primary emergency actions
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Direct 911 Hotline/i })).not.toBeInTheDocument()
   })
 
   it('does NOT render the rescue-teams-deployed stat card (removed)', () => {
@@ -78,7 +78,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 
     // Emergency actions
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Direct 911 Hotline/i })).not.toBeInTheDocument()
 
     // The redundant service-type panel is not shown on the overview.
     expect(screen.queryByText(/Request Assistance/i)).not.toBeInTheDocument()
@@ -221,9 +221,9 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
       liveStatusUpdates: [],
       startedAt: index === 0 ? 'Just now' : undefined,
     }))
-    localStorage.setItem('resqph.state.v4.missions', JSON.stringify(missions))
-    localStorage.setItem('resqph.state.v4.requests', JSON.stringify(INITIAL_REQUESTS))
-    localStorage.setItem('resqph.state.v4.teams', JSON.stringify(INITIAL_TEAMS))
+    localStorage.setItem('resqph.state.v2.missions', JSON.stringify(missions))
+    localStorage.setItem('resqph.state.v2.requests', JSON.stringify(INITIAL_REQUESTS))
+    localStorage.setItem('resqph.state.v2.teams', JSON.stringify(INITIAL_TEAMS))
 
     const { container } = renderWithProviders(<DashboardPage />, 'rescuer')
     const missionList = container.querySelector('.rescuer-open-mission-list')
@@ -235,9 +235,9 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
 
     expect(missionList?.querySelectorAll('li')).toHaveLength(5)
     expect(screen.getByRole('button', { name: 'Show fewer missions' })).toHaveAttribute('aria-expanded', 'true')
-    localStorage.removeItem('resqph.state.v4.missions')
-    localStorage.removeItem('resqph.state.v4.requests')
-    localStorage.removeItem('resqph.state.v4.teams')
+    localStorage.removeItem('resqph.state.v2.missions')
+    localStorage.removeItem('resqph.state.v2.requests')
+    localStorage.removeItem('resqph.state.v2.teams')
   })
 
   it('keeps mission, target, and combined navigation in separate console tabs', () => {
@@ -280,9 +280,14 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Rescue Records' }))
     expect(document.querySelector('.header-page-title')).toHaveTextContent('Rescue Records')
     expect(screen.getAllByRole('heading', { name: 'Rescue Records' }).length).toBeGreaterThan(0)
-    expect(screen.getByRole('heading', { name: 'Completed Tickets' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Field Reports' })).toBeInTheDocument()
     expect(screen.getByText('MSN-0038')).toBeInTheDocument()
+    expect(screen.getByText('RQ-0040')).toBeInTheDocument()
+    expect(screen.getByText('Capt. R. Santos, Team Alpha')).toBeInTheDocument()
+    expect(screen.getByText('6')).toBeInTheDocument()
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getByText('Field Notes')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Completed Tickets' })).not.toBeInTheDocument()
     expect(screen.getAllByText(/Successful/).length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText(/Flood-Aware Navigation & Rerouting Engine/i)).not.toBeInTheDocument()
   })
@@ -406,10 +411,8 @@ describe('Dashboard Prototype Controls', () => {
   it('renders the citizen portal without volunteer controls or prototype header suffix', () => {
     renderWithProviders(<DashboardPage />, 'citizen')
 
-    // "Citizen Distress Portal" label, top-nav logo, and ResQPH wordmark removed per UI cleanup
-    expect(screen.queryByText('Citizen Distress Portal')).not.toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'ResQPH Logo' })).not.toBeInTheDocument()
-    // Sidebar brand logo/title remain; header-brand removed
+    expect(screen.getByText('Citizen Distress Portal')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'ResQPH Logo' })).toHaveAttribute('src', '/logo.png')
     expect(document.querySelector('.brand-title')).toHaveTextContent('ResQPH')
     expect(document.querySelector('.brand-title__p')).toHaveTextContent('P')
     expect(document.querySelector('.brand-title__h')).toHaveTextContent('H')
@@ -419,4 +422,3 @@ describe('Dashboard Prototype Controls', () => {
     expect(document.querySelector('.header-center')).not.toBeInTheDocument()
   })
 })
-

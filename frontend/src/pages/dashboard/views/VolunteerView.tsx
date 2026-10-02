@@ -8,6 +8,7 @@ import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
 import {
   EmergencyHotlinesModal,
   EmergencyPreparednessGuide,
+  EmptyState,
   Section,
   VulnerabilitiesBadges,
   LocalizedForecastWidget,
@@ -150,9 +151,11 @@ export function VolunteerView({
                   </div>
                 </div>
               ) : (
-                <div className="modern-clean-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
-                  <p style={{ color: '#64748b', fontWeight: 600, margin: 0 }}>No active SOS signals in this sector.</p>
-                </div>
+                <EmptyState
+                  icon="broadcast"
+                  title="No active SOS signals"
+                  description="New demo rescue requests in this sector will appear here when available."
+                />
               )}
             </Section>
           </div>

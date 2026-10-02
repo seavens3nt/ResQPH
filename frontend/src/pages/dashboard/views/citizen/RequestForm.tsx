@@ -74,6 +74,32 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
 
   const { mutate, isPending } = useCreateRescueRequest()
 
+  function loadSampleRequest(sample: 'family' | 'medical') {
+    setAddress('Sanitized demonstration address, Sampaloc, Manila')
+    setLngStr(String(DEMO_LNG))
+    setLatStr(String(DEMO_LAT))
+    setLocationSource('demo')
+    setGpsError('')
+    setFieldErrors({})
+    setSubmitError(null)
+    setSubmitErrorCode(null)
+
+    if (sample === 'family') {
+      setHeadcountStr('4')
+      setVulnerabilities(['infant', 'senior'])
+      setMedicalNeeds(false)
+      setMedicalDetails('')
+      setSituationSummary('Water is rising on the ground floor. Four people need help reaching a safe area, including an infant and a senior.')
+      return
+    }
+
+    setHeadcountStr('2')
+    setVulnerabilities(['mobility'])
+    setMedicalNeeds(true)
+    setMedicalDetails('Needs mobility assistance during evacuation')
+    setSituationSummary('Two people are waiting on the upper floor. One person needs help moving to an accessible rescue vehicle.')
+  }
+
   function chooseLocationSource(source: 'gps' | 'demo') {
     setGpsError('')
     if (source === 'demo') {
@@ -230,6 +256,32 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       <div style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
         <strong style={{ display: 'block', fontSize: '0.84rem', color: '#f1f5f9' }}>Start with the essentials</strong>
         <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Add a location and number of people. Extra details are optional.</span>
+      </div>
+
+      <div
+        aria-label="Synthetic sample rescue requests"
+        style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', padding: '0.75rem 0.9rem', border: '1px solid #334155', borderRadius: '8px', background: '#111827' }}
+      >
+        <strong style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Try a sample request</strong>
+        <span style={{ color: '#94a3b8', fontSize: '0.76rem' }}>Synthetic examples only. Selecting one fills the form; review and edit it before submitting.</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={() => loadSampleRequest('family')}
+            disabled={isPending}
+            style={{ padding: '0.5rem 0.7rem', border: '1px solid #475569', borderRadius: '6px', background: '#1e293b', color: '#e2e8f0', cursor: isPending ? 'not-allowed' : 'pointer', fontSize: '0.78rem' }}
+          >
+            Sample family · 4 people
+          </button>
+          <button
+            type="button"
+            onClick={() => loadSampleRequest('medical')}
+            disabled={isPending}
+            style={{ padding: '0.5rem 0.7rem', border: '1px solid #475569', borderRadius: '6px', background: '#1e293b', color: '#e2e8f0', cursor: isPending ? 'not-allowed' : 'pointer', fontSize: '0.78rem' }}
+          >
+            Sample mobility assistance · 2 people
+          </button>
+        </div>
       </div>
 
       {/* ── Global error banner ─────────────────────────────────────── */}

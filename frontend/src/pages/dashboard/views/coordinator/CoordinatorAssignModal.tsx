@@ -46,7 +46,6 @@ export function CoordinatorAssignModal({
     (team: RescueTeam) => team.status === 'available' && (!targetRequest?.medical_needs || team.hasMedicalUnit),
   ) ?? teams.find((team: RescueTeam) => team.status === 'available')
   const [selectedTeamId, setSelectedTeamId] = useState(initialTeam?.id ?? '')
-  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([])
   const [apiError, setApiError] = useState<ApiError | null>(null)
   const [assignmentSuccess, setAssignmentSuccess] = useState(false)
 
@@ -87,7 +86,6 @@ export function CoordinatorAssignModal({
   function handleClose() {
     setApiError(null)
     setAssignmentSuccess(false)
-    setSelectedSpecializations([])
     onClose()
   }
 
@@ -217,21 +215,6 @@ export function CoordinatorAssignModal({
                             {team.hasMedicalUnit ? 'Medical unit' : 'No medical unit'}
                           </span>
                         </span>
-                        {team.specializations && team.specializations.length > 0 && (
-                          <span className="assign-team-option__specializations">
-                            {team.specializations.map((spec) => (
-                              <span key={spec} className="spec-badge">{spec}</span>
-                            ))}
-                          </span>
-                        )}
-                        {team.equipment && team.equipment.length > 0 && (
-                          <span className="assign-team-option__equipment">
-                            {team.equipment.slice(0, 3).map((eq) => (
-                              <span key={eq} className="eq-item">{eq}</span>
-                            ))}
-                            {team.equipment.length > 3 && <span className="eq-more">+{team.equipment.length - 3} more</span>}
-                          </span>
-                        )}
                       </span>
                     </label>
                   ))}
@@ -249,60 +232,6 @@ export function CoordinatorAssignModal({
                 <span>Assigned crew</span>
                 <strong>{selectedTeam.membersCount} rescuers · {selectedTeam.unitType}</strong>
                 <span>{selectedTeam.hasMedicalUnit ? 'Medical unit available' : 'No dedicated medical unit'}</span>
-                {selectedTeam.specializations && selectedTeam.specializations.length > 0 && (
-                  <div className="summary-specializations">
-                    <span>Specializations:</span>
-                    <div className="summary-spec-tags">
-                      {selectedTeam.specializations.map((spec) => (
-                        <span key={spec} className="summary-spec-tag">{spec}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {selectedTeam && (
-              <div className="assign-additional-config">
-                <h4>Additional Team Configuration</h4>
-                <p className="field-label-sm">Add optional specializations or equipment for this mission</p>
-
-                <div className="config-section">
-                  <label className="field__label">Additional Specializations</label>
-                  <div className="specialization-toggles">
-                    {['medic', 'diver', 'equipment', 'command'].map((spec) => {
-                      const hasSpec = selectedTeam.specializations?.includes(spec as any)
-                      const isSelected = selectedSpecializations.includes(spec)
-                      return (
-                        <label key={spec} className={`spec-toggle${isSelected ? ' is-selected' : ''}${hasSpec ? ' has-already' : ''}`}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            disabled={hasSpec}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedSpecializations([...selectedSpecializations, spec])
-                              } else {
-                                setSelectedSpecializations(selectedSpecializations.filter((s) => s !== spec))
-                              }
-                            }}
-                          />
-                          <span>{spec}</span>
-                          {hasSpec && <span className="spec-badge-already">Included</span>}
-                        </label>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="config-section">
-                  <label className="field__label">Mission Notes (Optional)</label>
-                  <textarea
-                    rows={2}
-                    placeholder="E.g., Request additional medical supplies for elderly evacuees..."
-                    className="form-textarea"
-                  />
-                </div>
               </div>
             )}
 

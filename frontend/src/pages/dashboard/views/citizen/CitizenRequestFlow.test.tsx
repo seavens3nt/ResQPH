@@ -154,8 +154,8 @@ describe('RequestForm', () => {
     expect(screen.getByLabelText(/Location — street address/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/People needing assistance/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
-    // Coordinate inputs are hidden; the map click handler sets them internally
-    expect(screen.queryByText(/Adjust map coordinates/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Adjust map coordinates/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Longitude/i)).not.toBeVisible()
     expect(screen.getByRole('radio', { name: /Use current GPS/i })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
@@ -219,11 +219,19 @@ describe('RequestForm', () => {
 
   // ── Outside-boundary validation error ────────────────────────────────────
 
-  // Coordinates can only be set via map click (UI removed raw coord inputs);
-  // outside-boundary validation is covered by the chooseMapCoordinates unit path.
-  it.skip('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
-    // This test relied on a now-removed "Adjust map coordinates" details block.
-    // Boundary validation still runs server-side and via chooseMapCoordinates.
+  it('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
+    renderForm()
+    fireEvent.click(screen.getByText(/Adjust map coordinates/i))
+    // Set coordinates outside U-Belt boundary (far from pilot area)
+    fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: '121.05' } })
+    fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: '14.7' } })
+    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/inside the U-Belt pilot area/i),
+      ).toBeInTheDocument()
+    })
   })
 
   it('does NOT show a boundary error for the default in-boundary coordinates', async () => {
@@ -667,7 +675,7 @@ describe('CitizenView — API-backed request flow', () => {
     renderOverview()
     expect(screen.getByText(/Controlled Scenario: High tide & heavy rainfall/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Direct 911 Hotline/i })).not.toBeInTheDocument()
     expect(screen.getAllByText(/No live ETA/i)).toHaveLength(2)
     expect(screen.queryByText(/ETA 6 min/i)).not.toBeInTheDocument()
   })

@@ -57,6 +57,28 @@ export function Section({ title, subtitle, children, action }: SectionProps) {
   )
 }
 
+interface EmptyStateProps {
+  icon: IconName
+  title: string
+  description: string
+  action?: ReactNode
+}
+
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+  return (
+    <div className="dashboard-empty-state">
+      <span className="dashboard-empty-state__sticker" aria-hidden="true">
+        <span className="dashboard-empty-state__sticker-main"><Icon name={icon} size={42} /></span>
+        <span className="dashboard-empty-state__sticker-spark">✦</span>
+        <span className="dashboard-empty-state__sticker-check"><Icon name="check" size={16} /></span>
+      </span>
+      <h3>{title}</h3>
+      <p>{description}</p>
+      {action ? <div className="dashboard-empty-state__action">{action}</div> : null}
+    </div>
+  )
+}
+
 /* ----------------------------------------------------------------- */
 const statusConfig: Record<RequestStatus, { bg: string; color: string; border: string; label: string }> = {
   pending: {

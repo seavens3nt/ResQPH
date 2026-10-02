@@ -78,10 +78,10 @@ describe('InteractiveFloodMap Component', () => {
     expect(screen.getAllByText('IMPASSABLE').length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders routing rationale and simulated route delay banner', () => {
+  it('omits the routing rationale and renders the simulated route delay banner', () => {
     render(<InteractiveFloodMap />)
-    expect(screen.getByText(/Controlled-Scenario Routing Rationale/i)).toBeInTheDocument()
-    expect(screen.getByText(/AVOIDED SHORTCUT/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Controlled-Scenario Routing Rationale/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/AVOIDED SHORTCUT/i)).not.toBeInTheDocument()
     expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/SIMULATED EN ROUTE ADVISORY:/i)).toBeInTheDocument()
   })

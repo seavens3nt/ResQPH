@@ -3,12 +3,19 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/art/Icon'
 import { useAuth } from '../../features/auth/AuthContext'
-import type { UserRole } from '../../features/auth/types'
+import type { SignupRole } from '../../features/auth/types'
+import {
+  SignupEmailSchema,
+  SignupEmergencyContactSchema,
+  SignupNameSchema,
+  SignupPasswordPairSchema,
+  SignupPhoneSchema,
+} from './signupValidation'
 import './auth.css'
 
-type Step = 'name' | 'phone' | 'email' | 'password' | 'emergency' | 'location'
+type Step = 'role' | 'name' | 'phone' | 'email' | 'password' | 'emergency' | 'location'
 
-const STEP_ORDER: Step[] = ['name', 'phone', 'email', 'password', 'emergency', 'location']
+const STEP_ORDER: Step[] = ['role', 'name', 'phone', 'email', 'password', 'emergency', 'location']
 const TOTAL_STEPS = STEP_ORDER.length - 1 // location screen doesn't count as a "form" step
 
 function stepNumber(step: Step): number {
@@ -19,7 +26,8 @@ export function SignupPage() {
   const { signup } = useAuth()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState<Step>('name')
+  const [step, setStep] = useState<Step>('role')
+  const [accountRole, setAccountRole] = useState<SignupRole | null>(null)
 
   // Fields
   const [firstName, setFirstName] = useState('')
@@ -42,36 +50,61 @@ export function SignupPage() {
     e.preventDefault()
     setError('')
 
+    if (step === 'role') {
+      if (!accountRole) { setError('Choose Citizen or Rescuer to continue.'); return }
+      next(); return
+    }
     if (step === 'name') {
-      if (!firstName.trim() || !lastName.trim()) { setError('Enter your first and last name.'); return }
+      const firstNameResult = SignupNameSchema.safeParse(firstName)
+      const lastNameResult = SignupNameSchema.safeParse(lastName)
+      if (!firstNameResult.success) { setError(`First name: ${firstNameResult.error.issues[0].message}`); return }
+      if (!lastNameResult.success) { setError(`Last name: ${lastNameResult.error.issues[0].message}`); return }
+      setFirstName(firstNameResult.data)
+      setLastName(lastNameResult.data)
       next(); return
     }
     if (step === 'phone') {
-      if (!phone.trim()) { setError('Enter your mobile number.'); return }
+      const result = SignupPhoneSchema.safeParse(phone)
+      if (!result.success) { setError(result.error.issues[0].message); return }
+      setPhone(result.data)
       next(); return
     }
     if (step === 'email') {
-      if (!email.trim() || !email.includes('@')) { setError('Enter a valid email address.'); return }
+      const result = SignupEmailSchema.safeParse(email)
+      if (!result.success) { setError(result.error.issues[0].message); return }
+      setEmail(result.data)
       next(); return
     }
     if (step === 'password') {
-      if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
-      if (password !== confirmPassword) { setError('Passwords do not match.'); return }
+      const result = SignupPasswordPairSchema.safeParse({ password, confirmPassword })
+      if (!result.success) { setError(result.error.issues[0].message); return }
       next(); return
     }
     if (step === 'emergency') {
-      // all optional — just proceed
+      const contact = { name: ecName, relationship: ecRelationship, phone: ecPhone }
+      const hasContactDetails = Object.values(contact).some((value) => value.trim().length > 0)
+      if (hasContactDetails) {
+        const result = SignupEmergencyContactSchema.safeParse(contact)
+        if (!result.success) { setError(result.error.issues[0].message); return }
+        setEcName(result.data.name)
+        setEcRelationship(result.data.relationship)
+        setEcPhone(result.data.phone)
+      }
       next(); return
     }
   }
 
   function finishSignup(locationGranted: boolean) {
-    const role: UserRole = 'citizen'
+    if (!accountRole) {
+      setStep('role')
+      setError('Choose Citizen or Rescuer to continue.')
+      return
+    }
     signup({
       name: `${firstName.trim()} ${lastName.trim()}`,
-      email: email.trim(),
-      role,
-      phone: phone.trim(),
+      email,
+      role: accountRole,
+      phone,
       emergencyContact: ecName.trim()
         ? { name: ecName.trim(), relationship: ecRelationship.trim(), phone: ecPhone.trim() }
         : undefined,
@@ -125,6 +158,7 @@ export function SignupPage() {
 
   // ── Step meta ──────────────────────────────────────────────────
   const stepMeta: Record<Exclude<Step, 'location'>, { title: string; subtitle: string }> = {
+    role:      { title: 'Choose your account type', subtitle: 'Create a Citizen or Rescuer prototype account.' },
     name:      { title: "What's your name?",         subtitle: 'This is how rescuers will identify you.' },
     phone:     { title: 'Your mobile number',         subtitle: 'Used to reach you during an emergency.' },
     email:     { title: 'Your email address',         subtitle: 'For account recovery and alerts.' },
@@ -179,6 +213,29 @@ export function SignupPage() {
 
           <form className="auth-clean-form signup-single-step" onSubmit={handleSubmit} noValidate>
 
+            {step === 'role' && (
+              <div className="role-segmented" role="group" aria-label="Choose account type">
+                <button
+                  type="button"
+                  className={`role-segmented__btn ${accountRole === 'citizen' ? 'is-selected' : ''}`}
+                  aria-pressed={accountRole === 'citizen'}
+                  onClick={() => { setAccountRole('citizen'); setError('') }}
+                >
+                  <Icon name="user" size={16} />
+                  <span>Citizen</span>
+                </button>
+                <button
+                  type="button"
+                  className={`role-segmented__btn ${accountRole === 'rescuer' ? 'is-selected' : ''}`}
+                  aria-pressed={accountRole === 'rescuer'}
+                  onClick={() => { setAccountRole('rescuer'); setError('') }}
+                >
+                  <Icon name="boat" size={16} />
+                  <span>Rescuer</span>
+                </button>
+              </div>
+            )}
+
             {step === 'name' && (
               <>
                 <div className="auth-pill-field">
@@ -189,6 +246,8 @@ export function SignupPage() {
                     placeholder="First name"
                     aria-label="First name / full name"
                     autoComplete="given-name"
+                    maxLength={60}
+                    required
                     autoFocus
                     value={firstName}
                     onChange={e => setFirstName(e.target.value)}
@@ -202,6 +261,8 @@ export function SignupPage() {
                     placeholder="Last name"
                     aria-label="Last name"
                     autoComplete="family-name"
+                    maxLength={60}
+                    required
                     value={lastName}
                     onChange={e => setLastName(e.target.value)}
                   />
@@ -218,6 +279,9 @@ export function SignupPage() {
                   placeholder="09XX XXX XXXX"
                   aria-label="Mobile number"
                   autoComplete="tel"
+                  inputMode="tel"
+                  maxLength={20}
+                  required
                   autoFocus
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
@@ -238,6 +302,8 @@ export function SignupPage() {
                   placeholder="Email address"
                   aria-label="Email"
                   autoComplete="email"
+                  maxLength={254}
+                  required
                   autoFocus
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -259,6 +325,8 @@ export function SignupPage() {
                     placeholder="Password"
                     aria-label="Password"
                     autoComplete="new-password"
+                    maxLength={128}
+                    required
                     autoFocus
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -279,6 +347,8 @@ export function SignupPage() {
                     placeholder="Confirm password"
                     aria-label="Confirm password"
                     autoComplete="new-password"
+                    maxLength={128}
+                    required
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                   />
@@ -299,6 +369,7 @@ export function SignupPage() {
                     placeholder="Contact name"
                     aria-label="Emergency contact name"
                     autoFocus
+                    maxLength={60}
                     value={ecName}
                     onChange={e => setEcName(e.target.value)}
                   />
@@ -315,6 +386,7 @@ export function SignupPage() {
                     type="text"
                     placeholder="Relationship (e.g. Mother)"
                     aria-label="Relationship"
+                    maxLength={40}
                     value={ecRelationship}
                     onChange={e => setEcRelationship(e.target.value)}
                   />
@@ -326,6 +398,8 @@ export function SignupPage() {
                     type="tel"
                     placeholder="Contact mobile number"
                     aria-label="Emergency contact number"
+                    inputMode="tel"
+                    maxLength={20}
                     value={ecPhone}
                     onChange={e => setEcPhone(e.target.value)}
                   />

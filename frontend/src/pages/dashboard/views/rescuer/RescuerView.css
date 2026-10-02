@@ -493,65 +493,6 @@
   outline-offset: 2px;
 }
 
-.rescuer-view .incoming-mission-banner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 1.1rem 1.25rem;
-  border: 1px solid #7f1d1d;
-  border-left: 4px solid #ef4444;
-  border-radius: 9px;
-  background: #14090d;
-  box-shadow: 0 10px 28px rgb(0 0 0 / 18%);
-}
-
-.rescuer-view .incoming-banner-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-  min-width: 0;
-}
-
-.rescuer-view .incoming-pulse-icon {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  border: 1px solid #7f1d1d;
-  border-radius: 7px;
-  background: #270e13;
-  color: #f87171;
-}
-
-.rescuer-view .incoming-banner-badge {
-  margin-bottom: 0.35rem;
-  color: #fca5a5;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-}
-
-.rescuer-view .incoming-mission-banner h3 {
-  margin: 0;
-  color: #f8fafc;
-  font-size: 1.125rem;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.rescuer-view .incoming-mission-banner p {
-  margin: 0.5rem 0 0;
-  color: #cbd5e1;
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.rescuer-view .incoming-banner-actions {
-  flex: 0 0 auto;
-}
-
 .rescuer-view .stat-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
@@ -890,6 +831,59 @@
 
 .rescuer-view .impassable-body p strong {
   color: #fff;
+}
+
+.rescuer-view .route-reveal-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #263244;
+  border-radius: 8px;
+  background: #0b101a;
+}
+
+.rescuer-view .route-reveal-prompt > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.rescuer-view .route-reveal-prompt strong {
+  color: #e2e8f0;
+  font-size: 0.88rem;
+}
+
+.rescuer-view .route-reveal-prompt span {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.rescuer-view .route-selection-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+  color: #bfdbfe;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.rescuer-view .route-selection-confirmation button {
+  border: 0;
+  padding: 0.35rem 0;
+  background: transparent;
+  color: #94a3b8;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rescuer-view .route-selection-confirmation button:hover {
+  color: #e2e8f0;
 }
 
 .rescuer-view .route-comparison-grid {
@@ -1246,13 +1240,18 @@
 }
 
 @media (max-width: 680px) {
-  .rescuer-view .incoming-mission-banner {
-    grid-template-columns: 1fr;
+  .rescuer-view .route-reveal-prompt {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .rescuer-view .incoming-banner-actions,
-  .rescuer-view .incoming-banner-actions .btn {
+  .rescuer-view .route-reveal-prompt .btn {
     width: 100%;
+  }
+
+  .rescuer-view .route-selection-confirmation {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .rescuer-view .route-comparison-grid {
@@ -1402,6 +1401,43 @@
   border: 1px solid var(--border-default);
   border-radius: 6px;
   color: var(--text-secondary);
+}
+
+.teammates-search-box {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 420px;
+  margin-bottom: 1rem;
+}
+
+.teammates-search-box label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.teammates-search-box input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.65rem 0.8rem;
+  color: var(--text-primary);
+  background: var(--surface-base);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.teammates-search-box input:focus {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.teammates-search-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .teammates-grid {
@@ -2003,6 +2039,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
+  order: 2;
 }
 
 .rescue-inquiries-detail {
@@ -2189,7 +2226,8 @@
 
 /* ── Mission Lifecycle Control Card (Rescue Target Details) ──── */
 .rescue-target-status-control-card {
-  margin-top: 1.25rem;
+  order: 1;
+  margin-top: 0;
   padding: 1rem 1.1rem 1.1rem;
   border: 1px solid #1e2d3d;
   border-radius: 10px;
@@ -2256,4 +2294,1177 @@
   font-weight: 600;
   color: #4ade80;
   letter-spacing: 0.03em;
+}
+
+/* Keep completion form controls inside the modal and stack each field. */
+.complete-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.complete-modal-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.complete-modal-content .field__label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.complete-modal-field input,
+.complete-modal-field textarea {
+  box-sizing: border-box;
+  display: block;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+}
+
+.complete-modal-field input {
+  min-height: 44px;
+}
+
+.complete-modal-count-field input {
+  max-width: 160px;
+}
+
+.complete-modal-field textarea {
+  min-height: 9rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.complete-modal-state-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #854d0e;
+  border-radius: 8px;
+  background: rgb(120 53 15 / 16%);
+  color: #fde68a;
+}
+
+.complete-modal-state-notice svg {
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+  color: #fbbf24;
+}
+
+.complete-modal-state-notice p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.complete-modal-state-notice strong {
+  color: #fef3c7;
+}
+
+.complete-modal-content .modal-footer {
+  box-sizing: border-box;
+  width: 100%;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  padding: 0;
+  margin-top: 0 !important;
+  border-top: 0;
+  background: transparent;
+}
+
+.complete-modal-content .modal-footer > .btn--ghost {
+  border-color: transparent;
+}
+
+.complete-modal-content .modal-footer > .btn--ghost:hover:not(:disabled) {
+  border-color: #334155;
+}
+
+.complete-modal-content .modal-footer > .btn--primary {
+  border-color: #b91c1c;
+}
+
+.complete-modal-content .modal-footer > .btn:focus-visible {
+  outline: 2px solid #f87171;
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .complete-modal-content .modal-footer > .btn {
+    flex: 1 1 100%;
+  }
+
+  .complete-modal-count-field input {
+    max-width: 160px;
+  }
+}
+
+/* Rescue Target Details: use the warm rescue palette instead of blue accents. */
+.rescuer-api-target-grid .target-card {
+  border-color: #3f3525;
+  background: linear-gradient(145deg, #17150f, #100f0b);
+  box-shadow: inset 3px 0 0 #d97706;
+}
+
+.rescuer-api-target-grid .target-card-label {
+  color: #fbbf24;
+}
+
+.rescuer-api-target-grid .target-address,
+.rescuer-api-target-grid .target-api-value {
+  color: #f8fafc;
+}
+
+.rescuer-api-target-grid .target-gps,
+.rescuer-api-target-grid .target-house-desc {
+  color: #cbd5e1;
+}
+
+.rescuer-api-target-grid .medical-emergency-alert {
+  border-color: #9a3412;
+  background: #21120c;
+  color: #fed7aa;
+}
+
+.rescuer-api-target-grid .medical-emergency-alert svg,
+.rescuer-api-target-grid .medical-emergency-alert strong {
+  color: #fb923c;
+}
+
+/* Rescue records and after-action reports */
+.rescuer-view .rescuer-records-container {
+  gap: 1rem;
+}
+
+.rescuer-view .rescuer-records-container > .dash-section {
+  overflow: hidden;
+  border-color: #263a52;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #0d1724, #080d16 68%);
+}
+
+.rescuer-view .rescuer-records-note {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #294767;
+  border-radius: 9px;
+  background: #0a1726;
+}
+
+.rescuer-view .rescuer-records-note p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.rescuer-view .rescuer-records-note__icon {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: 0 0 auto;
+  border: 1px solid #315b91;
+  border-radius: 8px;
+  background: #0b2138;
+  color: #7dd3fc;
+}
+
+.rescuer-view .rescuer-records-list {
+  max-height: 30rem;
+  gap: 0.55rem;
+}
+
+.rescuer-view .rescuer-record-ticket {
+  overflow: hidden;
+  border-color: #2b3b4e;
+  border-radius: 9px;
+  background: #0a111c;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.rescuer-view .rescuer-record-ticket:hover,
+.rescuer-view .rescuer-record-ticket[open] {
+  border-color: #426183;
+  background: #0c1725;
+}
+
+.rescuer-view .rescuer-record-ticket summary {
+  min-height: 58px;
+  padding: 0.7rem 0.85rem;
+}
+
+.rescuer-view .rescuer-record-ticket summary::marker {
+  color: #7dd3fc;
+}
+
+.rescuer-view .rescuer-record-ticket summary strong {
+  font-size: 0.82rem;
+}
+
+.rescuer-view .rescuer-record-summary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.rescuer-view .rescuer-record-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-color: #28523e;
+  border-radius: 999px;
+  background: #0c2118;
+  color: #86efac;
+}
+
+.rescuer-view .rescuer-record-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 30px;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #503039;
+  border-radius: 6px;
+  background: #1b1116;
+  color: #fda4af;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rescuer-view .rescuer-record-delete-btn:hover {
+  border-color: #a33b50;
+  background: #2b121a;
+  color: #ffe4e6;
+}
+
+.rescuer-view .rescuer-record-ticket__details {
+  padding: 0.65rem 0.9rem 0.85rem;
+  background: rgb(3 7 13 / 24%);
+}
+
+.rescuer-view .rescuer-reports-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.rescuer-view .rescuer-report-card {
+  padding: 1rem;
+  border: 1px solid #2b3b4e;
+  border-left: 3px solid #22c55e;
+  border-radius: 9px;
+  background: linear-gradient(120deg, #0d1917, #0a1119 60%);
+}
+
+.rescuer-view .rescuer-report-card > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem !important;
+}
+
+.rescuer-view .rescuer-report-card > div:first-child strong {
+  color: #f8fafc;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.rescuer-view .rescuer-report-card .status-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid #28523e;
+  border-radius: 999px;
+  background: #0c2118 !important;
+  color: #86efac !important;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.rescuer-view .rescuer-report-card > p {
+  margin: 0.25rem 0 0 !important;
+  color: #cbd5e1;
+  font-size: 0.84rem !important;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+/* Rescuer archive uses the same transaction ledger hierarchy as coordinator reports. */
+.rescuer-view .rescuer-records-list {
+  display: grid;
+  max-height: 30rem;
+  overflow-y: auto;
+  gap: 0.65rem;
+}
+
+.rescuer-view .rescuer-record-transaction,
+.rescuer-view .rescuer-report-card {
+  overflow: hidden;
+  border: 1px solid #2b3b4e;
+  border-radius: 9px;
+  background: #0a111c;
+}
+
+.rescuer-view .rescuer-record-transaction__main,
+.rescuer-view .rescuer-report-card__main {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.rescuer-view .rescuer-record-transaction__identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #1e293b;
+}
+
+.rescuer-view .rescuer-record-transaction__identity > div:first-child {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rescuer-view .rescuer-record-id {
+  color: #f8fafc;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.rescuer-view .rescuer-record-request {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.rescuer-view .rescuer-record-transaction__fields {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.rescuer-view .rescuer-record-transaction__fields > div,
+.rescuer-view .rescuer-record-transaction__notes > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.rescuer-view .rescuer-record-transaction__fields span,
+.rescuer-view .rescuer-record-transaction__notes > div > span {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.rescuer-view .rescuer-record-transaction__fields strong {
+  overflow-wrap: anywhere;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.rescuer-view .rescuer-record-transaction__details {
+  border-top: 1px solid #1e293b;
+}
+
+.rescuer-view .rescuer-record-transaction__details summary {
+  padding: 0.75rem 1rem;
+  color: #7dd3fc;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.rescuer-view .rescuer-record-transaction__notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+.rescuer-view .rescuer-record-transaction__notes > div {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #080d16;
+}
+
+.rescuer-view .rescuer-record-transaction__notes p {
+  margin: 0.4rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.rescuer-view .rescuer-record-delete-confirmation {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.rescuer-view .rescuer-record-delete-confirmation strong {
+  color: #f8fafc;
+  font-family: var(--font-mono);
+}
+
+.rescuer-view .rescuer-report-card > div:first-child {
+  margin: 0 !important;
+}
+
+@media (max-width: 520px) {
+  .rescuer-view .rescuer-record-ticket summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rescuer-view .rescuer-record-summary-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .rescuer-view .rescuer-record-transaction__fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .rescuer-view .rescuer-record-transaction__identity {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rescuer-view .rescuer-record-transaction__fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rescuer-view .rescuer-record-transaction__notes {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Red rescue archive theme */
+.rescuer-view .rescuer-records-container > .dash-section {
+  border-color: #6f2530;
+  background: radial-gradient(ellipse at 0 0, rgb(153 27 27 / 18%), transparent 44%), linear-gradient(145deg, #160e13, #090d14 72%);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 18%);
+}
+
+.rescuer-view .rescuer-records-container > .dash-section .dash-section__head h2 {
+  color: #fff1f2;
+}
+
+.rescuer-view .rescuer-records-container > .dash-section .dash-section__head p {
+  color: #c7a2a8;
+}
+
+.rescuer-view .rescuer-records-note {
+  border-color: #7f2937;
+  background: linear-gradient(100deg, #2a1119, #170f15 75%);
+  box-shadow: inset 3px 0 0 #ef4444;
+}
+
+.rescuer-view .rescuer-records-note__icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-color: #9f3340;
+  background: linear-gradient(145deg, #7f1d1d, #45131c);
+  color: #fecaca;
+  box-shadow: 0 5px 16px rgb(239 68 68 / 16%);
+}
+
+.rescuer-view .rescuer-records-note p {
+  color: #f1d5d8;
+}
+
+.rescuer-view .rescuer-record-transaction,
+.rescuer-view .rescuer-report-card {
+  position: relative;
+  border-color: #49252e;
+  background: linear-gradient(135deg, #1b1117, #0c1018 65%);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 16%);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.rescuer-view .rescuer-record-transaction {
+  border-left: 3px solid #dc3545;
+}
+
+.rescuer-view .rescuer-record-transaction:hover,
+.rescuer-view .rescuer-report-card:hover {
+  transform: translateY(-2px);
+  border-color: #a33b4a;
+  box-shadow: 0 12px 28px rgb(127 29 29 / 22%);
+}
+
+.rescuer-view .rescuer-record-transaction__identity {
+  border-bottom-color: #46242d;
+}
+
+.rescuer-view .rescuer-record-id {
+  color: #fff1f2;
+}
+
+.rescuer-view .rescuer-record-request {
+  color: #d9aeb5;
+}
+
+.rescuer-view .rescuer-record-status {
+  border-color: #27583d;
+  background: #10251a;
+  color: #86efac;
+}
+
+.rescuer-view .rescuer-record-delete-btn {
+  border-color: #79313d;
+  background: #2b1118;
+  color: #fda4af;
+}
+
+.rescuer-view .rescuer-record-delete-btn:hover {
+  border-color: #ef4444;
+  background: #45121b;
+}
+
+.rescuer-view .rescuer-record-transaction__fields > div {
+  padding: 0.6rem 0.65rem;
+  border: 1px solid #32232b;
+  border-radius: 8px;
+  background: rgb(8 11 17 / 70%);
+}
+
+.rescuer-view .rescuer-record-transaction__fields span,
+.rescuer-view .rescuer-record-transaction__notes > div > span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #f08a96;
+}
+
+.rescuer-view .rescuer-record-transaction__fields span svg {
+  flex: 0 0 auto;
+  color: #fb7185;
+}
+
+.rescuer-view .rescuer-record-transaction__fields strong {
+  color: #f8e9eb;
+}
+
+.rescuer-view .rescuer-record-transaction__details {
+  border-top-color: #46242d;
+  background: rgb(6 8 13 / 36%);
+}
+
+.rescuer-view .rescuer-record-transaction__details summary {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #fca5a5;
+}
+
+.rescuer-view .rescuer-record-transaction__details summary:hover {
+  color: #fff1f2;
+}
+
+.rescuer-view .rescuer-record-transaction__notes > div {
+  border: 1px solid #39232a;
+  background: #120e14;
+}
+
+.rescuer-view .rescuer-record-transaction__notes p {
+  color: #e6d7da;
+}
+
+.rescuer-view .rescuer-report-card {
+  border-left: 3px solid #f87171;
+}
+
+.rescuer-view .rescuer-report-card .rescuer-record-transaction__fields > div {
+  border-color: #38232b;
+  background: rgb(8 11 17 / 66%);
+}
+
+.rescuer-view .records-head-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid #fb7185;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ef4444, #991b1b 68%, #58151b);
+  color: white;
+  box-shadow: 0 0 26px rgb(239 68 68 / 28%), inset 0 1px rgb(255 255 255 / 22%);
+}
+
+.rescuer-view .records-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #b63848;
+  border-radius: 999px;
+  background: linear-gradient(110deg, #701d2b, #35131c);
+  color: #ffe4e6;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  box-shadow: 0 4px 16px rgb(220 53 69 / 18%);
+}
+
+.rescuer-view .rescuer-records-container > .dash-section:first-child {
+  position: relative;
+  border-color: #9f303d;
+  background: radial-gradient(ellipse at 82% 0%, rgb(239 68 68 / 27%), transparent 47%), linear-gradient(115deg, #36121b, #190e15 56%, #0c1018);
+}
+
+.rescuer-view .rescuer-records-container > .dash-section:first-child::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(#fca5a5, #dc2626, #7f1d1d);
+  content: '';
+}
+
+.rescuer-view .rescuer-records-container > .dash-section:first-child .dash-section__head h2 {
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 20px rgb(239 68 68 / 18%);
+}
+
+.rescuer-view .rescuer-records-note {
+  border-color: #a33342;
+  background: linear-gradient(105deg, rgb(127 29 29 / 66%), rgb(43 17 25 / 88%) 62%, rgb(17 16 23 / 90%));
+  box-shadow: inset 4px 0 #fb4b5d, 0 8px 24px rgb(0 0 0 / 20%);
+}
+
+.rescuer-view .rescuer-records-note__icon {
+  width: 3rem;
+  height: 3rem;
+  border-color: #fb7185;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #ef4444, #881c2b);
+  color: white;
+  box-shadow: 0 4px 18px rgb(239 68 68 / 25%);
+}
+
+.rescuer-view .rescuer-reports-list {
+  gap: 0.9rem;
+}
+
+.rescuer-view .rescuer-report-card {
+  border-color: #762b38;
+  border-left: 4px solid #f04455;
+  background: radial-gradient(ellipse at 0 0, rgb(153 27 27 / 18%), transparent 38%), linear-gradient(135deg, #211119, #0d1118 68%);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 22%), inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.rescuer-view .rescuer-report-card__main {
+  gap: 0.8rem;
+  padding: 1.1rem;
+}
+
+.rescuer-view .rescuer-report-card__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #fda4af;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.rescuer-view .rescuer-report-card__icon {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid #e24b5b;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #a72536, #511722);
+  color: #fff1f2;
+  box-shadow: 0 0 18px rgb(239 68 68 / 19%);
+}
+
+.rescuer-view .rescuer-report-card .rescuer-record-transaction__identity {
+  padding-bottom: 0.9rem;
+  border-bottom-color: #5a2733;
+}
+
+.rescuer-view .rescuer-report-card .rescuer-record-id {
+  color: #fff1f2;
+  font-size: 0.95rem;
+}
+
+.rescuer-view .rescuer-report-card .rescuer-record-status {
+  padding: 0.4rem 0.7rem;
+  border-color: #39734c;
+  background: linear-gradient(110deg, #173a27, #10251a);
+  box-shadow: inset 0 0 0 1px rgb(134 239 172 / 7%);
+}
+
+.rescuer-view .rescuer-record-transaction__fields > div {
+  border-color: #512631;
+  background: linear-gradient(150deg, rgb(74 24 36 / 38%), rgb(12 13 19 / 92%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.rescuer-view .rescuer-record-transaction__fields span {
+  color: #fda4af;
+}
+
+.rescuer-view .rescuer-record-transaction__fields span svg {
+  width: 15px;
+  height: 15px;
+  padding: 3px;
+  box-sizing: content-box;
+  border-radius: 6px;
+  background: rgb(190 24 93 / 20%);
+  color: #fb7185;
+}
+
+.rescuer-view .rescuer-record-transaction__fields strong {
+  color: #fff1f2;
+}
+
+.rescuer-view .rescuer-record-transaction__details summary {
+  gap: 0.5rem;
+  color: #fda4af;
+}
+
+.rescuer-view .rescuer-record-transaction__details summary svg {
+  color: #fb7185;
+}
+
+.rescuer-view .rescuer-record-transaction__notes > div {
+  border: 1px solid #542733;
+  background: linear-gradient(145deg, #211119, #100f15);
+}
+
+@media (max-width: 620px) {
+  .rescuer-view .records-head-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .rescuer-view .records-count-badge {
+    padding: 0.4rem 0.55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rescuer-view .rescuer-record-transaction,
+  .rescuer-view .rescuer-report-card {
+    transition: none;
+  }
+}
+
+/* Flood-aware navigation workspace */
+.rescuer-view .flood-navigation-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #263a52;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at top left, rgb(30 64 105 / 22%), transparent 48%), #080e18;
+}
+
+.rescuer-view .flood-navigation-mission-picker {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.45fr) minmax(220px, 1fr);
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin: 0;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #263244;
+}
+
+.rescuer-view .flood-navigation-mission-picker .rescue-ticket-select-label {
+  margin: 0;
+  color: #bfdbfe;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.rescuer-view .flood-navigation-mission-picker .rescue-ticket-select {
+  width: 100%;
+  min-height: 44px;
+  border-color: #36516f;
+  border-radius: 8px;
+  background: #0b1626;
+  color: #f8fafc;
+}
+
+.rescuer-view .flood-navigation-target {
+  margin: -0.35rem 0 0;
+  color: #cbd5e1;
+}
+
+.rescuer-view .flood-navigation-target strong {
+  color: #f8fafc;
+}
+
+.rescuer-view .flood-navigation-hazard {
+  padding: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #1b1014, #110d13 65%);
+}
+
+.rescuer-view .flood-navigation-hazard .impassable-tag {
+  display: inline-flex;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid #71333b;
+  border-radius: 999px;
+  background: #281318;
+  font-size: 0.68rem;
+}
+
+.rescuer-view .route-reveal-prompt {
+  border-color: #29466a;
+  background: linear-gradient(110deg, #0d1b2d, #0b1118 70%);
+}
+
+.rescuer-view .route-reveal-prompt strong {
+  color: #dbeafe;
+}
+
+.rescuer-view .route-reveal-prompt .btn {
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.rescuer-view .route-selection-confirmation {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #29466a;
+  border-radius: 8px;
+  background: #0b1626;
+  color: #bfdbfe;
+}
+
+.rescuer-view .route-comparison-grid {
+  align-items: stretch;
+}
+
+.rescuer-view .route-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 210px;
+  border-radius: 10px;
+  background: linear-gradient(150deg, #0d1724, #080d16 72%);
+}
+
+.rescuer-view .route-card.is-selected {
+  background: linear-gradient(150deg, #10233a, #0b1626 75%);
+}
+
+.rescuer-view .route-card:last-child.is-selected {
+  background: linear-gradient(150deg, #291317, #14090d 75%);
+}
+
+.rescuer-view .route-card h4 {
+  margin: 0.75rem 0;
+}
+
+.rescuer-view .route-metrics span {
+  border-radius: 999px;
+  font-size: 0.77rem;
+}
+
+.rescuer-view .route-explanation {
+  margin-top: auto;
+  padding-top: 0.9rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note {
+  overflow: hidden;
+  padding: 1rem;
+  border: 1px solid #263a52;
+  border-radius: 12px;
+  background: #080e18;
+}
+
+.rescuer-view .rescuer-navigation-map-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.rescuer-view .rescuer-navigation-map-kicker {
+  color: #7dd3fc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.rescuer-view .rescuer-navigation-map-heading h3 {
+  margin: 0.2rem 0 0;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.rescuer-view .rescuer-navigation-map-heading p {
+  max-width: 370px;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.rescuer-view .route-comparison-grid {
+  gap: 1rem;
+  margin-top: 0.75rem;
+  animation: flood-route-enter 220ms ease-out both;
+}
+
+.rescuer-view .route-card {
+  position: relative;
+  gap: 0.85rem;
+  min-height: 0;
+  padding: 1.15rem;
+  border: 1px solid #263a52;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.rescuer-view .route-card:hover,
+.rescuer-view .route-card:focus-visible {
+  transform: translateY(-2px);
+}
+
+.rescuer-view .route-card.is-selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgb(59 130 246 / 24%), 0 12px 28px rgb(0 0 0 / 24%);
+}
+
+.rescuer-view .route-card:last-child,
+.rescuer-view .route-card:last-child.is-selected {
+  border-left-color: #f59e0b;
+}
+
+.rescuer-view .route-card:last-child.is-selected {
+  border-color: #9a6b22;
+  background: linear-gradient(150deg, #211a0e, #11100d 76%);
+  box-shadow: 0 0 0 1px rgb(245 158 11 / 14%), 0 12px 28px rgb(0 0 0 / 24%);
+}
+
+.rescuer-view .route-badge-recommended,
+.rescuer-view .route-badge-alternative {
+  min-height: 26px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+}
+
+.rescuer-view .route-badge-alternative {
+  border-color: #71531f;
+  background: #211a0e;
+  color: #fcd34d;
+}
+
+.rescuer-view .route-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.rescuer-view .route-score small {
+  margin-right: 0.3rem;
+  color: #94a3b8;
+  font-family: var(--font-body);
+  font-size: 0.59rem;
+  letter-spacing: 0.06em;
+}
+
+.rescuer-view .route-score > span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.rescuer-view .route-card h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.rescuer-view .route-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rescuer-view .route-metrics span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid #263244;
+  border-radius: 7px;
+  background: rgb(5 10 18 / 65%);
+  font-size: 0.74rem;
+}
+
+.rescuer-view .route-metrics small {
+  color: #8493a8;
+  font-size: 0.59rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+
+.rescuer-view .route-metrics strong {
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.rescuer-view .route-explanation {
+  margin: 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid #263244;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.rescuer-view .rescuer-navigation-map-note .flood-map-container {
+  border-color: #263a52;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.rescuer-view .rescuer-navigation-map-note .flood-map-controls {
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note .flood-map-controls__summary {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note .flood-map-location__eyebrow {
+  color: #7dd3fc;
+}
+
+.rescuer-view .rescuer-navigation-map-note .flood-map-legend-items {
+  gap: 0.4rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note .legend-tag {
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note .map-metadata-bar {
+  padding: 0.65rem 1rem;
+  background: #090f19;
+  color: #94a3b8;
+}
+
+.rescuer-view .rescuer-navigation-map-note .map-meta-tag {
+  color: #cbd5e1;
+}
+
+.rescuer-view .rescuer-navigation-map-note .map-disclaimer-notice {
+  color: #fca5a5;
+}
+
+.rescuer-view .rescuer-navigation-map-note .map-control-row {
+  gap: 0.65rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note .map-base-layers,
+.rescuer-view .rescuer-navigation-map-note .flood-map-toggles {
+  gap: 0.35rem;
+}
+
+.rescuer-view .rescuer-navigation-map-note .map-mode-btn,
+.rescuer-view .rescuer-navigation-map-note .map-toggle-btn {
+  min-height: 36px;
+  border-radius: 7px;
+}
+
+.rescuer-view .rescuer-navigation-map-note .flood-map-leaflet-canvas {
+  height: 400px !important;
+}
+
+@keyframes flood-route-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 680px) {
+  .rescuer-view .flood-navigation-panel,
+  .rescuer-view .rescuer-navigation-map-note {
+    padding: 0.75rem;
+  }
+
+  .rescuer-view .flood-navigation-mission-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuer-view .rescuer-navigation-map-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rescuer-view .rescuer-navigation-map-heading p {
+    text-align: left;
+  }
+
+  .rescuer-view .rescuer-navigation-map-note .map-control-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rescuer-view .route-card {
+    min-height: 0;
+  }
+
+  .rescuer-view .route-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuer-view .route-metrics span {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }

@@ -75,8 +75,7 @@ export function InteractiveFloodMap({
   showAlternatives = true,
   selectedRoute = 'primary',
   onSelectRoute,
-  showRouteAdvisory = true,
-  showRouteRationale = true,
+  showRouteAdvisory = false,
   routeExplanation = 'Rescue Team arrival: 9 minutes. All possible shortcuts are flooded and team is using Jhocson St.',
   etaMinutes = 9,
   operationContext,
@@ -536,20 +535,6 @@ export function InteractiveFloodMap({
         </div>
       )}
 
-      {/* Simulated Route Advisory Banner */}
-      {showRouteAdvisory && (
-        <div className="map-realtime-routing-banner">
-          <div className="banner-pulse-icon">
-            <Icon name="route" size={18} />
-          </div>
-          <div className="banner-text">
-            <strong>{operationContext ? `SIMULATED OPERATION · ${operationContext.requestId}:` : 'SIMULATED EN ROUTE ADVISORY:'}</strong>{' '}
-            <span>{routeExplanation}</span>
-          </div>
-          <span className="banner-eta-badge font-mono">ETA: {etaMinutes} MINS</span>
-        </div>
-      )}
-
       {/* OpenStreetMap Leaflet Canvas */}
       <div className="flood-map-leaflet-wrapper">
         <div
@@ -620,36 +605,6 @@ export function InteractiveFloodMap({
         </div>
       )}
 
-      {/* Map Bottom Rationale Drawer */}
-      {showRouteRationale && (
-        <div className="flood-map-explanation">
-          <div className="explanation-head">
-            <div className="explanation-title">
-              <Icon name="shield" size={16} />
-              <span>Controlled-Scenario Routing Rationale</span>
-            </div>
-            <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--color-brand-hover)' }}>
-              LiPAD Hazard & Elevation Matrix Active
-            </span>
-          </div>
-          <div className="explanation-body">
-            <div className="explanation-row">
-              <span className="exp-badge exp-avoided">AVOIDED SHORTCUT</span>
-              <span className="exp-text">
-                <strong>Loyola St. Shortcut:</strong> Water depth reaches <strong>1.40 m</strong> (waist/chest current),
-                which exceeds the safe rescue craft threshold (<strong>0.30 m</strong>). High probability of engine stall.
-              </span>
-            </div>
-            <div className="explanation-row">
-              <span className="exp-badge exp-selected">RECOMMENDED ROUTE</span>
-              <span className="exp-text">
-                <strong>Jhocson St. Corridor:</strong> Lower controlled-scenario penalty and no impassable edge.
-                Safety Score: <strong>94/100</strong>. Unit ETA: <strong>{etaMinutes} minutes</strong>.
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

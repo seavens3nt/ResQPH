@@ -1,19 +1,19 @@
 /* ==========================================================================
-   LocalizedForecastWidget — Dark Dashboard Weather Card
+   LocalizedForecastWidget — Clean, Modern Weather Card
    ========================================================================== */
 
 .forecast-widget {
   width: 100%;
   border-radius: 12px;
-  background: var(--surface-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--border-default);
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
   box-sizing: border-box;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 /* Flood & Rainfall Warning Banner */
@@ -22,18 +22,18 @@
   align-items: center;
   gap: 8px;
   padding: 0.65rem 0.9rem;
-  background: rgba(214, 40, 40, 0.15);
-  border: 1px solid rgba(214, 40, 40, 0.3);
-  border-left: 3px solid #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-left: 3px solid #dc2626;
   border-radius: 6px;
-  color: #fecaca;
+  color: #b91c1c;
   font-weight: 600;
   font-size: 0.82rem;
   line-height: 1.35;
 }
 
 .forecast-warning svg {
-  color: #f87171;
+  color: #dc2626;
   flex-shrink: 0;
 }
 
@@ -55,13 +55,13 @@
 .forecast-location {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #0f172a;
   letter-spacing: -0.015em;
 }
 
 .forecast-sublocation {
   font-size: 0.75rem;
-  color: var(--text-tertiary);
+  color: #64748b;
 }
 
 .forecast-temp-line {
@@ -74,7 +74,7 @@
 .forecast-degrees {
   font-size: 2.75rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #0f172a;
   line-height: 1;
   letter-spacing: -0.03em;
 }
@@ -88,18 +88,13 @@
 .forecast-condition {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #0f172a;
 }
 
 .forecast-hilo {
   font-size: 0.78rem;
-  color: var(--text-tertiary);
+  color: #64748b;
   font-weight: 500;
-}
-
-.forecast-high {
-  color: #f87171;
-  font-weight: 700;
 }
 
 /* Metrics Chips */
@@ -110,8 +105,8 @@
 }
 
 .forecast-metric-chip {
-  background: var(--surface-raised);
-  border: 1px solid var(--border-default);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 0.6rem 0.9rem;
   display: flex;
@@ -125,13 +120,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-tertiary);
+  color: #64748b;
 }
 
 .forecast-metric-val {
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #0f172a;
 }
 
 /* Hourly Forecast Strip */
@@ -140,7 +135,7 @@
   flex-direction: column;
   gap: 0.65rem;
   padding-top: 0.85rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid #f1f5f9;
 }
 
 .forecast-hourly-head {
@@ -151,7 +146,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-tertiary);
+  color: #64748b;
 }
 
 .forecast-hourly-strip {
@@ -167,8 +162,8 @@
   align-items: center;
   gap: 4px;
   padding: 0.6rem 0.65rem;
-  background: var(--surface-raised);
-  border: 1px solid var(--border-subtle);
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
   border-radius: 8px;
   min-width: 58px;
   flex-shrink: 0;
@@ -177,7 +172,7 @@
 .hourly-cell__time {
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #475569;
 }
 
 .hourly-cell__icon {
@@ -189,13 +184,13 @@
 .hourly-cell__temp {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #0f172a;
 }
 
 .hourly-cell__pop {
   font-size: 0.68rem;
   font-weight: 600;
-  color: #93c5fd;
+  color: #2563eb;
 }
 
 @media (max-width: 768px) {
@@ -213,4 +208,57 @@
     min-width: unset;
     padding: 0.5rem;
   }
+}
+
+.dash .forecast-widget {
+  background: #05070b;
+  color: #f8fafc;
+  border-color: #263244;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+.dash .forecast-location,
+.dash .forecast-degrees,
+.dash .forecast-condition,
+.dash .forecast-metric-val,
+.dash .hourly-cell__temp {
+  color: #f8fafc;
+}
+
+.dash .forecast-sublocation,
+.dash .forecast-hilo,
+.dash .forecast-metric-label,
+.dash .forecast-hourly-head,
+.dash .hourly-cell__time {
+  color: #aab8ca;
+}
+
+.dash .forecast-high {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.dash .forecast-warning {
+  background: #1b0b10;
+  border-color: #7f1d1d;
+  border-left-color: #ef4444;
+  color: #fecaca;
+}
+
+.dash .forecast-warning svg {
+  color: #f87171;
+}
+
+.dash .forecast-metric-chip,
+.dash .hourly-cell {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dash .forecast-hourly {
+  border-top-color: #263244;
+}
+
+.dash .hourly-cell__pop {
+  color: #93c5fd;
 }
