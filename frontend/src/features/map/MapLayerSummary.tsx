@@ -276,7 +276,7 @@ export const MapLayerSummary: React.FC<MapLayerSummaryProps> = ({
       )}
 
       {/* Route Rationale Section (when route is eligible) */}
-      {!isNoRoute && !isLoading && !isUnavailable && routeExplanation && (
+      {!isNoRoute && !isEmpty && !isLoading && !isUnavailable && routeExplanation && (
         <div className="map-layer-summary__section" aria-labelledby="route-summary-heading">
           <h4 className="map-layer-summary__section-title" id="route-summary-heading">
             <span aria-hidden="true">🧭</span>

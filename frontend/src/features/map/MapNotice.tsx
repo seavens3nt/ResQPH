@@ -50,14 +50,15 @@ export const MapNotice: React.FC<MapNoticeProps> = ({
 }) => {
   const sourceInfo = SOURCE_LABELS[sourceType] || SOURCE_LABELS.controlled
 
-  const isAlertState = status === 'unavailable' || status === 'stale' || status === 'offline'
+  // Only unavailable is assertive; stale and offline are polite status notifications
+  const isUnavailableAlert = status === 'unavailable'
 
   return (
     <aside
       className={`map-notice map-notice--${status} ${compact ? 'map-notice--compact' : ''} ${className}`}
-      role={isAlertState ? 'alert' : 'region'}
+      role={isUnavailableAlert ? 'alert' : 'region'}
       aria-label="Map scenario notice and operational disclaimer"
-      aria-live={isAlertState ? 'assertive' : 'polite'}
+      aria-live={isUnavailableAlert ? 'assertive' : 'polite'}
     >
       <div className="map-notice__header">
         <div className="map-notice__title-group">
