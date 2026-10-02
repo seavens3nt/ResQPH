@@ -157,6 +157,7 @@ def test_disallowed_or_missing_role_uses_common_error_envelope(
         {"algorithm": "dijkstra"},
         {"scenario_id": "scenario-controlled-unknown"},
         {"include_ml_penalty": "true"},
+        {"unexpected": "field"},
     ],
 )
 def test_invalid_requests_return_422_and_do_not_call_adapter(

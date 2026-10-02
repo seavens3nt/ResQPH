@@ -11,7 +11,7 @@ from app.integrations.geospatial import (
     GeospatialFixtureConfig,
     load_geospatial_fixtures,
 )
-from app.schemas.geospatial import GeospatialFixtureBundle
+from app.schemas.geospatial import GeospatialFixtureBundle, GeospatialFixtureError
 from app.schemas.routing import (
     RouteEvaluateResponse,
     RouteFoundResponse,
@@ -79,7 +79,36 @@ class RoutingAdapter:
         self._fixture_config = fixture_config
 
     def evaluate(self, request: RouteRequest) -> RouteEvaluateResponse:
-        geospatial = load_geospatial_fixtures(self._fixture_config)
+        try:
+            geospatial = load_geospatial_fixtures(self._fixture_config)
+        except GeospatialFixtureError as exc:
+            raise RoutingIntegrationError(
+                "routing_engine_unavailable",
+                "The deterministic routing engine cannot load its controlled geospatial inputs.",
+                [
+                    {
+                        "field": f"geospatial.{detail.field}",
+                        "reason": f"{exc.code}: {detail.reason}",
+                    }
+                    for detail in exc.details
+                ],
+            ) from exc
+
+        loaded_scenario_id = geospatial.flood_scenario.scenario.scenario_id
+        if loaded_scenario_id != request.scenario_id:
+            raise RoutingIntegrationError(
+                "routing_engine_unavailable",
+                "The loaded controlled scenario does not match the route request.",
+                [
+                    {
+                        "field": "scenario_id",
+                        "reason": (
+                            f"requested {request.scenario_id}, loaded {loaded_scenario_id}"
+                        ),
+                    }
+                ],
+            )
+
         engine_request = RoutingEngineRequest(
             origin=tuple(request.origin.coordinates),
             destination=tuple(request.destination.coordinates),

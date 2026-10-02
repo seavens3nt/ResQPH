@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from app.integrations.geospatial import GeospatialFixtureConfig
 from app.integrations.routing import (
     ML_DISABLED_WARNING,
     RoutingAdapter,
@@ -100,6 +101,58 @@ def test_unavailable_engine_maps_to_stable_error() -> None:
     assert exc_info.value.details[0]["field"] == "routing_engine"
 
 
+def test_missing_geospatial_input_maps_to_stable_unavailable_error(
+    tmp_path: Path,
+) -> None:
+    adapter = RoutingAdapter(
+        FakeEngine(load_fixture(NO_ROUTE_FIXTURE)),
+        GeospatialFixtureConfig(
+            road_path=tmp_path / "missing-road.geojson",
+            flood_path=tmp_path / "missing-flood.geojson",
+        ),
+    )
+
+    with pytest.raises(RoutingIntegrationError) as exc_info:
+        adapter.evaluate(make_request())
+
+    assert exc_info.value.code == "routing_engine_unavailable"
+    assert exc_info.value.details[0]["field"] == "geospatial.road"
+    assert "fixture_missing" in exc_info.value.details[0]["reason"]
+
+
+def test_loaded_scenario_must_match_request(tmp_path: Path) -> None:
+    road_path = tmp_path / "road.geojson"
+    flood_path = tmp_path / "flood.geojson"
+    road_path.write_text(
+        (REPO_ROOT / "data" / "samples" / "road-edge.example.geojson").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    flood_payload = json.loads(
+        (REPO_ROOT / "data" / "samples" / "flood-scenario.example.geojson").read_text(
+            encoding="utf-8"
+        )
+    )
+    flood_payload["scenario"]["scenario_id"] = "scenario-controlled-other"
+    for feature in flood_payload["features"]:
+        feature["properties"]["scenario_id"] = "scenario-controlled-other"
+    flood_path.write_text(json.dumps(flood_payload), encoding="utf-8")
+    adapter = RoutingAdapter(
+        FakeEngine(load_fixture(NO_ROUTE_FIXTURE)),
+        GeospatialFixtureConfig.baseline_compatibility(
+            road_path=road_path,
+            flood_path=flood_path,
+        ),
+    )
+
+    with pytest.raises(RoutingIntegrationError) as exc_info:
+        adapter.evaluate(make_request())
+
+    assert exc_info.value.code == "routing_engine_unavailable"
+    assert exc_info.value.details[0]["field"] == "scenario_id"
+
+
 def test_unknown_result_status_is_rejected() -> None:
     error = evaluate_bad_result({"status": "rerouted"})
 
@@ -145,6 +198,20 @@ def test_missing_fallback_field_is_rejected() -> None:
 
     assert error.code == "routing_engine_malformed_result"
     assert any("fallback_used" in detail["field"] for detail in error.details)
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    ["not-a-timestamp", "2026-10-01T00:00:00+08:00", "2026-10-01"],
+)
+def test_invalid_result_timestamp_is_rejected(timestamp: str) -> None:
+    result = load_fixture(ROUTE_FOUND_FIXTURE)
+    result["scenario_timestamp"] = timestamp
+
+    error = evaluate_bad_result(result)
+
+    assert error.code == "routing_engine_malformed_result"
+    assert any("scenario_timestamp" in detail["field"] for detail in error.details)
 
 
 def test_invalid_warnings_are_rejected() -> None:

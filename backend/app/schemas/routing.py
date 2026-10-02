@@ -2,34 +2,32 @@
 
 from __future__ import annotations
 
-import json
 import math
-from functools import lru_cache
-from pathlib import Path
+from datetime import datetime
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
-from app.integrations.geospatial import DEFAULT_FLOOD_FIXTURE, STUDY_AREA_BOUNDS
+from app.integrations.geospatial import STUDY_AREA_BOUNDS
 
 RouteStatus = Literal["route-found", "no-route"]
 RoutingWarning = str
+ACCEPTED_CONTROLLED_SCENARIO_IDS = frozenset({"scenario-controlled-ubelt-001"})
 
 
-@lru_cache(maxsize=1)
 def accepted_controlled_scenario_ids() -> frozenset[str]:
-    """Return controlled scenario IDs declared by the accepted flood fixture."""
+    """Return scenario IDs locked by the Team Phase 2 API contract.
 
-    payload = json.loads(Path(DEFAULT_FLOOD_FIXTURE).read_text(encoding="utf-8"))
-    scenario = payload.get("scenario", {})
-    scenario_id = scenario.get("scenario_id")
-    source_type = scenario.get("source_type")
-    if isinstance(scenario_id, str) and source_type == "controlled":
-        return frozenset({scenario_id})
-    return frozenset()
+    Request validation must not read runtime fixture files. The adapter loads and
+    validates those inputs and reports a stable dependency error if unavailable.
+    """
+
+    return ACCEPTED_CONTROLLED_SCENARIO_IDS
 
 
 class GeoJsonPoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: Literal["Point"]
     coordinates: list[float] = Field(min_length=2, max_length=2)
 
@@ -40,6 +38,8 @@ class GeoJsonPoint(BaseModel):
 
 
 class LineStringGeometry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: Literal["LineString"]
     coordinates: list[list[float]] = Field(min_length=2)
 
@@ -55,6 +55,8 @@ class LineStringGeometry(BaseModel):
 
 
 class RouteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     origin: GeoJsonPoint
     destination: GeoJsonPoint
     scenario_id: str = Field(min_length=1)
@@ -73,6 +75,8 @@ class RouteRequest(BaseModel):
 
 
 class CostBreakdown(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     base: float = Field(ge=0.0)
     deterministic_risk: float = Field(ge=0.0)
     ml_risk: float = Field(ge=0.0)
@@ -121,6 +125,11 @@ class RouteFoundResponse(BaseModel):
             raise ValueError("warnings must contain nonempty strings")
         return value
 
+    @field_validator("scenario_timestamp")
+    @classmethod
+    def validate_scenario_timestamp(cls, value: str) -> str:
+        return _validate_utc_timestamp(value)
+
 
 class NoRouteResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -137,6 +146,11 @@ class NoRouteResponse(BaseModel):
         if any(not isinstance(warning, str) or not warning.strip() for warning in value):
             raise ValueError("warnings must contain nonempty strings")
         return value
+
+    @field_validator("scenario_timestamp")
+    @classmethod
+    def validate_scenario_timestamp(cls, value: str) -> str:
+        return _validate_utc_timestamp(value)
 
 
 RouteEvaluateResponse = Annotated[
@@ -167,3 +181,17 @@ def _validate_finite_number(value: Any, field_name: str) -> float:
     if not math.isfinite(numeric):
         raise ValueError(f"{field_name} must be a finite number")
     return numeric
+
+
+def _validate_utc_timestamp(value: str) -> str:
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise ValueError("scenario_timestamp must be an ISO 8601 UTC timestamp ending in Z")
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as exc:
+        raise ValueError(
+            "scenario_timestamp must be an ISO 8601 UTC timestamp ending in Z"
+        ) from exc
+    if parsed.utcoffset() is None or parsed.utcoffset().total_seconds() != 0:
+        raise ValueError("scenario_timestamp must be an ISO 8601 UTC timestamp ending in Z")
+    return value
