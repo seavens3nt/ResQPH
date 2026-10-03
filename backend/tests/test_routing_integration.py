@@ -28,6 +28,19 @@ SAMPLE_REQUEST = {
     "include_ml_penalty": True,
 }
 
+REAL_ROUTE_REQUEST = {
+    "origin": {"type": "Point", "coordinates": [120.9938198, 14.5977093]},
+    "destination": {"type": "Point", "coordinates": [120.9931743, 14.5983287]},
+    "scenario_id": "scenario-controlled-ubelt-001",
+    "algorithm": "astar",
+    "include_ml_penalty": True,
+}
+
+REAL_NO_ROUTE_REQUEST = {
+    **REAL_ROUTE_REQUEST,
+    "destination": {"type": "Point", "coordinates": [121.0036128, 14.6117538]},
+}
+
 
 class FakeEngine:
     def __init__(self, result: dict[str, Any]) -> None:
@@ -89,6 +102,42 @@ def test_request_translation_to_engine_interface(include_ml_penalty: bool) -> No
     assert translated.geospatial.flood_scenario.scenario.scenario_id == (
         "scenario-controlled-ubelt-001"
     )
+
+
+def test_default_engine_returns_deterministic_controlled_route() -> None:
+    adapter = RoutingAdapter()
+    request = RouteRequest.model_validate(REAL_ROUTE_REQUEST)
+
+    first = adapter.evaluate(request).model_dump(mode="json")
+    second = adapter.evaluate(request).model_dump(mode="json")
+
+    assert first == second
+    assert first["status"] == "route-found"
+    assert first["algorithm"] == "astar"
+    assert first["edge_ids"] == [
+        "ubelt-v1:1037130917:1037130787:0",
+        "ubelt-v1:1037130787:68082882:0",
+    ]
+    assert first["geometry"]["coordinates"][0] == [120.9938198, 14.5977093]
+    assert first["geometry"]["coordinates"][-1] == [120.9931743, 14.5983287]
+    assert first["cost_breakdown"]["ml_risk"] == 0
+    assert first["fallback_used"] is True
+    assert first["model_version"] is None
+    assert ML_DISABLED_WARNING in first["warnings"]
+    assert "impassable or severe edge(s) were excluded" in first["explanation"]
+    assert "Alternative edge" not in first["explanation"]
+
+
+def test_default_engine_preserves_no_route_without_geometry() -> None:
+    result = RoutingAdapter().evaluate(
+        RouteRequest.model_validate(REAL_NO_ROUTE_REQUEST)
+    ).model_dump(mode="json")
+
+    assert result["status"] == "no-route"
+    assert result["reason"] == "controlled_impassability_disconnected_destination"
+    assert "geometry" not in result
+    assert "edge_ids" not in result
+    assert ML_DISABLED_WARNING in result["warnings"]
 
 
 def test_unavailable_engine_maps_to_stable_error() -> None:

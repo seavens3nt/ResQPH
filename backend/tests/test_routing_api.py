@@ -38,6 +38,14 @@ VALID_PAYLOAD = {
     "include_ml_penalty": True,
 }
 
+REAL_ENGINE_PAYLOAD = {
+    "origin": {"type": "Point", "coordinates": [120.9938198, 14.5977093]},
+    "destination": {"type": "Point", "coordinates": [120.9931743, 14.5983287]},
+    "scenario_id": "scenario-controlled-ubelt-001",
+    "algorithm": "astar",
+    "include_ml_penalty": True,
+}
+
 
 class FakeAdapter:
     def __init__(
@@ -235,6 +243,28 @@ def test_repeated_identical_requests_preserve_same_domain_result(
     assert first.status_code == 200
     assert second.status_code == 200
     assert first.json() == second.json()
+
+
+def test_default_dependency_runs_real_engine_end_to_end() -> None:
+    app = FastAPI()
+    app.include_router(router, prefix="/api/v1")
+    app.add_exception_handler(ServiceError, service_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    real_client = TestClient(app)
+
+    response = post_route(real_client, payload=REAL_ENGINE_PAYLOAD)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "route-found"
+    assert body["algorithm"] == "astar"
+    assert body["fallback_used"] is True
+    assert body["cost_breakdown"]["ml_risk"] == 0
+    assert body["geometry"]["type"] == "LineString"
+    assert body["edge_ids"] == [
+        "ubelt-v1:1037130917:1037130787:0",
+        "ubelt-v1:1037130787:68082882:0",
+    ]
 
 
 def test_openapi_exposes_route_contract(client: TestClient) -> None:

@@ -5,6 +5,10 @@ import { Modal } from '../../../components/ui/Modal'
 import { useMissions } from '../../../features/missions/MissionContext'
 import type { RescueRequest } from '../../../features/missions/types'
 import { InteractiveFloodMap } from '../../../features/map/InteractiveFloodMap'
+import { RoutePlannerPanel } from '../../../features/routing/RoutePlannerPanel'
+import { CONTROLLED_ROUTE_REQUEST } from '../../../features/routing/routeScenarios'
+import { useRoute } from '../../../features/routing/useRoute'
+import type { RouteRequest } from '../../../features/routing/types'
 import { CoordinatorPendingQueue } from './coordinator/CoordinatorPendingQueue'
 import { CoordinatorAssignModal } from './coordinator/CoordinatorAssignModal'
 import type { ApiRescueRequestSummary } from '../../../api/assignments'
@@ -33,6 +37,8 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
     updateRouteDelayExplanation,
     submitIncidentReport,
   } = useMissions()
+  const { routeState, requestRoute } = useRoute()
+  const [lastRouteRequest, setLastRouteRequest] = useState<RouteRequest>(CONTROLLED_ROUTE_REQUEST)
 
   // Selection & Modal states
   const [selectedRequest, setSelectedRequest] = useState<RescueRequest | null>(requests[0] || null)
@@ -77,6 +83,15 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
     : navSection === 'missions' ? 'missions'
     : navSection === 'incidents' ? 'incidents'
     : 'queue'
+
+  function handleRouteRequest(request: RouteRequest) {
+    setLastRouteRequest(request)
+    requestRoute(request)
+  }
+
+  function handleRouteRetry() {
+    requestRoute(lastRouteRequest)
+  }
 
   // Open Assign Modal
   function handleOpenAssign(req: RescueRequest) {
@@ -535,11 +550,17 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
             title="Flood-Aware Routing Oversight"
             subtitle="Rule-based costs exclude an impassable controlled-scenario edge and recommend an eligible corridor."
           >
+            <RoutePlannerPanel
+              state={routeState}
+              onRequest={handleRouteRequest}
+              onRetry={handleRouteRetry}
+            />
             <InteractiveFloodMap
               activeStage="en-route"
               showAlternatives
               routeExplanation={activeMissionsList[0]?.routeDelayExplanation}
               etaMinutes={activeMissionsList[0]?.etaMinutes}
+              routeState={routeState}
             />
           </Section>
         </div>
@@ -624,11 +645,17 @@ export function CoordinatorView({ navSection = 'overview' }: { navSection?: NavS
           title="Flood-Aware Routing Oversight"
           subtitle="Rule-based costs exclude an impassable controlled-scenario edge and recommend an eligible corridor."
         >
+          <RoutePlannerPanel
+            state={routeState}
+            onRequest={handleRouteRequest}
+            onRetry={handleRouteRetry}
+          />
           <InteractiveFloodMap
             activeStage="en-route"
             showAlternatives
             routeExplanation={activeMissionsList[0]?.routeDelayExplanation}
             etaMinutes={activeMissionsList[0]?.etaMinutes}
+            routeState={routeState}
           />
         </Section>
       )}
