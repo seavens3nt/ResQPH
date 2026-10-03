@@ -12,11 +12,11 @@ import heapq
 from dataclasses import dataclass, field
 from typing import Any
 
-from resqph_routing.costs import compute_edge_cost
+from resqph_routing.costs import ML_FALLBACK_WARNING, compute_edge_cost
 from resqph_routing.graph import RoutingGraph
 
 
-@dataclass
+@dataclass(frozen=True)
 class RouteResult:
     """Domain result for a successful route."""
 
@@ -26,9 +26,38 @@ class RouteResult:
     cost_breakdown: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     explanations: list[str] = field(default_factory=list)
+    fallback_used: bool = False
+
+    @property
+    def edge_ids(self) -> list[str]:
+        """Expose the ordered path name used by the locked API contract."""
+        return list(self.route)
+
+    @property
+    def total_cost(self) -> float:
+        """Expose the total-cost name used by the locked API contract."""
+        return self.cost
+
+    @property
+    def aggregate_cost_breakdown(self) -> dict[str, float]:
+        """Aggregate per-edge costs for the backend response adapter."""
+        base = sum(item["base_cost"] for item in self.cost_breakdown)
+        ml_risk = sum(item["ml_penalty"] for item in self.cost_breakdown)
+        deterministic_risk = sum(
+            item["flood_penalty"]
+            + item["restricted_penalty"]
+            + item["obstacle_penalty"]
+            + item["uncertainty_penalty"]
+            for item in self.cost_breakdown
+        )
+        return {
+            "base": base,
+            "deterministic_risk": deterministic_risk,
+            "ml_risk": ml_risk,
+        }
 
 
-@dataclass
+@dataclass(frozen=True)
 class NoRouteResult:
     """Domain result when no route exists."""
 
@@ -37,6 +66,8 @@ class NoRouteResult:
     cost: float | None = None
     warnings: list[str] = field(default_factory=list)
     explanations: list[str] = field(default_factory=list)
+    fallback_used: bool = False
+    reason: str = "controlled_impassability_disconnected_destination"
 
 
 def _heuristic(graph: RoutingGraph, node_id: str, goal_id: str) -> float:
@@ -75,17 +106,22 @@ def find_route(
     """
     if not graph.has_node(origin) or not graph.has_node(destination):
         return NoRouteResult(
+            warnings=_graph_warnings(graph),
             explanations=[
                 (f"Origin '{origin}' or destination '{destination}' "
                 "not found in graph.")
-            ]
+            ],
+            fallback_used=graph.ml_fallback_used,
+            reason="origin_or_destination_not_in_graph",
         )
 
     if origin == destination:
         return RouteResult(
             route=[],
             cost=0.0,
+            warnings=_graph_warnings(graph),
             explanations=["Origin and destination are the same node."],
+            fallback_used=graph.ml_fallback_used,
         )
 
     # Priority queue entries: (f_cost, tie_counter, node_id, path_edge_ids, g_cost)
@@ -154,9 +190,16 @@ def find_route(
         excluded_info = f" Excluded edges: {excluded_list}."
 
     return NoRouteResult(
+        warnings=_unique(
+            [
+                "No eligible route exists under the selected controlled scenario.",
+                *_graph_warnings(graph),
+            ]
+        ),
         explanations=[
             f"No route found from '{origin}' to '{destination}'.{excluded_info}"
-        ]
+        ],
+        fallback_used=graph.ml_fallback_used,
     )
 
 
@@ -167,8 +210,9 @@ def _build_route_result(
 ) -> RouteResult:
     """Build a RouteResult with cost breakdowns and warnings."""
     cost_breakdown: list[dict[str, Any]] = []
-    warnings: list[str] = []
+    warnings: list[str] = _graph_warnings(graph)
     explanations: list[str] = []
+    fallback_used = graph.ml_fallback_used
 
     for edge_id in path_edge_ids:
         edge = graph.get_edge(edge_id)
@@ -200,6 +244,7 @@ def _build_route_result(
         )
 
         warnings.extend(breakdown.warnings)
+        fallback_used = fallback_used or breakdown.fallback_used
 
         # Build explanation for this edge
         parts = [f"base={breakdown.base_cost}"]
@@ -224,6 +269,43 @@ def _build_route_result(
         route=path_edge_ids,
         cost=total_cost,
         cost_breakdown=cost_breakdown,
-        warnings=warnings,
+        warnings=_unique(warnings),
         explanations=explanations,
+        fallback_used=fallback_used,
     )
+
+
+def calculate_path_cost(graph: RoutingGraph, edge_ids: list[str]) -> float:
+    """Calculate and validate the actual cost of one ordered edge path."""
+
+    total = 0.0
+    previous_to: str | None = None
+    for edge_id in edge_ids:
+        edge = graph.get_edge(edge_id)
+        if edge is None:
+            raise ValueError(f"edge {edge_id} is missing or excluded")
+        if previous_to is not None and edge.from_node != previous_to:
+            raise ValueError(f"edge {edge_id} is not contiguous with the preceding edge")
+        breakdown = compute_edge_cost(
+            edge_id=edge.edge_id,
+            base_cost=edge.base_cost,
+            flood_level=edge.flood_level,
+            passability=edge.passability,
+            has_obstacle=edge.has_obstacle,
+            is_stale_or_uncertain=edge.is_stale_or_uncertain,
+            ml_probability=edge.ml_probability,
+            ml_accepted=edge.ml_accepted,
+        )
+        if breakdown.total_cost is None:
+            raise ValueError(f"edge {edge_id} is excluded")
+        total += breakdown.total_cost
+        previous_to = edge.to_node
+    return total
+
+
+def _graph_warnings(graph: RoutingGraph) -> list[str]:
+    return [ML_FALLBACK_WARNING] if graph.ml_fallback_used else []
+
+
+def _unique(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(values))

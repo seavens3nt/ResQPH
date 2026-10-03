@@ -6,6 +6,7 @@ Derives explanations from actual edge decisions in the routing result.
 from __future__ import annotations
 
 from resqph_routing.astar import NoRouteResult, RouteResult
+from resqph_routing.costs import compute_edge_cost
 from resqph_routing.graph import RoutingGraph
 
 
@@ -76,6 +77,33 @@ def explain_route(
         else:
             explanations.append(
                 f"Step {i}: Edge '{edge_id}' ({edge.from_node} -> {edge.to_node})"
+            )
+
+    chosen_edges = set(result.route)
+    for edge_id, edge in sorted(graph.edge_index.items()):
+        if edge_id in chosen_edges:
+            continue
+        breakdown = compute_edge_cost(
+            edge_id=edge.edge_id,
+            base_cost=edge.base_cost,
+            flood_level=edge.flood_level,
+            passability=edge.passability,
+            has_obstacle=edge.has_obstacle,
+            is_stale_or_uncertain=edge.is_stale_or_uncertain,
+            ml_probability=edge.ml_probability,
+            ml_accepted=edge.ml_accepted,
+        )
+        penalty = (
+            breakdown.flood_penalty
+            + breakdown.restricted_penalty
+            + breakdown.obstacle_penalty
+            + breakdown.uncertainty_penalty
+            + breakdown.ml_penalty
+        )
+        if penalty > 0:
+            explanations.append(
+                f"Alternative edge '{edge_id}' was not selected; "
+                f"its evaluated edge cost was {breakdown.total_cost}."
             )
 
     # Explain excluded edges that affected routing

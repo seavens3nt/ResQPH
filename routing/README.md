@@ -4,9 +4,9 @@ This folder owns road-graph preparation, deterministic shortest-path routing,
 flood and geographic risk costs, impassable-road handling, dynamic rerouting,
 and route explanations for the ResQPH prototype.
 
-Team Phase 1 delivers the extraction, normalization, flood-join, and
-validation pipeline for the U-Belt pilot area. Later phases add A*/Dijkstra
-routing and cost penalties on top of the fixtures produced here.
+Team Phase 1 delivered the extraction, normalization, flood-join, and
+validation pipeline for the U-Belt pilot area. Team Phase 2 adds deterministic
+A* routing and explainable cost penalties on top of those accepted fixtures.
 
 ## Installation
 
@@ -43,10 +43,11 @@ python routing/scripts/build_ubelt_graph.py --force
 python -m pytest tests/ -v
 ```
 
-59 tests: extraction bounds and cache behavior, edge-ID format, offline
+The suite covers extraction bounds and cache behavior, edge-ID format, offline
 normalization, flood-join rejection rules, metadata consistency, schema and
-boundary validation, and committed-fixture integrity. No network access or
-private raw cache is required.
+boundary validation, committed-fixture integrity, deterministic routing,
+fallbacks, exclusions, and explanations. No network access or private raw
+cache is required.
 
 ## Module layout
 
@@ -57,10 +58,13 @@ routing/src/resqph_routing/
   normalize.py    Contract-schema projection and edge-ID generation
   flood_join.py   Controlled-scenario join + rejection reporting
   validate.py     Bounds, geometry, schema, and join-coverage checks
-  
+  costs.py        Validated deterministic and bounded optional-ML costs
+  graph.py        Known-graph and accepted U-Belt GeoJSON graph builders
+  astar.py        Deterministic A* search and ordered path-cost calculation
+  explain.py      Chosen, rejected, excluded, fallback, and warning explanations
 ```
 
-# ResQPH Routing Engine
+## ResQPH routing engine
 
 Deterministic flood-aware A* routing engine for the ResQPH prototype.
 
@@ -73,15 +77,16 @@ explainable results.
 
 ## Cost Model
 
-All costs are in **seconds-equivalent prototype units**.
+All costs are in **seconds-equivalent prototype units**:
 
+```text
 edge_cost = base_travel_cost
 + deterministic_flood_penalty
 + restricted_passability_penalty
 + obstacle_penalty
 + uncertainty_penalty
 + bounded_ml_penalty_when_accepted
-
+```
 
 ### Rule Table
 
@@ -107,9 +112,25 @@ result = find_route(graph, origin="A", destination="D")
 explanations = explain_route(graph, result)
 ```
 
+The accepted U-Belt fixtures can be consumed without translating their
+`from_node`, `to_node`, and `travel_time_s` properties manually:
+
+```python
+import json
+from pathlib import Path
+
+from resqph_routing import build_graph_from_geojson
+
+road = json.loads(Path("../data/samples/ubelt-v1-preview.geojson").read_text())
+flood = json.loads(
+    Path("../data/samples/ubelt-v1-flood-join.geojson").read_text()
+)
+graph = build_graph_from_geojson(road, flood, ml_accepted=False)
+```
+
 ## Reference contracts
 
-- `docs/phases/TEAM-PHASE-01.md` — phase scope and acceptance criteria
+- `docs/phases/TEAM-PHASE-02.md` — active routing scope and acceptance criteria
 - `docs/routing/ROUTING_CONTRACT.md` — routing inputs, outputs, and cost rules
 - `data/samples/road-edge.example.geojson` — edge schema
 - `data/samples/flood-scenario.example.geojson` — scenario schema
@@ -123,5 +144,9 @@ explanations = explain_route(graph, result)
   reproduce the reviewed 2026-10-01 counts byte for byte.
 - No road is guaranteed passable or safe because it appears in OSM.
 - The controlled flood scenario is synthetic and explicitly labelled as such.
-- This phase does not implement final A* routing, runtime ML integration,
-  or persistent offline behavior.
+- The A* heuristic is intentionally zero, making the search
+  Dijkstra-equivalent for the bounded academic prototype.
+- Runtime ML remains optional and disabled by default; missing, invalid, or
+  rejected probabilities use deterministic fallback.
+- Backend wiring and persistent offline behavior are separate integration
+  packages.

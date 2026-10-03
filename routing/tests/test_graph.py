@@ -1,7 +1,17 @@
 """Tests for the directed graph builder."""
 
+import json
+from pathlib import Path
 
-from resqph_routing.graph import build_graph
+import pytest
+
+from resqph_routing.graph import (
+    GraphValidationError,
+    build_graph,
+    build_graph_from_geojson,
+)
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 SAMPLE_NODES = [
     {"node_id": "A", "coordinates": [120.9900, 14.6040]},
@@ -96,3 +106,62 @@ class TestScenarioOverrides:
         )
         edge = graph.get_edge("BD")
         assert edge.ml_probability == 1.0
+
+    def test_explicit_missing_scenario_ml_does_not_use_external_result(self):
+        scenario = {"BD": {"ml_probability": None}}
+        graph = build_graph(
+            SAMPLE_NODES,
+            SAMPLE_EDGES,
+            scenario=scenario,
+            ml_results={"BD": 0.9},
+            ml_accepted=True,
+        )
+
+        edge = graph.get_edge("BD")
+        assert edge.ml_probability is None
+        assert graph.ml_fallback_used
+
+
+class TestContractValidation:
+    def test_duplicate_edge_id_is_rejected(self):
+        with pytest.raises(GraphValidationError, match="duplicate edge_id"):
+            build_graph(SAMPLE_NODES, [SAMPLE_EDGES[0], SAMPLE_EDGES[0]])
+
+    def test_unknown_endpoint_is_rejected(self):
+        edge = dict(SAMPLE_EDGES[0], to="missing")
+        with pytest.raises(GraphValidationError, match="unknown"):
+            build_graph(SAMPLE_NODES, [edge])
+
+    def test_unknown_scenario_edge_is_rejected(self):
+        with pytest.raises(GraphValidationError, match="unknown edge_id"):
+            build_graph(SAMPLE_NODES, SAMPLE_EDGES, scenario={"ZZ": {}})
+
+    def test_non_object_scenario_entry_is_rejected(self):
+        with pytest.raises(GraphValidationError, match="must be an object"):
+            build_graph(SAMPLE_NODES, SAMPLE_EDGES, scenario={"BD": "moderate"})
+
+    def test_neighbors_are_canonical_by_edge_id(self):
+        reversed_edges = list(reversed(SAMPLE_EDGES))
+        graph = build_graph(SAMPLE_NODES, reversed_edges)
+
+        assert [edge.edge_id for edge in graph.neighbors("A")] == ["AB", "AC"]
+
+
+def test_builds_from_committed_ubelt_geojson_contracts():
+    road = json.loads(
+        (REPO_ROOT / "data" / "samples" / "ubelt-v1-preview.geojson").read_text(
+            encoding="utf-8"
+        )
+    )
+    flood = json.loads(
+        (
+            REPO_ROOT / "data" / "samples" / "ubelt-v1-flood-join.geojson"
+        ).read_text(encoding="utf-8")
+    )
+
+    graph = build_graph_from_geojson(road, flood)
+
+    assert graph.nodes
+    assert graph.edge_index
+    assert all(edge.edge_id.startswith("ubelt-v1:") for edge in graph.edge_index.values())
+    assert all(edge.base_cost > 0 for edge in graph.edge_index.values())

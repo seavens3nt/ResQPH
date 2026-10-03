@@ -17,7 +17,9 @@ ML cannot restore an excluded edge or lower a deterministic safety penalty.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Approved prototype rule table (seconds-equivalent cost units)
@@ -42,6 +44,17 @@ EXCLUDED_PASSABILITY: frozenset[str] = frozenset({"impassable"})
 
 # Flood levels that generate warnings
 WARNING_FLOOD_LEVELS: frozenset[str] = frozenset({"high"})
+SUPPORTED_FLOOD_LEVELS: frozenset[str] = frozenset(
+    {"none", "low", "moderate", "high", "severe"}
+)
+SUPPORTED_PASSABILITY: frozenset[str] = frozenset(
+    {"passable", "restricted", "impassable"}
+)
+ML_FALLBACK_WARNING = "Runtime ML is disabled; deterministic rules were used."
+
+
+class RoutingInputError(ValueError):
+    """Raised when a routing record violates the locked input contract."""
 
 
 @dataclass(frozen=True)
@@ -58,6 +71,8 @@ class EdgeCostBreakdown:
     excluded: bool = False
     exclusion_reason: str | None = None
     warnings: list[str] = field(default_factory=list)
+    fallback_used: bool = False
+    fallback_reason: str | None = None
 
     @property
     def total_cost(self) -> float | None:
@@ -81,7 +96,7 @@ def compute_edge_cost(
     passability: str = "passable",
     has_obstacle: bool = False,
     is_stale_or_uncertain: bool = False,
-    ml_probability: float | None = None,
+    ml_probability: Any | None = None,
     ml_accepted: bool = False,
 ) -> EdgeCostBreakdown:
     """Compute the deterministic cost for a single edge.
@@ -110,6 +125,15 @@ def compute_edge_cost(
     EdgeCostBreakdown
         Full cost breakdown. If excluded is True, total_cost is None.
     """
+    _validate_edge_inputs(
+        edge_id,
+        base_cost,
+        flood_level,
+        passability,
+        has_obstacle,
+        is_stale_or_uncertain,
+        ml_accepted,
+    )
     warnings: list[str] = []
 
     # --- Exclusion checks (before any cost calculation) ---
@@ -160,9 +184,20 @@ def compute_edge_cost(
 
     # --- Bounded ML penalty ---
     ml_penalty = 0
-    if ml_accepted and ml_probability is not None:
-        clamped = max(0.0, min(1.0, ml_probability))
+    fallback_used = False
+    fallback_reason: str | None = None
+    if not ml_accepted:
+        fallback_used = True
+        fallback_reason = "ml_not_accepted"
+    elif not _is_finite_number(ml_probability):
+        fallback_used = True
+        fallback_reason = "ml_probability_missing_or_invalid"
+    else:
+        clamped = max(0.0, min(1.0, float(ml_probability)))
         ml_penalty = round(clamped * ML_MAX_PENALTY)
+
+    if fallback_used:
+        warnings.append(ML_FALLBACK_WARNING)
 
     return EdgeCostBreakdown(
         edge_id=edge_id,
@@ -175,4 +210,44 @@ def compute_edge_cost(
         excluded=False,
         exclusion_reason=None,
         warnings=warnings,
+        fallback_used=fallback_used,
+        fallback_reason=fallback_reason,
+    )
+
+
+def _validate_edge_inputs(
+    edge_id: str,
+    base_cost: float,
+    flood_level: str,
+    passability: str,
+    has_obstacle: bool,
+    is_stale_or_uncertain: bool,
+    ml_accepted: bool,
+) -> None:
+    if not isinstance(edge_id, str) or not edge_id.strip():
+        raise RoutingInputError("edge_id must be a nonempty string")
+    if not _is_finite_number(base_cost) or float(base_cost) <= 0:
+        raise RoutingInputError("base_cost must be a positive finite number")
+    if not isinstance(flood_level, str) or flood_level not in SUPPORTED_FLOOD_LEVELS:
+        raise RoutingInputError(
+            f"flood_level must be one of {sorted(SUPPORTED_FLOOD_LEVELS)}"
+        )
+    if not isinstance(passability, str) or passability not in SUPPORTED_PASSABILITY:
+        raise RoutingInputError(
+            f"passability must be one of {sorted(SUPPORTED_PASSABILITY)}"
+        )
+    for field_name, value in (
+        ("has_obstacle", has_obstacle),
+        ("is_stale_or_uncertain", is_stale_or_uncertain),
+        ("ml_accepted", ml_accepted),
+    ):
+        if not isinstance(value, bool):
+            raise RoutingInputError(f"{field_name} must be a boolean")
+
+
+def _is_finite_number(value: Any) -> bool:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, int | float)
+        and math.isfinite(float(value))
     )

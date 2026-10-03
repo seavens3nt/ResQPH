@@ -8,7 +8,13 @@ import pathlib
 
 import pytest
 
-from resqph_routing.astar import NoRouteResult, RouteResult, find_route
+from resqph_routing.astar import (
+    NoRouteResult,
+    RouteResult,
+    calculate_path_cost,
+    find_route,
+)
+from resqph_routing.costs import ML_FALLBACK_WARNING
 from resqph_routing.graph import build_graph
 
 # ---------------------------------------------------------------------------
@@ -42,6 +48,21 @@ def run_case(known_graph_data, case):
     return find_route(graph, origin="A", destination="D")
 
 
+def build_case_graph(known_graph_data, case):
+    scenario = case.get("scenario", {})
+    ml_accepted = any(
+        "ml_probability" in value
+        for value in scenario.values()
+        if isinstance(value, dict)
+    )
+    return build_graph(
+        known_graph_data["nodes"],
+        known_graph_data["edges"],
+        scenario=scenario,
+        ml_accepted=ml_accepted,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Case 1: baseline
 # ---------------------------------------------------------------------------
@@ -57,7 +78,10 @@ class TestBaseline:
         assert isinstance(result, RouteResult)
         assert result.status == "route-found"
         assert result.route == case["expected_route"]
+        assert result.edge_ids == case["expected_route"]
         assert result.cost == case["expected_cost"]
+        assert result.total_cost == case["expected_cost"]
+        assert sum(result.aggregate_cost_breakdown.values()) == result.total_cost
 
     def test_baseline_deterministic(self, known_graph_data):
         """Running the same input twice must produce identical results."""
@@ -98,8 +122,9 @@ class TestModerateFloodReroute:
             for c in known_graph_data["expected_cases"]
             if c["case_id"] == "moderate-flood-reroute"
         )
-        # AB=60, BD=60+90(moderate)=150, total=210
-        assert case["rejected_route_cost"] == 210
+        graph = build_case_graph(known_graph_data, case)
+
+        assert calculate_path_cost(graph, ["AB", "BD"]) == case["rejected_route_cost"]
 
 
 # ---------------------------------------------------------------------------
@@ -150,6 +175,8 @@ class TestNoRoute:
         assert result.status == "no-route"
         assert result.route == []
         assert result.cost is None
+        assert result.reason == "controlled_impassability_disconnected_destination"
+        assert "No eligible route" in result.warnings[0]
 
     def test_no_route_has_explanation(self, known_graph_data):
         case = next(
@@ -185,8 +212,9 @@ class TestBoundedMLPenalty:
             for c in known_graph_data["expected_cases"]
             if c["case_id"] == "bounded-ml-penalty"
         )
-        # AB=60, BD=60+60(ml)=120, total=180
-        assert case["rejected_route_cost"] == 180
+        graph = build_case_graph(known_graph_data, case)
+
+        assert calculate_path_cost(graph, ["AB", "BD"]) == case["rejected_route_cost"]
 
     def test_ml_fallback_without_ml(self, known_graph_data):
         """When ML is missing/disabled, rule fallback should work."""
@@ -199,6 +227,24 @@ class TestBoundedMLPenalty:
         assert isinstance(result, RouteResult)
         assert result.route == ["AB", "BD"]
         assert result.cost == 120
+        assert result.fallback_used
+        assert ML_FALLBACK_WARNING in result.warnings
+
+    def test_invalid_ml_falls_back_without_crashing(self, known_graph_data):
+        graph = build_graph(
+            known_graph_data["nodes"],
+            known_graph_data["edges"],
+            ml_results={"BD": "not-a-probability"},
+            ml_accepted=True,
+        )
+
+        result = find_route(graph, origin="A", destination="D")
+
+        assert isinstance(result, RouteResult)
+        assert result.route == ["AB", "BD"]
+        assert result.cost == 120
+        assert result.fallback_used
+        assert ML_FALLBACK_WARNING in result.warnings
 
 
 # ---------------------------------------------------------------------------
@@ -219,3 +265,23 @@ class TestDeterminism:
             if isinstance(result1, RouteResult) and isinstance(result2, RouteResult):
                 assert result1.cost_breakdown == result2.cost_breakdown
                 assert result1.warnings == result2.warnings
+
+    def test_equal_cost_tie_is_stable_across_input_order(self, known_graph_data):
+        edges = [
+            {"edge_id": "AZ", "from": "A", "to": "Z", "base_cost": 60},
+            {"edge_id": "ZD", "from": "Z", "to": "D", "base_cost": 60},
+            {"edge_id": "AB", "from": "A", "to": "B", "base_cost": 60},
+            {"edge_id": "BD", "from": "B", "to": "D", "base_cost": 60},
+        ]
+        nodes = [
+            {"node_id": "A"},
+            {"node_id": "B"},
+            {"node_id": "Z"},
+            {"node_id": "D"},
+        ]
+
+        forward = find_route(build_graph(nodes, edges), "A", "D")
+        reversed_result = find_route(build_graph(nodes, list(reversed(edges))), "A", "D")
+
+        assert forward.route == ["AB", "BD"]
+        assert reversed_result.route == forward.route

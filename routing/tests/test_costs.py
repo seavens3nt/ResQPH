@@ -1,6 +1,14 @@
 """Tests for the deterministic cost engine."""
 
-from resqph_routing.costs import compute_edge_cost
+import math
+
+import pytest
+
+from resqph_routing.costs import (
+    ML_FALLBACK_WARNING,
+    RoutingInputError,
+    compute_edge_cost,
+)
 
 
 class TestBaseCost:
@@ -97,6 +105,9 @@ class TestMLPenalty:
         )
         assert result.ml_penalty == 0
         assert result.total_cost == 60.0
+        assert result.fallback_used
+        assert result.fallback_reason == "ml_not_accepted"
+        assert ML_FALLBACK_WARNING in result.warnings
 
     def test_ml_accepted_full_probability(self):
         result = compute_edge_cost(
@@ -136,6 +147,19 @@ class TestMLPenalty:
             "E1", base_cost=60.0, ml_probability=None, ml_accepted=True
         )
         assert result.ml_penalty == 0
+        assert result.fallback_used
+        assert result.fallback_reason == "ml_probability_missing_or_invalid"
+
+    @pytest.mark.parametrize("value", ["0.8", True, math.nan, math.inf, -math.inf])
+    def test_invalid_ml_probability_uses_rule_fallback(self, value):
+        result = compute_edge_cost(
+            "E1", base_cost=60.0, ml_probability=value, ml_accepted=True
+        )
+
+        assert result.total_cost == 60.0
+        assert result.ml_penalty == 0
+        assert result.fallback_used
+        assert ML_FALLBACK_WARNING in result.warnings
 
     def test_ml_cannot_restore_excluded_edge(self):
         result = compute_edge_cost(
@@ -163,3 +187,32 @@ class TestCombinedPenalties:
         )
         expected = 60 + 90 + 180 + 120 + 60 + 60  # 570
         assert result.total_cost == expected
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        ({"edge_id": ""}, "edge_id"),
+        ({"base_cost": 0}, "base_cost"),
+        ({"base_cost": math.nan}, "base_cost"),
+        ({"flood_level": "unknown"}, "flood_level"),
+        ({"passability": "maybe"}, "passability"),
+        ({"has_obstacle": "yes"}, "has_obstacle"),
+        ({"is_stale_or_uncertain": 1}, "is_stale_or_uncertain"),
+        ({"ml_accepted": 1}, "ml_accepted"),
+    ],
+)
+def test_invalid_edge_contract_is_rejected(overrides, message):
+    values = {
+        "edge_id": "E1",
+        "base_cost": 60.0,
+        "flood_level": "none",
+        "passability": "passable",
+        "has_obstacle": False,
+        "is_stale_or_uncertain": False,
+        "ml_accepted": False,
+    }
+    values.update(overrides)
+
+    with pytest.raises(RoutingInputError, match=message):
+        compute_edge_cost(**values)

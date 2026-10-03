@@ -53,6 +53,16 @@ class TestExplainRouteFound:
         assert "BD" in combined
         assert "excluded" in combined.lower()
 
+    def test_explanations_include_penalized_rejected_edge(self):
+        scenario = {"BD": {"flood_level": "moderate", "passability": "passable"}}
+        graph = build_graph(SAMPLE_NODES, SAMPLE_EDGES, scenario=scenario)
+        result = find_route(graph, origin="A", destination="D")
+
+        combined = " ".join(explain_route(graph, result))
+
+        assert "Alternative edge 'BD' was not selected" in combined
+        assert "150" in combined
+
 
 class TestExplainNoRoute:
     def test_explain_no_route(self):
@@ -71,13 +81,14 @@ class TestExplainNoRoute:
 
 class TestWarnings:
     def test_high_flood_warning(self):
-        scenario = {"BD": {"flood_level": "high", "passability": "passable"}}
-        graph = build_graph(SAMPLE_NODES, SAMPLE_EDGES, scenario=scenario)
-        result = find_route(graph, origin="A", destination="D")
+        nodes = [{"node_id": "A"}, {"node_id": "B"}]
+        edges = [{"edge_id": "AB", "from": "A", "to": "B", "base_cost": 60}]
+        scenario = {"AB": {"flood_level": "high", "passability": "passable"}}
+        graph = build_graph(nodes, edges, scenario=scenario)
+        result = find_route(graph, origin="A", destination="B")
         warnings = collect_warnings(result)
 
-        # High flood should generate a warning
-        assert isinstance(warnings, list)
+        assert any("high flood" in warning for warning in warnings)
 
     def test_no_warnings_for_baseline(self):
         graph = build_graph(SAMPLE_NODES, SAMPLE_EDGES)
