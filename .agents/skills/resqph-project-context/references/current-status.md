@@ -1,12 +1,11 @@
 # Current Status
 
-- **Active phase:** Team Phase 3 Ranee-only post-routing reconciliation.
-- **Overall health:** On track within the constrained MVP.
-- **Completed and verified:** Project Foundation Phases 1–2; Team Phase 1 bounded graph and controlled map pipeline; Team Phase 2 deterministic A*, route API/client/presentation/map integration and explicit no-route behavior; Team Phase 3 external evidence with runtime ML deferred.
-- **Current target:** Issue #57 implementation and evidence are ready for review; PR CI and merge remain pending.
-- **Runtime ML:** disabled; the external Ondoy artifact is not U-Belt contract-compatible.
-- **Current assignment:** Ranee alone owns the Team Phase 3 reconciliation; no work is assigned to Elle or another member for this phase.
-- **Latest checks:** routing 136 passed; backend 115 passed and 2 environment-gated skips; cross-layer route acceptance 2 passed; frontend 183 passed, lint with 4 pre-existing warnings, and production build passed; production npm audit found 0 vulnerabilities; 10 JSON/GeoJSON fixtures parsed.
-- **Blockers:** none for the Ranee-only reconciliation. Exact deadline and weekly capacity remain unrecorded.
-- **Gate readiness:** Team Phase 2 is approved after merged PR #55 and complete local/CI evidence. Team Phase 3 code/evidence was already accepted with conditions; only the post-routing reconciliation remains.
-- **Last verified:** 2026-10-04 against `main` at `6d66a16` plus Issue #57 changes: 121 backend/integration tests passed, 2 skipped; 21 external ML tests passed; 5 digests matched; Ruff passed.
+- **Active phase:** Team Phase 4 — Limited Offline Support.
+- **Completed and verified:** Foundation 1–2 and Team 1–3; Phase 3 retains its conditional acceptance and runtime exclusion.
+- **Entry revision:** merged PR #58 at `8f2a7ea`; PR and post-merge main CI passed; Issue #57 closed.
+- **Assignments:** Elle resumes durable client flow; Clarence owns presentation; Jared owns backend sync acceptance; Matthew owns repeatable acceptance scenarios; Ranee owns review/integration/gate.
+- **Locked inputs:** `docs/phases/TEAM-PHASE-04.md`, `docs/offline/OFFLINE_IMPLEMENTATION.md`, existing offline/lifecycle contracts, mission API types and `data/samples/offline-mission.example.json`.
+- **Implementation boundary:** existing queue is volatile React state; persistence/reload/reconnection are unimplemented Phase 4 work.
+- **Latest checks:** 121 backend/integration tests passed, 2 skipped; 21 isolated ML tests passed; 5 digests matched; Ruff passed; required GitHub jobs passed.
+- **Runtime ML:** disabled and route-independent.
+- **Unknowns:** exact deadline and weekly capacity. Offline browser and disposable MongoDB evidence are required at the Phase 4 gate.

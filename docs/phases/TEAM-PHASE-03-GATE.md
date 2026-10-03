@@ -9,8 +9,9 @@ route costs and geometry, explicit fallback warnings, and geometry-free no-route
 Rejected artifacts are never deserialized.
 
 The existing `Approve with conditions` decision remains applicable. The
-reconciliation is ready for review; its PR must pass CI and merge before
-Issue #57 and the milestone can be closed. Runtime integration remains deferred.
+reconciliation is completed through merged PR #58 at `8f2a7ea`. Required PR
+and post-merge main CI passed; Issue #57 is closed. Ranee approved the final
+closeout on 2026-10-04 and authorized Team Phase 4. Runtime integration remains deferred.
 
 **Status:** Completed and verified
 

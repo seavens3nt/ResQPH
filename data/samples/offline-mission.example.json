@@ -1,0 +1,52 @@
+{
+  "fixture_notice": "Synthetic controlled academic demonstration; not an operational mission.",
+  "schema_version": 1,
+  "actor_id": "rescuer-alpha",
+  "last_synced_at": "2026-10-04T00:00:00Z",
+  "mission": {
+    "id": "mission-offline-001",
+    "request_id": "request-offline-001",
+    "team_id": "rescuer-alpha",
+    "assigned_rescuer_id": "rescuer-alpha",
+    "status": "en-route",
+    "version": 2,
+    "assigned_at": "2026-10-04T00:00:00Z",
+    "created_at": "2026-10-04T00:00:00Z",
+    "updated_at": "2026-10-04T00:00:00Z",
+    "request_summary": {
+      "location": {
+        "address": "Synthetic U-Belt pilot location",
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            120.9938198,
+            14.5977093
+          ]
+        }
+      },
+      "headcount": 2,
+      "vulnerabilities": [],
+      "medical_needs": false,
+      "reported_flood_level": "low",
+      "situation_summary": "Synthetic academic rescue scenario.",
+      "fixture_notice": "Synthetic controlled scenario."
+    },
+    "status_history": [],
+    "latest_route_result": null,
+    "data_source": "synthetic",
+    "sync_status": "synced"
+  },
+  "pending_event": {
+    "localId": "offline-event-001",
+    "missionId": "mission-offline-001",
+    "body": {
+      "event_id": "offline-event-001",
+      "new_status": "arrived",
+      "expected_mission_version": 2,
+      "client_recorded_at": "2026-10-04T00:05:00Z",
+      "source": "offline-sync"
+    },
+    "syncState": "pending",
+    "enqueuedAt": "2026-10-04T00:05:00Z"
+  }
+}

@@ -1,6 +1,6 @@
 # ResQPH project roadmap
 
-**Status:** Team Phase 2 completed; Team Phase 3 post-routing reconciliation ready
+**Status:** Team Phase 3 completed; Team Phase 4 ready to start
 **Decision owner:** Ranee
 **Last updated:** 2026-10-04
 
@@ -9,8 +9,7 @@
 Ranee completed the Project Foundation through PR #25, Team Phase 1 through
 the accepted mapping gate, and Team Phase 2 through PR #55 and its routing
 gate. Matthew's early Team Phase 3 experiment was accepted as external
-exploratory evidence with runtime integration deferred. One Ranee-only
-post-routing reconciliation remains before the project advances to Team Phase 4.
+exploratory evidence with runtime integration deferred. The post-routing reconciliation is merged through PR #58; Team Phase 4 is active.
 
 Because delivery time is constrained, every phase must protect the smallest end-to-end demonstration. Deterministic rescue coordination and rule-based A* routing are the critical path. ML experimentation remains required, while runtime ML integration and optional data enrichment are conditional and must not block that path.
 
@@ -125,7 +124,7 @@ verified controlled-scenario path. Runtime ML remains disabled.
 
 ## Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Completed with conditions; Ranee-only post-routing reconciliation ready
+**Status:** Completed and verified with conditions through PRs #31 and #58
 **Accountable owner:** Matthew
 **Support:** Ranee and Jared
 
@@ -139,19 +138,21 @@ and the backend adapter as a safe fallback boundary. The rule-based route
 remains the accepted application behavior. See
 [`TEAM-PHASE-03.md`](phases/TEAM-PHASE-03.md).
 
-Before opening Team Phase 4, Ranee will complete one focused reconciliation:
-rerun the current ML/fallback evidence against the merged route path, confirm
-ML rejection still leaves deterministic costs and truthful warnings, and
-remove any stale status labels or evidence wording. No runtime model activation
-or new member package is part of that work.
+Ranee completed the post-routing reconciliation through PR #58. All required
+PR and post-merge main CI passed; the artifact remains outside runtime.
 
 ## Team Phase 4 — Limited Offline Support
 
-**Status:** Planned
+**Status:** Ready to start; active delivery phase
 **Accountable backend owner:** Ranee
-**Frontend owner:** To be confirmed between Elle and Clarence
+**Frontend controller/storage owner:** Elle
+**Presentation owner:** Clarence
+**Backend acceptance:** Jared
+**Repeatable acceptance scenarios:** Matthew
 
-Cache one assigned mission, show data age, queue one next-valid status event, synchronize idempotently, and display conflict/failure states.
+Cache one assigned mission, show data age, queue one next-valid status event,
+synchronize idempotently, and display conflict/failure states. The packages are
+ready to start from [the locked phase guide](phases/TEAM-PHASE-04.md).
 
 ## Team Phase 5 — Integration, Testing, and Presentation
 

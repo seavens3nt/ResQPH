@@ -17,7 +17,7 @@
 - Lifecycle: `docs/workflows/RESCUE_LIFECYCLE.md`
 - Routing: `docs/routing/ROUTING_CONTRACT.md`
 - ML: `docs/ml/ML_FEASIBILITY.md` and `data/samples/ml-road-risk-contract.example.json`
-- Offline: `docs/offline/OFFLINE_CONTRACT.md`
+- Offline: `docs/offline/OFFLINE_CONTRACT.md`, `docs/offline/OFFLINE_IMPLEMENTATION.md`, and `data/samples/offline-mission.example.json`
 - UI states: `docs/ui/UI_STATES.md` and `docs/ui/WIREFRAMES.md`
 - Boundary and joins: `data/samples/study-area.geojson`, `ubelt-v1-preview.geojson`, and `ubelt-v1-flood-join.geojson`
 - Routing verification: `data/samples/routing-known-graph.example.json`, `route-found.example.json`, and `no-route.example.json`
@@ -41,4 +41,4 @@
 - Frontend prototype state is not proof of backend persistence or integration.
 - Runtime labels must identify controlled, simulated, historical, cached, stale, or pending-sync data accurately.
 
-Last verified against commit: `6096ddc` plus the pending Team Phase 2 gate record.
+Last verified against commit: `8f2a7ea` plus Team Phase 4 locked-input preparation.
