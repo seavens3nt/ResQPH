@@ -1,6 +1,6 @@
 # Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Completed as external exploratory evidence; runtime integration deferred
+**Status:** Completed with conditions; Ranee-only post-routing reconciliation ready
 
 **Accountable owner:** Matthew
 
@@ -93,3 +93,11 @@ The gate decision is `Approve with conditions`: the experiment is accepted as
 the completed academic ML deliverable and the evidence-gated fallback adapter
 is accepted, while runtime model integration remains deferred. See
 [`TEAM-PHASE-03-GATE.md`](TEAM-PHASE-03-GATE.md).
+
+## Post-routing reconciliation
+
+Team Phase 2 is now complete, so Ranee will perform one final focused check
+against merged `main`: verify that disabled, missing, rejected, or incompatible
+ML still contributes zero route cost and produces an explicit fallback warning.
+This is evidence reconciliation, not model activation, retraining, NLP work, or
+a new member handoff.

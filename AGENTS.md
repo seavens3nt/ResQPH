@@ -20,9 +20,10 @@ Work follows these delivery phases:
 6. Team Phase 4 — Limited Offline Support
 7. Team Phase 5 — Integration, Testing, and Presentation
 
-Team Phase 2 is the active delivery phase. Team Phase 1 is completed and
-verified. Matthew's early Team Phase 3 package is accepted as external
-exploratory evidence, but runtime model integration remains unapproved.
+Team Phase 2 is completed and verified. Team Phase 3 external evidence was
+accepted early with conditions; Ranee owns its single post-routing
+reconciliation before Team Phase 4 opens. Runtime model integration remains
+unapproved.
 
 ## Time-constrained delivery order
 

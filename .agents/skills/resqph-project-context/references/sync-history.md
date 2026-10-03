@@ -65,3 +65,22 @@ merge PR #31 and does not unblock dependent work early.
 
 This sync activates independently executable Team Phase 2 packages. It does
 not authorize runtime ML or change the prototype safety boundary.
+
+## 2026-10-04 — Team Phase 2 routing gate and Team Phase 3 reconciliation
+
+- **Baseline commit:** `6096ddc`
+- **Target:** completed Team Phase 2 gate and Ranee-only Team Phase 3 follow-up
+- **Changed guidance:** the deterministic engine now runs through the route API,
+  frontend client, accessible presentation, and map overlay; no-route remains
+  geometry-free; runtime ML remains disabled; Ranee alone owns the remaining
+  Phase 3 post-routing evidence reconciliation.
+- **Evidence inspected:** merged PRs #50–#53 and #55, Issues #45–#49 and #54,
+  routing/backend/frontend/cross-layer suites, fixture parsing, production
+  dependency audit, phase records, and live GitHub CI/milestone state.
+- **Verification:** routing 136 passed; backend 115 passed with 2 environment-gated
+  skips; cross-layer route acceptance 2 passed; frontend 183 passed plus lint/build;
+  PR #55 frontend/backend/ML CI passed; 10 fixtures parsed; 0 production npm vulnerabilities.
+- **Unresolved evidence:** browser visual acceptance, optional MongoDB environment
+  run, U-Belt-compatible ML artifact, limited offline synchronization, and exact deadline.
+
+This sync does not enable the external model or claim live/guaranteed-safe routing.

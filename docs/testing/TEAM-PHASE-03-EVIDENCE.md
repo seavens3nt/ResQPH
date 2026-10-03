@@ -1,6 +1,6 @@
 # Team Phase 3 verification evidence
 
-**Status:** Ready for review
+**Status:** Completed and verified with conditions
 
 **Evidence date:** 2026-09-29
 
@@ -48,6 +48,7 @@ validate U-Belt predictive accuracy. The runtime classifier remains disabled.
 
 [PR #31](https://github.com/seavens3nt/ResQPH/pull/31) passed its frontend,
 backend, and ML evidence checks on 2026-09-29. This evidence becomes
-`Completed and verified` only after Ranee reviews and merges the pull request,
-verifies `main`, and records the gate decision in
-[Issue #37](https://github.com/seavens3nt/ResQPH/issues/37).
+`Completed and verified with conditions` because Ranee reviewed and merged the
+pull request, verified `main`, and recorded the gate decision in closed
+[Issue #37](https://github.com/seavens3nt/ResQPH/issues/37). Runtime integration
+remains deferred.

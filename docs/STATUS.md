@@ -1,12 +1,12 @@
 # ResQPH project status
 
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-04
 
 | Field | Current value |
 |---|---|
-| Active delivery phase | Team Phase 2 — Flood-Aware Routing |
+| Active delivery phase | Team Phase 3 — Ranee-only post-routing reconciliation |
 | Overall health | On track within the constrained MVP |
-| Current goal | Complete deterministic A*, route API integration, and truthful accessible route presentation with runtime ML disabled |
+| Current goal | Reconfirm the accepted ML evidence against the completed routing path without enabling the incompatible artifact |
 
 ## Completed and verified
 
@@ -17,15 +17,16 @@
 - Authoritative backend geospatial loading and frontend 30-edge/10-record map consumption.
 - Accessible map legend, notices, layer summary, failure states, and text alternative.
 - Team Phase 3 external XGBoost evidence accepted with runtime integration deferred.
+- Team Phase 2 deterministic A* route engine, backend boundary, route client,
+  accessible presentation, map overlay, explicit no-route behavior, and disabled-ML fallback.
 
 ## Active work
 
-### Team Phase 2 — Flood-Aware Routing
+### Team Phase 3 — Ranee-only reconciliation
 
-- Matthew: deterministic A*, rule costs, exclusions, known-graph tests, and explanations.
-- Jared: validated backend routing endpoint and adapter.
-- Ranee: phase gate plus Elle's temporarily reassigned route client/map-overlay package.
-- Clarence: accessible route result, fallback, warning, and no-route presentation.
+- The academic ML package and conditional gate were already accepted through PR #31 and Issue #37.
+- Ranee owns the only remaining follow-up: reconfirm that the now-completed route path stays deterministic when ML is disabled or rejected, then reconcile the evidence/status record.
+- No other member receives a Team Phase 3 package unless Ranee changes this decision.
 
 ## Locked constraints
 
@@ -40,11 +41,13 @@
 
 | Area | Result |
 |---|---|
-| Routing | Ruff passed; 59 tests passed |
-| Backend | Ruff passed; 73 tests passed; 2 MongoDB integration tests skipped |
-| Frontend | Lint passed with 4 pre-existing warnings; 155 tests passed; production build passed |
+| Routing | Ruff passed; 136 tests passed |
+| Backend | Ruff passed; 115 tests passed; 2 MongoDB integration tests skipped |
+| Cross-layer route acceptance | 2 tests passed |
+| Frontend | Lint completed with 4 pre-existing warnings; 183 tests passed; production build passed |
 | Fixtures | 10 JSON/GeoJSON files parsed |
-| Team Phase 1 gate | Approved |
+| Production dependency audit | 0 vulnerabilities |
+| Team Phase 2 gate | Approved |
 
 ## Links
 
@@ -53,5 +56,6 @@
 - [Team Phase 1 gate](phases/TEAM-PHASE-01-GATE.md)
 - [Team Phase 1 evidence](testing/TEAM-PHASE-01-EVIDENCE.md)
 - [Team Phase 2 guide](phases/TEAM-PHASE-02.md)
+- [Team Phase 2 gate](phases/TEAM-PHASE-02-GATE.md)
 - [GitHub Issues](https://github.com/seavens3nt/ResQPH/issues)
 - [GitHub Actions](https://github.com/seavens3nt/ResQPH/actions)
