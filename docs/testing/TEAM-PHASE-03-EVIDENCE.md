@@ -1,5 +1,27 @@
 # Team Phase 3 verification evidence
 
+## 2026-10-04 post-routing reconciliation — Issue #57
+
+The reconciliation is ready for review against baseline `6d66a16`.
+
+- Backend and cross-component suites: **121 passed, 2 MongoDB-environment skips**.
+- Ruff across backend and integration tests: passed.
+- Isolated Ondoy experiment: **21 passed**.
+- All five SHA-256 manifest entries match the committed files.
+- Four new cross-component cases cover disabled ML, a missing artifact,
+  checksum rejection, and the actual committed incompatible Ondoy metadata.
+- Every case prevents model deserialization, preserves the same route with ML
+  requested or omitted, reports zero ML cost and no runtime model version,
+  and preserves explicit no-route without geometry.
+- CI now runs the complete integration-test directory on every PR.
+
+The route API deliberately does not consume the inference adapter yet. These
+checks prove its isolation from rejected ML and the adapter's rejection before
+deserialization; they do not establish accepted-model routing or new accuracy.
+`ML_ENABLED=false` remains the example/default. The two skipped tests require
+a MongoDB replica-set environment and are unrelated to this reconciliation.
+Merge and milestone closure remain pending until the PR passes required CI.
+
 **Status:** Completed and verified with conditions
 
 **Evidence date:** 2026-09-29

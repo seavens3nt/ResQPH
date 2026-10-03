@@ -1,5 +1,15 @@
 # Context Sync History
 
+## 2026-10-04 — Issue #57 post-routing verification
+
+- Baseline: `6d66a16`; target: Ranee's Phase 3 reconciliation PR.
+- Change: CI runs all integration tests; four artifact rejection states now
+  verify the real route API alongside the inference adapter.
+- Evidence: 121 backend/integration tests passed with 2 MongoDB skips, 21
+  isolated ML tests passed, Ruff passed, and all 5 manifest digests matched.
+- Status: ready for review; CI, merge, issue closure, and milestone closure pending.
+- Runtime ML remains disabled. No new model or accuracy claim is introduced.
+
 ## 2026-09-22 — Time-constrained MVP alignment
 
 - **Baseline commit:** `991c325`

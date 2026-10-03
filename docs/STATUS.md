@@ -25,7 +25,7 @@
 ### Team Phase 3 — Ranee-only reconciliation
 
 - The academic ML package and conditional gate were already accepted through PR #31 and Issue #37.
-- Ranee owns the only remaining follow-up: reconfirm that the now-completed route path stays deterministic when ML is disabled or rejected, then reconcile the evidence/status record.
+- Ranee's Issue #57 reconciliation is ready for review: four ML artifact states preserve deterministic routes and explicit no-route; the evidence is recorded and PR merge remains pending.
 - No other member receives a Team Phase 3 package unless Ranee changes this decision.
 
 ## Locked constraints
@@ -43,7 +43,8 @@
 |---|---|
 | Routing | Ruff passed; 136 tests passed |
 | Backend | Ruff passed; 115 tests passed; 2 MongoDB integration tests skipped |
-| Cross-layer route acceptance | 2 tests passed |
+| Cross-layer route and ML fallback acceptance | 6 tests passed; backend plus integration total: 121 passed, 2 skipped |
+| External ML experiment | 21 passed; all 5 manifest digests matched |
 | Frontend | Lint completed with 4 pre-existing warnings; 183 tests passed; production build passed |
 | Fixtures | 10 JSON/GeoJSON files parsed |
 | Production dependency audit | 0 vulnerabilities |
