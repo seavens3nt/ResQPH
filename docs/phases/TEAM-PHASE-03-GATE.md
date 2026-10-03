@@ -1,5 +1,17 @@
 # Team Phase 3 gate — AI/ML Road-Risk Component
 
+## Post-routing addendum — 2026-10-04
+
+Issue #57 verifies the accepted gate against the completed deterministic route
+path. Local checks pass: 121 backend/integration tests, 21 isolated ML tests,
+Ruff, and all five manifest digests. The four artifact states preserve identical
+route costs and geometry, explicit fallback warnings, and geometry-free no-route.
+Rejected artifacts are never deserialized.
+
+The existing `Approve with conditions` decision remains applicable. The
+reconciliation is ready for review; its PR must pass CI and merge before
+Issue #57 and the milestone can be closed. Runtime integration remains deferred.
+
 **Status:** Completed and verified
 
 **Decision owner:** Ranee
