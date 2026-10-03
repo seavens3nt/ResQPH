@@ -57,6 +57,54 @@ routing/src/resqph_routing/
   normalize.py    Contract-schema projection and edge-ID generation
   flood_join.py   Controlled-scenario join + rejection reporting
   validate.py     Bounds, geometry, schema, and join-coverage checks
+  
+```
+
+# ResQPH Routing Engine
+
+Deterministic flood-aware A* routing engine for the ResQPH prototype.
+
+## Architecture
+
+This package is a **pure Python routing module** with zero dependencies on
+FastAPI, MongoDB, React, or runtime ML artifacts. It operates exclusively
+on explicit inputs (graph, origin, destination, scenario) and returns
+explainable results.
+
+## Cost Model
+
+All costs are in **seconds-equivalent prototype units**.
+
+edge_cost = base_travel_cost
++ deterministic_flood_penalty
++ restricted_passability_penalty
++ obstacle_penalty
++ uncertainty_penalty
++ bounded_ml_penalty_when_accepted
+
+
+### Rule Table
+
+| Scenario State | Effect |
+|---|---|
+| `none` | No flood penalty |
+| `low` | +30 cost units |
+| `moderate` | +90 cost units |
+| `high` | +240 cost units + warning |
+| `severe` or `impassable` | Edge excluded |
+| `restricted` passability | +180 cost units |
+| Verified recent obstacle | +120 cost units |
+| Stale/uncertain data | +60 cost units + warning |
+| ML (accepted) | `round(clamp(prob, 0, 1) * 60)`, capped at 60 |
+
+## Usage
+
+```python
+from resqph_routing import build_graph, find_route, explain_route
+
+graph = build_graph(nodes, edges, scenario=scenario, ml_accepted=False)
+result = find_route(graph, origin="A", destination="D")
+explanations = explain_route(graph, result)
 ```
 
 ## Reference contracts
