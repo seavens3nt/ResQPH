@@ -1,11 +1,11 @@
 # Road-risk ML feasibility and acceptance
 
-**Status:** Ready for review as completed exploratory evidence; runtime model integration deferred
+**Status:** Accepted as completed exploratory evidence with conditions; runtime model integration deferred
 
 **Candidate experiment:** XGBoost road-flood classifier from the Ondoy 2009 package
 
 **Operative application path:** deterministic rule-based risk score
-**Last updated:** 2026-09-29
+**Last updated:** 2026-10-04
 
 Matthew's external experiment is preserved under
 [`../../ml/external-experiments/ondoy-2009-metro-manila/`](../../ml/external-experiments/ondoy-2009-metro-manila/).

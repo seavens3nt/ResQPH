@@ -1,11 +1,11 @@
 # ML adapter and U-Belt integration status
 
-**Status:** Ready for review
+**Status:** Completed and verified with conditions
 
 **Owner:** Matthew
 
 **Review owner:** Ranee
-**Last updated:** 2026-09-29
+**Last updated:** 2026-10-04
 
 ## Accepted behavior in this change
 

@@ -9,10 +9,11 @@ missions during controlled or historical flood scenarios. Citizens submit
 requests, coordinators assign missions, and rescuers review assignments and
 update mission status.
 
-The foundation, core request-to-mission workflow, and mapping/geospatial
-pipeline are verified. **Team Phase 2 — Flood-Aware Routing** is the active
-delivery phase. Matthew's early **Team Phase 3 — AI/ML** package is accepted as
-external exploratory evidence; its model is not enabled in the application.
+The foundation, core request-to-mission workflow, mapping/geospatial pipeline,
+and **Team Phase 2 — Flood-Aware Routing** are verified. Matthew's early
+**Team Phase 3 — AI/ML** package is accepted as external exploratory evidence;
+Ranee owns its final post-routing reconciliation and its model is not enabled
+in the application.
 
 > [!IMPORTANT]
 > ResQPH is a classroom prototype. It is not an official emergency-response
@@ -41,10 +42,12 @@ Verified now:
 - Validated backend geospatial loader and fixture-driven accessible map layers
 - Deterministic road-risk fallback and evidence-gated ML adapter
 - Preserved and checksum-verified external XGBoost experiment
+- Deterministic A* routing from engine through API and coordinator UI, including
+  explainable costs, impassable-edge exclusion, and explicit no-route behavior
 
 Still required for the MVP:
 
-- Deterministic A* routing with explainable penalties and no-route behavior
+- Ranee-only post-routing reconciliation of the already accepted ML evidence
 - Limited offline support for one cached mission and one queued status update
 - Final end-to-end verification and presentation evidence
 

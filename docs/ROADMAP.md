@@ -1,15 +1,16 @@
 # ResQPH project roadmap
 
-**Status:** Team Phase 1 completed; Team Phase 2 ready to start
+**Status:** Team Phase 2 completed; Team Phase 3 post-routing reconciliation ready
 **Decision owner:** Ranee
-**Last updated:** 2026-09-29
+**Last updated:** 2026-10-04
 
 ## Delivery structure
 
-Ranee completed the Project Foundation through PR #25 and Team Phase 1 through
-the accepted mapping gate. Team Phase 2 is now the active delivery phase.
-Matthew's early Team Phase 3 experiment was accepted as external exploratory
-evidence with runtime integration deferred.
+Ranee completed the Project Foundation through PR #25, Team Phase 1 through
+the accepted mapping gate, and Team Phase 2 through PR #55 and its routing
+gate. Matthew's early Team Phase 3 experiment was accepted as external
+exploratory evidence with runtime integration deferred. One Ranee-only
+post-routing reconciliation remains before the project advances to Team Phase 4.
 
 Because delivery time is constrained, every phase must protect the smallest end-to-end demonstration. Deterministic rescue coordination and rule-based A* routing are the critical path. ML experimentation remains required, while runtime ML integration and optional data enrichment are conditional and must not block that path.
 
@@ -113,18 +114,18 @@ reproducible fixtures are accepted. See the Team Phase 1 gate and evidence.
 
 ## Team Phase 2 — Flood-Aware Routing
 
-**Status:** Ready to start
+**Status:** Completed and verified through PRs #50–#53 and #55
 **Accountable routing owner:** Matthew
 **Backend integration support:** Jared
 
-Implement A*, baseline known-graph tests, deterministic flood/passability
-penalties, impassable-edge exclusion, no-route behavior, route explanations,
-backend adapter, and frontend route presentation. Ranee temporarily owns
-Elle's route-data/frontend package until Ranee changes that assignment.
+The accepted A* engine, deterministic flood/passability penalties,
+impassable-edge exclusion, no-route behavior, route explanations, backend
+adapter, route client, accessible presentation, and map overlay now run as one
+verified controlled-scenario path. Runtime ML remains disabled.
 
 ## Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Completed as early external evidence; runtime integration deferred
+**Status:** Completed with conditions; Ranee-only post-routing reconciliation ready
 **Accountable owner:** Matthew
 **Support:** Ranee and Jared
 
@@ -133,10 +134,16 @@ artifact integrity, the actual random-row evaluation boundary, error analysis,
 stable inference output, and missing/malformed/incompatible-model fallback.
 The external artifact is not compatible with the U-Belt runtime contract.
 
-The proposed gate accepts the experiment as a non-integrated academic result
+The accepted gate treats the experiment as a non-integrated academic result
 and the backend adapter as a safe fallback boundary. The rule-based route
 remains the accepted application behavior. See
 [`TEAM-PHASE-03.md`](phases/TEAM-PHASE-03.md).
+
+Before opening Team Phase 4, Ranee will complete one focused reconciliation:
+rerun the current ML/fallback evidence against the merged route path, confirm
+ML rejection still leaves deterministic costs and truthful warnings, and
+remove any stale status labels or evidence wording. No runtime model activation
+or new member package is part of that work.
 
 ## Team Phase 4 — Limited Offline Support
 

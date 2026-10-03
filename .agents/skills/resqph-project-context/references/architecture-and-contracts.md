@@ -8,7 +8,7 @@
 - `ml/`: rule baseline, isolated external XGBoost evidence package, evaluation, metadata, checksums, and tests. The external artifact is not a runtime adapter.
 - `data/`: metadata, reproducible acquisition/processing instructions, and small sanitized fixtures.
 - `docs/`: authoritative scope, architecture, contracts, roadmap, phase gates, status, and evidence.
-- `tests/`: planned cross-component and end-to-end verification.
+- `tests/`: cross-component acceptance checks, including the deterministic engine-to-API route flow.
 
 ## Locked interfaces
 
@@ -24,8 +24,9 @@
 
 ## Canonical verification
 
-- Frontend: `npm ci`, `npm run lint`, `npm test`, `npm run build` from `frontend/`.
-- Backend: `.\.venv\Scripts\python.exe -m ruff check app tests` and `.\.venv\Scripts\python.exe -m pytest` from `backend/`.
+- Frontend: `npm ci`, `npm run lint`, `npm test -- --run`, `npm run build` from `frontend/`.
+- Backend: `.\.venv\Scripts\python.exe -m ruff check app tests ..\tests\integration` and `.\.venv\Scripts\python.exe -m pytest` from `backend/`, plus the explicit cross-layer test under `tests/integration/`.
+- Routing: Ruff and Pytest from `routing/`.
 - MongoDB: `docker compose up -d` and replica-set health through `mongosh`.
 - Documentation: parse JSON/GeoJSON fixtures, resolve local Markdown links, inspect terminology, and run `git diff --check`.
 
@@ -40,4 +41,4 @@
 - Frontend prototype state is not proof of backend persistence or integration.
 - Runtime labels must identify controlled, simulated, historical, cached, stale, or pending-sync data accurately.
 
-Last verified against commit: `7541c65` plus the Team Phase 1 gate correction.
+Last verified against commit: `6096ddc` plus the pending Team Phase 2 gate record.

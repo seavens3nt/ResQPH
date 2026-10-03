@@ -1,6 +1,6 @@
 # Team Phase 2 — Flood-Aware Routing
 
-**Status:** Ready to start
+**Status:** Completed and verified
 
 **Gate owner:** Ranee
 
@@ -99,3 +99,10 @@ Ranee may approve only when a controlled scenario demonstrably changes or
 blocks the baseline path, the no-route response is preserved end to end, all
 results are explainable and deterministic, and the application still works
 with runtime ML disabled.
+
+## Completion record
+
+Ranee approved this gate on 2026-10-04 after PRs #50–#53 and the final
+engine-to-API-to-UI integration in PR #55 were merged and verified. See the
+[`gate`](TEAM-PHASE-02-GATE.md) and
+[`evidence`](../testing/TEAM-PHASE-02-EVIDENCE.md).
