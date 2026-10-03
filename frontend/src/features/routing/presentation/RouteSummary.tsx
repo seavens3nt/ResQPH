@@ -97,11 +97,23 @@ function NoRouteResultPanel({
 }
 
 export function RouteSummary(props: RouteSummaryProps) {
-  if (props.status === 'idle' || props.status === 'empty') {
+  if (props.status === 'idle') {
     return (
       <section className="route-summary route-summary--empty" role="status">
         <h2>No route requested</h2>
         <p>Submit a route request for a controlled scenario to see its result.</p>
+      </section>
+    )
+  }
+
+  if (props.status === 'empty') {
+    return (
+      <section className="route-summary route-summary--empty" role="status">
+        <h2>No route result available</h2>
+        <p>
+          No matching route result is available. Review the request inputs or select a controlled
+          scenario before trying again.
+        </p>
       </section>
     )
   }
@@ -164,7 +176,7 @@ export function RouteSummary(props: RouteSummaryProps) {
       role="alert"
       aria-live="assertive"
     >
-      <h2>Route unavailable</h2>
+      <h2>{props.status === 'unavailable' ? 'Routing service unavailable' : 'Route result error'}</h2>
       <p>{props.message}</p>
       {props.retryable && props.onRetry && (
         <button type="button" className="route-summary__retry" onClick={props.onRetry}>

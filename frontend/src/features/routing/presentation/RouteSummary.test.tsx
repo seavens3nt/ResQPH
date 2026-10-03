@@ -6,38 +6,11 @@ import { RouteExplanation } from './RouteExplanation'
 import { RouteSummary } from './RouteSummary'
 import { RouteWarnings } from './RouteWarnings'
 import type { NoRouteResult, RouteFoundResult } from '../types'
+import routeFoundFixtureText from '../../../../../data/samples/route-found.example.json?raw'
+import noRouteFixtureText from '../../../../../data/samples/no-route.example.json?raw'
 
-const FOUND_RESULT: RouteFoundResult = {
-  status: 'route-found',
-  route_id: 'route-known-graph-baseline',
-  geometry: {
-    type: 'LineString',
-    coordinates: [[120.99, 14.604], [120.991, 14.6045], [120.9915, 14.6055]],
-  },
-  distance_m: 120,
-  estimated_time_s: 120,
-  total_cost: 120,
-  edge_ids: ['AB', 'BD'],
-  cost_breakdown: { base: 120, deterministic_risk: 0, ml_risk: 0 },
-  fallback_used: true,
-  warnings: [
-    'Synthetic controlled scenario; not live navigation data.',
-    'Runtime ML is disabled; deterministic rules were used.',
-  ],
-  explanation: 'The baseline known graph selected AB and BD as the lowest-cost eligible path.',
-  scenario_timestamp: '2026-10-01T00:00:00Z',
-  model_version: null,
-}
-
-const NO_ROUTE_RESULT: NoRouteResult = {
-  status: 'no-route',
-  reason: 'controlled_impassability_disconnected_destination',
-  warnings: [
-    'No eligible route exists under the selected controlled scenario.',
-    'Do not draw a straight-line or ordinary shortest-path substitute.',
-  ],
-  scenario_timestamp: '2026-10-01T00:00:00Z',
-}
+const FOUND_RESULT = JSON.parse(routeFoundFixtureText) as RouteFoundResult
+const NO_ROUTE_RESULT = JSON.parse(noRouteFixtureText) as NoRouteResult
 
 describe('RouteSummary', () => {
   it('presents route facts, scenario time, explanation, deterministic fallback, and warnings', () => {
@@ -59,12 +32,15 @@ describe('RouteSummary', () => {
     expect(screen.getByText(/not live navigation data/i)).toBeInTheDocument()
   })
 
-  it('renders empty, idle, and loading states without route facts', () => {
-    const { rerender } = render(<RouteSummary status="empty" />)
+  it('keeps idle, empty, and loading states distinct and free of stale route facts', () => {
+    const { rerender } = render(<RouteSummary status="idle" />)
     expect(screen.getByRole('status')).toHaveTextContent(/No route requested/i)
-
-    rerender(<RouteSummary status="idle" />)
     expect(screen.getByRole('status')).toHaveTextContent(/Submit a route request/i)
+
+    rerender(<RouteSummary status="empty" />)
+    expect(screen.getByRole('status')).toHaveTextContent(/No route result available/i)
+    expect(screen.getByRole('status')).toHaveTextContent(/Review the request inputs/i)
+    expect(screen.queryByText(/Submit a route request/i)).not.toBeInTheDocument()
 
     rerender(<RouteSummary status="loading" />)
     expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true')
@@ -134,11 +110,13 @@ describe('RouteSummary', () => {
         onRetry={onRetry}
       />,
     )
+    expect(screen.getByRole('heading', { name: 'Routing service unavailable' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent(/The routing service is unavailable/i)
     fireEvent.click(screen.getByRole('button', { name: 'Retry route request' }))
     expect(onRetry).toHaveBeenCalledOnce()
 
     rerender(<RouteSummary status="error" message="The response could not be read." />)
+    expect(screen.getByRole('heading', { name: 'Route result error' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent(/could not be read/i)
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
