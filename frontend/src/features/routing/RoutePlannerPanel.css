@@ -1,0 +1,123 @@
+.route-planner {
+  display: grid;
+  gap: 1rem;
+  margin-block-end: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-default, #9aa5b1);
+  border-radius: 0.75rem;
+  background: var(--surface-raised, #fff);
+  color: var(--text-primary, #1f2933);
+}
+
+.route-planner__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.route-planner__heading h3,
+.route-planner__heading p,
+.route-planner__scope {
+  margin: 0;
+}
+
+.route-planner__eyebrow {
+  color: var(--text-secondary, #4b5563);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.route-planner__badge {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--color-warning-border, #8a4b08);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.route-planner__scope {
+  max-width: 72ch;
+  color: var(--text-secondary, #4b5563);
+}
+
+.route-planner__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.route-planner__facts > div {
+  min-width: 0;
+  padding: 0.7rem;
+  border-radius: 0.5rem;
+  background: var(--surface-elevated, #f5f7fa);
+}
+
+.route-planner__facts dt {
+  color: var(--text-secondary, #4b5563);
+  font-size: 0.78rem;
+}
+
+.route-planner__facts dd {
+  margin: 0.15rem 0 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.route-planner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.route-planner__button {
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border-strong, #52606d);
+  border-radius: 0.45rem;
+  background: var(--surface-raised, #fff);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.route-planner__button--primary {
+  border-color: var(--color-brand, #155e75);
+  background: var(--color-brand, #155e75);
+  color: #fff;
+}
+
+.route-planner__button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.route-planner__button:focus-visible {
+  outline: 3px solid var(--color-brand-hover, #1769aa);
+  outline-offset: 2px;
+}
+
+@media (max-width: 42rem) {
+  .route-planner__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .route-planner__badge {
+    width: fit-content;
+  }
+
+  .route-planner__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .route-planner__button {
+    width: 100%;
+  }
+}
