@@ -2,7 +2,7 @@
 
 ## 2026-10-04 post-routing reconciliation — Issue #57
 
-The reconciliation is ready for review against baseline `6d66a16`.
+The reconciliation is completed and verified through merged PR #58 at `8f2a7ea`.
 
 - Backend and cross-component suites: **121 passed, 2 MongoDB-environment skips**.
 - Ruff across backend and integration tests: passed.
@@ -20,7 +20,8 @@ checks prove its isolation from rejected ML and the adapter's rejection before
 deserialization; they do not establish accepted-model routing or new accuracy.
 `ML_ENABLED=false` remains the example/default. The two skipped tests require
 a MongoDB replica-set environment and are unrelated to this reconciliation.
-Merge and milestone closure remain pending until the PR passes required CI.
+PR #58 and post-merge main CI passed all frontend, backend and ML evidence jobs.
+Issue #57 is closed; Ranee approved the final Phase 3 closeout on 2026-10-04.
 
 **Status:** Completed and verified with conditions
 

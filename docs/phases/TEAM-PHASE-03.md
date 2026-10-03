@@ -1,6 +1,6 @@
 # Team Phase 3 — AI/ML Road-Risk Component
 
-**Status:** Completed with conditions; Ranee-only post-routing reconciliation ready
+**Status:** Completed and verified with conditions
 
 **Accountable owner:** Matthew
 
@@ -96,8 +96,8 @@ is accepted, while runtime model integration remains deferred. See
 
 ## Post-routing reconciliation
 
-Team Phase 2 is now complete, so Ranee will perform one final focused check
-against merged `main`: verify that disabled, missing, rejected, or incompatible
-ML still contributes zero route cost and produces an explicit fallback warning.
+Ranee completed the final check through merged PR #58 at `8f2a7ea`:
+disabled, missing, rejected, and incompatible ML preserve zero route cost
+and an explicit fallback warning. PR and post-merge main CI passed.
 This is evidence reconciliation, not model activation, retraining, NLP work, or
 a new member handoff.

@@ -8,13 +8,13 @@ Ranee completes the two Project Foundation phases before the team’s newly numb
 | Project Foundation 2 — Core Application | [PHASE-02.md](PHASE-02.md) and [gate](PHASE-02-GATE.md) | Completed and verified through PR #25 |
 | Team 1 — Mapping and Geospatial Pipeline | [TEAM-PHASE-01.md](TEAM-PHASE-01.md) and [gate](TEAM-PHASE-01-GATE.md) | Completed and verified |
 | Team 2 — Flood-Aware Routing | [TEAM-PHASE-02.md](TEAM-PHASE-02.md) and [gate](TEAM-PHASE-02-GATE.md) | Completed and verified |
-| Team 3 — AI/ML Road-Risk Component | [TEAM-PHASE-03.md](TEAM-PHASE-03.md) and [gate](TEAM-PHASE-03-GATE.md) | Completed with conditions; Ranee-only post-routing reconciliation ready |
-| Team 4 — Limited Offline Support | Created after Team 3 approval | Planned |
+| Team 3 — AI/ML Road-Risk Component | [TEAM-PHASE-03.md](TEAM-PHASE-03.md) and [gate](TEAM-PHASE-03-GATE.md) | Completed and verified with conditions |
+| Team 4 — Limited Offline Support | [TEAM-PHASE-04.md](TEAM-PHASE-04.md) | Ready to start; active delivery phase |
 | Team 5 — Integration, Testing, and Presentation | Created after Team 4 approval | Planned |
 
 A phase may span more than one sprint. It exits only when Ranee inspects the required artifacts and verification evidence and records a gate decision.
 
 Team Phase 3 was delivered early by Matthew and accepted as external
-exploratory evidence. Runtime integration remains deferred. After the completed
-Team Phase 2 gate, Ranee owns the single Phase 3 post-routing reconciliation;
-no member handoff is required.
+exploratory evidence. Runtime integration remains deferred. The post-routing
+reconciliation is completed through PR #58. Team Phase 4 uses independently
+executable offline packages; Elle resumes her frontend work.

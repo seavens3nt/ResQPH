@@ -12,8 +12,8 @@ update mission status.
 The foundation, core request-to-mission workflow, mapping/geospatial pipeline,
 and **Team Phase 2 — Flood-Aware Routing** are verified. Matthew's early
 **Team Phase 3 — AI/ML** package is accepted as external exploratory evidence;
-Ranee owns its final post-routing reconciliation and its model is not enabled
-in the application.
+its post-routing reconciliation is verified. Team Phase 4 — Limited Offline
+Support is active, with Elle resuming frontend work.
 
 > [!IMPORTANT]
 > ResQPH is a classroom prototype. It is not an official emergency-response
@@ -47,7 +47,6 @@ Verified now:
 
 Still required for the MVP:
 
-- Ranee-only post-routing reconciliation of the already accepted ML evidence
 - Limited offline support for one cached mission and one queued status update
 - Final end-to-end verification and presentation evidence
 

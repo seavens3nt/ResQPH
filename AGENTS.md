@@ -20,10 +20,10 @@ Work follows these delivery phases:
 6. Team Phase 4 — Limited Offline Support
 7. Team Phase 5 — Integration, Testing, and Presentation
 
-Team Phase 2 is completed and verified. Team Phase 3 external evidence was
-accepted early with conditions; Ranee owns its single post-routing
-reconciliation before Team Phase 4 opens. Runtime model integration remains
-unapproved.
+Team Phases 1–3 are completed and verified, with the existing ML conditions
+preserved. Team Phase 4 — Limited Offline Support is active. Elle resumes her
+frontend role; all packages use the locked offline contract and fixture.
+Runtime model integration remains unapproved.
 
 ## Time-constrained delivery order
 

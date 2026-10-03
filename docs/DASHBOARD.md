@@ -3,55 +3,42 @@
 **Last updated:** 2026-10-04
 **Decision owner:** Ranee
 
-| Active phase | Health | Current goal |
-|---|---|---|
-| Team 3 — AI/ML reconciliation | On track | Ranee-only post-routing verification; runtime ML remains disabled |
-
-## Phase progress
-
 | Phase | Status | Gate focus |
 |---|---|---|
-| Project Foundation 1 | Completed and verified | Scope, contracts, fixtures, and evidence |
-| Project Foundation 2 | Completed and verified | Persistent request-to-mission workflow |
-| Team 1 — Mapping and Geospatial | Completed and verified | Reproducible bounded graph, stable IDs, controlled flood join |
-| Team 2 — Flood-Aware Routing | Completed and verified | A*, penalties, exclusions, no-route, explanations, API/UI integration |
-| Team 3 — AI/ML | Completed with conditions; reconciliation ready | External evidence accepted; Ranee verifies the completed route still fails closed |
-| Team 4 — Limited Offline | Planned | One cached mission and one queued update |
-| Team 5 — Integration and Presentation | Planned | Verified end-to-end demo and reconciled academic outputs |
+| Project Foundation 1–2 | Completed and verified | Scope/contracts and persistent lifecycle |
+| Team 1 — Mapping | Completed and verified | Bounded graph and controlled fixture integration |
+| Team 2 — Routing | Completed and verified | Deterministic engine through API/UI |
+| Team 3 — AI/ML | Completed and verified with conditions | External evidence accepted; runtime integration deferred |
+| Team 4 — Limited Offline | Ready to start; active | One durable mission and one pending update |
+| Team 5 — Integration and Presentation | Planned | Complete controlled demo and academic outputs |
 
-## Team Phase 2 evidence snapshot
+## Active packages
 
-| Area | Result |
-|---|---|
-| Routing tests | 136 passed |
-| Backend tests | 115 passed; 2 environment-gated skips |
-| Cross-layer route acceptance | 2 passed |
-| Frontend tests | 183 passed |
-| Frontend build | Passed with non-blocking bundle-size advisory |
-| Gate | Approved |
-
-## Active ownership
-
-| Owner | Team Phase 3 package | Status |
+| Owner | Package | Status |
 |---|---|---|
-| Ranee | Post-routing ML fallback verification and evidence reconciliation | Ready to start |
-| Matthew | No new package; accepted external experiment remains preserved | Completed |
-| Jared | No Team Phase 3 package | Not assigned |
-| Clarence | No Team Phase 3 package | Not assigned |
-| Elle | No Team Phase 3 package | Not assigned |
+| Elle | Durable cache/queue/controller and rescuer wiring | Ready to start; resumed |
+| Clarence | Accessible offline presentation | Ready to start |
+| Jared | Backend replay and persistence acceptance | Ready to start |
+| Matthew | Repeatable acceptance checks and demo matrix | Ready to start |
+| Ranee | Integration review and final gate | Ready to start |
 
-## Immediate actions
+All packages consume locked contracts/fixtures. No personal handoffs or
+member-to-member approval are required.
 
-1. Ranee pulls the Team Phase 2 gate revision from `main` and follows the single assigned Team Phase 3 closeout issue.
-2. Keep `ML_ENABLED=false`; verify rejected/missing ML leaves route costs deterministic and explicit.
-3. Update only the inconsistent evidence/status records and close the milestone after verification.
+## Verification checkpoint
 
-## Navigation
+PR #58 and post-merge main CI passed. Local evidence: 121 backend/integration
+tests passed with 2 environment skips; isolated ML 21 passed; 5 digests matched.
+Team Phase 3 is complete. Durable offline behavior has not yet been implemented.
 
-- [Current status](STATUS.md)
+## Start here
+
+1. Read [Team Phase 4](phases/TEAM-PHASE-04.md) and your assigned GitHub issue.
+2. Pull accepted `main`; use the issue branch and exact owned files.
+3. Attach repeatable evidence to one focused PR; Ranee reviews and merges.
+
+- [Status](STATUS.md)
 - [Roadmap](ROADMAP.md)
-- [Team Phase 3](phases/TEAM-PHASE-03.md)
-- [Architecture](ARCHITECTURE.md)
-- [Team responsibilities](TEAM.md)
-- [Development setup](SETUP.md)
+- [Setup](SETUP.md)
+- [Team](TEAM.md)
 - [Contribution rules](../CONTRIBUTING.md)
