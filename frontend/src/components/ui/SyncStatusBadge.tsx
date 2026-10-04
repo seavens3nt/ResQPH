@@ -9,7 +9,7 @@
 
 import './SyncStatusBadge.css'
 
-export type SyncState = 'fresh' | 'stale' | 'pending' | 'failed'
+export type SyncState = 'fresh' | 'stale' | 'pending' | 'syncing' | 'failed' | 'success'
 
 interface SyncStatusBadgeProps {
   state: SyncState
@@ -22,30 +22,39 @@ const LABELS: Record<SyncState, string> = {
   fresh: 'Synced',
   stale: 'Cached · Possibly Stale',
   pending: 'Pending Sync',
+  syncing: 'Syncing',
   failed: 'Sync Failed',
+  success: 'Acknowledged',
 }
 
 const CSS_CLASSES: Record<SyncState, string> = {
   fresh: 'sync-badge--fresh',
   stale: 'sync-badge--stale',
   pending: 'sync-badge--pending',
+  syncing: 'sync-badge--syncing',
   failed: 'sync-badge--failed',
+  success: 'sync-badge--success',
 }
 
-function formatSyncTime(iso?: string): string {
-  if (!iso) return 'Unknown'
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(new Date(iso))
-  } catch {
-    return iso
-  }
+function isValidTimestamp(iso: string | undefined): iso is string {
+  return iso !== undefined && !Number.isNaN(Date.parse(iso))
 }
 
-export function SyncStatusBadge({ state, lastSyncedAt, failureReason, className = '' }: SyncStatusBadgeProps) {
+function formatSyncTime(iso: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'long',
+  }).format(new Date(iso))
+}
+
+export function SyncStatusBadge({
+  state,
+  lastSyncedAt,
+  failureReason,
+  className = '',
+}: SyncStatusBadgeProps) {
+  const hasValidTimestamp = isValidTimestamp(lastSyncedAt)
+
   return (
     <div
       className={`sync-badge ${CSS_CLASSES[state]} ${className}`}
@@ -54,26 +63,58 @@ export function SyncStatusBadge({ state, lastSyncedAt, failureReason, className 
       aria-label={`Synchronization status: ${LABELS[state]}`}
     >
       <div className="sync-badge__header-row">
-        <span className="sync-badge__dot" aria-hidden="true" />
         <span className="sync-badge__label">{LABELS[state]}</span>
       </div>
 
-      {lastSyncedAt && (
-        <span className="sync-badge__time">
-          Last synced: {formatSyncTime(lastSyncedAt)}
-        </span>
+      {state === 'stale' && (
+        <>
+          {hasValidTimestamp ? (
+            <time className="sync-badge__time" dateTime={lastSyncedAt}>
+              Last synced: {formatSyncTime(lastSyncedAt)}
+            </time>
+          ) : (
+            <span className="sync-badge__time">Last sync time is unavailable.</span>
+          )}
+          <span className="sync-badge__note">
+            Conditions may have changed since this mission was last synchronized.
+          </span>
+        </>
       )}
 
-      {state === 'failed' && failureReason && (
-        <span className="sync-badge__reason" role="alert">
-          {failureReason}
-        </span>
+      {state === 'fresh' && hasValidTimestamp && (
+        <time className="sync-badge__time" dateTime={lastSyncedAt}>
+          Last synced: {formatSyncTime(lastSyncedAt)}
+        </time>
       )}
 
       {state === 'pending' && (
-        <span className="sync-badge__pending-note">
-          One transition queued — will sync on reconnect
+        <span className="sync-badge__note">
+          One transition queued — will sync on reconnect. It has not been accepted by the server.
         </span>
+      )}
+
+      {state === 'syncing' && (
+        <span className="sync-badge__note">
+          Sending the queued transition. Server acceptance is not yet confirmed.
+        </span>
+      )}
+
+      {state === 'failed' && (
+        <>
+          <span className="sync-badge__note">The queued transition was not accepted.</span>
+          {failureReason && (
+            <span className="sync-badge__reason">
+              Failure reason: {failureReason}
+            </span>
+          )}
+          {!failureReason && (
+            <span className="sync-badge__reason">Failure reason was not provided.</span>
+          )}
+        </>
+      )}
+
+      {state === 'success' && (
+        <span className="sync-badge__note">The server acknowledged this transition.</span>
       )}
     </div>
   )
