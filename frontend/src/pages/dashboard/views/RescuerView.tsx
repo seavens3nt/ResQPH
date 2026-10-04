@@ -18,6 +18,23 @@ import {
 } from './shared'
 import type { NavSection } from './navTypes'
 
+// Until the optional presentation props are implemented, never rely on the
+// older queue's unconditional claim that current server state was fetched.
+function OfflineQueuePanel({ offline }: { offline: ReturnType<typeof useOfflineMission> }) {
+  if (offline.entry?.syncState === 'failed') {
+    return <section aria-label="Offline synchronization queue">
+      <p role="alert">Sync Failed: {offline.entry.failureReason}. The attempted event {offline.entry.localId} is preserved for review.</p>
+      <p>{offline.currentServerMission
+        ? `Latest authorized server state: ${offline.currentServerMission.status}, version ${offline.currentServerMission.version}.`
+        : 'Current server state could not be verified. Do not treat the cached mission as current.'}</p>
+      <Button variant="ghost" disabled={offline.busy} onClick={() => { void offline.discard() }}>Discard Failed Event After Review</Button>
+    </section>
+  }
+  return <RescuerOfflineQueue {...{ entry: offline.entry, isOffline: offline.isOffline,
+    onRetrySync: offline.retry, onDismissFailed: offline.discard,
+    currentServerMission: offline.currentServerMission, storageError: offline.storageError }} />
+}
+
 export function RescuerView(_props: { navSection?: NavSection }) {
   const { user } = useAuth()
   const {
@@ -33,7 +50,6 @@ export function RescuerView(_props: { navSection?: NavSection }) {
   const mission = activeRescuerMission
   const targetRequest = mission ? requests.find((r: RescueRequest) => r.id === mission.requestId) : null
   const advanceStatus = () => { void offline.advance() }
-  const handleRetrySync = offline.retry
   const offlineEntry = offline.entry
   const isAdvancing = offline.busy
 
@@ -48,13 +64,17 @@ export function RescuerView(_props: { navSection?: NavSection }) {
   )
   const [rescuerFieldNotes, setRescuerFieldNotes] = useState('')
 
+  if (offline.loading && !apiMission && !mission) {
+    return <div className="rescuer-view"><p role="status">Loading assigned mission and offline storage…</p></div>
+  }
+
   if (offline.isOffline && !apiMission) {
     return (
       <div className="rescuer-view">
         <WeatherAlertBanner />
         {offline.storageError && <p role="alert">Offline storage error: {offline.storageError}</p>}
         {offline.isDemoOffline && <p role="note">Demo offline toggle is active; browser connectivity is online.</p>}
-        {offlineEntry && <RescuerOfflineQueue {...{ entry: offlineEntry, isOffline: true, onRetrySync: handleRetrySync, onDismissFailed: offline.discard, currentServerMission: offline.currentServerMission, storageError: offline.storageError }} />}
+        {offlineEntry && <OfflineQueuePanel offline={offline} />}
         <Section title="Mission unavailable offline" subtitle="No previously synchronized mission is stored for this rescuer account.">
           <p role="status">Reconnect to load an assigned mission. No mission or map is available from the offline cache.</p>
         </Section>
@@ -69,13 +89,14 @@ export function RescuerView(_props: { navSection?: NavSection }) {
         <WeatherAlertBanner />
         {offline.isDemoOffline && <p role="note">Demo offline toggle is active; browser connectivity is online.</p>}
         {offline.storageError && <p role="alert">Offline storage error: {offline.storageError}</p>}
-        <RescuerOfflineQueue {...{ entry: offlineEntry, isOffline: offline.isOffline, onRetrySync: handleRetrySync, onDismissFailed: offline.discard, currentServerMission: offline.currentServerMission, storageError: offline.storageError }} />
+        {offline.networkError && <p role="alert">Mission API unavailable: {offline.networkError}</p>}
+        <OfflineQueuePanel offline={offline} />
         {offline.currentServerMission && <p role="status">Latest authorized server state: {offline.currentServerMission.status}, version {offline.currentServerMission.version}. Review it against the preserved attempted event before discarding.</p>}
         <Section
           title="Assigned Mission"
           subtitle={offline.isStale ? 'Cached API mission for offline reference; conditions may have changed.' : 'Mission state returned by the ResQPH API.'}
         >
-          <fieldset disabled={Boolean(offlineEntry)} aria-label={offlineEntry ? 'Mission status action locked while an event awaits sync or review' : undefined} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+          <fieldset disabled={Boolean(offlineEntry) || offline.loading || offline.busy} aria-label={offlineEntry ? 'Mission status action locked while an event awaits sync or review' : undefined} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
             <RescuerMissionCard {...{ mission: apiMission, lastSyncedAt: offline.lastSyncedAt, isStale: offline.isStale, isAdvancing, onAdvanceStatus: advanceStatus, isCached: offline.isCached, isQueueLocked: Boolean(offlineEntry) }} />
           </fieldset>
         </Section>
@@ -97,7 +118,9 @@ export function RescuerView(_props: { navSection?: NavSection }) {
 
         <Section title="Field Rescuer Console — Standby">
           {/* Offline queue shown even in standby */}
-          <RescuerOfflineQueue {...{ entry: offlineEntry, isOffline: offline.isOffline, onRetrySync: handleRetrySync, onDismissFailed: offline.discard, currentServerMission: offline.currentServerMission, storageError: offline.storageError }} />
+          {offline.storageError && <p role="alert">Offline storage error: {offline.storageError}</p>}
+          {offline.networkError && <p role="alert">Mission API unavailable: {offline.networkError}</p>}
+          <OfflineQueuePanel offline={offline} />
           <div className="empty-state">
             <Icon name="boat" size={38} />
             <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: 8 }}>
@@ -163,6 +186,8 @@ export function RescuerView(_props: { navSection?: NavSection }) {
 
       <p role="note">Simulated demonstration context. This mission and map are not API-backed or cached server data.</p>
       {offline.storageError && <p role="alert">Offline storage error: {offline.storageError}</p>}
+      {offline.networkError && <p role="alert">Mission API unavailable: {offline.networkError}</p>}
+      {offlineEntry && <OfflineQueuePanel offline={offline} />}
 
       {/* 1. INCOMING MISSION NOTIFICATION BANNER (IF PENDING ACCEPTANCE) */}
       {showIncomingModal && (

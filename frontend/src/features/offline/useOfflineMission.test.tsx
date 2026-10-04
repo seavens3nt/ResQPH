@@ -5,11 +5,12 @@ import { ApiError, type MissionDetail, type OfflineQueueEntry } from '../../api/
 const store = vi.hoisted(() => {
   const missions = new Map<string, { mission: MissionDetail; last_synced_at: string }>()
   const queues = new Map<string, OfflineQueueEntry>()
-  return { missions, queues, readMission: vi.fn(), readQueue: vi.fn(), writeMission: vi.fn(), enqueueEvent: vi.fn(), updateQueue: vi.fn(), acknowledgeEvent: vi.fn(), discardEvent: vi.fn() }
+  return { missions, queues, clearMission: vi.fn(), readMission: vi.fn(), readQueue: vi.fn(), writeMission: vi.fn(), enqueueEvent: vi.fn(), updateQueue: vi.fn(), acknowledgeEvent: vi.fn(), discardEvent: vi.fn() }
 })
 
 vi.mock('./offlineStore', () => ({
   readMission: store.readMission,
+  clearMission: store.clearMission,
   readQueue: store.readQueue,
   writeMission: store.writeMission,
   enqueueEvent: store.enqueueEvent,
@@ -31,10 +32,13 @@ const mission: MissionDetail = {
 
 describe('useOfflineMission', () => {
   beforeEach(() => {
+    vi.resetAllMocks()
     store.missions.clear(); store.queues.clear()
     store.enqueueEvent.mockClear(); store.updateQueue.mockClear(); store.acknowledgeEvent.mockClear()
     store.readMission.mockImplementation(async (actor: string) => store.missions.get(actor) ?? null)
     store.readQueue.mockImplementation(async (actor: string) => store.queues.get(actor) ?? null)
+    store.clearMission.mockImplementation(async (actor: string) => store.missions.delete(actor))
+    store.discardEvent.mockImplementation(async (actor: string) => store.queues.delete(actor))
     store.writeMission.mockImplementation(async (actor: string, value: MissionDetail) => {
       const record = { mission: value, last_synced_at: new Date().toISOString() }
       store.missions.set(actor, record)
@@ -54,7 +58,7 @@ describe('useOfflineMission', () => {
     })
     api.listMyMissions.mockResolvedValue([mission])
     api.updateMissionStatus.mockReset()
-    api.getMission.mockReset()
+    api.getMission.mockResolvedValue(mission)
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: false })
   })
 
@@ -128,7 +132,7 @@ describe('useOfflineMission', () => {
     const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
     await waitFor(() => expect(result.current.entry?.syncState).toBe('failed'))
     expect(result.current.entry?.localId).toBe('event-forbidden')
-    expect(api.getMission).not.toHaveBeenCalled()
+    expect(api.getMission).toHaveBeenCalledTimes(1) // initial authorized refresh only, no post-403 fetch
   })
 
   it('keeps the current API mission visible and reports quota failure instead of claiming it was cached', async () => {
@@ -140,4 +144,113 @@ describe('useOfflineMission', () => {
     expect(result.current.isCached).toBe(false)
     expect(result.current.storageError).toContain('QuotaExceededError')
   })
+
+  it('does not erase a corrupt-cache error or lose a recoverable queued slot', async () => {
+    store.readMission.mockRejectedValueOnce(new Error('Stored mission is corrupt'))
+    const queued = makeEntry()
+    store.queues.set('rescuer-a', queued)
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.storageError).toContain('corrupt')
+    expect(result.current.entry?.localId).toBe(queued.localId)
+  })
+
+  it('persists an online attempt before sending and retries the same body after a lost response', async () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    api.updateMissionStatus.mockRejectedValueOnce(new Error('response dropped')).mockResolvedValueOnce({ ...mission, status: 'arrived', version: 3 })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await act(async () => result.current.advance())
+    await waitFor(() => expect(result.current.entry?.syncState).toBe('pending'))
+    await waitFor(() => expect(api.updateMissionStatus).toHaveBeenCalledTimes(1))
+    const original = api.updateMissionStatus.mock.calls[0][1]
+    expect(store.enqueueEvent).toHaveBeenCalledTimes(1)
+    await act(async () => result.current.retry())
+    await waitFor(() => expect(result.current.entry).toBeNull())
+    expect(api.updateMissionStatus.mock.calls[1][1]).toEqual(original)
+  })
+
+  it('blocks concurrent advances before React rerenders', async () => {
+    store.missions.set('rescuer-a', { mission, last_synced_at: mission.updated_at })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await act(async () => { await Promise.all([result.current.advance(), result.current.advance()]) })
+    expect(store.enqueueEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not send when persisting the syncing state fails', async () => {
+    store.queues.set('rescuer-a', makeEntry())
+    store.updateQueue.mockRejectedValueOnce(new Error('QuotaExceededError'))
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.storageError).toContain('QuotaExceededError'))
+    expect(api.updateMissionStatus).not.toHaveBeenCalled()
+    expect(result.current.entry?.syncState).toBe('pending')
+  })
+
+  it('retains the original event after the server accepts but acknowledgement storage fails', async () => {
+    const queued = makeEntry()
+    store.queues.set('rescuer-a', queued)
+    store.acknowledgeEvent.mockRejectedValueOnce(new Error('QuotaExceededError'))
+    api.updateMissionStatus.mockResolvedValue({ ...mission, status: 'arrived', version: 3 })
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.storageError).toContain('QuotaExceededError'))
+    expect(result.current.entry?.localId).toBe(queued.localId)
+    expect(result.current.entry?.syncState).toBe('pending')
+    expect(result.current.mission?.status).toBe('en-route')
+  })
+
+  it.each([403, 404, 422])('blocks permanent %s rejection for review without auto retry', async (status) => {
+    store.queues.set('rescuer-a', makeEntry())
+    api.updateMissionStatus.mockRejectedValue(new ApiError(status, 'rejected', 'Review required'))
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.entry?.syncState).toBe('failed'))
+    await act(async () => result.current.retry())
+    expect(api.updateMissionStatus).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores a late rejection after actor switch and never rewrites the next actor queue', async () => {
+    store.queues.set('rescuer-a', makeEntry())
+    let reject!: (error: Error) => void
+    api.updateMissionStatus.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail }))
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result, rerender } = renderHook(({ actor }) => useOfflineMission(actor, false), { initialProps: { actor: 'rescuer-a' } })
+    await waitFor(() => expect(api.updateMissionStatus).toHaveBeenCalledTimes(1))
+    rerender({ actor: 'rescuer-b' })
+    await act(async () => reject(new ApiError(409, 'conflict', 'Old actor')))
+    expect(result.current.entry).toBeNull()
+    expect(result.current.currentServerMission).toBeNull()
+    expect(store.updateQueue).toHaveBeenCalledTimes(1)
+  })
+
+  it('removes an old cached assignment when the authoritative active list is empty', async () => {
+    store.missions.set('rescuer-a', { mission, last_synced_at: mission.updated_at })
+    api.listMyMissions.mockResolvedValue([])
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.mission).toBeNull()
+    expect(store.clearMission).toHaveBeenCalledWith('rescuer-a')
+  })
+
+  it('adopts reviewed conflict state before allowing the next event after explicit discard', async () => {
+    store.queues.set('rescuer-a', makeEntry())
+    api.getMission.mockResolvedValue({ ...mission, status: 'arrived', version: 3 })
+    api.updateMissionStatus.mockRejectedValueOnce(new ApiError(409, 'conflict', 'Stale version'))
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.entry?.syncState).toBe('failed'))
+    await act(async () => result.current.discard())
+    expect(result.current.mission?.version).toBe(3)
+    expect(result.current.entry).toBeNull()
+  })
 })
+
+function makeEntry(): OfflineQueueEntry {
+  return { localId: 'event-regression', missionId: mission.id,
+    body: { event_id: 'event-regression', new_status: 'arrived', expected_mission_version: 2,
+      client_recorded_at: '2026-10-04T00:05:00Z', source: 'offline-sync' },
+    syncState: 'pending', enqueuedAt: '2026-10-04T00:05:00Z' }
+}

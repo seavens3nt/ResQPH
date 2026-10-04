@@ -34,4 +34,14 @@ describe('offline record validation', () => {
     expect(recovered.body).toBe(interrupted.body)
     expect(recovered.localId).toBe(interrupted.localId)
   })
+
+  it.each([0, -1, 1.5, NaN])('rejects invalid event version %s', (version) => {
+    expect(validateQueueEntry({ ...event, body: { ...event.body, expected_mission_version: version } }, 'rescuer-alpha')).toBe(false)
+  })
+
+  it('rejects malformed nested history without throwing and rejects another assigned actor', () => {
+    const record = { schema_version: 1, actor_id: 'rescuer-alpha', last_synced_at: mission.updated_at, mission }
+    expect(validateCacheRecord({ ...record, mission: { ...mission, status_history: [null] } }, 'rescuer-alpha')).toBe(false)
+    expect(validateCacheRecord({ ...record, mission: { ...mission, assigned_rescuer_id: 'someone-else' } }, 'rescuer-alpha')).toBe(false)
+  })
 })

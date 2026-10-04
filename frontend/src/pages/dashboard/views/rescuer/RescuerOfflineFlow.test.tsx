@@ -40,4 +40,17 @@ describe('rescuer offline presentation wiring', () => {
     expect(screen.getByTestId('mission-card')).toHaveAttribute('data-locked', 'true')
     expect(screen.getByTestId('offline-queue')).toHaveAttribute('data-storage-error', 'Quota exceeded')
   })
+
+  it('does not claim server state was fetched when a failed event has no authorized refresh', () => {
+    state.value = {
+      mission: { id: 'mission-1', status: 'en-route', version: 2, status_history: [], request_summary: null },
+      entry: { localId: 'event-1', syncState: 'failed', failureReason: 'Assignment unavailable' },
+      loading: false, isOffline: false, isCached: true, isStale: true,
+      currentServerMission: null, busy: false, discard: vi.fn(), retry: vi.fn(), advance: vi.fn(),
+    }
+    render(<AuthProvider><RescuerView /></AuthProvider>)
+    expect(screen.getByText(/Current server state could not be verified/)).toBeInTheDocument()
+    expect(screen.queryByText(/Current server state is shown above/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Discard Failed Event After Review/ })).toBeInTheDocument()
+  })
 })
