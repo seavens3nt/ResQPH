@@ -1,44 +1,24 @@
 # ResQPH project dashboard
 
-**Last updated:** 2026-10-04
+**Last updated:** 2026-10-05 (Asia/Manila)
 **Decision owner:** Ranee
 
-| Phase | Status | Gate focus |
+| Phase | Status | Evidence |
 |---|---|---|
-| Project Foundation 1–2 | Completed and verified | Scope/contracts and persistent lifecycle |
-| Team 1 — Mapping | Completed and verified | Bounded graph and controlled fixture integration |
-| Team 2 — Routing | Completed and verified | Deterministic engine through API/UI |
-| Team 3 — AI/ML | Completed and verified with conditions | External evidence accepted; runtime integration deferred |
-| Team 4 — Limited Offline | Ready to start; active | One durable mission and one pending update |
-| Team 5 — Integration and Presentation | Planned | Complete controlled demo and academic outputs |
-
-## Active packages
-
-| Owner | Package | Status |
-|---|---|---|
-| Elle | Durable cache/queue/controller and rescuer wiring | Ready to start; resumed |
-| Clarence | Accessible offline presentation | Ready to start |
-| Jared | Backend replay and persistence acceptance | Ready to start |
-| Matthew | Repeatable acceptance checks and demo matrix | Ready to start |
-| Ranee | Integration review and final gate | Ready to start |
-
-All packages consume locked contracts/fixtures. No personal handoffs or
-member-to-member approval are required.
-
-## Verification checkpoint
-
-PR #58 and post-merge main CI passed. Local evidence: 121 backend/integration
-tests passed with 2 environment skips; isolated ML 21 passed; 5 digests matched.
-Team Phase 3 is complete. Durable offline behavior has not yet been implemented.
+| Foundation 1–2 | Completed and verified | Scope and persistent lifecycle |
+| Team 1 | Completed and verified | Bounded controlled U-Belt mapping |
+| Team 2 | Completed and verified | Deterministic route API/UI and no-route |
+| Team 3 | Completed and verified with conditions | External exploratory ML; runtime disabled |
+| Team 4 | Completed and verified | [Offline gate](phases/TEAM-PHASE-04-GATE.md) |
+| Team 5 | Ready to start; active | [Work packages](phases/TEAM-PHASE-05.md) |
 
 ## Start here
 
-1. Read [Team Phase 4](phases/TEAM-PHASE-04.md) and your assigned GitHub issue.
-2. Pull accepted `main`; use the issue branch and exact owned files.
-3. Attach repeatable evidence to one focused PR; Ranee reviews and merges.
+Pull accepted main, read the Phase 5 guide and your assigned issue, then create one focused branch. Every package has exact owned files, repeatable checks and one PR reviewed by Ranee. Members do not wait on informal handoffs.
+
+Phase 4 evidence: 234 frontend tests, 177 backend/integration tests, production build, real offline browser reload and MongoDB acceptance. Final all-role regression, accessibility/performance review, demo materials and final submission acceptance are Phase 5 work.
 
 - [Status](STATUS.md)
 - [Roadmap](ROADMAP.md)
 - [Setup](SETUP.md)
 - [Team](TEAM.md)
-- [Contribution rules](../CONTRIBUTING.md)

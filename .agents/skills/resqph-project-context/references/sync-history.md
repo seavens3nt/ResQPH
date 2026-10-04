@@ -1,5 +1,14 @@
 # Context Sync History
 
+## 2026-10-05 — Team Phase 4 gate and Phase 5 opening
+
+- Baseline: main `3ecedb1`; target: Issue #64 integration gate.
+- Impact: cache/API history compatibility -> offline interfaces; production shell and Vite setup -> run guide; verified gate -> status/roadmap/active ownership.
+- Evidence: 234 frontend tests, 177 backend/integration tests with MongoDB enabled; true offline browser reload, persisted/replayed ID, exactly one MongoDB event, conflict review, actor isolation and corrupt storage disclosure.
+- Updates: retain ML disabled and prototype safety limits; activate independent Phase 5 work packages only after the gate reaches main.
+- Confidence: high for bounded offline acceptance; final submission/deployment remains unverified. Exact deadline/hosting unknown; no additional scope decision inferred.
+
+
 ## 2026-10-04 — Team Phase 3 closeout and Team Phase 4 entry
 
 - Baseline: merged PR #58 at `8f2a7ea`; PR and post-merge main CI passed.

@@ -15,6 +15,13 @@ const queryClient = new QueryClient({
   },
 })
 
+// Cache only the production UI shell; mission/event data remains actor-scoped in IndexedDB.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.register('/offline-shell.js').catch(() => {
+    console.warn('Offline application reload is unavailable; reconnect before reopening the app.')
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

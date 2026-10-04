@@ -10,6 +10,9 @@
 - `docs/`: authoritative scope, architecture, contracts, roadmap, phase gates, status, and evidence.
 - `tests/`: cross-component acceptance checks, including the deterministic engine-to-API route flow.
 
+- `frontend/public/offline-shell.js`: production UI-shell-only service worker; no API or map-tile caching.
+- `frontend/src/features/offline/`: validated actor-scoped Dexie storage and reconnect controller.
+
 ## Locked interfaces
 
 - API: `docs/api/API_CONTRACT.md`
@@ -41,4 +44,4 @@
 - Frontend prototype state is not proof of backend persistence or integration.
 - Runtime labels must identify controlled, simulated, historical, cached, stale, or pending-sync data accurately.
 
-Last verified against commit: `8f2a7ea` plus Team Phase 4 locked-input preparation.
+Last verified against commit: `3ecedb1` plus Issue #64 integration gate. True offline reload verification uses a production build and preview, not Vite development mode.

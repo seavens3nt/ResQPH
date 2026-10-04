@@ -11,7 +11,7 @@
 - **Safety boundary:** no official dispatch, guaranteed-safe route, nationwide coverage, government integration, or actual-emergency use.
 - **Priority authority:** `docs/requirements/MVP_SCOPE.md`, especially its three-tier time-constrained delivery order.
 - **Other authorities:** `docs/ROADMAP.md`, `docs/TEAM.md`, `docs/api/API_CONTRACT.md`, `docs/database/MONGODB_SCHEMA.md`, `docs/routing/ROUTING_CONTRACT.md`, `docs/ml/ML_FEASIBILITY.md`, and `docs/offline/OFFLINE_CONTRACT.md`.
-- **Current phase:** Team Phase 3 is completed and verified with conditions through PR #58. Team Phase 4 — Limited Offline Support is active.
+- **Current phase:** Team Phase 4 verified through Issue #64 gate; Team Phase 5 integration/testing/presentation active. Phase 3 retains conditions.
 - **Owners:** Ranee—PM/core backend/gates; Jared—backend mission lifecycle/integration; Elle—primary UI/UX/citizen frontend; Clarence—coordinator/rescuer frontend; Matthew—geospatial/routing/ML beginning with Team Phase 1.
-- **Current assignment:** Elle resumes durable frontend offline flow; Clarence owns presentation; Jared owns backend sync acceptance; Matthew owns repeatable acceptance scenarios; Ranee owns integration and the gate.
-- **Last verified:** 2026-10-04 against `main` at `8f2a7ea` plus the Team Phase 4 locked-input preparation.
+- **Current assignment:** Ranee setup/release; Elle frontend acceptance; Clarence demo/presentation; Jared backend/database acceptance; Matthew routing/ML evidence. No personal handoffs.
+- **Last verified:** 2026-10-05 against main `3ecedb1` plus Issue #64 integration gate; see docs/STATUS.md.

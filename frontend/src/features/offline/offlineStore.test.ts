@@ -16,6 +16,16 @@ const event: OfflineQueueEntry & { actor_id: string } = {
 }
 
 describe('offline record validation', () => {
+  it('accepts actual API history fields and nulls but rejects unrelated history', () => {
+    const history = { event_id: 'accepted', mission_id: mission.id, prior_status: 'assigned',
+      new_status: 'en-route', actor_id: 'rescuer-alpha', actor_role: 'rescuer', source: 'online',
+      client_recorded_at: null, server_recorded_at: mission.updated_at, note: null }
+    const record = { schema_version: 1, actor_id: 'rescuer-alpha', last_synced_at: mission.updated_at,
+      mission: { ...mission, status_history: [history] } }
+    expect(validateCacheRecord(record, 'rescuer-alpha')).toBe(true)
+    expect(validateCacheRecord({ ...record, mission: { ...record.mission,
+      status_history: [{ ...history, mission_id: 'unrelated' }] } }, 'rescuer-alpha')).toBe(false)
+  })
   it('accepts schema-v1 mission records only for their actor and valid mission data', () => {
     const record = { schema_version: 1, actor_id: 'rescuer-alpha', last_synced_at: '2026-10-04T00:00:00Z', mission }
     expect(validateCacheRecord(record, 'rescuer-alpha')).toBe(true)

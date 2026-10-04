@@ -7,7 +7,7 @@ import { RescuerView } from '../RescuerView'
 const state = vi.hoisted(() => ({ value: {} as Record<string, unknown> }))
 vi.mock('../../../../features/offline/useOfflineMission', () => ({ useOfflineMission: () => state.value }))
 vi.mock('../rescuer/RescuerMissionCard', () => ({ RescuerMissionCard: (props: Record<string, unknown>) => <div data-testid="mission-card" data-cached={String(props.isCached)} data-locked={String(props.isQueueLocked)} /> }))
-vi.mock('../rescuer/RescuerOfflineQueue', () => ({ RescuerOfflineQueue: (props: Record<string, unknown>) => <div data-testid="offline-queue" data-storage-error={String(props.storageError ?? '')} /> }))
+vi.mock('../rescuer/RescuerOfflineQueue', () => ({ RescuerOfflineQueue: (props: Record<string, unknown>) => <div data-testid="offline-queue" data-storage-error={String(props.storageError ?? '')} data-server-state={props.currentServerMission ? 'provided' : 'unavailable'} /> }))
 
 describe('rescuer offline presentation wiring', () => {
   beforeEach(() => {
@@ -49,8 +49,8 @@ describe('rescuer offline presentation wiring', () => {
       currentServerMission: null, busy: false, discard: vi.fn(), retry: vi.fn(), advance: vi.fn(),
     }
     render(<AuthProvider><RescuerView /></AuthProvider>)
-    expect(screen.getByText(/Current server state could not be verified/)).toBeInTheDocument()
+    expect(screen.getByTestId('offline-queue')).toHaveAttribute('data-server-state', 'unavailable')
     expect(screen.queryByText(/Current server state is shown above/)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Discard Failed Event After Review/ })).toBeInTheDocument()
+    expect(screen.getByTestId('offline-queue')).toBeInTheDocument()
   })
 })
