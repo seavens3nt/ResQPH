@@ -13,14 +13,14 @@ import copy
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-
-from app.api.routes.missions import get_mission_service
-from app.main import app
 from offline_test_support import (
     get_offline_event_payload,
     get_test_headers,
     load_offline_fixture,
 )
+
+from app.api.routes.missions import get_mission_service
+from app.main import app
 
 
 class MockMissionState:
