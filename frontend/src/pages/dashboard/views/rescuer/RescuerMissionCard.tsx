@@ -45,7 +45,7 @@ export function RescuerMissionCard({
     completed: 'TAP RESCUE COMPLETED',
   }
 
-  const syncState = isStale ? 'stale' : 'fresh'
+  const syncState = isStale || isCached ? 'stale' : 'fresh'
 
   return (
     <article className="rescuer-mission-card" aria-labelledby={titleId}>
@@ -112,6 +112,7 @@ export function RescuerMissionCard({
           <Button
             variant="primary"
             size="lg"
+            type="button"
             onClick={onAdvanceStatus}
             disabled={isAdvancing || isQueueLocked}
             aria-busy={isAdvancing}

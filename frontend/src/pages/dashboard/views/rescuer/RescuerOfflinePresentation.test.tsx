@@ -21,6 +21,34 @@ function makeEntry(syncState: OfflineQueueEntry['syncState']): OfflineQueueEntry
 }
 
 describe('rescuer offline presentation', () => {
+  it('never labels an explicitly cached mission as freshly synced', () => {
+    render(<RescuerMissionCard mission={fixture.mission} lastSyncedAt={fixture.last_synced_at}
+      isStale={false} isCached isAdvancing={false} onAdvanceStatus={vi.fn()} />)
+    expect(screen.getByRole('status', { name: /Cached · Possibly Stale/i })).toBeInTheDocument()
+    expect(screen.queryByText('Synced')).not.toBeInTheDocument()
+  })
+
+  it('does not display an unrelated mission as the queued event server state', () => {
+    render(<RescuerOfflineQueue entry={{ ...makeEntry('failed'), body: {
+      ...fixture.pending_event.body, note: 'Preserved attempted field note',
+    } }} isOffline={false} currentServerMission={{ ...fixture.mission, id: 'another-mission' }}
+      onRetrySync={vi.fn()} onDismissFailed={vi.fn()} />)
+    expect(screen.getByText(/Current server state could not be retrieved or verified/i)).toBeInTheDocument()
+    expect(screen.getByText('Preserved attempted field note')).toBeInTheDocument()
+  })
+
+  it('allows an online pending retry without submitting a containing form', () => {
+    const retry = vi.fn()
+    const submit = vi.fn((event: React.FormEvent) => event.preventDefault())
+    render(<form onSubmit={submit}><RescuerOfflineQueue entry={makeEntry('pending')}
+      isOffline={false} onRetrySync={retry} onDismissFailed={vi.fn()} /></form>)
+    const button = screen.getByRole('button', { name: /Retry Sync Now/i })
+    expect(button).toBeEnabled()
+    fireEvent.click(button)
+    expect(retry).toHaveBeenCalledOnce()
+    expect(submit).not.toHaveBeenCalled()
+  })
+
   it('shows the cached mission, full last-sync time, and changed-conditions disclosure', () => {
     render(
       <RescuerMissionCard

@@ -57,6 +57,9 @@ export function RescuerOfflineQueue({
   if (!entry && !isOffline && !storageError) return null
 
   const syncing = entry?.syncState === 'syncing'
+  const verifiedServerMission = currentServerMission?.id === entry?.missionId
+    ? currentServerMission
+    : null
 
   return (
     <section className="offline-queue-panel" aria-labelledby={titleId}>
@@ -133,6 +136,12 @@ export function RescuerOfflineQueue({
               <dt>Event source</dt>
               <dd>{entry.body.source}</dd>
             </div>
+            {entry.body.note && (
+              <div>
+                <dt>Attempted event note</dt>
+                <dd>{entry.body.note}</dd>
+              </div>
+            )}
           </dl>
 
           {entry.syncState === 'pending' && (
@@ -165,10 +174,10 @@ export function RescuerOfflineQueue({
                 <strong>Failure reason:</strong>{' '}
                 {entry.failureReason || 'No failure details were provided.'}
               </p>
-              {currentServerMission ? (
+              {verifiedServerMission ? (
                 <p className="offline-queue-panel__server-state">
-                  <strong>Current server state:</strong> {currentServerMission.status}, version{' '}
-                  {currentServerMission.version}.
+                  <strong>Current server state:</strong> {verifiedServerMission.status}, version{' '}
+                  {verifiedServerMission.version}.
                 </p>
               ) : (
                 <p className="offline-queue-panel__server-state">
@@ -185,15 +194,11 @@ export function RescuerOfflineQueue({
                   Reconnect before retrying this pending event.
                 </p>
               )}
-              {syncing && (
-                <p id={retryHelpId} className="offline-queue-panel__action-help">
-                  Wait for the current sync attempt to finish before retrying.
-                </p>
-              )}
               <div className="offline-queue-panel__actions">
                 <Button
                   variant="outline"
                   size="sm"
+                  type="button"
                   onClick={onRetrySync}
                   disabled={isOffline || syncing}
                   aria-describedby={isOffline || syncing ? retryHelpId : undefined}
@@ -209,6 +214,7 @@ export function RescuerOfflineQueue({
               <Button
                 variant="danger"
                 size="sm"
+                type="button"
                 onClick={onDismissFailed}
                 disabled={syncing}
                 aria-label={`Dismiss Failed Event — Discard Failed Event After Review, event ${entry.body.event_id}`}
