@@ -1,30 +1,22 @@
-/* ==========================================================================
-   RescuerMissionCard — Modern, High-Visibility Tactical Mission Card
-   ========================================================================== */
-
 .rescuer-mission-card {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
+  margin-bottom: 1.5rem;
   padding: 1.25rem 1.4rem;
-  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
+  background: #ffffff;
   box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  margin-bottom: 1.5rem;
 }
 
-.rescuer-mission-card:hover {
-  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
-}
-
-/* Header */
 .rescuer-mission-card__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
   padding-bottom: 0.85rem;
   border-bottom: 1px solid #f1f5f9;
   flex-wrap: wrap;
@@ -34,77 +26,106 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .rescuer-mission-card__id {
-  font-family: var(--font-mono, monospace);
-  font-size: 1.1rem;
-  font-weight: 800;
+  margin: 0;
   color: #0f172a;
+  font-family: var(--font-mono, monospace);
+  font-size: 1rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
-/* Metadata Chips */
 .rescuer-mission-card__meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-  font-size: 0.82rem;
   color: #475569;
+  font-size: 0.82rem;
+  flex-wrap: wrap;
 }
 
 .rescuer-mission-card__meta > span {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #f8fafc;
+  min-width: 0;
   padding: 4px 10px;
-  border-radius: 6px;
   border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  overflow-wrap: anywhere;
 }
 
-/* Prototype Notice */
 .rescuer-mission-card .proto-notice {
-  font-size: 0.75rem;
-  color: #64748b;
   margin: 0;
   padding: 6px 10px;
-  background: #f8fafc;
-  border-radius: 6px;
   border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
-/* Completed Tag */
+.rescuer-mission-card__cache-note,
+.rescuer-mission-card__queue-note {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #713f12;
+  border-radius: 0.375rem;
+  background: #fffbeb;
+  color: #422006;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.rescuer-mission-card .btn:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 3px;
+}
+
+.rescuer-mission-card .btn:disabled {
+  cursor: not-allowed;
+}
+
 .mission-completed-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #a7f3d0;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
   width: fit-content;
+  padding: 8px 16px;
+  border: 1px solid #065f46;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #064e3b;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-/* History Timeline */
 .rescuer-mission-card__history {
   margin-top: 0.25rem;
-  border-top: 1px solid #f1f5f9;
   padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
 }
 
 .rescuer-mission-card__history summary {
+  color: #334155;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
   cursor: pointer;
   user-select: none;
-  transition: color 0.15s ease;
+}
+
+.rescuer-mission-card__history summary:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .rescuer-mission-card__history summary:hover {
@@ -112,14 +133,13 @@
 }
 
 .rescuer-mission-card__history ol {
-  margin: 0.75rem 0 0;
-  padding: 0 0 0 1rem;
-  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  position: relative;
+  margin: 0.75rem 0 0;
+  padding: 0 0 0 1rem;
   border-left: 2px solid #e2e8f0;
+  list-style: none;
 }
 
 .history-item {
@@ -130,34 +150,56 @@
   padding-left: 0.75rem;
 }
 
-.history-item::before {
-  content: '';
-  position: absolute;
-  left: -1.25rem;
-  top: 5px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px #cbd5e1;
-}
-
 .history-item__states {
-  font-weight: 700;
-  font-size: 0.8rem;
   color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
-.history-item__meta {
+.history-item__meta,
+.history-item__note {
+  color: #334155;
   font-size: 0.72rem;
-  color: #64748b;
+  overflow-wrap: anywhere;
 }
 
 .history-item__note {
-  font-size: 0.72rem;
-  color: #475569;
   font-style: italic;
+}
+
+@media (max-width: 40rem) {
+  .rescuer-mission-card {
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+
+  .rescuer-mission-card__head,
+  .rescuer-mission-card__head > div {
+    align-items: flex-start;
+  }
+
+  .rescuer-mission-card__head {
+    flex-direction: column;
+  }
+
+  .rescuer-mission-card__head > .sync-badge {
+    width: 100%;
+  }
+
+  .rescuer-mission-card__meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rescuer-mission-card__meta > span {
+    width: 100%;
+  }
+
+  .rescuer-mission-card .btn {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+    text-align: center;
+  }
 }

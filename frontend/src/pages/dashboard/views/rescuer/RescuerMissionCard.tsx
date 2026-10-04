@@ -6,6 +6,7 @@
  *   - Mission and route loading/failure states (handled by parent)
  *   - Valid status-transition action button
  */
+import { useId } from 'react'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import type { MissionDetail, MissionStatusHistoryItem } from '../../../../api/missions'
 import { nextValidStatus } from '../../../../api/missions'
@@ -20,6 +21,8 @@ interface RescuerMissionCardProps {
   isStale: boolean
   isAdvancing: boolean
   onAdvanceStatus: () => void
+  isCached?: boolean
+  isQueueLocked?: boolean
 }
 
 export function RescuerMissionCard({
@@ -28,7 +31,11 @@ export function RescuerMissionCard({
   isStale,
   isAdvancing,
   onAdvanceStatus,
+  isCached = false,
+  isQueueLocked = false,
 }: RescuerMissionCardProps) {
+  const titleId = useId()
+  const queueNoteId = useId()
   const next = nextValidStatus(mission.status)
   const req = mission.request_summary
 
@@ -38,19 +45,29 @@ export function RescuerMissionCard({
     completed: 'TAP RESCUE COMPLETED',
   }
 
+  const syncState = isStale || isCached ? 'stale' : 'fresh'
+
   return (
-    <div className="rescuer-mission-card" aria-label={`Mission ${mission.id}`}>
+    <article className="rescuer-mission-card" aria-labelledby={titleId}>
       {/* Header */}
       <div className="rescuer-mission-card__head">
         <div>
-          <span className="rescuer-mission-card__id">{mission.id}</span>
+          <h3 className="rescuer-mission-card__id" id={titleId}>
+            <span>Mission</span> <code>{mission.id}</code>
+          </h3>
           <StatusBadge status={mission.status} />
         </div>
         <SyncStatusBadge
-          state={isStale ? 'stale' : 'fresh'}
+          state={syncState}
           lastSyncedAt={lastSyncedAt ?? undefined}
         />
       </div>
+
+      {isCached && (
+        <p className="rescuer-mission-card__cache-note" role="note">
+          Cached mission for offline reference. Conditions may have changed since the last sync.
+        </p>
+      )}
 
       {/* Request summary */}
       {req ? (
@@ -80,17 +97,37 @@ export function RescuerMissionCard({
 
       {/* Next valid transition action */}
       {next && mission.status !== 'completed' ? (
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={onAdvanceStatus}
-          disabled={isAdvancing}
-          aria-busy={isAdvancing}
-          style={{ marginTop: 12 }}
-        >
-          <Icon name="route" size={18} />
-          <span>{isAdvancing ? 'Updating…' : (NEXT_LABEL[next] ?? `Mark ${next}`)}</span>
-        </Button>
+        <>
+          {isQueueLocked && (
+            <p id={queueNoteId} className="rescuer-mission-card__queue-note" role="status">
+              A status transition is awaiting sync or review. The displayed mission status has not
+              been advanced by that queued event.
+            </p>
+          )}
+          {isAdvancing && (
+            <p className="rescuer-mission-card__queue-note" role="status">
+              Saving or syncing a status transition. Server acceptance is not yet confirmed.
+            </p>
+          )}
+          <Button
+            variant="primary"
+            size="lg"
+            type="button"
+            onClick={onAdvanceStatus}
+            disabled={isAdvancing || isQueueLocked}
+            aria-busy={isAdvancing}
+            aria-describedby={isQueueLocked ? queueNoteId : undefined}
+          >
+            <Icon name="route" size={18} />
+            <span>
+              {isAdvancing
+                ? 'Saving status…'
+                : isQueueLocked
+                  ? 'Status update awaiting review'
+                  : (NEXT_LABEL[next] ?? `Mark ${next}`)}
+            </span>
+          </Button>
+        </>
       ) : mission.status === 'completed' ? (
         <span className="mission-completed-tag" role="status">
           ✓ Mission Completed
@@ -117,6 +154,6 @@ export function RescuerMissionCard({
           </ol>
         </details>
       )}
-    </div>
+    </article>
   )
 }
