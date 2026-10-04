@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     fs: {
-      allow: ['../data'],
+      allow: ['.', '../data'],
     },
   },
   test: {

@@ -47,15 +47,16 @@ const missionSchema = z.object({
     reported_flood_level: z.string(), situation_summary: z.string(), fixture_notice: z.string().optional(),
   }).strict().nullable().optional(),
   status_history: z.array(z.object({
-    event_id: z.string().min(1), prior_status: status, new_status: status,
+    event_id: z.string().min(1), mission_id: z.string().min(1).optional(), prior_status: status, new_status: status,
     actor_id: z.string().min(1), actor_role: z.string().min(1),
-    source: z.enum(['online', 'offline-sync']), client_recorded_at: timestamp.optional(),
-    server_recorded_at: timestamp, note: z.string().optional(),
+    source: z.enum(['online', 'offline-sync']), client_recorded_at: timestamp.nullable().optional(),
+    server_recorded_at: timestamp, note: z.string().nullable().optional(),
   }).strict()),
   latest_route_result: z.record(z.string(), z.unknown()).nullable().optional(),
   data_source: z.string().min(1), sync_status: z.string().min(1),
   completed_at: timestamp.nullable().optional(),
-}).strict()
+}).strict().refine((mission) => mission.status_history.every((event) =>
+  event.mission_id === undefined || event.mission_id === mission.id))
 
 function validMission(value: unknown): value is MissionDetail {
   return missionSchema.safeParse(value).success

@@ -13,7 +13,7 @@ The foundation, core request-to-mission workflow, mapping/geospatial pipeline,
 and **Team Phase 2 — Flood-Aware Routing** are verified. Matthew's early
 **Team Phase 3 — AI/ML** package is accepted as external exploratory evidence;
 its post-routing reconciliation is verified. Team Phase 4 — Limited Offline
-Support is active, with Elle resuming frontend work.
+Support is verified. Team Phase 5 — Integration, Testing, and Presentation is active.
 
 > [!IMPORTANT]
 > ResQPH is a classroom prototype. It is not an official emergency-response
@@ -45,9 +45,10 @@ Verified now:
 - Deterministic A* routing from engine through API and coordinator UI, including
   explainable costs, impassable-edge exclusion, and explicit no-route behavior
 
-Still required for the MVP:
+- Limited offline support: production UI shell reload, one actor-scoped cached
+  mission and one queued status update with safe replay and conflict review
 
-- Limited offline support for one cached mission and one queued status update
+Still required for final acceptance:
 - Final end-to-end verification and presentation evidence
 
 The external XGBoost metrics are exploratory. They were produced with a random

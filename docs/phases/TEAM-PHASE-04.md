@@ -1,6 +1,6 @@
 # Team Phase 4 — Limited Offline Support
 
-**Status:** Ready to start
+**Status:** Completed and verified — see [gate](TEAM-PHASE-04-GATE.md) and [evidence](../testing/TEAM-PHASE-04-EVIDENCE.md)
 **Gate owner:** Ranee
 **Entry baseline:** merged PR #58, `8f2a7ea`; Team Phase 3 approved with conditions.
 
@@ -60,4 +60,3 @@ lost-response retry, stale-version conflict, wrong actor, offline/no-cache,
 storage failure and truthful accessible UI. Relevant frontend/backend/integration
 checks and the disposable MongoDB evidence must pass. Record the gate only after
 accepted packages are merged; Team Phase 5 opens afterward.
-

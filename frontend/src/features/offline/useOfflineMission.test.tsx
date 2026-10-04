@@ -31,6 +31,15 @@ const mission: MissionDetail = {
 }
 
 describe('useOfflineMission', () => {
+  it('restores authoritative review state for a failed event after reload', async () => {
+    store.queues.set('rescuer-a', { ...makeEntry(), syncState: 'failed' })
+    api.getMission.mockResolvedValue({ ...mission, status: 'arrived', version: 3 })
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
+    await waitFor(() => expect(result.current.currentServerMission?.version).toBe(3))
+    expect(result.current.entry?.syncState).toBe('failed')
+    expect(api.updateMissionStatus).not.toHaveBeenCalled()
+  })
   beforeEach(() => {
     vi.resetAllMocks()
     store.missions.clear(); store.queues.clear()

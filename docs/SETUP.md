@@ -47,6 +47,20 @@ npm run dev
 
 The default frontend URL is `http://localhost:5173`.
 
+## Verify a real offline reload
+
+Vite development mode needs a network connection. For offline acceptance, use the production shell:
+
+```powershell
+npm run build
+npm run preview
+```
+
+Visit online once and allow the service worker to install before disconnecting.
+Only the UI shell and built assets are cached. One actor-scoped mission and event
+are held in IndexedDB; API responses and map tiles are not cached by the worker.
+The first visit cannot work offline. Reconnect to receive application updates.
+
 ## Configure the backend
 
 From the repository root:

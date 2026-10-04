@@ -52,14 +52,15 @@ export type MissionApiStatus = 'assigned' | 'en-route' | 'arrived' | 'completed'
 
 export interface MissionStatusHistoryItem {
   event_id: string
+  mission_id?: string
   prior_status: MissionApiStatus
   new_status: MissionApiStatus
   actor_id: string
   actor_role: string
   source: 'online' | 'offline-sync'
-  client_recorded_at?: string
+  client_recorded_at?: string | null
   server_recorded_at: string
-  note?: string
+  note?: string | null
 }
 
 export interface MissionDetail {

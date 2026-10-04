@@ -61,7 +61,8 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean) 
         const serverMission = queued ? await getMission(queued.missionId) : (await listMyMissions())[0]
         if (!current()) return
         if (serverMission) {
-          setState((value) => ({ ...value, mission: serverMission, serverConfirmed: true }))
+          setState((value) => ({ ...value, mission: serverMission, serverConfirmed: true,
+            currentServerMission: queued?.syncState === 'failed' ? serverMission : null }))
           try {
             const record = await writeMission(actorId, serverMission)
             if (current()) setState((value) => ({ ...value, mission: record.mission, lastSyncedAt: record.last_synced_at }))

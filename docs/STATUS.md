@@ -1,51 +1,28 @@
 # ResQPH project status
 
-**Last updated:** 2026-10-04
+**Last updated:** 2026-10-05 (Asia/Manila)
 
-| Field | Current value |
-|---|---|
-| Active delivery phase | Team Phase 4 — Limited Offline Support |
-| Overall health | On track within the constrained MVP |
-| Current goal | Durable one-mission cache and one queued status update across reload/reconnect |
+**Active phase:** Team Phase 5 — Integration, Testing, and Presentation.
+**Health:** On track for the constrained prototype; final submission is not yet accepted.
 
-## Completed and verified
+Foundation 1–2 and Team Phases 1–4 are completed and verified. Phase 3 retains its accepted exploratory-ML conditions: runtime ML remains disabled.
 
-- Project Foundation Phases 1–2: persistent request, assignment, mission and role workflow.
-- Team Phase 1: bounded U-Belt graph, controlled flood join, validated fixtures and accessible map.
-- Team Phase 2: deterministic A*, API/client/map integration and explicit no-route.
-- Team Phase 3: accepted external exploratory ML evidence and verified rejection/fallback.
-  PR #58 merged at `8f2a7ea`; PR and post-merge main CI passed; Issue #57 closed.
-  The artifact remains outside runtime under the accepted conditional gate.
+## Phase 4 acceptance
 
-## Active ownership
+Reviewed packages: PR #65 (Elle), #66 (Matthew), #67 (Jared), #68 (Clarence), followed by Ranee's Issue #64 integration gate. See [gate](phases/TEAM-PHASE-04-GATE.md) and [evidence](testing/TEAM-PHASE-04-EVIDENCE.md).
 
-- Elle: durable client cache, single-event queue, reconnect controller and rescuer wiring.
-- Clarence: accessible cached/stale/pending/syncing/failed presentation.
-- Jared: backend offline replay/role/version/history verification and focused repairs.
-- Matthew: repeatable offline API acceptance checks and demo matrix.
-- Ranee: setup, review, integration and phase gate.
+Real browser/IndexedDB offline reload, queued identity, accepted API replay, durable MongoDB event count, conflict/reload review, actor isolation and corrupt-cache rejection were checked. The production UI shell is cached; API responses and map tiles are not.
 
-Elle resumes her frontend work. Inputs and boundaries are locked in the
-[Team Phase 4 guide](phases/TEAM-PHASE-04.md).
+Verification: frontend 234 tests plus lint/build; backend/integration 177 tests with real database cases enabled. Existing lint, bundle-size and development dependency warnings are final-quality work, not hidden completions.
 
-## Latest inspected evidence
+## Phase 5 ownership
 
-| Area | Result |
-|---|---|
-| Backend and cross-component suites | 121 passed; 2 MongoDB-environment skips |
-| Isolated external ML | 21 passed; all 5 manifest digests matched |
-| PR #58 and main CI | Frontend, backend and ML evidence passed |
-| Team Phase 3 gate | Completed and verified with conditions |
-| Offline implementation | Existing volatile queue only; durable behavior is Phase 4 work |
+- Ranee: reproducible setup, CI/dependency quality, integration review and final release gate.
+- Elle: browser role-flow and offline acceptance regression, keyboard/mobile evidence.
+- Clarence: final demo, presentation script and source/limitation alignment.
+- Jared: backend/API/database regression and safe local operational checks.
+- Matthew: routing/fallback and external ML evidence reconciliation.
 
-Runtime ML remains disabled. Exact deadline and weekly availability are unrecorded.
-Browser visual acceptance and disposable MongoDB verification remain required
-during the affected offline/integration gates.
+Use [Team Phase 5](phases/TEAM-PHASE-05.md). Elle resumes her normal role. No personal handoffs or peer approvals. No new model activation, nationwide scope, production authentication, Google Maps migration or deployment is authorized by this phase opening. Maps remains deferred to a separately approved follow-up.
 
-## Navigation
-
-- [Dashboard](DASHBOARD.md)
-- [Roadmap](ROADMAP.md)
-- [Phase 3 gate](phases/TEAM-PHASE-03-GATE.md)
-- [Phase 4](phases/TEAM-PHASE-04.md)
-- [GitHub Issues](https://github.com/seavens3nt/ResQPH/issues)
+Exact deadline and weekly capacity remain unrecorded. Hosting/submission decisions belong to Ranee.

@@ -1,11 +1,11 @@
 # Current Status
 
-- **Active phase:** Team Phase 4 — Limited Offline Support.
-- **Completed and verified:** Foundation 1–2 and Team 1–3; Phase 3 retains its conditional acceptance and runtime exclusion.
-- **Entry revision:** merged PR #58 at `8f2a7ea`; PR and post-merge main CI passed; Issue #57 closed.
-- **Assignments:** Elle resumes durable client flow; Clarence owns presentation; Jared owns backend sync acceptance; Matthew owns repeatable acceptance scenarios; Ranee owns review/integration/gate.
-- **Locked inputs:** `docs/phases/TEAM-PHASE-04.md`, `docs/offline/OFFLINE_IMPLEMENTATION.md`, existing offline/lifecycle contracts, mission API types and `data/samples/offline-mission.example.json`.
-- **Implementation boundary:** existing queue is volatile React state; persistence/reload/reconnection are unimplemented Phase 4 work.
-- **Latest checks:** 121 backend/integration tests passed, 2 skipped; 21 isolated ML tests passed; 5 digests matched; Ruff passed; required GitHub jobs passed.
-- **Runtime ML:** disabled and route-independent.
-- **Unknowns:** exact deadline and weekly capacity. Offline browser and disposable MongoDB evidence are required at the Phase 4 gate.
+- Active: Team Phase 5 — Integration, Testing, and Presentation.
+- Completed and verified: Foundation 1–2 and Team 1–4. Phase 3 remains conditional, with runtime ML disabled.
+- Phase 4 packages: PRs #65–#68 plus Ranee's Issue #64 integration corrections and gate.
+- Evidence: frontend 234 passed plus lint/build; backend/integration 177 passed with real isolated MongoDB acceptance. Browser offline reload/IndexedDB queue/reconnect, conflict review, actor isolation and corrupt-cache rejection checked.
+- Offline: production UI shell service worker plus actor-scoped Dexie mission/event slots. No API-response or tile caching. Dev mode needs network to reload; use production preview for true offline reload acceptance.
+- Phase 5 owners: Ranee setup/release; Elle frontend browser QA; Clarence demo/presentation; Jared backend/database QA; Matthew routing/ML evidence.
+- Remaining final-quality checks: dev-only undici audit warning, existing lint/bundle warnings, whole-role final regression and submission package.
+- Unknown: exact course deadline, weekly capacity and any hosting/submission requirement. No deployment is approved by the phase opening.
+- Authority: docs/phases/TEAM-PHASE-05.md and docs/STATUS.md.

@@ -143,7 +143,7 @@ PR and post-merge main CI passed; the artifact remains outside runtime.
 
 ## Team Phase 4 — Limited Offline Support
 
-**Status:** Ready to start; active delivery phase
+**Status:** Completed and verified through the [Phase 4 gate](phases/TEAM-PHASE-04-GATE.md)
 **Accountable backend owner:** Ranee
 **Frontend controller/storage owner:** Elle
 **Presentation owner:** Clarence
@@ -152,13 +152,15 @@ PR and post-merge main CI passed; the artifact remains outside runtime.
 
 Cache one assigned mission, show data age, queue one next-valid status event,
 synchronize idempotently, and display conflict/failure states. The packages are
-ready to start from [the locked phase guide](phases/TEAM-PHASE-04.md).
+verified against [the phase evidence](testing/TEAM-PHASE-04-EVIDENCE.md).
 
 ## Team Phase 5 — Integration, Testing, and Presentation
 
-**Status:** Planned
+**Status:** Ready to start; active delivery phase
 **Gate owner:** Ranee
 **Participants:** All members
+
+See [the independent Phase 5 work packages](phases/TEAM-PHASE-05.md).
 
 Verify the complete rescue scenario, failure and fallback cases, accessibility, performance within agreed targets, privacy, data/source labels, deployment or reliable local-demo instructions, rollback, documentation, paper alignment, backup video, and rehearsals. No unverified feature enters the final presentation.
 

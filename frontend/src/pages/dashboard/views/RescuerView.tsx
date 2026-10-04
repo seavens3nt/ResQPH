@@ -18,21 +18,12 @@ import {
 } from './shared'
 import type { NavSection } from './navTypes'
 
-// Until the optional presentation props are implemented, never rely on the
-// older queue's unconditional claim that current server state was fetched.
 function OfflineQueuePanel({ offline }: { offline: ReturnType<typeof useOfflineMission> }) {
-  if (offline.entry?.syncState === 'failed') {
-    return <section aria-label="Offline synchronization queue">
-      <p role="alert">Sync Failed: {offline.entry.failureReason}. The attempted event {offline.entry.localId} is preserved for review.</p>
-      <p>{offline.currentServerMission
-        ? `Latest authorized server state: ${offline.currentServerMission.status}, version ${offline.currentServerMission.version}.`
-        : 'Current server state could not be verified. Do not treat the cached mission as current.'}</p>
-      <Button variant="ghost" disabled={offline.busy} onClick={() => { void offline.discard() }}>Discard Failed Event After Review</Button>
-    </section>
-  }
-  return <RescuerOfflineQueue {...{ entry: offline.entry, isOffline: offline.isOffline,
+  return <fieldset disabled={offline.busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+    <RescuerOfflineQueue {...{ entry: offline.entry, isOffline: offline.isOffline,
     onRetrySync: offline.retry, onDismissFailed: offline.discard,
     currentServerMission: offline.currentServerMission, storageError: offline.storageError }} />
+  </fieldset>
 }
 
 export function RescuerView(_props: { navSection?: NavSection }) {
