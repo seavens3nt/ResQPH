@@ -267,8 +267,11 @@ def utc_now() -> datetime:
 def same_utc_instant(left: datetime | None, right: datetime | None) -> bool:
     if left is None or right is None:
         return left is None and right is None
-    if left.tzinfo is None:
-        left = left.replace(tzinfo=timezone.utc)
-    if right.tzinfo is None:
-        right = right.replace(tzinfo=timezone.utc)
-    return left.astimezone(timezone.utc) == right.astimezone(timezone.utc)
+    return bson_utc_millisecond(left) == bson_utc_millisecond(right)
+
+
+def bson_utc_millisecond(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    normalized = value.astimezone(timezone.utc)
+    return normalized.replace(microsecond=(normalized.microsecond // 1000) * 1000)

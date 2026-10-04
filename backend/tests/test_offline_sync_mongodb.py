@@ -303,6 +303,138 @@ async def test_mongodb_conflicting_id_reuse_is_rejected_without_extra_write(
 
 
 @pytest.mark.asyncio
+async def test_mongodb_replay_accepts_bson_millisecond_precision_and_keeps_server_time(
+    database: AsyncDatabase,
+    offline_fixture: dict[str, Any],
+) -> None:
+    mission = await seed_offline_mission(database, offline_fixture)
+    app = mission_api(database)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+    ) as client:
+        first = await post_status(
+            client,
+            offline_fixture,
+            client_recorded_at="2026-10-04T00:05:00.123456Z",
+        )
+        stored_after_commit = await stored_events(database, mission.id)
+        replay = await post_status(
+            client,
+            offline_fixture,
+            client_recorded_at="2026-10-04T00:05:00.123456Z",
+        )
+
+        fetched = await client.get(f"/api/v1/missions/{mission.id}", headers=rescuer_headers())
+
+    assert first.status_code == 200
+    assert replay.status_code == 200
+    assert fetched.status_code == 200
+    assert replay.json()["status"] == "arrived"
+    assert replay.json()["version"] == 3
+
+    events = await stored_events(database, mission.id)
+    assert len(events) == 1
+    assert events[0]["client_recorded_at"].isoformat() == "2026-10-04T00:05:00.123000"
+    assert events[0]["server_recorded_at"] == stored_after_commit[0]["server_recorded_at"]
+    assert replay.json()["status_history"][0]["client_recorded_at"] == (
+        "2026-10-04T00:05:00.123000Z"
+    )
+    assert fetched.json()["status_history"][0]["client_recorded_at"] == (
+        "2026-10-04T00:05:00.123000Z"
+    )
+    assert replay.json()["status_history"][0]["server_recorded_at"] == (
+        first.json()["status_history"][0]["server_recorded_at"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_mongodb_replay_accepts_equivalent_timezone_representation(
+    database: AsyncDatabase,
+    offline_fixture: dict[str, Any],
+) -> None:
+    mission = await seed_offline_mission(database, offline_fixture)
+    app = mission_api(database)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+    ) as client:
+        first = await post_status(
+            client,
+            offline_fixture,
+            client_recorded_at="2026-10-04T00:05:00.123456Z",
+        )
+        replay = await post_status(
+            client,
+            offline_fixture,
+            client_recorded_at="2026-10-04T08:05:00.123456+08:00",
+        )
+
+    assert first.status_code == 200
+    assert replay.status_code == 200
+    assert replay.json()["version"] == 3
+    assert len(await stored_events(database, mission.id)) == 1
+
+
+@pytest.mark.asyncio
+async def test_mongodb_replay_rejects_materially_different_client_timestamp(
+    database: AsyncDatabase,
+    offline_fixture: dict[str, Any],
+) -> None:
+    mission = await seed_offline_mission(database, offline_fixture)
+    app = mission_api(database)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+    ) as client:
+        first = await post_status(
+            client,
+            offline_fixture,
+            client_recorded_at="2026-10-04T00:05:00.123456Z",
+        )
+        conflict = await post_status(
+            client,
+            offline_fixture,
+            client_recorded_at="2026-10-04T00:05:00.124456Z",
+        )
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["error"]["code"] == "duplicate_event"
+    persisted = await stored_mission(database, mission.id)
+    assert persisted["status"] == "arrived"
+    assert persisted["version"] == 3
+    assert len(await stored_events(database, mission.id)) == 1
+
+
+@pytest.mark.asyncio
+async def test_mongodb_replay_rejects_changed_note(
+    database: AsyncDatabase,
+    offline_fixture: dict[str, Any],
+) -> None:
+    mission = await seed_offline_mission(database, offline_fixture)
+    app = mission_api(database)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+    ) as client:
+        first = await post_status(client, offline_fixture, note="Original note")
+        conflict = await post_status(client, offline_fixture, note="Changed note")
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["error"]["code"] == "duplicate_event"
+    persisted = await stored_mission(database, mission.id)
+    assert persisted["status"] == "arrived"
+    assert persisted["version"] == 3
+    assert len(await stored_events(database, mission.id)) == 1
+
+
+@pytest.mark.asyncio
 async def test_mongodb_stale_version_rejection_has_no_writes(
     database: AsyncDatabase,
     offline_fixture: dict[str, Any],
