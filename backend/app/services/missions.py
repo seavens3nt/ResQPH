@@ -237,6 +237,8 @@ class MissionService:
             and existing_event.actor_id == actor.user_id
             and existing_event.actor_role == actor.role
             and existing_event.source == payload.source
+            and same_utc_instant(existing_event.client_recorded_at, payload.client_recorded_at)
+            and existing_event.note == payload.note
         )
         if same_accepted_event:
             return
@@ -260,3 +262,13 @@ class MissionService:
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def same_utc_instant(left: datetime | None, right: datetime | None) -> bool:
+    if left is None or right is None:
+        return left is None and right is None
+    if left.tzinfo is None:
+        left = left.replace(tzinfo=timezone.utc)
+    if right.tzinfo is None:
+        right = right.replace(tzinfo=timezone.utc)
+    return left.astimezone(timezone.utc) == right.astimezone(timezone.utc)
