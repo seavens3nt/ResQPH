@@ -18,6 +18,7 @@ from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import DuplicateMissionStatusEventError
 from app.services.missions import MissionService
+from tests.test_offline_sync_mongodb import validate_disposable_database_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = REPO_ROOT / "data" / "samples" / "offline-mission.example.json"
@@ -239,10 +240,22 @@ def test_same_event_retry_and_lost_response_replay_do_not_apply_again(
     assert event_count(event_store, "mission-offline-001") == 1
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("client_recorded_at", "2026-10-04T00:06:00Z"),
+        ("client_recorded_at", None),
+        ("note", "Different offline note"),
+        ("source", "online"),
+        ("new_status", "completed"),
+    ],
+)
 def test_conflicting_reuse_of_event_id_with_different_offline_record_is_rejected(
     client: TestClient,
     event_store: InMemoryEventRepository,
     offline_fixture: dict[str, Any],
+    field: str,
+    value: Any,
 ) -> None:
     first = post_offline(client, offline_fixture)
     assert first.status_code == 200
@@ -250,13 +263,22 @@ def test_conflicting_reuse_of_event_id_with_different_offline_record_is_rejected
     conflict = post_offline(
         client,
         offline_fixture,
-        client_recorded_at="2026-10-04T00:06:00Z",
-        note="Different offline note",
+        **{field: value},
     )
 
     assert conflict.status_code == 409
     assert conflict.json()["error"]["code"] == "duplicate_event"
     assert event_count(event_store, "mission-offline-001") == 1
+
+
+@pytest.mark.parametrize("name", ["resqph", "admin", "local", "resqph_issue62_offline_", "resqph_issue62_offline_/normal", "resqph_issue62_offline_test.data"])
+def test_disposable_database_guard_rejects_unsafe_names(name: str) -> None:
+    with pytest.raises(ValueError):
+        validate_disposable_database_name(name)
+
+
+def test_disposable_database_guard_accepts_explicit_test_name() -> None:
+    validate_disposable_database_name("resqph_issue62_offline_pr67_review")
 
 
 def test_new_event_id_with_stale_expected_version_is_rejected_without_writes(

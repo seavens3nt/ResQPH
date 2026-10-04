@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 from collections.abc import AsyncIterator
 from copy import deepcopy
 from pathlib import Path
@@ -32,6 +33,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = REPO_ROOT / "data" / "samples" / "offline-mission.example.json"
 DISPOSABLE_DATABASE_PREFIX = "resqph_issue62_offline_"
 
+
+def validate_disposable_database_name(database_name: str) -> None:
+    if not re.fullmatch(r"resqph_issue62_offline_[A-Za-z0-9_]+", database_name):
+        raise ValueError("Use a nonempty disposable issue62 database name with only letters, digits and underscores.")
+
 pytestmark = [
     pytest.mark.skipif(
         os.getenv("RUN_MONGODB_INTEGRATION") != "1",
@@ -51,26 +57,31 @@ async def database() -> AsyncIterator[AsyncDatabase]:
     database_name = os.getenv("MONGODB_INTEGRATION_DATABASE")
     if mongodb_uri is None or database_name is None:
         pytest.fail("set MONGODB_INTEGRATION_URI and MONGODB_INTEGRATION_DATABASE explicitly")
-    if not database_name.startswith(DISPOSABLE_DATABASE_PREFIX):
-        pytest.fail(
-            "integration database must be disposable and start with "
-            f"{DISPOSABLE_DATABASE_PREFIX!r}"
-        )
+    try:
+        validate_disposable_database_name(database_name)
+    except ValueError as error:
+        pytest.fail(str(error))
 
     client = AsyncMongoClient(mongodb_uri, serverSelectionTimeoutMS=5_000)
+    owned_database = False
     try:
         await client.admin.command("ping")
         hello = await client.admin.command("hello")
         if not hello.get("setName"):
             pytest.fail("MongoDB integration server must be a replica set for transactions")
 
-        await client.drop_database(database_name)
+        if database_name in await client.list_database_names():
+            pytest.fail("Refusing to overwrite an existing database. Choose a new disposable database name.")
         db = client[database_name]
+        owned_database = True
         await initialize_database(db)
         yield db
     finally:
-        await client.drop_database(database_name)
-        await client.close()
+        try:
+            if owned_database:
+                await client.drop_database(database_name)
+        finally:
+            await client.close()
 
 
 async def seed_offline_mission(
@@ -168,6 +179,9 @@ async def test_mongodb_offline_successful_single_commit(
     assert events[0]["source"] == "offline-sync"
     assert events[0]["client_recorded_at"].isoformat().startswith("2026-10-04T00:05:00")
     assert events[0]["server_recorded_at"] == persisted["updated_at"]
+    indexes = await database["mission_status_events"].index_information()
+    assert indexes["uq_mission_status_event_id"]["unique"] is True
+    assert indexes["uq_mission_status_event_id"]["key"] == [("event_id", 1)]
 
 
 @pytest.mark.asyncio
@@ -457,6 +471,23 @@ async def test_mongodb_stale_version_rejection_has_no_writes(
     persisted = await stored_mission(database, mission.id)
     assert persisted["status"] == "arrived"
     assert persisted["version"] == 3
+    assert await stored_events(database, mission.id) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("requested_status", ["completed", "assigned", "en-route"])
+async def test_mongodb_invalid_transition_rejection_has_no_writes(
+    database: AsyncDatabase,
+    offline_fixture: dict[str, Any],
+    requested_status: str,
+) -> None:
+    mission = await seed_offline_mission(database, offline_fixture)
+    before = await stored_mission(database, mission.id)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=mission_api(database)), base_url="http://testserver") as client:
+        response = await post_status(client, offline_fixture, new_status=requested_status)
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "invalid_transition"
+    assert await stored_mission(database, mission.id) == before
     assert await stored_events(database, mission.id) == []
 
 

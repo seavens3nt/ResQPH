@@ -265,12 +265,15 @@ def utc_now() -> datetime:
 
 
 def same_utc_instant(left: datetime | None, right: datetime | None) -> bool:
+    """Compare replay timestamps at BSON Date's persisted millisecond precision."""
     if left is None or right is None:
         return left is None and right is None
     return bson_utc_millisecond(left) == bson_utc_millisecond(right)
 
 
 def bson_utc_millisecond(value: datetime) -> datetime:
+    # MongoDB BSON Date stores UTC milliseconds, not Python microseconds.
+    # https://www.mongodb.com/docs/manual/reference/bson-types/#date
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     normalized = value.astimezone(timezone.utc)
