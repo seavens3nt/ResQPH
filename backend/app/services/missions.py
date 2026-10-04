@@ -237,6 +237,8 @@ class MissionService:
             and existing_event.actor_id == actor.user_id
             and existing_event.actor_role == actor.role
             and existing_event.source == payload.source
+            and same_utc_instant(existing_event.client_recorded_at, payload.client_recorded_at)
+            and existing_event.note == payload.note
         )
         if same_accepted_event:
             return
@@ -260,3 +262,19 @@ class MissionService:
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def same_utc_instant(left: datetime | None, right: datetime | None) -> bool:
+    """Compare replay timestamps at BSON Date's persisted millisecond precision."""
+    if left is None or right is None:
+        return left is None and right is None
+    return bson_utc_millisecond(left) == bson_utc_millisecond(right)
+
+
+def bson_utc_millisecond(value: datetime) -> datetime:
+    # MongoDB BSON Date stores UTC milliseconds, not Python microseconds.
+    # https://www.mongodb.com/docs/manual/reference/bson-types/#date
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    normalized = value.astimezone(timezone.utc)
+    return normalized.replace(microsecond=(normalized.microsecond // 1000) * 1000)
