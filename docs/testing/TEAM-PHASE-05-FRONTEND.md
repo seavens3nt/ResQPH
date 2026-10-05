@@ -6,6 +6,8 @@
 **Base:** accepted `origin/main` at `df5a29d` (merge of Phase 4 gate PR #69)\
 **Result:** component regression and frontend checks pass; production browser and real API acceptance remain unverified in this environment.
 
+The branch is committed and pushed to `origin`. No pull request was created: the GitHub CLI/connector and browser provider are unavailable here. GitHub's remote response supplied the PR entry point: <https://github.com/seavens3nt/ResQPH/pull/new/test/71-frontend-acceptance>. Ranee review and merge remain pending.
+
 ## Changed evidence files
 
 - `frontend/src/test/phase5RoleFlows.test.tsx` — role-view/API-client regressions using the production API modules and Axios adapter boundary. The adapter supplies synthetic HTTP contract responses; it does not replace the API service or represent a server run.
