@@ -54,6 +54,7 @@ describe('Issue 71 all-role frontend contract regression', () => {
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
 
     expect(await screen.findByRole('button', { name: /Submitting/i })).toBeDisabled()
+    expect(onSuccess).not.toHaveBeenCalled()
     await waitFor(() => expect(requestConfig.url).toBe('/rescue-requests'))
     expect(requestConfig.method).toBe('post')
     expect(requestConfig.headers.get('X-Demo-Role')).toBe('citizen')
@@ -65,7 +66,8 @@ describe('Issue 71 all-role frontend contract regression', () => {
     const created = {
       id: 'request-issue71-synthetic', citizen_id: 'citizen-demo',
       location: { address: 'Synthetic U-Belt location', point: { type: 'Point', coordinates: [120.9946, 14.6042] } },
-      headcount: 1, vulnerabilities: [], medical_needs: false, reported_flood_level: 'unknown',
+      headcount: 1, vulnerabilities: [], medical_needs: false, medical_details: null,
+      situation_summary: null, reported_flood_level: 'unknown',
       status: 'pending', version: 1, created_at: '2026-10-05T00:00:00Z', updated_at: '2026-10-05T00:00:00Z',
     }
     resolveRequest(response(requestConfig, 201, created, 'Created'))
@@ -87,6 +89,8 @@ describe('Issue 71 all-role frontend contract regression', () => {
   })
 
   it('coordinator preserves the conflict envelope and sends contract assignment version', async () => {
+    const onSuccess = vi.fn()
+    const onClose = vi.fn()
     let requestConfig!: Parameters<AxiosAdapter>[0]
     apiClient.defaults.adapter = vi.fn(async (config) => {
       requestConfig = config
@@ -99,7 +103,7 @@ describe('Issue 71 all-role frontend contract regression', () => {
       headcount: 1, vulnerabilities: [], medical_needs: false, reported_flood_level: 'low',
       situation_summary: 'Synthetic controlled case', submitted_at: '2026-10-05T00:00:00Z',
     }
-    renderForRole(<CoordinatorAssignModal isOpen targetRequest={request} onClose={vi.fn()} onSuccess={vi.fn()} />, 'coordinator')
+    renderForRole(<CoordinatorAssignModal isOpen targetRequest={request} onClose={onClose} onSuccess={onSuccess} />, 'coordinator')
     fireEvent.click(screen.getByRole('button', { name: /Confirm Dispatch Assignment/i }))
 
     expect(await screen.findByText('Request was already assigned.')).toBeInTheDocument()
@@ -107,6 +111,40 @@ describe('Issue 71 all-role frontend contract regression', () => {
     expect(requestConfig.method).toBe('post')
     expect(JSON.parse(String(requestConfig.data))).toMatchObject({ expected_request_version: 4 })
     expect(requestConfig.headers.get('X-Demo-Role')).toBe('coordinator')
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['blank address', /Location .* street address/i, '   '],
+    ['zero people', /People needing assistance/i, '0'],
+    ['outside boundary', /Longitude/i, '121.5'],
+  ])('citizen rejects %s locally without sending a request', async (_case, label, value) => {
+    const transport = vi.fn()
+    const onSuccess = vi.fn()
+    apiClient.defaults.adapter = transport
+    renderForRole(<RequestForm onSuccess={onSuccess} onCancel={vi.fn()} />, 'citizen')
+    fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
+    expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+    expect(transport).not.toHaveBeenCalled()
+    expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it('citizen retains input and does not signal success during service outage', async () => {
+    const onSuccess = vi.fn()
+    apiClient.defaults.adapter = vi.fn(async (config) => {
+      throw new AxiosError('Unavailable', 'ERR_BAD_RESPONSE', config, undefined,
+        response(config, 503, { error: { code: 'database_unavailable', message: 'Synthetic outage.' } }, 'Service Unavailable'))
+    })
+    renderForRole(<RequestForm onSuccess={onSuccess} onCancel={vi.fn()} />, 'citizen')
+    const address = screen.getByLabelText(/Location .* street address/i)
+    fireEvent.change(address, { target: { value: 'Synthetic retry location, Manila' } })
+    fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/temporarily unavailable/i)
+    expect(address).toHaveValue('Synthetic retry location, Manila')
+    expect(onSuccess).not.toHaveBeenCalled()
+    await waitFor(() => expect(screen.getByRole('button', { name: /Submit request/i })).toBeEnabled())
   })
 
   it('rescuer uses the status-event API response and renders completed history', async () => {

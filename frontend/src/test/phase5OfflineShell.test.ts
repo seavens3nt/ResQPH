@@ -46,6 +46,7 @@ describe('Issue 71 production offline shell checks (mocked worker APIs)', () => 
     const { listeners } = createWorker()
     const forbiddenToCache = [
       ['http://localhost:4173/api/v1/missions', 'GET', 'cors'],
+      ['http://localhost:4173/api/v1/missions', 'GET', 'navigate'],
       ['https://tiles.example/7/31/45.png', 'GET', 'cors'],
       ['http://localhost:4173/api/v1/missions/1/status-events', 'POST', 'cors'],
       ['http://localhost:4173/private.json', 'GET', 'cors'],
@@ -55,5 +56,25 @@ describe('Issue 71 production offline shell checks (mocked worker APIs)', () => 
       listeners.fetch({ request: { url, method, mode }, respondWith } as never)
       expect(respondWith).not.toHaveBeenCalled()
     }
+  })
+
+  it('falls back to the original cached build asset after a network failure', async () => {
+    const { listeners, cache, fetch } = createWorker()
+    fetch.mockRejectedValueOnce(new Error('offline'))
+    const request = { url: 'http://localhost:4173/assets/app-issue71.js', method: 'GET', mode: 'cors' }
+    let result: Promise<unknown> | undefined
+    listeners.fetch({ request, respondWith: (value: Promise<unknown>) => { result = value } } as never)
+    await expect(result).resolves.toEqual({ source: 'cached' })
+    expect(cache.match).toHaveBeenCalledWith(request)
+  })
+
+  it('does not invent a shell if the network and cache are both unavailable', async () => {
+    const { listeners, cache, fetch } = createWorker()
+    fetch.mockRejectedValueOnce(new Error('offline without cache'))
+    cache.match.mockResolvedValueOnce(undefined as never)
+    let result: Promise<unknown> | undefined
+    listeners.fetch({ request: { url: 'http://localhost:4173/dashboard', method: 'GET', mode: 'navigate' },
+      respondWith: (value: Promise<unknown>) => { result = value } } as never)
+    await expect(result).rejects.toThrow('offline without cache')
   })
 })

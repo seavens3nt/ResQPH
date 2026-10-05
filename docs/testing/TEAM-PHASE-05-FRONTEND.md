@@ -1,78 +1,174 @@
-# Team Phase 5 frontend acceptance evidence — Issue #71
+# Team Phase 5 frontend evidence — Issue #71
 
-**Date:** 2026-10-05 (Asia/Singapore)\
-**Owner:** Elle — frontend acceptance package\
-**Branch:** `test/71-frontend-acceptance`\
-**Base:** accepted `origin/main` at `df5a29d` (merge of Phase 4 gate PR #69)\
-**Result:** component regression and frontend checks pass; production browser and real API acceptance remain unverified in this environment.
+**Review date:** 2026-10-06, Asia/Manila. **Owner:** Elle.
+**PR:** #79, `test/71-frontend-acceptance`.
+**Reviewed source:** `acbefc85d34ca5ed1192c9ea16478e3d1f4d39bc`, updated with
+accepted main `d3d9d507a260a463a54ca4fdee2b3f4f29d31080` and this repair.
 
-The branch is committed and pushed to `origin`. No pull request was created: the GitHub CLI/connector and browser provider are unavailable here. GitHub's remote response supplied the PR entry point: <https://github.com/seavens3nt/ResQPH/pull/new/test/71-frontend-acceptance>. Ranee review and merge remain pending.
+**Decision:** The component/worker regression package is verified. Fresh
+browser acceptance is **blocked by confirmed product defects**. This evidence
+must not be used to close Issue #71 or approve the final Phase 5 gate until
+the repair issues below are resolved and the browser matrix is repeated.
+The PR may merge its useful tests and failure record without claiming that
+all-role/offline acceptance is complete.
 
-## Changed evidence files
+## Owned changes
 
-- `frontend/src/test/phase5RoleFlows.test.tsx` — role-view/API-client regressions using the production API modules and Axios adapter boundary. The adapter supplies synthetic HTTP contract responses; it does not replace the API service or represent a server run.
-- `frontend/src/test/phase5OfflineShell.test.ts` — isolated service-worker checks with mocked browser worker/cache/fetch APIs.
-- `docs/testing/TEAM-PHASE-05-FRONTEND.md` — this record.
+- `frontend/src/test/phase5RoleFlows.test.tsx`: production components, API
+  modules and Axios interceptors with a mocked HTTP transport.
+- `frontend/src/test/phase5OfflineShell.test.ts`: actual worker source with
+  mocked browser cache/fetch APIs.
+- This document: real browser/API observations, checks and remaining limits.
 
-No product code or files outside Issue #71 ownership were changed.
+No application behavior, backend, model artifacts or contracts were changed.
+The earlier author's unavailable-environment record is superseded by the
+review runs below; it is not carried forward as current verification status.
 
-## Revision and commands
+## Automated verification
 
-Run from `frontend/` on the branch above. In this PowerShell environment, `npm.ps1` is unsigned and blocked by execution policy, so the equivalent `npm.cmd` shim was used.
+Run from `frontend/` with the lockfile-installed dependencies:
 
-| Command | Result |
-|---|---|
-| `npm.cmd run lint` | Pass. Four existing warnings remain: `LandingPage.tsx` state update in effect; `shared.tsx`, `AuthContext.tsx`, and `MissionContext.tsx` Fast Refresh exports. |
-| `npm.cmd test -- --run --pool forks --maxWorkers 1` | Pass: 28 test files, 242 tests. Single-worker flags avoid excessive worker startup in this environment. |
-| `npm.cmd run build` | Pass: 303 modules transformed. Existing bundle-size warning: JS bundle 891.47 kB minified (over 500 kB). |
-| `npm.cmd exec -- vitest run --pool forks --maxWorkers 1 src/test/phase5RoleFlows.test.tsx src/test/phase5OfflineShell.test.ts` | Pass: 2 files, 8 tests (focused rerun). |
-| `git diff --check` | Pass. |
+```powershell
+npm.cmd ci
+npm.cmd run lint
+npm.cmd test -- --run --pool forks --maxWorkers 1
+npm.cmd run build
+```
 
-The focused 8-test run, full 242-test suite, lint, and production TypeScript/Vite build passed after the final test changes.
+| Check | Result |
+| --- | --- |
+| Lint | Passed, four existing warnings |
+| Full frontend suite | 28 files, 248 tests passed |
+| Newly owned tests | 14 cases included in the full run |
+| TypeScript/Vite build | Passed, 303 modules; existing 891.47 kB JS chunk warning |
 
-## Component regression evidence — HTTP transport mocked
+The four lint warnings concern `LandingPage.tsx` state updates in an effect and
+Fast Refresh exports in `shared.tsx`, `AuthContext.tsx`, and `MissionContext.tsx`.
+These are local verification results; hosted CI must also pass on the pushed
+repair. `git diff --check` and Markdown local links are checked before submission.
 
-The new role tests exercise the production API modules and production React components while the Axios adapter returns controlled synthetic responses. Request URL, method, role header, submitted body/version, and rendered outcome are asserted.
+### What the component tests establish
 
-- **Citizen:** `POST /rescue-requests` carries the citizen demo header and in-boundary GeoJSON point; submitting state appears while the response is pending; a `201` pending/version-1 response reaches the success callback. A `422` common error envelope is announced and entered address remains intact.
-- **Volunteer:** volunteer SOS queue view mounts and exposes its active-signal section. This is a view smoke check only; hazard reporting remains outside this API-backed regression.
-- **Coordinator:** `POST /rescue-requests/{id}/assignment` includes `expected_request_version`; a `409 assignment_conflict` remains visible with server text.
-- **Rescuer:** status-event client posts completion with the event/version body and renders the returned completed state, immutable history transition, actor/source, and synthetic note.
-- **Offline shell:** mocked worker installation caches `/index.html` and built JS/CSS; disconnected navigation returns cached shell; API, tile, POST, and arbitrary data requests are not intercepted.
+Citizen tests reject blank/whitespace address, zero people and outside-boundary
+coordinates before HTTP. Pending submission disables its button and cannot
+signal success before the synthetic 201 response. The response includes null
+optional details, as the real backend does. Server 422 and 503 failures announce
+errors and preserve input. This does not establish downstream mission caching.
 
-These are **component/transport-mocked** observations, not actual API responses. The focused test output is reproducible with the command in the table.
+Coordinator conflict tests check request version, role header and assignment
+URL/body; neither success nor close callback fires on 409. Rescuer tests check
+the status-event client and rendering of a supplied completed record/history.
+They do not exercise the full status hook/cache journey. Volunteer coverage is
+only a view smoke check; it does not prove persisted hazard reporting.
 
-## Production-preview browser matrix
+Worker tests establish install of the shell/build assets, cached navigation
+and asset fallback, rejection when neither network nor cache is available,
+and no interception of API (including navigation to `/api/`), POST, cross-origin
+tiles or arbitrary JSON. These are mocked worker APIs, not disconnected-browser
+or service-worker-installation evidence.
 
-The frontend production build completed and Vite preview started at `http://127.0.0.1:4173/`. The available computer-use browser inventory returned no browser providers or tabs, so I could not open the preview, capture reproducible screenshots, or exercise browser connectivity, keyboard focus, or viewport layouts. I stopped preview after checking availability.
+## Disposable real environment
 
-| Acceptance | Evidence in this package | Outcome |
-|---|---|---|
-| Preview UI at 320 px and desktop | No browser provider available | Not run; no screenshots captured |
-| Keyboard-only role navigation/focus | Semantic labels and live-region assertions in component tests only | Browser interaction not run |
-| Offline install, disconnect, reload, reconnect | Worker behavior unit tests are mocked | Real browser path not run |
-| Queued event survives reload with same ID | Not exercised in a browser for Issue #71 | Refer to prior Phase 4 evidence below; not claimed as a new run |
-| Second action stays locked; conflict review; actor switch | Not exercised in a browser for Issue #71 | Refer to prior Phase 4 evidence below; not claimed as a new run |
+Production preview: `http://127.0.0.1:5199/`. Actual API: port `8029`.
+Task-created MongoDB 8.3 single-node replica set: `resqph_pr79`, port `27029`,
+database `resqph_pr79_browser_20261006`, bound to loopback. Existing user/audit
+databases were not used. Python 3.12 selected this checkout's backend and routing
+sources explicitly. Synthetic Team Alpha was seeded with the production
+`RescuerTeam` fields. The disposable data are retained for reproduction.
 
-Historical baseline: `docs/testing/TEAM-PHASE-04-EVIDENCE.md` records Phase 4 production-preview checks for a synthetic mission/event, stable event ID after disconnected reload, 409 review/queue lock, and rescuer actor isolation. That accepted evidence is not a substitute for screenshots or a rerun against this branch.
+Backend environment:
 
-## Real API and end-to-end acceptance
+```powershell
+$env:MONGODB_URI = 'mongodb://127.0.0.1:27029/?replicaSet=resqph_pr79&directConnection=true'
+$env:MONGODB_DATABASE = 'resqph_pr79_browser_20261006'
+$env:FRONTEND_ORIGINS = 'http://127.0.0.1:5199'
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8029
+```
 
-**Not run.** The requested disposable backend needs Python 3.12, installed backend dependencies, and a MongoDB replica set. This workspace has no `backend/.venv/Scripts/python.exe`, no Docker command, and no Mongo tooling. `GET http://localhost:8000/api/v1/health` did not return within the two-second probe. I did not connect to or modify the user's default MongoDB instance or create a test database.
+Production preview, with the API URL set before building:
 
-As a result, no actual response/status evidence exists here for request creation → assignment → route-found/no-route → rescuer progress/completion/history. Routing, assignment conflicts, route fallback, and persisted lifecycle must be exercised against a disposable backend before this package can be accepted as full browser/API acceptance. No route or API result is inferred from the mocked component tests.
+```powershell
+$env:VITE_API_URL = 'http://127.0.0.1:8029/api/v1'
+npm.cmd run build
+npm.cmd run preview -- --host 127.0.0.1 --port 5199 --strictPort
+```
 
-## Defects and limitations
+Two reviewer setup errors were corrected before recording accepted results:
+an overlapping build briefly restored the default API URL, and the first seed
+omitted required team fields. Those failed attempts are not product findings.
 
-- **Environment blocker:** the local Python/MongoDB/Docker prerequisites and a controllable browser are unavailable, preventing the required real API and visual browser matrices.
-- **Product defects:** none confirmed by the checks completed here. The missing prerequisites are not a product-code defect.
-- No screenshots, deployment, submission, or Phase 5 final-gate approval are claimed.
+## Fresh browser journey and authoritative response evidence
 
-## Reproduction when prerequisites are available
+The controlled browser preview was actually opened through the available
+browser tools. The synthetic citizen signed in, opened SOS triage, continued
+to request details, and verified blank-address rejection. A valid address,
+two people and blank optional details produced HTTP 201 and the API-backed
+tracking screen. Coordinator login displayed that same pending request,
+and selecting Team Alpha confirmed assignment and removed it from the queue.
 
-1. Start a disposable MongoDB 8 replica set and backend using `docs/SETUP.md`; configure an isolated database name and confirm `GET /api/v1/health`.
-2. From `frontend/`, run `npm run build` and `npm run preview`; open the preview once online to install the shell worker.
-3. With synthetic records, exercise citizen request, coordinator assignment, route-found and no-route responses, rescuer status progression/completion/history, then record each real HTTP status/body with private data omitted.
-4. At 320 px and desktop, capture the same browser's screenshots; navigate using only keyboard and record focused controls and error/live announcements.
-5. Disconnect network, reload, verify the cached UI and unchanged queued event ID, verify the second-action lock, reconnect into success and conflict paths, review the authoritative server state, and switch actors to verify isolation.
-6. Use only the task-created database and browser records; record exact revision, commands, viewport dimensions, keyboard actions, sanitized response summaries, and limitations here.
+| Record | Sanitized identity |
+| --- | --- |
+| Citizen | `pr79.citizen@example.test` |
+| Coordinator | `pr79.coordinator@example.test` |
+| Request | `request-54bf05a841644329889345e29f2c565e` |
+| Mission | `mission-5fe5f928ff744d80b9cbb28799ca3cbf` |
+| Assigned rescuer/team | `team-alpha` |
+| Status event | `313b4a38-00b8-4e2b-b66c-4684cabc347c` |
+
+The rescuer entered `team-alpha` in the current Email field as a diagnostic
+workaround for the identity mismatch. The real mission arrived but showed
+`Server mission data failed actor/record validation`. Clicking **TAP EN ROUTE**
+then showed `Accepted server mission failed actor/record validation`, kept
+the UI at Assigned and locked its next action behind a Pending Sync event.
+
+A separate real HTTP GET of that mission returned **200, en-route, version 2**,
+with the same event in server history and `situation_summary: null`. Thus the
+server had accepted the transition while the UI asserted it had not. API logs
+and the matched record/event establish the failure beyond a mocked test.
+
+Separate direct real-API controlled route probes returned HTTP 200 for both
+route-found and no-route. The found path used
+`ubelt-v1:1037130917:1037130787:0` and `ubelt-v1:1037130787:68082882:0`, with
+zero ML risk. The disconnected case had no geometry. These fixed controlled
+probes were **not** a route displayed on the new assigned mission; they do not
+prove mission-to-map integration.
+
+## Browser matrix and named repair dependencies
+
+| Acceptance | Observed result | Repair dependency |
+| --- | --- | --- |
+| Citizen input/submission | Blank address rejected; valid request saved and tracked | Passed for tested inputs |
+| Matching coordinator queue | Fresh request appears and assignment succeeds | Passed for queue/assignment only |
+| Coordinator counters/inspector | One pending API request with zero pending counter and unrelated Maria Santos/RQ-0042 inspector | #76 |
+| Rescuer identity | Requires hidden team ID in Email field | #76, #77, #82 |
+| Fresh mission cache/status | Null optional summary rejected; accepted en-route event falsely remains pending | #76 |
+| Mission route controls | API-backed mission has no route evaluation/map control | #76 |
+| Keyboard modal focus | Focus remained on SOS trigger behind open modal | #78 |
+| Desktop/narrow layout | Desktop 1280px; 320x900 override measured 320px viewport and 320px document width | Spot-check only; #78 for complete focus/navigation audit |
+| Completion/history | Component coverage passed; same fresh browser mission cannot progress past blocked queue | #76, #83; rerun required |
+| Offline reload/reconnect/conflict/actor isolation | Not run on this fresh mission because online cache already fails | #76, #82; rerun required |
+| Separate volunteer flow | Current portal toggle is still present; component smoke only | #82, #84 |
+
+Screenshots were captured locally as `outputs/pr79-status-discrepancy.jpg` and
+`outputs/pr79-status-320px.jpg` in the review workspace. These filenames are
+local review artifacts, not files committed by this ownership-limited PR.
+The temporary viewport override was reset. No current screenshot establishes
+offline reload success or complete accessibility compliance.
+
+## Reproduction and exit condition
+
+Repeat the fresh browser journey with optional details omitted, then follow
+that same request, team, mission, route and status through all roles. Verify
+the queue clears after server acknowledgement, the next valid status is
+available and completion/history match server state. Repeat production-browser
+offline cache/reload/one-update/reconnect, stable event ID, second-action lock,
+409 review and actor isolation after the cache/identity repair. Keyboard-only
+dialog navigation must trap focus and restore it on close; repeat at desktop
+and 320px. Do not substitute accepted fixture-only Phase 4 evidence for this run.
+
+References: [API contract](../api/API_CONTRACT.md),
+[offline contract](../offline/OFFLINE_CONTRACT.md),
+[Phase 4 evidence](TEAM-PHASE-04-EVIDENCE.md).
+Issue #71 stays open for the missing positive browser acceptance. Final MVP
+acceptance, deployment, submission and phase completion are not established
+by merging this regression/evidence package.
