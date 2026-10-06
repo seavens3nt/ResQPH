@@ -18,6 +18,8 @@
  */
 
 import { useRescueRequest, useCancelRescueRequest } from '../../../../features/requests/hooks'
+import { useQuery } from '@tanstack/react-query'
+import { getMissionTracking } from '../../../../api/missions'
 import { PrototypeNotice } from './PrototypeNotice'
 import { StatusBadge } from './StatusBadge'
 import type { RequestStatus } from '../../../../features/requests/types'
@@ -45,6 +47,13 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
   const { mutate: cancel, isPending: isCancelling } = useCancelRescueRequest()
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const tracking = useQuery({
+    queryKey: ['citizen-mission-tracking', data?.mission_id],
+    queryFn: () => getMissionTracking(data?.mission_id ?? ''),
+    enabled: Boolean(data?.mission_id) && !['pending', 'cancelled', 'completed'].includes(data?.status ?? 'pending'),
+    refetchInterval: 3000,
+    retry: false,
+  })
 
   // ---------------------------------------------------------------------------
   // Loading
@@ -309,6 +318,26 @@ export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewP
             Contact: 09XX XXX XXXX
           </span>
         </div>
+      )}
+
+      {tracking.data && (
+        <div
+          className="modern-clean-card"
+          style={{ padding: '1rem 1.25rem', display: 'grid', gap: '0.5rem', fontSize: '0.84rem' }}
+        >
+          <strong style={{ color: '#0f172a' }}>Shared simulated responder tracking</strong>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', color: '#475569' }}>
+            <span>Status: <strong>{tracking.data.simulation_status}</strong></span>
+            <span>Remaining: <strong>{Math.round(tracking.data.remaining_distance_m)} m</strong></span>
+            <span>ETA: <strong>{Math.ceil(tracking.data.estimated_remaining_time_s / 60)} min</strong></span>
+            <span>Updated: <strong>{new Date(tracking.data.timestamp).toLocaleTimeString()}</strong></span>
+          </div>
+        </div>
+      )}
+      {tracking.error && (
+        <p role="status" style={{ color: '#92400e', fontSize: '0.78rem', margin: 0 }}>
+          Simulated tracking is temporarily unavailable. Status polling continues separately.
+        </p>
       )}
 
       {/* ── Status history ───────────────────────────────────────────── */}

@@ -3,10 +3,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-
 from app.api.routes.assignments import get_assignment_service, router
 from app.models.mission import Mission
 from app.models.rescue_request import (
@@ -22,7 +18,11 @@ from app.schemas.common import (
     service_error_handler,
     validation_exception_handler,
 )
+from app.schemas.routing import RouteFoundResponse
 from app.services.assignments import AssignmentService
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
 
 BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
 
@@ -136,6 +136,9 @@ class InMemoryRescuers:
     async def get_by_id(self, team_id: str, session: Any = None) -> RescuerTeam | None:
         return self.state.teams.get(team_id)
 
+    async def list_all(self, session: Any = None) -> list[RescuerTeam]:
+        return list(self.state.teams.values())
+
     async def reserve_if_available(
         self,
         *,
@@ -195,6 +198,31 @@ class InMemoryAssignments:
         return mission
 
 
+class FakeRoutingAdapter:
+    def evaluate(self, _payload: Any) -> RouteFoundResponse:
+        return RouteFoundResponse(
+            fixture_notice="Synthetic academic scenario; not live flood evidence.",
+            status="route-found",
+            route_id="route-test",
+            algorithm="astar",
+            geometry={
+                "type": "LineString",
+                "coordinates": [[120.9931743, 14.5983287], [120.9938198, 14.5977093]],
+            },
+            distance_m=123.0,
+            estimated_time_s=45.0,
+            total_cost=45.0,
+            edge_ids=["edge-test"],
+            cost_breakdown={"base": 45.0, "deterministic_risk": 0.0, "ml_risk": 0.0},
+            fallback_used=True,
+            warnings=["Synthetic controlled scenario; not live navigation data.", "Runtime ML is disabled; deterministic rules were used."],
+            explanation="Controlled test route.",
+            scenario_timestamp="2026-09-21T04:00:00Z",
+            model_version=None,
+            selection_mode="distance",
+        )
+
+
 @pytest.fixture()
 def state() -> AssignmentState:
     return AssignmentState()
@@ -212,6 +240,7 @@ def client(state: AssignmentState) -> TestClient:
             InMemoryRequests(state),  # type: ignore[arg-type]
             InMemoryRescuers(state),  # type: ignore[arg-type]
             InMemoryAssignments(state),  # type: ignore[arg-type]
+            FakeRoutingAdapter(),  # type: ignore[arg-type]
         )
 
     app.dependency_overrides[get_assignment_service] = service_override
@@ -333,3 +362,32 @@ def test_assignment_openapi_documents_created_and_conflict_responses(
     assert "403" in operation["responses"]
     assert "409" in operation["responses"]
     assert "503" in operation["responses"]
+
+
+def test_recommendations_rank_available_teams_by_valid_road_distance(
+    client: TestClient,
+    state: AssignmentState,
+) -> None:
+    state.teams["team-alpha"] = state.teams["team-alpha"].model_copy(
+        update={
+            "station_id": "sampaloc-fire-station",
+            "station_address": "A.H. Lacson Ave.",
+            "base_location": {"type": "Point", "coordinates": [120.9931, 14.608]},
+            "current_location": {"type": "Point", "coordinates": [120.9931, 14.608]},
+        }
+    )
+    state.teams["team-bravo"] = state.teams["team-bravo"].model_copy(
+        update={"availability": "assigned"}
+    )
+
+    response = client.get(
+        "/api/v1/rescue-requests/request-1/recommendations",
+        headers=headers(),
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selection_mode"] == "distance"
+    assert body["candidates"][0]["team_id"] == "team-alpha"
+    assert body["candidates"][0]["road_distance_m"] == 123.0
+    assert body["exclusions"][0]["reason"] == "team_unavailable"

@@ -2,10 +2,9 @@ from datetime import datetime, timezone
 from html import escape
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
-
 from app.models.mission import MissionStatus
 from app.models.mission_status_event import DemoRole, EventSource
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 WritableMissionStatus = Literal["assigned", "en-route", "arrived", "completed"]
 
@@ -87,6 +86,7 @@ class MissionResponse(BaseModel):
     updated_at: datetime
     request_summary: dict[str, Any] | None = None
     latest_route_result: dict[str, Any] | None = None
+    tracking_state: dict[str, Any] | None = None
     data_source: str = "synthetic"
     sync_status: str = "synced"
     completed_at: datetime | None = None
@@ -117,3 +117,24 @@ def serialize_utc(value: datetime | None) -> str | None:
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+class MissionTrackingResponse(BaseModel):
+    mission_id: str
+    request_id: str
+    team_id: str
+    simulation_status: str
+    position: dict[str, Any] | None
+    timestamp: str
+    route_id: str | None = None
+    route_geometry: dict[str, Any] | None = None
+    progress_ratio: float = Field(ge=0.0, le=1.0)
+    remaining_distance_m: float = Field(ge=0.0)
+    estimated_remaining_time_s: float = Field(ge=0.0)
+    total_distance_m: float = Field(ge=0.0)
+    total_travel_time_s: float = Field(ge=0.0)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class MissionTrackingControl(BaseModel):
+    action: Literal["start", "pause", "resume", "reset"]

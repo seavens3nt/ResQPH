@@ -1,8 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.api.dependencies.demo_role import get_demo_actor
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
 from app.repositories.assignments import AssignmentRepository
 from app.repositories.rescue_requests import RescueRequestRepository
@@ -41,9 +43,16 @@ def get_rescue_request_service() -> RescueRequestService:
 )
 async def create_rescue_request(
     payload: RescueRequestCreate,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[RescueRequestService, Depends(get_rescue_request_service)],
 ) -> RescueRequestResponse:
+    check_rate_limit(
+        request,
+        actor_id=actor.user_id,
+        action="report-submission",
+        limit=settings.report_rate_limit_per_minute,
+    )
     return await service.create_request(payload, actor)
 
 

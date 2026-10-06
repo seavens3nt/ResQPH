@@ -124,6 +124,16 @@ Allowed role: `coordinator`.
 
 Success: `201 Created` with the mission and updated request summary. Request transition, mission creation, team availability, and history records form one consistency boundary.
 
+### Recommend simulated rescue teams
+
+`GET /rescue-requests/{request_id}/recommendations`
+
+Allowed role: `coordinator`.
+
+Returns deterministic simulated team candidates backed by the Sampaloc station catalog. Candidates are ranked by shortest valid road distance after road eligibility, directionality, controlled flood restrictions, and bounded snapping are applied. Unavailable, assigned, missing-position, stale-position, or unreachable teams are returned as exclusions rather than hidden.
+
+This endpoint uses controlled fixtures only. It does not contact real stations or create an assignment; the coordinator must still confirm through `POST /assignment`.
+
 ### Retrieve missions
 
 - `GET /missions?assigned_to=me&status=assigned,en-route,arrived`
@@ -155,6 +165,36 @@ team availability, and immutable mission event in one MongoDB transaction.
 Completion records `completed_at` and releases the team's assignment links.
 A mismatched linked request or team returns `409 lifecycle_conflict` with no
 partial writes. An identical event replay does not increment versions again.
+
+### Mission tracking
+
+- `GET /missions/{mission_id}/tracking`
+- `POST /missions/{mission_id}/tracking/control`
+
+Allowed tracking viewers: assigned `rescuer`, owning `citizen`, and `coordinator`.
+Allowed controls: assigned `rescuer` and `coordinator`.
+
+Control body:
+
+```json
+{ "action": "start" }
+```
+
+`action` may be `start`, `pause`, `resume`, or `reset`. Tracking is one backend-authoritative simulation per mission, derived from the mission route geometry and travel-time seconds. Reads do not mutate state. Arrival at the end of the route does not mark the rescue completed; lifecycle completion still requires the status endpoint.
+
+Tracking exposes position, timestamp, simulation status, remaining road distance, estimated remaining travel time in seconds, total route distance/time, route geometry, and warnings.
+
+## Rate limits
+
+Prototype limits are in-memory and single-process:
+
+- New report submissions: 5/minute per actor.
+- Route/recommendation calculations: 10/minute per actor.
+- Tracking reads: 60/minute per actor.
+- Simulation controls: 10/minute per actor.
+- Each action also has a broader client-IP bucket for shared classroom Wi-Fi.
+
+The backend uses the socket client host and does not trust arbitrary forwarding headers. `429` responses use the common error envelope and include `Retry-After`. In-memory limits are not globally enforced across multiple workers.
 
 ### Submit hazard report
 

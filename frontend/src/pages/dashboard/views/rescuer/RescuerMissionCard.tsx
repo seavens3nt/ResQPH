@@ -6,10 +6,13 @@
  *   - Mission and route loading/failure states (handled by parent)
  *   - Valid status-transition action button
  */
-import { useId } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import type { MissionDetail, MissionStatusHistoryItem } from '../../../../api/missions'
-import { nextValidStatus } from '../../../../api/missions'
+import { controlMissionTracking, getMissionTracking, nextValidStatus } from '../../../../api/missions'
 import { StatusBadge } from '../shared'
 import { Button } from '../../../../components/ui/Button'
 import { Icon } from '../../../../components/art/Icon'
@@ -46,6 +49,25 @@ export function RescuerMissionCard({
   }
 
   const syncState = isStale || isCached ? 'stale' : 'fresh'
+  const [pageVisible, setPageVisible] = useState(() => document.visibilityState === 'visible')
+  const [followRescuer, setFollowRescuer] = useState(true)
+  const suspendFollow = useCallback(() => setFollowRescuer(false), [])
+  const tracking = useQuery({
+    queryKey: ['mission-tracking', mission.id],
+    queryFn: () => getMissionTracking(mission.id),
+    enabled: !isCached && mission.status !== 'completed',
+    refetchInterval: pageVisible ? 3000 : false,
+  })
+  const trackingControl = useMutation({
+    mutationFn: (action: 'start' | 'pause' | 'resume' | 'reset') => controlMissionTracking(mission.id, action),
+    onSuccess: () => void tracking.refetch(),
+  })
+
+  useEffect(() => {
+    const onVisibility = () => setPageVisible(document.visibilityState === 'visible')
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
 
   return (
     <article className="rescuer-mission-card" aria-labelledby={titleId}>
@@ -94,6 +116,45 @@ export function RescuerMissionCard({
         <strong>Prototype:</strong> Route data is fixture-based; status transitions use demo role
         simulation. Not a production dispatch system.
       </p>
+
+      {tracking.data && (
+        <div className="mission-tracking-panel">
+          <div className="mission-tracking-panel__header">
+            <strong>Shared Simulated Tracking</strong>
+            <label>
+              <input
+                type="checkbox"
+                checked={followRescuer}
+                onChange={(event) => setFollowRescuer(event.target.checked)}
+              />
+              Follow rescuer
+            </label>
+          </div>
+          <MissionTrackingMap
+            route={tracking.data.route_geometry?.coordinates ?? []}
+            position={tracking.data.position?.coordinates ?? null}
+            follow={followRescuer}
+            onUserPan={suspendFollow}
+          />
+          <div className="mission-tracking-panel__metrics">
+            <span>Status: <strong>{tracking.data.simulation_status}</strong></span>
+            <span>Remaining: <strong>{Math.round(tracking.data.remaining_distance_m)} m</strong></span>
+            <span>ETA: <strong>{Math.ceil(tracking.data.estimated_remaining_time_s / 60)} min</strong></span>
+            <span>Updated: <strong>{new Date(tracking.data.timestamp).toLocaleTimeString()}</strong></span>
+          </div>
+          <div className="mission-tracking-panel__actions">
+            <Button size="sm" variant="outline" type="button" onClick={() => trackingControl.mutate('start')}>Start</Button>
+            <Button size="sm" variant="ghost" type="button" onClick={() => trackingControl.mutate('pause')}>Pause</Button>
+            <Button size="sm" variant="ghost" type="button" onClick={() => trackingControl.mutate('resume')}>Resume</Button>
+            <Button size="sm" variant="ghost" type="button" onClick={() => trackingControl.mutate('reset')}>Reset</Button>
+          </div>
+        </div>
+      )}
+      {tracking.error && (
+        <p className="rescuer-mission-card__queue-note" role="status">
+          Mission tracking is unavailable or rate-limited. The marker will not animate beyond the last server update.
+        </p>
+      )}
 
       {/* Next valid transition action */}
       {next && mission.status !== 'completed' ? (
@@ -156,4 +217,69 @@ export function RescuerMissionCard({
       )}
     </article>
   )
+}
+
+function MissionTrackingMap({
+  route,
+  position,
+  follow,
+  onUserPan,
+}: {
+  route: [number, number][]
+  position: [number, number] | null
+  follow: boolean
+  onUserPan: () => void
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<L.Map | null>(null)
+  const lineRef = useRef<L.Polyline | null>(null)
+  const markerRef = useRef<L.CircleMarker | null>(null)
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return
+    const map = L.map(containerRef.current, { zoomControl: true }).setView([14.6042, 120.9946], 15)
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map)
+    map.on('dragstart zoomstart', onUserPan)
+    mapRef.current = map
+    return () => {
+      map.remove()
+      mapRef.current = null
+      lineRef.current = null
+      markerRef.current = null
+    }
+  }, [onUserPan])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    const latLngRoute = route.map(([lng, lat]) => [lat, lng] as L.LatLngTuple)
+    if (lineRef.current) lineRef.current.remove()
+    if (latLngRoute.length >= 2) {
+      lineRef.current = L.polyline(latLngRoute, { color: '#2563eb', weight: 5, opacity: 0.84 }).addTo(map)
+      map.fitBounds(lineRef.current.getBounds(), { padding: [20, 20] })
+    }
+  }, [route])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !position) return
+    const latLng: L.LatLngTuple = [position[1], position[0]]
+    if (!markerRef.current) {
+      markerRef.current = L.circleMarker(latLng, {
+        radius: 8,
+        color: '#ffffff',
+        weight: 3,
+        fillColor: '#dc2626',
+        fillOpacity: 1,
+      }).addTo(map)
+    } else {
+      markerRef.current.setLatLng(latLng)
+    }
+    if (follow) map.panTo(latLng, { animate: true, duration: 0.4 })
+  }, [follow, position])
+
+  return <div ref={containerRef} className="mission-tracking-map" aria-label="Simulated mission route and rescuer marker" />
 }

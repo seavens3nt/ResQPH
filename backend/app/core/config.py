@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://localhost:27017/?replicaSet=rs0"
     mongodb_database: str = "resqph"
     frontend_origins: str = "http://localhost:5173"
+    route_snap_max_distance_m: float = 900.0
+    simulation_speed_mps: float = 5.0
+    report_rate_limit_per_minute: int = 5
+    route_rate_limit_per_minute: int = 10
+    tracking_rate_limit_per_minute: int = 60
+    simulation_control_rate_limit_per_minute: int = 10
+    broad_ip_rate_limit_per_minute: int = 180
 
     # -----------------------------------------------------------------------
     # ML runtime adapter

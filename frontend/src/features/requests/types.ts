@@ -111,6 +111,8 @@ export interface RescueRequestRecord {
   updated_at: string
   /** Present after coordinator assignment */
   assigned_team_id?: string
+  /** Present after coordinator assignment */
+  mission_id?: string
   status_history?: StatusHistoryEntry[]
 }
 

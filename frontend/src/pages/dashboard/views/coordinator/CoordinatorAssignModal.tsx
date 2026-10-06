@@ -8,11 +8,12 @@
  *   - Success: assignment confirmed + updated state
  *   - Validation error: team selection required
  */
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ApiError,
   assignTeam,
+  getTeamRecommendations,
   type ApiRescueRequestSummary,
 } from '../../../../api/assignments'
 import { ApiErrorBanner } from '../../../../components/ui/ApiErrorBanner'
@@ -47,6 +48,21 @@ export function CoordinatorAssignModal({
   )
   const [apiError, setApiError] = useState<ApiError | null>(null)
   const [assignmentSuccess, setAssignmentSuccess] = useState(false)
+  const recommendations = useQuery({
+    queryKey: ['team-recommendations', targetRequest?.id],
+    queryFn: () => getTeamRecommendations(targetRequest?.id ?? ''),
+    enabled: isOpen && Boolean(targetRequest?.id),
+    staleTime: 10_000,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.httpStatus === 429) return false
+      return failureCount < 1
+    },
+  })
+
+  useEffect(() => {
+    const top = recommendations.data?.candidates[0]
+    if (top) setSelectedTeamId(top.team_id)
+  }, [recommendations.data])
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
@@ -96,6 +112,8 @@ export function CoordinatorAssignModal({
   }
 
   const availableTeams = teams.filter((t: RescueTeam) => t.status === 'available')
+  const recommendationCandidates = recommendations.data?.candidates ?? []
+  const hasSelectableTeam = recommendationCandidates.length > 0 || availableTeams.length > 0
 
   return (
     <Modal
@@ -155,6 +173,12 @@ export function CoordinatorAssignModal({
             requiredRole="coordinator"
           />
         )}
+        {recommendations.error instanceof ApiError && (
+          <ApiErrorBanner
+            error={recommendations.error}
+            onRetry={() => void recommendations.refetch()}
+          />
+        )}
 
         {/* Assignment form */}
         {!assignmentSuccess && (
@@ -163,7 +187,33 @@ export function CoordinatorAssignModal({
               <label className="field__label" htmlFor="assign-team-select">
                 Select Available Rescue Team
               </label>
-              {availableTeams.length === 0 ? (
+              {recommendations.isLoading ? (
+                <p role="status" className="proto-notice">Calculating shortest valid simulated road-distance recommendation…</p>
+              ) : recommendationCandidates.length > 0 ? (
+                <div className="recommendation-list" role="list">
+                  {recommendationCandidates.map((candidate, index) => (
+                    <label
+                      key={candidate.team_id}
+                      role="listitem"
+                      className={`recommendation-row ${selectedTeamId === candidate.team_id ? 'is-selected' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="recommended-team"
+                        value={candidate.team_id}
+                        checked={selectedTeamId === candidate.team_id}
+                        onChange={() => setSelectedTeamId(candidate.team_id)}
+                      />
+                      <span>
+                        <strong>{index === 0 ? 'Recommended: ' : ''}{candidate.team_name}</strong>
+                        <small>
+                          {Math.round(candidate.road_distance_m)} m road distance · ETA {Math.ceil(candidate.estimated_travel_time_s / 60)} min · {candidate.station_address ?? 'simulated station'}
+                        </small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : availableTeams.length === 0 ? (
                 <div className="empty-state" style={{ padding: '12px 0' }}>
                   <Icon name="volunteers" size={24} />
                   <p>No teams are currently available for dispatch.</p>
@@ -186,6 +236,21 @@ export function CoordinatorAssignModal({
                   ))}
                 </select>
               )}
+              {recommendations.data && recommendationCandidates.length === 0 && (
+                <p className="field__error" role="status">
+                  No available simulated team has a valid road route. Review exclusions before assigning manually.
+                </p>
+              )}
+              {recommendations.data?.exclusions.length ? (
+                <details className="recommendation-exclusions">
+                  <summary>Excluded teams ({recommendations.data.exclusions.length})</summary>
+                  <ul>
+                    {recommendations.data.exclusions.map((item) => (
+                      <li key={item.team_id}>{item.team_name}: {item.reason}</li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
               {!selectedTeamId && (
                 <span id="assign-team-error" className="field__error" role="alert">
                   A team selection is required
@@ -200,7 +265,7 @@ export function CoordinatorAssignModal({
               <Button
                 variant="primary"
                 type="submit"
-                disabled={isPending || !selectedTeamId || availableTeams.length === 0}
+                disabled={isPending || !selectedTeamId || !hasSelectableTeam}
                 aria-busy={isPending}
               >
                 {isPending ? 'Assigning…' : 'Confirm Dispatch Assignment'}

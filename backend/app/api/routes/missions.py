@@ -5,14 +5,19 @@ from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
 from app.repositories.mission_status_events import MissionStatusEventRepository
 from app.repositories.missions import MissionRepository
+from app.repositories.rescue_requests import RescueRequestRepository
 from app.schemas.missions import (
     DemoActor,
     ErrorEnvelope,
     MissionResponse,
     MissionStatusEventCreate,
+    MissionTrackingControl,
+    MissionTrackingResponse,
     parse_status_filter,
 )
 from app.services.missions import MissionService, MissionServiceError
@@ -34,6 +39,7 @@ def get_mission_service() -> MissionService:
     return MissionService(
         MissionRepository(database),
         MissionStatusEventRepository(database),
+        RescueRequestRepository(database),
     )
 
 
@@ -81,6 +87,45 @@ async def create_status_event(
 ) -> MissionResponse | JSONResponse:
     try:
         return await service.create_status_event(mission_id, payload, actor)
+    except MissionServiceError as exc:
+        return error_response(exc)
+
+
+@router.get("/{mission_id}/tracking", response_model=MissionTrackingResponse)
+async def get_tracking(
+    mission_id: str,
+    request: Request,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[MissionService, Depends(get_mission_service)],
+) -> MissionTrackingResponse | JSONResponse:
+    try:
+        check_rate_limit(
+            request,
+            actor_id=actor.user_id,
+            action="tracking-read",
+            limit=settings.tracking_rate_limit_per_minute,
+        )
+        return await service.get_tracking(mission_id, actor)
+    except MissionServiceError as exc:
+        return error_response(exc)
+
+
+@router.post("/{mission_id}/tracking/control", response_model=MissionTrackingResponse)
+async def control_tracking(
+    mission_id: str,
+    payload: MissionTrackingControl,
+    request: Request,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[MissionService, Depends(get_mission_service)],
+) -> MissionTrackingResponse | JSONResponse:
+    try:
+        check_rate_limit(
+            request,
+            actor_id=actor.user_id,
+            action="tracking-control",
+            limit=settings.simulation_control_rate_limit_per_minute,
+        )
+        return await service.control_tracking(mission_id, payload.action, actor)
     except MissionServiceError as exc:
         return error_response(exc)
 

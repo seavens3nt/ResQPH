@@ -83,11 +83,29 @@ export interface MissionDetail {
   } | null
   status_history: MissionStatusHistoryItem[]
   latest_route_result?: Record<string, unknown> | null
+  tracking_state?: Record<string, unknown> | null
   data_source: string
   sync_status: string
   completed_at?: string | null
   created_at: string
   updated_at: string
+}
+
+export interface MissionTracking {
+  mission_id: string
+  request_id: string
+  team_id: string
+  simulation_status: string
+  position: GeoPoint | null
+  timestamp: string
+  route_id?: string | null
+  route_geometry?: { type: 'LineString'; coordinates: [number, number][] } | null
+  progress_ratio: number
+  remaining_distance_m: number
+  estimated_remaining_time_s: number
+  total_distance_m: number
+  total_travel_time_s: number
+  warnings: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -195,6 +213,30 @@ export async function updateMissionStatus(
     const res = await apiClient.post<MissionDetail>(
       `/missions/${missionId}/status-events`,
       body,
+    )
+    return res.data
+  } catch (err) {
+    return normalizeError(err)
+  }
+}
+
+export async function getMissionTracking(missionId: string): Promise<MissionTracking> {
+  try {
+    const res = await apiClient.get<MissionTracking>(`/missions/${missionId}/tracking`)
+    return res.data
+  } catch (err) {
+    return normalizeError(err)
+  }
+}
+
+export async function controlMissionTracking(
+  missionId: string,
+  action: 'start' | 'pause' | 'resume' | 'reset',
+): Promise<MissionTracking> {
+  try {
+    const res = await apiClient.post<MissionTracking>(
+      `/missions/${missionId}/tracking/control`,
+      { action },
     )
     return res.data
   } catch (err) {

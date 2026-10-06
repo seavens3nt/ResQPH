@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import assignments, health, missions, ml, rescue_requests, routing
 from app.core.config import settings
+from app.core.rate_limit import RateLimitExceeded, rate_limit_error_handler
 from app.db.mongodb import close_mongodb, connect_mongodb, get_database
 from app.db.setup import initialize_database
 from app.integrations import ml_inference
@@ -52,4 +53,5 @@ app.include_router(ml.router, prefix=settings.api_prefix)
 app.include_router(routing.router, prefix=settings.api_prefix)
 
 app.add_exception_handler(ServiceError, service_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(RateLimitExceeded, rate_limit_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
