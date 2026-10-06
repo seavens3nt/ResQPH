@@ -1,256 +1,124 @@
 # Team Phase 5 backend acceptance evidence
 
-**Issue:** #73 — Jared Noel (`@AshenDary`)
-**Branch:** `test/73-backend-acceptance`
-**Scope:** API/database negative regression and safe local operational checks.
-**Allowed paths changed:** `backend/tests/test_phase5_acceptance.py`, `docs/testing/TEAM-PHASE-05-BACKEND.md`.
+**Issue:** #73 — Jared Noel (`@AshenDary`); reviewer integration repair by Ranee.
+**Branch:** `test/73-backend-acceptance` — PR #80.
+**Reviewed main baseline:** `44a03f99fb6739ba8b854d7e07893db758dd5c54`.
+**Verification date:** 2026-10-06.
 
-## Accepted baseline
+## Review corrections
 
-- `origin/main`: `df5a29ddf3ec280b76abbc2a096579727d736693`.
-- PR #69, `fix(offline): complete Team Phase 4 gate and prepare Team Phase 5`, merged 2026-10-04T18:04:52Z.
-- Issue #64 is closed with `status:completed-and-verified`.
-- Hosted main CI for `df5a29d`: run `37222997330`, workflow `CI`, conclusion `success`, created 2026-10-04T18:04:55Z, updated 2026-10-04T18:06:47Z.
-- PR #69 checks before merge: `frontend`, `backend`, and `ml-evidence` all `SUCCESS`.
+The original package at `f8b10ac` reported 3 passed / 2 failed in its focused
+MongoDB suite. Both failures were reproduced after integrating current main.
 
-This is hosted CI evidence only. Local test runs below are separate.
+1. **Real lifecycle defect repaired:** accepted mission transitions now update
+   the linked request status/version/history and team availability within the
+   same transaction as the mission and immutable event. Completion records its
+   timestamp and releases the team. A changed/missing link returns
+   `409 lifecycle_conflict` and rolls back all records.
+2. **Failure-injection fixture repaired:** the original override supplied a
+   synchronous `Database` to asynchronous repositories, producing HTTP 500
+   before the intended injected `PyMongoError`. It was not evidence that the
+   production assignment service mishandled that error. The override now uses
+   the application's connected async database. It verifies that request/team
+   writes occur inside the transaction, that the injected insert failure is
+   actually reached, and that HTTP `503 database_unavailable` is returned with
+   every tentative write rolled back. Production assignment handling was not
+   changed or weakened.
+3. Offline fixtures now include the linked request and reserved team rather
+   than an orphan mission. Existing event-failure rollback coverage checks
+   these linked records too.
 
-## Environment
+Jared's original owned paths remain the acceptance test and this document.
+Ranee's review adds the narrowly related mission repository/service repair,
+offline fixture compatibility, and contract/presentation guidance updates.
+No UI, trained model, dependencies, or deployment configuration are changed.
 
-- Python: `backend/.venv/bin/python`, CPython 3.12.14 from `uv venv --python 3.12 .venv`.
-- Backend dependency install: `uv pip install --python .venv/bin/python -r requirements.txt -r requirements-dev.txt`.
-- Pytest: 9.1.1.
-- Ruff: 0.16.10.
-- MongoDB: Docker container `resqph-issue73-mongodb`, image `mongo:8.0`, server version 8.0.32, single-node replica set `rs0`, published at `127.0.0.1:27019`.
-- Mongo URI used in tests: `mongodb://127.0.0.1:27019/?replicaSet=rs0&directConnection=true`.
-- Runtime ML remained disabled by default (`ML_ENABLED=false` equivalent settings path); no model artifact was loaded.
+## Verified acceptance
 
-## Disposable database procedure
+| Check | Observed result |
+|---|---|
+| Invalid input / missing or prohibited demo role | 422/403; no request inserted |
+| Request creation and atomic assignment | Request pending -> assigned; one mission; team reserved |
+| Mission/request progression | assigned -> en-route -> arrived -> completed; ordered request history |
+| Team state | assigned -> en-route -> on-scene -> available; assignment links cleared |
+| Completion | Mission version 4; request/team version 5; server completion time |
+| Immutable events and offline source | Three events; first event unchanged; offline-sync source retained |
+| Duplicate assignment, stale version, invalid transition, wrong actor | Conflict/denial; no extra event or linked write |
+| Same-ID retry / changed-body reuse | One committed transition / 409 duplicate_event |
+| Reassigned original actor | 403; linked records unchanged |
+| Broken request or team link | 409 lifecycle_conflict; mission/request/team/history rollback |
+| Assignment dependency failure | Injected PyMongoError reached; safe 503 envelope; request/team/mission rollback |
+| OpenAPI and CORS | Required paths/error schema; local configured origin allowed, unlisted origin blocked |
+| Real startup | Production FastAPI lifespan; indexes and synthetic teams initialized |
 
-Use one of these prefixes, matching the test file being run:
+## Local verification results
 
-```bash
-DB="resqph_issue73_backend_$(date +%Y%m%d%H%M%S)"
-DB="resqph_issue62_offline_$(date +%Y%m%d%H%M%S)"
-DB="resqph_issue15_api_test_$(date +%Y%m%d%H%M%S)"
+- Ruff, backend and cross-component integration paths: **passed**.
+- Default backend/cross-component suite: **187 passed, 23 skipped**.
+- Focused Phase 5 API/database suite: **7 passed, no skips**.
+- Existing real-MongoDB offline suite: **15 passed, no skips**.
+- Existing real-MongoDB assignment suite: **2 passed, no skips**.
+- Database cleanup: no `resqph_issue*` databases remain on the task-only server.
+
+The 23 default skips are the separately gated MongoDB cases: 6 new Phase 5,
+15 offline, and 2 assignment. Each suite was run separately with its required
+database prefix; do not describe default CI alone as real-database acceptance.
+Two existing dependency deprecation warnings concern Starlette/httpx and the
+AnyIO BlockingPortal alias. They do not indicate test failures.
+
+Environment: Python 3.12 in the reusable audit virtual environment; native
+MongoDB **8.3.7**, task-only port **27032**, single-node replica set
+`resqph_pr80`. This run verifies real transaction behavior, not the Docker
+image/startup procedure. Runtime ML remains disabled; all data are synthetic.
+
+## Repeatable PowerShell checks
+
+From the repository's `backend` directory, use a Python 3.12 virtual environment
+installed from `requirements.txt` and `requirements-dev.txt`:
+
+```powershell
+$python = '.\.venv\Scripts\python.exe'
+$env:PYTHONPATH = "$PWD;$PWD\..\routing\src"
+Remove-Item Env:RUN_MONGODB_INTEGRATION -ErrorAction SilentlyContinue
+& $python -m ruff check app tests ..\tests\integration
+& $python -m pytest tests ..\tests\integration -q
 ```
 
-The Phase 5 fixture refuses to run unless the database name matches `resqph_issue73_backend_[A-Za-z0-9_]+`, the server is a replica set, and the database does not already exist. The fixture patches the accepted application settings to the disposable database, enters the production FastAPI lifespan, initializes indexes and synthetic teams, then drops only that disposable database during cleanup.
+For the task-only replica set (substitute your verified local replica-set URI):
 
-Cleanup check:
+```powershell
+$env:RUN_MONGODB_INTEGRATION = '1'
+$env:MONGODB_INTEGRATION_URI = 'mongodb://127.0.0.1:27032/?replicaSet=resqph_pr80'
+$env:MONGODB_INTEGRATION_DATABASE = 'resqph_issue73_backend_your_unique_run'
+& $python -m pytest tests/test_phase5_acceptance.py -q
 
-```bash
-docker exec resqph-issue73-mongodb mongosh --quiet --eval \
-  'db.adminCommand({listDatabases: 1}).databases.map(d => d.name).filter(n => n.startsWith("resqph_issue")).join("\n")'
+$env:MONGODB_INTEGRATION_DATABASE = 'resqph_issue62_offline_your_unique_run'
+& $python -m pytest tests/test_offline_sync_mongodb.py -q
+
+$env:MONGODB_INTEGRATION_DATABASE = 'resqph_issue15_api_test_your_unique_run'
+$env:MONGODB_URI = $env:MONGODB_INTEGRATION_URI
+$env:MONGODB_DATABASE = $env:MONGODB_INTEGRATION_DATABASE
+& $python -m pytest tests/test_assignment_mongodb.py -q
 ```
 
-Observed result: empty output after the runs below.
+The Phase 5 fixture requires explicit settings, a replica set, and a fresh
+database named `resqph_issue73_backend_[A-Za-z0-9_]+`. It refuses existing
+databases and drops only the database it owns. Never point it at an operational
+or shared database. The local review used
+`..\..\repo-audit\.venv-backend-audit\Scripts\python.exe` instead of `$python`.
+After checks, remove the five test-only environment variables above before
+starting a normal development backend. Reset/rollback means stopping the test
+process and discarding only its owned disposable database, not deleting project
+records or MongoDB volumes. Code rollback should use a reviewed revert PR.
 
-## Acceptance matrix
+## Acceptance boundary
 
-| Case | Contract source | Existing coverage | New Phase 5 coverage | Real MongoDB required | Observed outcome |
-|---|---|---|---|---|---|
-| Invalid rescue-request input | API contract, MVP scope | Request/schema tests | `test_phase5_invalid_inputs_and_roles_leave_database_unchanged` | Yes | `422 validation_error`, no rescue request inserted |
-| Missing or prohibited role | API role simulation | Role/request tests | Missing role and volunteer create request checks | Yes | `403 demo_role_required` or `403 forbidden`, no write |
-| Valid request creation | API lifecycle | Phase 2 full slice | Phase 5 lifecycle test | Yes | Request stored as `pending`, version 1, synthetic history |
-| Atomic assignment | Lifecycle, MongoDB consistency boundary | Assignment unit and Mongo tests | Lifecycle test plus dependency rollback test | Yes | Success path writes request, mission, team; failure path rolls back all three |
-| Mission status progression | Lifecycle | Mission/offline tests | Strict accepted lifecycle test | Yes | Mission reaches `completed`, version 4, 3 immutable events |
-| Request mirrors mission progression | Lifecycle | Not fully covered | Strict accepted lifecycle test | Yes | **Defect:** request stays `assigned`, version 2 |
-| Ordered immutable history | Lifecycle/offline | Mission/offline tests | Lifecycle test stores first event then verifies unchanged after completion | Yes | Mission event history ordered and first event unchanged |
-| Duplicate assignment | API/lifecycle conflict | Assignment tests | Phase 5 negative test | Yes | `409 duplicate_assignment`, second team remains available |
-| Same event replay | Offline contract | Offline tests | Phase 5 negative test | Yes | Same event id/body returns current mission, one event stored |
-| Conflicting event-id reuse | Offline contract | Offline Mongo tests | Phase 5 negative test | Yes | `409 duplicate_event`, one event stored |
-| Stale version | Lifecycle/offline | Mission/offline tests | Phase 5 negative test | Yes | `409 stale_mission_version`, no event stored |
-| Wrong/reassigned actor | Lifecycle/offline | Role/offline tests | Wrong actor and reassigned original actor checks | Yes | `403 forbidden`, no extra write |
-| Invalid/skipped/repeated transitions | Lifecycle | Mission/offline tests | Skipped and repeated checks | Yes | `409 invalid_transition`, no extra write |
-| Dependency failure envelope | API error envelope | Assignment Mongo rollback catches some DB failures | Phase 5 dependency failure injection through production `AssignmentService` | Yes | **Defect:** rollback succeeds, but response is `500` instead of documented `503 database_unavailable` envelope |
-| OpenAPI paths/schemas | API/routing/ML contracts | Route/request OpenAPI tests | Phase 5 OpenAPI smoke | No | Required paths and `ErrorEnvelope` schema present; assignment documents 201/403/404/409/422/503 |
-| CORS accepted config | API operational boundary | Not central in earlier tests | Allowed and blocked preflight checks | No | `localhost:5173` allowed; unlisted origin blocked |
-| Startup/index initialization | Database setup | Database lifecycle tests | Production FastAPI lifespan in Mongo fixture | Yes | App starts, indexes/synthetic teams initialized, fixture cleanup drops DB |
-
-## Commands and results
-
-Standard backend checks:
-
-```bash
-cd backend
-.venv/bin/python -m ruff check app tests ../tests/integration
-.venv/bin/python -m pytest tests ../tests/integration
-```
-
-Observed:
-
-- Ruff: passed.
-- Pytest: 182 collected; **161 passed, 21 skipped, 1 warning**.
-- Skips are MongoDB-gated tests when `RUN_MONGODB_INTEGRATION` is not set.
-- Warning: Starlette deprecation from `fastapi.testclient` importing `httpx` via current test dependency set.
-
-Focused Phase 5 acceptance without Mongo:
-
-```bash
-cd backend
-.venv/bin/python -m pytest tests/test_phase5_acceptance.py -q
-```
-
-Observed: **1 passed, 4 skipped, 1 warning**. The skipped tests require real MongoDB.
-
-Focused Phase 5 acceptance with MongoDB:
-
-```bash
-cd backend
-DB="resqph_issue73_backend_$(date +%Y%m%d%H%M%S)"
-RUN_MONGODB_INTEGRATION=1 \
-MONGODB_INTEGRATION_URI='mongodb://127.0.0.1:27019/?replicaSet=rs0&directConnection=true' \
-MONGODB_INTEGRATION_DATABASE="$DB" \
-.venv/bin/python -m pytest tests/test_phase5_acceptance.py -q
-```
-
-Observed: **3 passed, 2 failed, 1 warning**.
-
-Failures:
-
-1. `test_phase5_real_mongodb_lifecycle_updates_request_mission_and_history`
-   - Expected: linked rescue request reaches `completed`, version 5, history `pending -> assigned -> en-route -> arrived -> completed`.
-   - Observed: mission reaches `completed`, version 4, three ordered events; linked request remains `assigned`, version 2.
-   - Runtime boundary: `backend/app/services/missions.py::MissionService.create_status_event` updates only `missions` and `mission_status_events`; it does not update `rescue_requests`.
-
-2. `test_phase5_assignment_dependency_failure_returns_envelope_and_rolls_back`
-   - Expected: forced mission insert dependency failure returns documented `503 database_unavailable` error envelope.
-   - Observed: request, team and mission writes roll back correctly, but HTTP response is `500 Internal Server Error`.
-   - Runtime boundary: `backend/app/services/assignments.py::AssignmentService.assign_team` catches `PyMongoError` outside `session.with_transaction`, but the injected failure through the transaction path is not converted to the documented envelope.
-
-Phase 4 opt-in MongoDB evidence repeated:
-
-```bash
-cd backend
-DB="resqph_issue62_offline_$(date +%Y%m%d%H%M%S)"
-RUN_MONGODB_INTEGRATION=1 \
-MONGODB_INTEGRATION_URI='mongodb://127.0.0.1:27019/?replicaSet=rs0&directConnection=true' \
-MONGODB_INTEGRATION_DATABASE="$DB" \
-.venv/bin/python -m pytest tests/test_offline_sync_mongodb.py -q
-```
-
-Observed: **15 passed**.
-
-```bash
-cd backend
-DB="resqph_issue15_api_test_$(date +%Y%m%d%H%M%S)"
-RUN_MONGODB_INTEGRATION=1 \
-MONGODB_INTEGRATION_URI='mongodb://127.0.0.1:27019/?replicaSet=rs0&directConnection=true' \
-MONGODB_INTEGRATION_DATABASE="$DB" \
-MONGODB_URI='mongodb://127.0.0.1:27019/?replicaSet=rs0&directConnection=true' \
-MONGODB_DATABASE="$DB" \
-.venv/bin/python -m pytest tests/test_assignment_mongodb.py -q
-```
-
-Observed: **2 passed, 1 warning**.
-
-Broader Phase 4-style opt-in run, excluding the separately handled full assignment slice and the new Issue #73 tests because they require different disposable database prefixes:
-
-```bash
-cd backend
-DB="resqph_issue62_offline_$(date +%Y%m%d%H%M%S)"
-RUN_MONGODB_INTEGRATION=1 \
-MONGODB_INTEGRATION_URI='mongodb://127.0.0.1:27019/?replicaSet=rs0&directConnection=true' \
-MONGODB_INTEGRATION_DATABASE="$DB" \
-.venv/bin/python -m pytest tests ../tests/integration \
-  -k 'not test_full_fastapi_request_to_assignment_slice_against_mongodb and not phase5'
-```
-
-Observed: 182 collected; 176 selected; **176 passed, 6 deselected, 1 warning**.
-
-The six deselections were intentional and are not proof that all Phase 5
-acceptance passed: one deselected test was
-`test_full_fastapi_request_to_assignment_slice_against_mongodb`, which was run
-separately with the required `resqph_issue15_api_test_` disposable database
-prefix; the other five deselected tests were the Issue #73 Phase 5 acceptance
-tests, which require the separate `resqph_issue73_backend_` disposable database
-prefix and are reported in the focused run above.
-
-## API and operational findings
-
-- OpenAPI exposes the accepted rescue request, assignment, mission status-event, routing, and ML road-risk paths.
-- `ErrorEnvelope` exists in generated schemas.
-- Assignment OpenAPI documents the accepted 201/403/404/409/422/503 response set.
-- CORS allows the accepted local frontend origin `http://localhost:5173` and rejects `https://example.invalid`.
-- The mission routes produce the error envelope at runtime through their local handler, but their route decorators do not explicitly list the same error response models as request/assignment/routing routes. This is an OpenAPI documentation gap to consider after the two blocking runtime defects.
-- Startup through FastAPI lifespan initializes MongoDB indexes and synthetic teams in the disposable database.
-- Routing and ML checks stayed within accepted boundaries: deterministic route/no-route contracts are inspected through OpenAPI and existing tests; runtime ML remains disabled and no live or guaranteed-safe navigation claim is made.
-
-## Simulated versus persisted
-
-- Verified with real persistence: request creation, assignment success, mission status success, event replay/conflict, stale version rejection, wrong/reassigned actor rejection, invalid transition rejection, assignment rollback, index initialization, cleanup.
-- Simulated failure injection: the assignment dependency failure uses a custom `AssignmentRepository.create_mission` that raises `PyMongoError` while retaining production `AssignmentService`, real request repository, real rescuer repository, real MongoDB transaction, and production route execution.
-- Not verified as passing: accepted request status mirroring mission progression; documented 503 envelope for the injected assignment transaction failure.
-
-## Product defects for Ranee-scoped repair
-
-1. **Request lifecycle does not follow mission lifecycle after assignment.**
-   - Affected file/function: `backend/app/services/missions.py::MissionService.create_status_event`.
-   - Expected: accepted mission status transitions update the linked rescue request to `en-route`, `arrived`, and `completed` with version/history in the same accepted consistency boundary.
-   - Observed: mission reaches `completed`; request remains `assigned`, version 2.
-   - Reproduce: run the focused Phase 5 MongoDB command above.
-
-2. **Assignment dependency failure does not return the documented error envelope.**
-   - Affected file/function: `backend/app/services/assignments.py::AssignmentService.assign_team`.
-   - Expected: dependency failure returns HTTP `503` with `error.code == "database_unavailable"`.
-   - Observed: transaction rollback succeeds, but API returns HTTP `500`.
-   - Reproduce: run the focused Phase 5 MongoDB command above.
-
-## Current verdict
-
-**Draft evidence submission. Phase 5 backend acceptance is not complete: two real-MongoDB acceptance cases failed on the recorded revision. Do not merge until the expectations are confirmed, applicable repairs are merged, and the acceptance suite is rerun successfully.**
-
-Ranee owns the runtime corrections. This branch intentionally preserves the
-known failing acceptance tests and records observed behavior separately from the
-repairs that still need confirmation.
-
-## Manual PR draft
-
-Title:
-
-```text
-test(backend): add Phase 5 acceptance tests and failure evidence
-```
-
-Description:
-
-```markdown
-Closes #73
-
-## Summary
-- Added Phase 5 backend acceptance tests for OpenAPI/CORS, invalid input and role rejection, real MongoDB lifecycle, replay/conflict/stale/actor/transition rejections, and assignment rollback.
-- Added repeatable backend evidence with baseline CI, commands, MongoDB setup, cleanup procedure, observed results, and limitations.
-
-## Changed files
-- backend/tests/test_phase5_acceptance.py
-- docs/testing/TEAM-PHASE-05-BACKEND.md
-
-## Observed results
-- Hosted main CI baseline at df5a29d is green.
-- Ruff: `python -m ruff check app tests ../tests/integration` passed.
-- Standard backend/integration pytest: 161 passed, 21 skipped, 1 warning.
-- Existing Phase 4 MongoDB offline suite: 15 passed.
-- Existing assignment MongoDB suite: 2 passed, 1 warning.
-- Broad Phase 4-style opt-in MongoDB run: 176 passed, 6 deselected, 1 warning.
-- Focused Phase 5 MongoDB acceptance: 3 passed, 2 failed, 1 warning.
-- The six deselections excluded the separately run full assignment MongoDB slice and the five separately reported Issue #73 Phase 5 acceptance tests; they do not prove all Phase 5 acceptance passed.
-
-## Blocking defects
-- Request records remain `assigned` after the linked mission reaches `completed`; expected request lifecycle/history to progress through `en-route`, `arrived`, and `completed`.
-- Forced assignment transaction dependency failure rolls back database writes but returns HTTP 500 instead of the documented 503 error envelope.
-- Ranee owns the runtime corrections.
-
-Draft evidence submission. Phase 5 backend acceptance is not complete: two real-MongoDB acceptance cases failed on the recorded revision. Do not merge until the expectations are confirmed, applicable repairs are merged, and the acceptance suite is rerun successfully.
-
-## Checklist
-- [x] Baseline main revision and hosted CI recorded
-- [x] Local Ruff run recorded
-- [x] Standard backend/integration pytest recorded
-- [x] Real MongoDB opt-in evidence recorded
-- [x] Disposable database cleanup confirmed
-- [ ] Focused Phase 5 MongoDB acceptance passes
-- [ ] CI observed on this branch
-- [ ] Reviewer approval
-- [ ] Merge
-```
+This evidence supports the backend package, not final MVP acceptance. A fresh
+browser request must still follow the same identity/request/team/mission/route
+across roles, including cache reload/replay and UI state acknowledgement.
+Remaining frontend and overall integration findings under #76 and #82–#84
+are not resolved by these API tests. #83's backend progression/team release
+subtask is covered here; its remaining UI surfaces still require verification.
+Mission error responses are handled at runtime, but their full OpenAPI response
+model documentation remains an optional follow-up. No production authentication,
+live flood accuracy, real emergency readiness, or runtime ML acceptance is claimed.

@@ -36,6 +36,10 @@
 ## Integration constraints
 
 - The core lifecycle must work while routing and ML adapters are unavailable.
+- PR #80 verifies mission status, linked request status/history, team availability,
+  and immutable event persistence within one transaction. Completion releases the
+  team; mismatched links return `409 lifecycle_conflict` without partial writes.
+  Backend evidence does not establish browser/cache acceptance.
 - Deterministic rule penalties and impassable-edge exclusion take priority over ML output.
 - Runtime model loading requires explicit enablement, SHA-256, and exact target,
   version, and ordered-feature metadata. The Ondoy artifact fails this contract

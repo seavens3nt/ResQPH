@@ -9,7 +9,7 @@ from app.repositories.mission_status_events import (
     DuplicateMissionStatusEventError,
     MissionStatusEventRepository,
 )
-from app.repositories.missions import MissionRepository
+from app.repositories.missions import MissionLifecycleConflictError, MissionRepository
 from app.schemas.missions import DemoActor, MissionResponse, MissionStatusEventCreate
 
 
@@ -152,6 +152,12 @@ class MissionService:
             updated_mission, transaction_event = await self._events.run_in_transaction(
                 persist_transition
             )
+        except MissionLifecycleConflictError:
+            raise MissionServiceError(
+                409,
+                "lifecycle_conflict",
+                "Status was not changed because the linked request or team no longer matches the mission.",
+            ) from None
         except DuplicateMissionStatusEventError:
             existing_event = await self._events.get_by_event_id(payload.event_id)
             if existing_event is not None:

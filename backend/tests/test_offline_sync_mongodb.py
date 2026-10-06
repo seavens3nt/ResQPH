@@ -90,6 +90,23 @@ async def seed_offline_mission(
 ) -> Mission:
     mission = Mission.model_validate(offline_fixture["mission"])
     await database["missions"].insert_one(mission.model_dump(mode="python"))
+    await database["rescue_requests"].insert_one({
+        "id": mission.request_id,
+        "mission_id": mission.id,
+        "status": mission.status,
+        "version": 3,
+        "status_history": [],
+    })
+    await database["rescuers"].update_one(
+        {"id": mission.team_id},
+        {"$set": {
+            "availability": "en-route",
+            "assigned_request_id": mission.request_id,
+            "assigned_mission_id": mission.id,
+            "version": 2,
+        }},
+        upsert=True,
+    )
     return mission
 
 
@@ -554,6 +571,8 @@ async def test_mongodb_history_failure_rolls_back_mission_update(
 ) -> None:
     mission = await seed_offline_mission(database, offline_fixture)
     missions = RecordingMissionRepository(database)
+    before_request = await database["rescue_requests"].find_one({"id": mission.request_id})
+    before_team = await database["rescuers"].find_one({"id": mission.team_id})
     service = MissionService(missions, FailingEventRepository(database))
     payload = MissionStatusEventCreate.model_validate(offline_body(offline_fixture))
 
@@ -570,3 +589,5 @@ async def test_mongodb_history_failure_rolls_back_mission_update(
     assert persisted["status"] == "en-route"
     assert persisted["version"] == 2
     assert events == []
+    assert await database["rescue_requests"].find_one({"id": mission.request_id}) == before_request
+    assert await database["rescuers"].find_one({"id": mission.team_id}) == before_team

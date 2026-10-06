@@ -13,6 +13,7 @@ from pymongo.errors import PyMongoError
 
 from app.api.routes.assignments import get_assignment_service
 from app.core.config import settings
+from app.db.mongodb import get_database
 from app.main import app
 from app.models.mission import Mission
 from app.repositories.assignments import AssignmentRepository
@@ -71,7 +72,6 @@ def mongo_harness(monkeypatch: pytest.MonkeyPatch) -> Iterator[MongoHarness]:
 
         monkeypatch.setattr(settings, "mongodb_uri", mongodb_uri)
         monkeypatch.setattr(settings, "mongodb_database", database_name)
-        monkeypatch.setattr(settings, "frontend_origins", "http://localhost:5173,http://localhost:4173")
         owns_database = True
         with TestClient(app, raise_server_exceptions=False) as api:
             yield MongoHarness(
@@ -294,6 +294,8 @@ def test_phase5_real_mongodb_lifecycle_updates_request_mission_and_history(
     assert first.status_code == 200
     assert first.json()["status"] == "en-route"
     assert first.json()["version"] == 2
+    assert get_document(database, "rescue_requests", {"id": request_id})["status"] == "en-route"
+    assert get_document(database, "rescuers", {"id": "team-alpha"})["availability"] == "en-route"
     first_event = get_document(
         database,
         "mission_status_events",
@@ -311,6 +313,8 @@ def test_phase5_real_mongodb_lifecycle_updates_request_mission_and_history(
     assert arrived.status_code == 200
     assert arrived.json()["status"] == "arrived"
     assert arrived.json()["version"] == 3
+    assert get_document(database, "rescue_requests", {"id": request_id})["status"] == "arrived"
+    assert get_document(database, "rescuers", {"id": "team-alpha"})["availability"] == "on-scene"
 
     completed = post_status(
         api,
@@ -336,6 +340,12 @@ def test_phase5_real_mongodb_lifecycle_updates_request_mission_and_history(
     stored_request = get_document(database, "rescue_requests", {"id": request_id})
     assert stored_mission["status"] == "completed"
     assert stored_mission["version"] == 4
+    assert stored_mission["completed_at"] == stored_mission["updated_at"]
+    released_team = get_document(database, "rescuers", {"id": "team-alpha"})
+    assert released_team["availability"] == "available"
+    assert released_team["version"] == 5
+    assert released_team["assigned_request_id"] is None
+    assert released_team["assigned_mission_id"] is None
     assert event_count(database, mission_id) == 3
     assert get_document(database, "mission_status_events", {"event_id": "phase5-en-route"}) == first_event
 
@@ -358,6 +368,8 @@ def test_phase5_retry_conflict_stale_actor_and_transition_rejections_do_not_writ
     database = mongo_harness.database
     request_id = create_request(api)["id"]
     mission_id = assign_request(api, request_id)["mission"]["id"]
+    before_request = get_document(database, "rescue_requests", {"id": request_id})
+    before_team = get_document(database, "rescuers", {"id": "team-alpha"})
 
     duplicate_assignment = api.post(
         f"/api/v1/rescue-requests/{request_id}/assignment",
@@ -390,12 +402,16 @@ def test_phase5_retry_conflict_stale_actor_and_transition_rejections_do_not_writ
     assert skipped.status_code == 409
     assert skipped.json()["error"]["code"] == "invalid_transition"
     assert event_count(database, mission_id) == 0
+    assert get_document(database, "rescue_requests", {"id": request_id}) == before_request
+    assert get_document(database, "rescuers", {"id": "team-alpha"}) == before_team
 
     accepted = post_status(api, mission_id, "phase5-retry", "en-route", 1, note="Original note")
     assert accepted.status_code == 200
     assert accepted.json()["status"] == "en-route"
     assert event_count(database, mission_id) == 1
 
+    accepted_request = get_document(database, "rescue_requests", {"id": request_id})
+    accepted_team = get_document(database, "rescuers", {"id": "team-alpha"})
     retry = post_status(api, mission_id, "phase5-retry", "en-route", 1, note="Original note")
     assert retry.status_code == 200
     assert retry.json()["status"] == "en-route"
@@ -427,14 +443,54 @@ def test_phase5_retry_conflict_stale_actor_and_transition_rejections_do_not_writ
     assert reassigned_original.json()["error"]["code"] == "forbidden"
     assert get_document(database, "missions", {"id": mission_id})["status"] == "en-route"
     assert event_count(database, mission_id) == 1
+    assert get_document(database, "rescue_requests", {"id": request_id}) == accepted_request
+    assert get_document(database, "rescuers", {"id": "team-alpha"}) == accepted_team
+
+
+@MONGODB_REQUIRED
+@pytest.mark.parametrize("broken_link", ["request", "team"])
+def test_phase5_linked_lifecycle_conflict_rolls_back_all_records(
+    mongo_harness: MongoHarness,
+    broken_link: str,
+) -> None:
+    api, database = mongo_harness.api, mongo_harness.database
+    request_id = create_request(api)["id"]
+    mission_id = assign_request(api, request_id)["mission"]["id"]
+    if broken_link == "request":
+        database["rescue_requests"].update_one({"id": request_id}, {"$set": {"status": "cancelled"}})
+    else:
+        database["rescuers"].update_one({"id": "team-alpha"}, {"$set": {"assigned_mission_id": "other-mission"}})
+    before = {
+        collection: get_document(database, collection, {"id": identifier})
+        for collection, identifier in [
+            ("missions", mission_id), ("rescue_requests", request_id), ("rescuers", "team-alpha")
+        ]
+    }
+    response = post_status(api, mission_id, "phase5-broken-link", "en-route", 1)
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "lifecycle_conflict"
+    for collection, document in before.items():
+        assert get_document(database, collection, {"id": document["id"]}) == document
+    assert event_count(database, mission_id) == 0
 
 
 class FailingMissionAssignmentRepository(AssignmentRepository):
+    failure_reached = False
+
     async def create_mission(
         self,
         mission: Mission,
         session: AsyncClientSession,
     ) -> Mission:
+        request = await self._missions.database["rescue_requests"].find_one(
+            {"id": mission.request_id}, session=session,
+        )
+        team = await self._missions.database["rescuers"].find_one(
+            {"id": mission.team_id}, session=session,
+        )
+        assert request is not None and request["status"] == "assigned"
+        assert team is not None and team["assigned_mission_id"] == mission.id
+        self.failure_reached = True
         raise PyMongoError("forced Phase 5 mission insert failure")
 
 
@@ -447,12 +503,16 @@ def test_phase5_assignment_dependency_failure_returns_envelope_and_rolls_back(
     request_id = create_request(api)["id"]
     before_request = get_document(database, "rescue_requests", {"id": request_id})
     before_team = get_document(database, "rescuers", {"id": "team-alpha"})
+    injected_repository: FailingMissionAssignmentRepository | None = None
 
     def failing_assignment_service() -> AssignmentService:
+        nonlocal injected_repository
+        async_database = get_database()
+        injected_repository = FailingMissionAssignmentRepository(async_database)
         return AssignmentService(
-            RescueRequestRepository(cast(Any, database)),
-            RescuerRepository(cast(Any, database)),
-            FailingMissionAssignmentRepository(cast(Any, database)),
+            RescueRequestRepository(async_database),
+            RescuerRepository(async_database),
+            injected_repository,
         )
 
     app.dependency_overrides[get_assignment_service] = failing_assignment_service
@@ -470,3 +530,5 @@ def test_phase5_assignment_dependency_failure_returns_envelope_and_rolls_back(
     assert database["missions"].count_documents({"request_id": request_id}) == 0
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "database_unavailable"
+    assert injected_repository is not None and injected_repository.failure_reached
+    assert "forced Phase 5" not in response.text

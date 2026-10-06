@@ -150,6 +150,12 @@ Allowed role: assigned `rescuer`; completion may also be accepted from `coordina
 
 The same `event_id` must not create duplicate history. Valid offline synchronization changes `source` to `offline-sync` and remains subject to the same transition and version rules.
 
+Accepted transitions update the mission, linked rescue request status/version/history,
+team availability, and immutable mission event in one MongoDB transaction.
+Completion records `completed_at` and releases the team's assignment links.
+A mismatched linked request or team returns `409 lifecycle_conflict` with no
+partial writes. An identical event replay does not increment versions again.
+
 ### Submit hazard report
 
 `POST /hazard-reports`
