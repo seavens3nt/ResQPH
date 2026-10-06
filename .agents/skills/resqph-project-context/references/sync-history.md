@@ -1,5 +1,14 @@
 # Context Sync History
 
+## 2026-10-06 — PR #80 backend acceptance repair
+
+- Baseline: main `44a03f9`; target: Issue #73 backend package review.
+- Impact: mission transitions -> linked request/team persistence and conflict contract.
+- Updates: narrow API, architecture and presentation wording; overall Phase 5 stays active.
+- Evidence: focused real-database lifecycle/conflict/assignment rollback checks,
+  offline rollback checks, and the command/count record in `docs/testing/TEAM-PHASE-05-BACKEND.md`.
+- Boundary: no UI repair, model enablement or final acceptance inferred.
+
 ## 2026-10-05 — Team Phase 4 gate and Phase 5 opening
 
 - Baseline: main `3ecedb1`; target: Issue #64 integration gate.

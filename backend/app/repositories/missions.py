@@ -8,9 +8,15 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.models.mission import Mission, MissionStatus
 
 
+class MissionLifecycleConflictError(Exception):
+    """The linked request or team no longer matches the mission transition."""
+
+
 class MissionRepository:
     def __init__(self, database: AsyncDatabase) -> None:
         self._collection = database["missions"]
+        self._requests = database["rescue_requests"]
+        self._teams = database["rescuers"]
 
     async def list_for_rescuer(
         self,
@@ -49,6 +55,8 @@ class MissionRepository:
         recorded_at: datetime,
         session: AsyncClientSession | None = None,
     ) -> Mission | None:
+        if session is None or not session.in_transaction:
+            raise RuntimeError("Mission lifecycle updates require an active transaction.")
         update: dict[str, Any] = {
             "$set": {
                 "status": new_status,
@@ -71,4 +79,31 @@ class MissionRepository:
         )
         if document is None:
             return None
+        request_result = await self._requests.update_one(
+            {"id": document["request_id"], "mission_id": mission_id, "status": prior_status},
+            {
+                "$set": {"status": new_status, "updated_at": recorded_at},
+                "$inc": {"version": 1},
+                "$push": {"status_history": {"status": new_status, "occurred_at": recorded_at}},
+            },
+            session=session,
+        )
+        availability = {"en-route": "en-route", "arrived": "on-scene", "completed": "available"}
+        team_update: dict[str, Any] = {
+            "$set": {"availability": availability[new_status], "updated_at": recorded_at},
+            "$inc": {"version": 1},
+        }
+        if new_status == "completed":
+            team_update["$set"].update({"assigned_request_id": None, "assigned_mission_id": None})
+        team_result = await self._teams.update_one(
+            {
+                "id": document["team_id"],
+                "assigned_mission_id": mission_id,
+                "assigned_request_id": document["request_id"],
+            },
+            team_update,
+            session=session,
+        )
+        if request_result.modified_count != 1 or team_result.modified_count != 1:
+            raise MissionLifecycleConflictError("Linked mission lifecycle records no longer match.")
         return Mission.model_validate(document)

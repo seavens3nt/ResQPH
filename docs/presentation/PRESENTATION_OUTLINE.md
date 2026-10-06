@@ -40,8 +40,9 @@ References: [architecture](../ARCHITECTURE.md), [database schema](../database/MO
 Intended lifecycle: pending request -> assigned mission -> en-route -> arrived
 -> completed; pending cancellation is constrained. Assignment creates the
 mission, reserves the team and updates the request atomically.
-Mission status/history/idempotent replay are implemented, but do **not** claim
-all later transitions already propagate to request/team: #83 owns that repair.
+Mission status/history/idempotent replay and linked request/team propagation
+are verified by PR #80's real-database tests, including completion/team release.
+This is backend evidence; #83's remaining browser/UI surfaces still need review.
 References: [lifecycle](../workflows/RESCUE_LIFECYCLE.md), [API](../api/API_CONTRACT.md).
 
 ## Slide 6 — Deterministic routing
