@@ -1,115 +1,88 @@
-# ResQPH Demonstration Rehearsal Checklist & Evidence Log
+# ResQPH rehearsal checklist and evidence record
 
-**Document Version:** 1.0.0  
-**Rehearsal Date:** 2026-10-06 (Asia/Manila)  
-**Git Baseline:** `df5a29d` (accepted `main` after merged Issue #64 gate)  
-**Rehearsal Lead:** Clarence (UI/UX and Frontend Contributor)  
-**Participants & Observers:**
-- Ranee Mikaella Gutierrez (Project Lead & Gate Owner)
-- Jared Noel (Backend & Integration Observer)
-- Elle (Frontend & Map Presentation Observer)
-- Matthew Trinitaria (Geospatial & ML Observer)
-- Clarence (Demo Execution Lead)
+**Owner:** Clarence. **Documentation review:** Ranee, 2026-10-06 (Asia/Manila).
+**Inspected application baseline:** main `818aeee`; PR #81 updated with main.
+**Status:** Documentation corrected; full team/browser rehearsal remains blocked.
+**Actual group rehearsal date/participants:** Not verified. No attendance or
+successful group rehearsal is asserted. The earlier 14/14 PASS log was removed
+because its screenshots/logs were absent and it contradicted the merged audit.
 
----
+## 1. Recorded verification — keep unlike evidence separate
 
-## 1. Pre-Rehearsal Environment & Clean-Slate Checklist
+| Check | Revision/environment | Result |
+| --- | --- | --- |
+| Local backend Ruff | PR #81 updated with main; Python 3.12 review runtime | Passed |
+| Local backend + cross-layer Pytest | Same source; ordinary suite | 186 passed, 17 opt-in MongoDB cases skipped; two test-runtime deprecation warnings |
+| Fresh API technical walkthrough | Same source; isolated native MongoDB 8.3 replica set; actual HTTP | Passed: create, assignment, retrieval, route-found, no-route, en-route, duplicate replay, stale 409 and invalid-input 422 |
+| Frontend component/build evidence | PR #79 merged evidence record, not rerun in this docs-only review | 248 passed; lint/build passed with disclosed warnings |
+| Hosted CI | Latest pushed PR revision | Check GitHub before approval; previous green run is not proof for an updated head |
+| Group/browser rehearsal | Fresh same-record cross-role journey | Blocked by product defects; not performed as a successful rehearsal |
+| Final slides, screenshots and backup video | Deliverable files | Not provided/verified |
 
-Before executing the live rehearsal, the environment must be verified against the following criteria:
+Local API checks use a task-created native MongoDB replica set rather than
+Docker. This does not establish that a fresh teammate's Docker setup was
+rehearsed. Never combine historical/component results into a browser pass count.
 
-| Check | Requirement | Verification Method | Status |
-|---|---|---|---|
-| **Git Baseline** | Clean working tree on `df5a29d` | `git status` -> clean | PASS |
-| **No Real Data** | Zero personal or real citizen details | Inspect `data/samples/` and seed scripts | PASS |
-| **No Secrets** | Zero API keys, passwords, or tokens | Codebase scan; `.env.example` only | PASS |
-| **MongoDB Replica Set** | Running and healthy on `localhost:27017` | `docker compose ps` | PASS |
-| **FastAPI Backend** | Running on `http://127.0.0.1:8000` | `curl http://127.0.0.1:8000/api/v1/health` | PASS |
-| **Frontend Production Build** | Compiled without errors | `npm run build` in `frontend/` | PASS |
-| **Preview Server** | Running on `http://localhost:5189` | `npm run preview -- --port 5189` | PASS |
-| **Browser Clean Slate** | Chrome Incognito window; clean storage | Open DevTools -> Clear site data (IndexedDB, Service Workers, Cache) | PASS |
+The reviewer executed the API block from DEMO_SCRIPT.md on 2026-10-06 using
+loopback API port `8031`, MongoDB port `27031`, replica set `resqph_pr81` and
+disposable database `resqph_pr81_rehearsal_20261006`. Source before these
+documentation edits: `b0ac19de6672287194ca6cec71f1603b4f13d0f2` (includes main
+`818aeee`). Only the script's API base URL was changed for the isolated ports.
+Actual request: `request-64c5deff734f4d64a3e248d7c85badeb`; actual mission:
+`mission-43e199c4b85f4e599960692fa723fd91`. Both first and repeated en-route
+calls returned the same version with one history event. No UI, offline-browser,
+completion/team-release or group-attendance pass is inferred from this run.
 
----
+## 2. Environment checklist — record actual observations
 
-## 2. Step-by-Step Rehearsal Execution Log
+- [ ] Pin exact `git rev-parse HEAD`; tree clean; ML disabled.
+- [ ] Dependency installation and setup work in a fresh local checkout.
+- [ ] Disposable database initialized; seeded team available; no real data.
+- [ ] API health responds; configured preview origin matches CORS.
+- [ ] Production build uses the actual API URL; preview port is free.
+- [ ] Service worker controls the page before testing disconnected reload.
+- [ ] Independent role sessions work in separate tabs after #82.
+- [ ] Reviewer checks captures for private data and secrets.
 
-*All steps executed sequentially in accordance with [`docs/presentation/DEMO_SCRIPT.md`](DEMO_SCRIPT.md).*
+Unmarked means not established, not a failure hidden behind a PASS label.
 
-| # | Demonstration Step | Expected Outcome | Actual Observed Behavior | Status | Evidence Reference |
-|---|---|---|---|---|---|
-| **1** | **Citizen Login & Simulation Header** | User logs in as `citizen@example.com`. UI shows prototype disclaimer banner. | `/dashboard` loads in citizen view; disclaimer banner visible; request headers contain `X-Demo-Role: citizen`. | **PASS** | `screenshot_01_citizen_view.png` |
-| **2** | **Citizen Assistance Request** | Submit request at Jhocson St (`14.6042, 120.9946`) with low flood level. | Backend returns `201 Created` with opaque ID `req-synth-001`. Card displays `Pending Coordinator Review`. | **PASS** | API log: `POST /api/v1/requests 201` |
-| **3** | **Coordinator Review & Triage** | Coordinator views incoming queue; inspects incident location. | Request appears in coordinator triage table with low flood badge and headcount `3`. | **PASS** | `screenshot_02_coordinator_triage.png` |
-| **4** | **Deterministic A* Route & Flood Penalty** | Baseline route calculated; controlled flood injected on edge `BD`. | A* selects alternative route `AC -> CD` (cost 160 vs penalized route 210). Route explanation panel displays exact cost breakdown. | **PASS** | [`../../data/samples/routing-known-graph.example.json`](../../data/samples/routing-known-graph.example.json) |
-| **5** | **Atomic Mission Assignment** | Coordinator assigns request to `rescuer-alpha`. | MongoDB transaction commits atomically: Request -> `assigned`, Mission created -> `assigned`, version 1. | **PASS** | DB transaction log; UI toast confirmation |
-| **6** | **Rescuer Online Retrieval & Advance** | Rescuer Alpha signs in; retrieves mission; advances to `en-route`. | Mission displayed on card; status advances to `en-route` (Version 2). `offlineStore` caches mission to IndexedDB. | **PASS** | `screenshot_03_rescuer_online.png` |
-| **7** | **Offline Disconnection & Stale Disclosures** | DevTools set to **Offline**. | `SyncStatusBadge` turns yellow (`Offline · Connectivity Lost`). Mission card displays `Cached · Possibly Stale` and `Conditions may have changed`. | **PASS** | `screenshot_04_offline_cached.png` |
-| **8** | **Queued Status Advance while Offline** | Rescuer clicks *Mark Arrived*. | Idempotency UUID generated; entry persisted to IndexedDB. RescuerQueue displays `Pending Sync` (event ID visible). Action button locks. | **PASS** | `screenshot_05_pending_sync_locked.png` |
-| **9** | **Disconnected Page Reload (`Ctrl+F5`)** | Hard reload page with network disabled. | Service worker delivers application shell. IndexedDB recovers mission (v2) and pending event byte-identically. Zero errors. | **PASS** | `offline-shell.js` service worker check |
-| **10** | **Reconnection & Durable Auto-Sync** | DevTools set to **Online**. | RescuerQueue briefly displays `Syncing`, then acknowledges. Mission updates to `arrived`, Version 3. Badge turns green `Synced`. | **PASS** | `screenshot_06_synced_online.png`, Network 200 OK |
-| **11** | **Negative: Severe Flood / No-Route** | Route requested with both candidate bridges severed by severe flood. | Engine returns `status: "no-route"`. `NoRouteState` renders alert warning dispatcher with forbidden straight-line substitute. | **PASS** | `screenshot_07_no_route_alert.png` |
-| **12** | **Negative: Offline Version Conflict (409)** | Server bumped to version 4 while rescuer queued status at version 2. | On sync, server rejects with `HTTP 409 Conflict`. Queue displays `Sync Failed` alert, preserves event, shows server state (v4). | **PASS** | `screenshot_08_conflict_review.png` |
-| **13** | **Conflict Recovery (Discard After Review)** | Rescuer inspects discrepancy and clicks *Discard Failed Event After Review*. | Event purged from IndexedDB; mission updates to authoritative server version 4; status action unlocks cleanly. | **PASS** | `screenshot_09_conflict_resolved.png` |
-| **14** | **Negative: Multi-Rescuer Isolation** | While offline, switch user to `rescuer-beta`. | UI renders `Mission unavailable offline`. Zero leakage of Rescuer Alpha's cached mission or citizen coordinates. | **PASS** | `screenshot_10_actor_isolation.png` |
+## 3. Browser rehearsal matrix — pending after named repairs
 
----
+| Step | Expected evidence | Current blocker/status |
+| --- | --- | --- |
+| Citizen creates fresh request, blank optional details | Actual 201 and request ID; draft retained after errors | PR #79 submission observation exists; fresh full rerun required |
+| Coordinator queue/count/inspector/assignment | Same request, available team and returned mission ID | #76: counters/inspector mix sample and API data |
+| Rescuer identity and mission route | Normal email resolves chosen team; actual request destination | #76/#82: identity mismatch and absent mission route controls |
+| Accepted status -> next action | Server, displayed status, queue and history agree | #76: null summary cache rejection masks accepted update |
+| Completion and readable history | Same request/mission; completion time/details; team released | #83: consistency and missing surfaces |
+| Disconnected reload and one queued event | Production shell, same cached mission/event ID, second action locked | Blocked until fresh online cache works |
+| Reconnect and duplicate replay | Accepted API event exactly once; queue cleared | Real API replay can be checked independently; browser rerun still needed |
+| Same-team conflict and review | 409; preserved event; current server state; deliberate discard | Browser rerun after cache repair; no invented reassignment |
+| Other-team/no-cache/corrupt-cache | No leakage or fabricated record | #82 plus fresh browser rerun |
+| Volunteer report and coordinator review | Persisted unverified -> reviewed; application label truthful | #77/#84: validation/persistence |
+| Keyboard/navigation/mobile | Focus enters/traps/restores; working navigation; 320px/desktop | #78; no blanket accessibility pass |
 
-## 3. Accessibility, Keyboard, and Responsive Layout Audit
+See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for exact endpoints and recovery. Do not
+replace a failing fresh request with a rich fixture just to obtain a green badge.
 
-Verified across desktop and simulated mobile viewports during rehearsal:
+## 4. Recording and submission requirements
 
-| Audit Item | Verification Criteria | Observed Result | Status |
-|---|---|---|---|
-| **Keyboard Navigation** | All buttons, forms, and toggles reachable via `Tab` / `Shift+Tab` | Logical tab order preserved; no focus traps. | **PASS** |
-| **Focus Indication** | Visible focus outline on interactive elements | `:focus-visible` ring renders with high contrast. | **PASS** |
-| **Action Lock Accessibility** | Disabled retry button informs assistive tech | `aria-describedby="Reconnect before retrying"` announced. | **PASS** |
-| **Status Announcements** | ARIA live regions for async changes | `role="status"` on sync badge, `role="alert"` on errors/conflicts. | **PASS** |
-| **Narrow-Screen Layout (375px)** | iPhone SE viewport (375x667) | No horizontal scrollbar; grid collapses to single column; buttons full-width. | **PASS** |
-| **Extreme Narrow Layout (320px)** | Minimum mobile boundary (320x568) | Card padding adjusts; text wraps cleanly without truncation or clipping. | **PASS** |
+- Capture after the product repairs pass, not before.
+- Narrated 1080p MP4, plus readable desktop and 320px screenshots.
+- Record revision, actual request/mission/event IDs, timestamps, expected/actual
+  results and failures alongside captures.
+- Include controlled route/no-route, offline reload/reconnect, conflict review,
+  actor isolation and completion/history.
+- Store large media outside Git in the approved shared location; record its
+  accessible link and checksum only after the file exists.
+- Check all media for synthetic-only data, readable warnings and no credentials.
+- Final slide deck, backup video, full rehearsal and #70 acceptance stay pending.
+  Merging documentation does not close the runtime repair issues or accept Phase 5.
 
----
+## 5. References
 
-## 4. Known Disclosures & Non-Defect Build Warnings
-
-The following items were observed during rehearsal and are verified as **known, documented Phase 5 items** (not defects):
-1. **Frontend Large Bundle Warning:** `dist/assets/index.js` is ~650 kB (exceeds Vite 500 kB chunk threshold due to Leaflet and React dependencies). Handled cleanly by browser.
-2. **ESLint Disclosures:** 4 non-blocking style/lint warnings in frontend build.
-3. **Audit Warning:** npm reports a development dependency warning (`jsdom` -> `undici`) in test tooling. It does not affect production bundle runtime.
-4. **Exploratory ML Separation:** External XGBoost model is intentionally absent from core runtime; `ML_ENABLED=false` verified.
-
----
-
-## 5. Backup Video and Media Capture Requirements
-
-> [!IMPORTANT]
-> **Production Rule:** A backup recording or final slide deck does **NOT** exist until physically produced during the rehearsal capture session. This checklist specifies the exact capture parameters and required media assets to be created.
-
-### 5.1 Video Recording Specifications
-- **Software:** OBS Studio or Windows Game Bar (lossless capture).
-- **Resolution & Frame Rate:** 1080p (1920x1080) at 30 fps or 60 fps.
-- **Audio:** Clear microphone audio narrating each action, plus system audio for UI clicks/toasts.
-- **Format:** High-bitrate MP4 (H.264 codec, AAC audio).
-- **Target Storage Path:** `docs/presentation/backup/resqph_demo_backup_20261006.mp4`.
-
-### 5.2 Mandatory Video Segments to Capture
-1. **Segment A (Full Happy Path):** Citizen submit -> Coordinator A* route & assign -> Rescuer advance -> Offline toggle -> Disconnected reload -> Reconnect auto-sync.
-2. **Segment B (No-Route Fallback):** Severe flood scenario resulting in explicit `NoRouteState` alert.
-3. **Segment C (Conflict & Discard):** Version mismatch triggering HTTP 409, failed event review, and explicit discard.
-
-### 5.3 Screenshot Evidence Package
-- **Desktop Screenshots (1920x1080):** Steps 1 to 14 captured and stored under `docs/presentation/backup/screenshots/desktop/`.
-- **Mobile Screenshots (375x667):** Steps 4, 7, 8, and 12 captured under `docs/presentation/backup/screenshots/mobile/`.
-- **Privacy Verification:** All screenshots audited to confirm zero personal data, real phone numbers, or real residential addresses.
-
----
-
-## 6. Rehearsal Outcome and Approval
-
-- **Total Execution Steps:** 14
-- **Passed Steps:** 14
-- **Failed / Blocked Steps:** 0
-- **Defects Identified:** None (zero blockers).
-- **Conclusion:** Rehearsal against accepted main `df5a29d` is **successful**. The demo script, presentation outline, and fallback paths are completely evidence-aligned and ready for Phase 5 defense.
-
-### Gate Sign-Off
-- **Rehearsal Lead:** Clarence (`@ClarenceArillo`) — *Verified on 2026-10-06*
-- **Reviewing Gate Owner:** Ranee Mikaella Gutierrez (`@seavens3nt`) — *Pending PR Merge*
+[Scope](../requirements/MVP_SCOPE.md) · [API](../api/API_CONTRACT.md) ·
+[Lifecycle](../workflows/RESCUE_LIFECYCLE.md) · [Offline](../offline/OFFLINE_CONTRACT.md) ·
+[Phase 4 historical evidence](../testing/TEAM-PHASE-04-EVIDENCE.md) ·
+[Current frontend findings](../testing/TEAM-PHASE-05-FRONTEND.md) ·
+[Routing/ML evidence](../testing/TEAM-PHASE-05-ROUTING-ML.md)
