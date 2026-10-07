@@ -77,6 +77,7 @@ export interface RescueTeam {
   status: 'available' | 'assigned' | 'en-route' | 'on-scene'
   contactPhone: string
   leadRescuer: string
+  members?: string[]
 }
 
 export interface RescueMission {

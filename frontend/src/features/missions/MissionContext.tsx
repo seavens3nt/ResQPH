@@ -69,6 +69,9 @@ interface MissionContextValue {
     report: Omit<HazardReport, 'id' | 'reportedAt' | 'verifiedByDispatch'>,
   ) => HazardReport
   submitIncidentReport: (report: Omit<IncidentReport, 'id' | 'documentedAt'>) => IncidentReport
+  createRescueTeam: (team: Omit<RescueTeam, 'id'>) => RescueTeam
+  updateRescueTeam: (id: string, team: Omit<RescueTeam, 'id'>) => void
+  deleteRescueTeam: (id: string) => void
   activeRescuerMission: RescueMission | null
   activeCitizenRequest: RescueRequest | null
   resetToInitialData: () => void
@@ -161,6 +164,23 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     setHazardReports(INITIAL_HAZARD_REPORTS)
     setIncidentReports(INITIAL_INCIDENT_REPORTS)
     setPendingSyncCount(0)
+  }, [])
+
+  const createRescueTeam = useCallback(
+    (input: Omit<RescueTeam, 'id'>): RescueTeam => {
+      const team: RescueTeam = { ...input, id: `team-${Date.now().toString(36)}` }
+      setTeams((prev) => [...prev, team])
+      return team
+    },
+    [],
+  )
+
+  const updateRescueTeam = useCallback((id: string, input: Omit<RescueTeam, 'id'>) => {
+    setTeams((prev) => prev.map((team) => (team.id === id ? { ...input, id } : team)))
+  }, [])
+
+  const deleteRescueTeam = useCallback((id: string) => {
+    setTeams((prev) => prev.filter((team) => team.id !== id || team.status !== 'available'))
   }, [])
 
   const createRescueRequest = useCallback(
@@ -492,6 +512,9 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       addMissionStatusUpdate,
       submitHazardReport,
       submitIncidentReport,
+      createRescueTeam,
+      updateRescueTeam,
+      deleteRescueTeam,
       activeRescuerMission,
       activeCitizenRequest,
       resetToInitialData,
@@ -517,6 +540,9 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       addMissionStatusUpdate,
       submitHazardReport,
       submitIncidentReport,
+      createRescueTeam,
+      updateRescueTeam,
+      deleteRescueTeam,
       activeRescuerMission,
       activeCitizenRequest,
       resetToInitialData,

@@ -675,7 +675,7 @@ describe('CitizenView — API-backed request flow', () => {
     renderOverview()
     expect(screen.getByText(/Controlled Scenario: High tide & heavy rainfall/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Direct 911 Hotline/i })).not.toBeInTheDocument()
     expect(screen.getAllByText(/No live ETA/i)).toHaveLength(2)
     expect(screen.queryByText(/ETA 6 min/i)).not.toBeInTheDocument()
   })
@@ -781,6 +781,28 @@ describe('CitizenView — API-backed request flow', () => {
     })
     expect(screen.getByRole('button', { name: /Start a rescue request/i })).toBeInTheDocument()
     expect(screen.queryByText(/Pending Dispatch/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('sample-rescue-tracking')).toBeInTheDocument()
+    expect(screen.getByText('SAMPLE-001')).toBeInTheDocument()
+    expect(screen.getByText(/not connected to a submitted request or dispatch/i)).toBeInTheDocument()
+    expect(screen.getByText('En route')).toBeInTheDocument()
+    expect(screen.getByText('Team leader contact · sample')).toBeInTheDocument()
+    expect(screen.getByText('09XX XXX XXXX')).toBeInTheDocument()
+  })
+
+  it('shows the sample tracking placeholder when the request list API fails', async () => {
+    mockList.mockRejectedValue(new Error('API unavailable'))
+    renderInquiries()
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/Unable to load your rescue requests/i)
+    })
+
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+    expect(screen.getByTestId('sample-rescue-tracking')).toBeInTheDocument()
+    expect(screen.getByText('SAMPLE-001')).toBeInTheDocument()
+    expect(screen.getByText(/not connected to a submitted request or dispatch/i)).toBeInTheDocument()
+    expect(screen.getByText('Team leader contact · sample')).toBeInTheDocument()
+    expect(screen.getByText('09XX XXX XXXX')).toBeInTheDocument()
   })
 })
 

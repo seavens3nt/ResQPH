@@ -1,28 +1,29 @@
 /*
- * ResQPH design system — Red & White edition
+ * ResQPH design system — Dark / Black edition
  *
  * Fonts
- *   Bebas Neue      — condensed all-caps display (impact, urgency)
- *   Outfit          — geometric humanist sans, clean at every size
+ *   Outfit          — geometric humanist sans, all sizes (matches login page)
  *   JetBrains Mono  — coordinates, codes, status labels
  *
- * Palette: rescue red (#D62828) on pure white. Dark surfaces use a
- * deep red-tinted near-black — never brown, never grey.
+ * Palette: rescue red (#D62828) on zinc-black (#0c0c0e). Surfaces use the
+ * same zinc scale as the login page (#18181b cards, #27272a borders).
  *
  * Semantic token layers
  *   --color-*    → role-based decisions  (brand, status)
  *   --surface-*  → background hierarchy
- *   --text-*     → foreground hierarchy
+ *   --text-*     → foreground hierarchy (zinc-400/500)
  *   --border-*   → strokes & dividers
  *   Raw hex      → only inside THIS file
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ── Primitives (raw hex – never used in component CSS) ───────────── */
 :root {
   --_white:        #ffffff;
-  --_off-white:    #fafafa;
+  --_off-white:    #f4f4f5;
+
+  /* Red accent palette */
   --_red-50:       #fff1f1;
   --_red-100:      #ffd6d6;
   --_red-300:      #f47171;
@@ -32,11 +33,12 @@
   --_red-700:      #921212;
   --_red-900:      #4a0808;
 
-  --_dark-base:    #120808;   /* near-black, red-tinted */
-  --_dark-1:       #1a0c0c;
-  --_dark-2:       #210f0f;
-  --_dark-3:       #2c1414;
-  --_dark-4:       #3a1a1a;
+  /* True-black Zinc palette — matches login page exactly */
+  --_dark-base:    #0c0c0e;   /* page bg, same as .auth-mobile-page */
+  --_dark-1:       #18181b;   /* card bg, same as .auth-phone-shell */
+  --_dark-2:       #1f1f23;   /* raised surface */
+  --_dark-3:       #27272a;   /* border / overlay, same as login border */
+  --_dark-4:       #3f3f46;   /* strong border */
 
   --_green-400:    #22c55e;
   --_amber-400:    #f59e0b;
@@ -46,7 +48,7 @@
   --color-brand:          var(--_red-500);
   --color-brand-hover:    var(--_red-400);
   --color-brand-deep:     var(--_red-700);
-  --color-brand-subtle:   rgb(214 40 40 / 10%);
+  --color-brand-subtle:   rgb(214 40 40 / 12%);
   --color-brand-border:   rgb(214 40 40 / 35%);
   --color-brand-glow:     rgb(214 40 40 / 28%);
 
@@ -68,35 +70,35 @@
   --color-info-surface:    rgb(96 165 250 / 12%);
   --color-info-border:     rgb(96 165 250 / 28%);
 
-  /* ── Semantic: Surfaces (dark default) ───────────────────────────── */
+  /* ── Semantic: Surfaces (true black) ─────────────────────────────── */
   --surface-base:          var(--_dark-base);
   --surface-raised:        var(--_dark-1);
   --surface-elevated:      var(--_dark-2);
   --surface-overlay:       var(--_dark-3);
 
-  /* Light band (how-it-works section) */
+  /* Light band (landing page sections) */
   --surface-light:         var(--_white);
   --surface-light-raised:  var(--_off-white);
   --surface-light-border:  rgb(214 40 40 / 12%);
 
-  /* ── Semantic: Text (on dark) ────────────────────────────────────── */
-  --text-primary:          var(--_white);
-  --text-secondary:        rgb(255 255 255 / 72%);
-  --text-tertiary:         rgb(255 255 255 / 46%);
-  --text-disabled:         rgb(255 255 255 / 26%);
+  /* ── Semantic: Text ──────────────────────────────────────────────── */
+  --text-primary:          #f4f4f5;               /* matches login .auth-main-title */
+  --text-secondary:        #a1a1aa;               /* zinc-400 */
+  --text-tertiary:         #71717a;               /* zinc-500, matches .auth-main-subtitle */
+  --text-disabled:         #52525b;               /* zinc-600 */
 
   /* Text on light surfaces */
-  --text-on-light:           #120808;
-  --text-on-light-secondary: #5a2424;
-  --text-on-light-tertiary:  #8a4040;
+  --text-on-light:           #09090b;
+  --text-on-light-secondary: #3f3f46;
+  --text-on-light-tertiary:  #71717a;
 
-  /* ── Semantic: Borders (on dark) ─────────────────────────────────── */
-  --border-subtle:   rgb(255 255 255 / 8%);
-  --border-default:  rgb(255 255 255 / 14%);
-  --border-strong:   rgb(255 255 255 / 24%);
+  /* ── Semantic: Borders ───────────────────────────────────────────── */
+  --border-subtle:   rgb(255 255 255 / 6%);
+  --border-default:  #27272a;                     /* same as .auth-phone-shell border */
+  --border-strong:   #3f3f46;
 
   /* ── Fonts ───────────────────────────────────────────────────────── */
-  --font-display: 'Bebas Neue', 'Arial Narrow', 'Impact', sans-serif;
+  --font-display: 'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-body:    'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
 
@@ -130,12 +132,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Bebas Neue is all-caps by nature — no weight axis, single face */
+/* Headings — Outfit, same as login page */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  line-height: 1.0;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
   margin: 0;
   color: var(--text-primary);
 }
@@ -166,65 +168,53 @@ img, svg { display: block; max-width: 100%; }
   }
 }
 
-/* Shared field-operations theme: clean white surfaces, high contrast, balanced rescue red accent. */
-:root {
-  color-scheme: light;
-  --_off-white: #fafafa;
-  --_red-50: #fef2f2;
-  --_red-100: #fee2e2;
-  --_red-300: #fca5a5;
-  --_red-400: #f87171;
-  --_red-500: #dc2626;   /* brand rescue red */
-  --_red-600: #b91c1c;
-  --_red-700: #991b1b;
-  --_dark-base: #f8fafc;
-  --_dark-1: #ffffff;
-  --_dark-2: #f1f5f9;
-  --_dark-3: #e2e8f0;
-  --_dark-4: #cbd5e1;
-  --_green-400: #16a34a;
-  --_amber-400: #d97706;
-  --_blue-400: #2563eb;
-  --color-brand: var(--_red-500);
-  --color-brand-hover: var(--_red-600);
-  --color-brand-deep: var(--_red-700);
-  --color-brand-subtle: rgb(220 38 38 / 8%);
-  --color-brand-border: rgb(220 38 38 / 25%);
-  --color-brand-glow: rgb(220 38 38 / 20%);
-  --color-danger: var(--_red-500);
-  --color-danger-text: var(--_red-700);
-  --color-danger-surface: rgb(220 38 38 / 8%);
-  --color-danger-border: rgb(220 38 38 / 22%);
-  --color-success: var(--_green-400);
-  --color-success-surface: rgb(22 163 74 / 8%);
-  --color-success-border: rgb(22 163 74 / 22%);
-  --color-warning: var(--_amber-400);
-  --color-warning-surface: rgb(217 119 6 / 9%);
-  --color-warning-border: rgb(217 119 6 / 22%);
-  --color-info: var(--_blue-400);
-  --color-info-surface: rgb(37 99 235 / 8%);
-  --color-info-border: rgb(37 99 235 / 22%);
-  --surface-base: var(--_dark-base);
-  --surface-raised: var(--_dark-1);
-  --surface-elevated: var(--_dark-2);
-  --surface-overlay: var(--_dark-1);
-  --surface-light: #ffffff;
-  --surface-light-raised: var(--_off-white);
-  --surface-light-border: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-disabled: #94a3b8;
-  --text-on-light: #0f172a;
-  --text-on-light-secondary: #475569;
-  --text-on-light-tertiary: #64748b;
-  --border-subtle: #f1f5f9;
-  --border-default: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --font-body: 'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+
+/* ── Mobile Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    font-size: 0.95rem;
+  }
+
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.1rem; }
+  h5 { font-size: 1rem; }
+  h6 { font-size: 0.9rem; }
 }
 
-body { color-scheme: light; background: var(--surface-base); color: var(--text-primary); }
-h1, h2, h3, h4, h5, h6 { font-weight: 600; letter-spacing: -0.025em; }
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+
+  body {
+    font-size: 0.9rem;
+  }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.15rem; }
+  h4 { font-size: 1.05rem; }
+  h5 { font-size: 0.95rem; }
+  h6 { font-size: 0.85rem; }
+}
+
+/* ── Screen-reader & accessibility utilities ────────────────────────────── */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

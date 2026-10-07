@@ -183,7 +183,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
 })
 describe('Field Rescuer Mobile Dashboard Flows', () => {
   it('renders target details panel, medical alerts, and flood severity status', () => {
-    renderWithProviders(<RescuerView />, 'rescuer')
+    renderWithProviders(<RescuerView navSection="inquiries" />, 'rescuer')
 
     // Target location and landmark
     expect(screen.getByText(/House & Location Description/i)).toBeInTheDocument()
@@ -194,10 +194,11 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
   })
 
   it('renders flood-aware route engine with avoided Loyola St and recommended Jhocson St', () => {
-    renderWithProviders(<RescuerView />, 'rescuer')
+    renderWithProviders(<RescuerView navSection="missions" />, 'rescuer')
 
-    // Impassable warning
-    expect(screen.getByText(/LOYOLA ST\. — IMPASSABLE/i)).toBeInTheDocument()
+    // Impassable warning is shown first; route cards are revealed on demand
+    expect(screen.getByText(/Loyola St\.\s*— impassable/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Use recommended route/i }))
     expect(screen.getAllByText(/RECOMMENDED ROUTE/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/Jhocson St\. Recommended Corridor/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Gerardo St\. Detour/i)).toBeInTheDocument()

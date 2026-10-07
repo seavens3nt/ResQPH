@@ -209,3 +209,56 @@
     padding: 0.5rem;
   }
 }
+
+.dash .forecast-widget {
+  background: #05070b;
+  color: #f8fafc;
+  border-color: #263244;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+.dash .forecast-location,
+.dash .forecast-degrees,
+.dash .forecast-condition,
+.dash .forecast-metric-val,
+.dash .hourly-cell__temp {
+  color: #f8fafc;
+}
+
+.dash .forecast-sublocation,
+.dash .forecast-hilo,
+.dash .forecast-metric-label,
+.dash .forecast-hourly-head,
+.dash .hourly-cell__time {
+  color: #aab8ca;
+}
+
+.dash .forecast-high {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.dash .forecast-warning {
+  background: #1b0b10;
+  border-color: #7f1d1d;
+  border-left-color: #ef4444;
+  color: #fecaca;
+}
+
+.dash .forecast-warning svg {
+  color: #f87171;
+}
+
+.dash .forecast-metric-chip,
+.dash .hourly-cell {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dash .forecast-hourly {
+  border-top-color: #263244;
+}
+
+.dash .hourly-cell__pop {
+  color: #93c5fd;
+}
