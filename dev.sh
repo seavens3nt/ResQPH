@@ -13,6 +13,7 @@ INSTALL_DEPS=0
 
 BACKEND_PID=""
 FRONTEND_PID=""
+CLEANED_UP=0
 
 usage() {
   cat <<USAGE
@@ -122,6 +123,156 @@ install_dependencies() {
   (cd "$ROOT_DIR/frontend" && npm install)
 }
 
+install_local_routing_package() {
+  local py
+  py="$(backend_python)"
+
+  log "Installing local routing package in editable mode"
+  if command -v uv >/dev/null 2>&1; then
+    uv pip install --python "$py" -e "$ROOT_DIR/routing"
+  else
+    "$py" -m ensurepip --upgrade >/dev/null 2>&1 || true
+    "$py" -m pip install -e "$ROOT_DIR/routing"
+  fi
+}
+
+ensure_local_routing_package() {
+  local py
+  py="$(backend_python)"
+
+  if "$py" - "$ROOT_DIR" <<'PY'
+import inspect
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+expected = (root / "routing" / "src").resolve()
+
+try:
+    import resqph_routing
+except Exception:
+    raise SystemExit(1)
+
+package_path = Path(inspect.getfile(resqph_routing)).resolve()
+has_required_api = hasattr(resqph_routing, "find_shortest_distance_route")
+if expected not in package_path.parents or not has_required_api:
+    raise SystemExit(1)
+PY
+  then
+    return 0
+  fi
+
+  install_local_routing_package
+}
+
+verify_backend_import() {
+  local py
+  py="$(backend_python)"
+
+  log "Verifying backend imports"
+  (cd "$ROOT_DIR/backend" && "$py" - <<'PY'
+import app.main
+PY
+  )
+}
+
+detect_host_ip() {
+  if command -v ipconfig >/dev/null 2>&1; then
+    ipconfig getifaddr en0 2>/dev/null && return 0
+    ipconfig getifaddr en1 2>/dev/null && return 0
+  fi
+  if command -v hostname >/dev/null 2>&1; then
+    hostname -I 2>/dev/null | awk '{print $1}' && return 0
+  fi
+  printf '127.0.0.1\n'
+}
+
+mongodb_uri_is_ready() {
+  local uri="$1"
+  local py
+  py="$(backend_python)"
+
+  "$py" - "$uri" <<'PY'
+import asyncio
+import sys
+
+from pymongo import AsyncMongoClient
+
+
+async def main() -> int:
+    uri = sys.argv[1]
+    client = AsyncMongoClient(uri, serverSelectionTimeoutMS=2000)
+    try:
+        hello = await client.admin.command("hello")
+    finally:
+        await client.close()
+    if hello.get("setName") != "rs0" or not hello.get("isWritablePrimary"):
+        return 1
+    return 0
+
+
+raise SystemExit(asyncio.run(main()))
+PY
+}
+
+select_mongodb_uri() {
+  if [[ -n "${MONGODB_URI:-}" ]]; then
+    log "Using MONGODB_URI from the environment"
+    return 0
+  fi
+
+  local host_ip
+  host_ip="$(detect_host_ip)"
+  local candidates=(
+    "mongodb://localhost:27017/?replicaSet=rs0"
+    "mongodb://127.0.0.1:27017/?replicaSet=rs0"
+  )
+  if [[ -n "$host_ip" && "$host_ip" != "127.0.0.1" ]]; then
+    candidates+=("mongodb://${host_ip}:27017/?replicaSet=rs0&directConnection=true")
+  fi
+
+  local uri
+  for uri in "${candidates[@]}"; do
+    if mongodb_uri_is_ready "$uri" >/dev/null 2>&1; then
+      export MONGODB_URI="$uri"
+      log "Using MongoDB URI: $uri"
+      return 0
+    fi
+  done
+
+  echo "MongoDB is running, but the backend could not reach the rs0 replica set." >&2
+  echo "If another local mongod owns localhost:27017, stop it or set MONGODB_URI explicitly." >&2
+  exit 1
+}
+
+wait_for_backend() {
+  local py
+  py="$(backend_python)"
+
+  log "Waiting for backend health endpoint"
+  for _ in {1..60}; do
+    if ! kill -0 "$BACKEND_PID" >/dev/null 2>&1; then
+      echo "Backend process exited before becoming ready." >&2
+      exit 1
+    fi
+    if "$py" - "$BACKEND_PORT" <<'PY' >/dev/null 2>&1
+import sys
+import urllib.request
+
+port = sys.argv[1]
+with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/v1/health", timeout=1) as response:
+    raise SystemExit(0 if response.status == 200 else 1)
+PY
+    then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "Backend did not become ready within 60 seconds." >&2
+  exit 1
+}
+
 wait_for_mongodb() {
   log "Waiting for MongoDB replica set"
   for _ in {1..60}; do
@@ -138,6 +289,11 @@ wait_for_mongodb() {
 }
 
 cleanup() {
+  if [[ "$CLEANED_UP" == "1" ]]; then
+    return 0
+  fi
+  CLEANED_UP=1
+
   log "Stopping local dev servers"
   if [[ -n "$BACKEND_PID" ]] && kill -0 "$BACKEND_PID" >/dev/null 2>&1; then
     kill "$BACKEND_PID" >/dev/null 2>&1 || true
@@ -168,6 +324,8 @@ else
 fi
 
 PYTHON_BIN="$(backend_python)"
+ensure_local_routing_package
+verify_backend_import
 
 if [[ ! -d "$ROOT_DIR/frontend/node_modules" ]]; then
   echo "frontend/node_modules is missing. Run './dev.sh --install' first." >&2
@@ -177,10 +335,12 @@ fi
 log "Starting MongoDB"
 (cd "$ROOT_DIR" && docker compose up -d mongodb)
 wait_for_mongodb
+select_mongodb_uri
 
 log "Starting backend on http://localhost:${BACKEND_PORT}"
 (cd "$ROOT_DIR/backend" && "$PYTHON_BIN" -m fastapi dev app/main.py --port "$BACKEND_PORT") &
 BACKEND_PID=$!
+wait_for_backend
 
 log "Starting frontend on http://localhost:${FRONTEND_PORT}"
 (cd "$ROOT_DIR/frontend" && npm run dev -- --host 0.0.0.0 --port "$FRONTEND_PORT") &
