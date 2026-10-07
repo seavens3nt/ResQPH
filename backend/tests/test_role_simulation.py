@@ -2,10 +2,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-
 from app.api.routes.missions import (
     get_mission_service,
     router,
@@ -15,6 +11,9 @@ from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import DuplicateMissionStatusEventError
 from app.services.missions import MissionService
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
 
 BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
 

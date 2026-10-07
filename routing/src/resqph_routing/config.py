@@ -24,7 +24,7 @@ STUDY_AREA_BOUNDS: tuple[float, float, float, float] = (
     120.982000,
     14.596000,
     121.004000,
-    14.617500,
+    14.621000,
 )
 
 # CRS definitions

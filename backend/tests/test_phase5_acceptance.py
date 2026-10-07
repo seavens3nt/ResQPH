@@ -5,12 +5,6 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import pytest
-from fastapi.testclient import TestClient
-from pymongo import MongoClient
-from pymongo.asynchronous.client_session import AsyncClientSession
-from pymongo.database import Database
-from pymongo.errors import PyMongoError
-
 from app.api.routes.assignments import get_assignment_service
 from app.core.config import settings
 from app.db.mongodb import get_database
@@ -20,6 +14,11 @@ from app.repositories.assignments import AssignmentRepository
 from app.repositories.rescue_requests import RescueRequestRepository
 from app.repositories.rescuers import RescuerRepository
 from app.services.assignments import AssignmentService
+from fastapi.testclient import TestClient
+from pymongo import MongoClient
+from pymongo.asynchronous.client_session import AsyncClientSession
+from pymongo.database import Database
+from pymongo.errors import PyMongoError
 
 DISPOSABLE_DATABASE_PREFIX = "resqph_issue73_backend_"
 

@@ -5,10 +5,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-
 from app.api.routes.routing import get_routing_adapter, router
 from app.integrations.routing import RoutingIntegrationError
 from app.schemas.common import (
@@ -17,6 +13,9 @@ from app.schemas.common import (
     validation_exception_handler,
 )
 from app.schemas.routing import RouteRequest
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROUTE_FOUND = json.loads(

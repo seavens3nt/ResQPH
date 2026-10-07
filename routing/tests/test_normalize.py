@@ -4,7 +4,6 @@ from __future__ import annotations
 import re
 
 import pytest
-
 from resqph_routing import config
 from resqph_routing.normalize import (
     CONTRACT_COLUMNS,

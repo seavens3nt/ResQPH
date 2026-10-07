@@ -8,7 +8,7 @@
  *   - Success: assignment confirmed + updated state
  *   - Validation error: team selection required
  */
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ApiError,
@@ -43,9 +43,7 @@ export function CoordinatorAssignModal({
   // Read available teams from the existing mock context (fallback for when backend teams endpoint is not yet available)
   const { teams } = useMissions()
 
-  const [selectedTeamId, setSelectedTeamId] = useState(
-    teams.find((t: RescueTeam) => t.status === 'available')?.id ?? '',
-  )
+  const [selectedTeamId, setSelectedTeamId] = useState('')
   const [apiError, setApiError] = useState<ApiError | null>(null)
   const [assignmentSuccess, setAssignmentSuccess] = useState(false)
   const recommendations = useQuery({
@@ -59,16 +57,17 @@ export function CoordinatorAssignModal({
     },
   })
 
-  useEffect(() => {
-    const top = recommendations.data?.candidates[0]
-    if (top) setSelectedTeamId(top.team_id)
-  }, [recommendations.data])
+  const availableTeams = teams.filter((t: RescueTeam) => t.status === 'available')
+  const recommendationCandidates = recommendations.data?.candidates ?? []
+  const defaultTeamId = recommendationCandidates[0]?.team_id ?? availableTeams[0]?.id ?? ''
+  const effectiveSelectedTeamId = selectedTeamId || defaultTeamId
+  const hasSelectableTeam = recommendationCandidates.length > 0 || availableTeams.length > 0
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
       if (!targetRequest) throw new Error('No request selected')
       return assignTeam(targetRequest.id, {
-        team_id: selectedTeamId,
+        team_id: effectiveSelectedTeamId,
         expected_request_version: targetRequest.version,
       })
     },
@@ -101,19 +100,16 @@ export function CoordinatorAssignModal({
   function handleClose() {
     setApiError(null)
     setAssignmentSuccess(false)
+    setSelectedTeamId('')
     onClose()
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!selectedTeamId) return
+    if (!effectiveSelectedTeamId) return
     setApiError(null)
     mutate()
   }
-
-  const availableTeams = teams.filter((t: RescueTeam) => t.status === 'available')
-  const recommendationCandidates = recommendations.data?.candidates ?? []
-  const hasSelectableTeam = recommendationCandidates.length > 0 || availableTeams.length > 0
 
   return (
     <Modal
@@ -195,13 +191,13 @@ export function CoordinatorAssignModal({
                     <label
                       key={candidate.team_id}
                       role="listitem"
-                      className={`recommendation-row ${selectedTeamId === candidate.team_id ? 'is-selected' : ''}`}
+                      className={`recommendation-row ${effectiveSelectedTeamId === candidate.team_id ? 'is-selected' : ''}`}
                     >
                       <input
                         type="radio"
                         name="recommended-team"
                         value={candidate.team_id}
-                        checked={selectedTeamId === candidate.team_id}
+                        checked={effectiveSelectedTeamId === candidate.team_id}
                         onChange={() => setSelectedTeamId(candidate.team_id)}
                       />
                       <span>
@@ -221,12 +217,12 @@ export function CoordinatorAssignModal({
               ) : (
                 <select
                   id="assign-team-select"
-                  value={selectedTeamId}
+                  value={effectiveSelectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
                   className="form-select"
                   required
                   aria-required="true"
-                  aria-describedby={!selectedTeamId ? 'assign-team-error' : undefined}
+                  aria-describedby={!effectiveSelectedTeamId ? 'assign-team-error' : undefined}
                 >
                   <option value="">— Select a team —</option>
                   {availableTeams.map((t: RescueTeam) => (
@@ -251,7 +247,7 @@ export function CoordinatorAssignModal({
                   </ul>
                 </details>
               ) : null}
-              {!selectedTeamId && (
+              {!effectiveSelectedTeamId && (
                 <span id="assign-team-error" className="field__error" role="alert">
                   A team selection is required
                 </span>
@@ -265,7 +261,7 @@ export function CoordinatorAssignModal({
               <Button
                 variant="primary"
                 type="submit"
-                disabled={isPending || !selectedTeamId || !hasSelectableTeam}
+                disabled={isPending || !effectiveSelectedTeamId || !hasSelectableTeam}
                 aria-busy={isPending}
               >
                 {isPending ? 'Assigning…' : 'Confirm Dispatch Assignment'}

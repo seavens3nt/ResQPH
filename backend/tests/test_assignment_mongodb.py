@@ -3,10 +3,6 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
-from pymongo import AsyncMongoClient, MongoClient
-from pymongo.asynchronous.client_session import AsyncClientSession
-
 from app.db.setup import initialize_database
 from app.main import app
 from app.models.mission import Mission
@@ -17,6 +13,9 @@ from app.repositories.rescuers import RescuerRepository
 from app.schemas.assignments import AssignmentCreate
 from app.schemas.common import DemoActor, ServiceError
 from app.services.assignments import AssignmentService
+from fastapi.testclient import TestClient
+from pymongo import AsyncMongoClient, MongoClient
+from pymongo.asynchronous.client_session import AsyncClientSession
 
 pytestmark = [
     pytest.mark.skipif(

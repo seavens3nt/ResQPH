@@ -10,12 +10,6 @@ from typing import Any, cast
 import httpx
 import pytest
 import pytest_asyncio
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from pymongo import AsyncMongoClient
-from pymongo.asynchronous.client_session import AsyncClientSession
-from pymongo.asynchronous.database import AsyncDatabase
-
 from app.api.routes.missions import (
     get_mission_service,
     router,
@@ -28,6 +22,11 @@ from app.repositories.mission_status_events import MissionStatusEventRepository
 from app.repositories.missions import MissionRepository
 from app.schemas.missions import DemoActor, MissionStatusEventCreate
 from app.services.missions import MissionService
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from pymongo import AsyncMongoClient
+from pymongo.asynchronous.client_session import AsyncClientSession
+from pymongo.asynchronous.database import AsyncDatabase
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = REPO_ROOT / "data" / "samples" / "offline-mission.example.json"

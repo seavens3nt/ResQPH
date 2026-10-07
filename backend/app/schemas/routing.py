@@ -105,9 +105,18 @@ class RouteFoundResponse(BaseModel):
     explanation: str = Field(min_length=1)
     scenario_timestamp: str = Field(min_length=1)
     model_version: str | None
-    selection_mode: Literal["cost", "distance"] = "cost"
-    snapped_origin: dict[str, Any] | None = None
-    snapped_destination: dict[str, Any] | None = None
+    selection_mode: Literal["cost", "distance"] = Field(
+        default="cost",
+        exclude_if=lambda value: value == "cost",
+    )
+    snapped_origin: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    snapped_destination: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("distance_m", "estimated_time_s", "total_cost", mode="before")
     @classmethod
@@ -142,9 +151,18 @@ class NoRouteResponse(BaseModel):
     reason: str = Field(min_length=1)
     warnings: list[RoutingWarning] = Field(min_length=1)
     scenario_timestamp: str = Field(min_length=1)
-    selection_mode: Literal["cost", "distance"] = "cost"
-    snapped_origin: dict[str, Any] | None = None
-    snapped_destination: dict[str, Any] | None = None
+    selection_mode: Literal["cost", "distance"] = Field(
+        default="cost",
+        exclude_if=lambda value: value == "cost",
+    )
+    snapped_origin: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    snapped_destination: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("warnings")
     @classmethod

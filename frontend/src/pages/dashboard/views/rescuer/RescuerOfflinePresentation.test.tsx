@@ -2,7 +2,9 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
+import type { ReactElement } from 'react'
 import type { MissionDetail, OfflineQueueEntry } from '../../../../api/missions'
 import { RescuerMissionCard } from './RescuerMissionCard'
 import { RescuerOfflineQueue } from './RescuerOfflineQueue'
@@ -16,13 +18,20 @@ interface OfflineFixture {
 
 const fixture = JSON.parse(fixtureJson) as OfflineFixture
 
+function renderMissionCard(ui: ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
+}
+
 function makeEntry(syncState: OfflineQueueEntry['syncState']): OfflineQueueEntry {
   return { ...fixture.pending_event, syncState }
 }
 
 describe('rescuer offline presentation', () => {
   it('never labels an explicitly cached mission as freshly synced', () => {
-    render(<RescuerMissionCard mission={fixture.mission} lastSyncedAt={fixture.last_synced_at}
+    renderMissionCard(<RescuerMissionCard mission={fixture.mission} lastSyncedAt={fixture.last_synced_at}
       isStale={false} isCached isAdvancing={false} onAdvanceStatus={vi.fn()} />)
     expect(screen.getByRole('status', { name: /Cached · Possibly Stale/i })).toBeInTheDocument()
     expect(screen.queryByText('Synced')).not.toBeInTheDocument()
@@ -50,7 +59,7 @@ describe('rescuer offline presentation', () => {
   })
 
   it('shows the cached mission, full last-sync time, and changed-conditions disclosure', () => {
-    render(
+    renderMissionCard(
       <RescuerMissionCard
         mission={fixture.mission}
         lastSyncedAt={fixture.last_synced_at}
@@ -73,7 +82,7 @@ describe('rescuer offline presentation', () => {
 
   it('locks a second status action while a queued event remains unaccepted', () => {
     const onAdvance = vi.fn()
-    render(
+    renderMissionCard(
       <RescuerMissionCard
         mission={fixture.mission}
         lastSyncedAt={fixture.last_synced_at}
@@ -92,7 +101,7 @@ describe('rescuer offline presentation', () => {
   })
 
   it('announces an in-progress status action without claiming acceptance', () => {
-    render(
+    renderMissionCard(
       <RescuerMissionCard
         mission={fixture.mission}
         lastSyncedAt={fixture.last_synced_at}

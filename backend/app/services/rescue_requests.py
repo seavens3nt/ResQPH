@@ -1,8 +1,6 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from pymongo.errors import PyMongoError
-
 from app.models.rescue_request import RequestStatus, RequestStatusHistory, RescueRequest
 from app.repositories.assignments import AssignmentRepository
 from app.repositories.rescue_requests import RescueRequestRepository
@@ -13,6 +11,7 @@ from app.schemas.rescue_requests import (
     RescueRequestListResponse,
     RescueRequestResponse,
 )
+from pymongo.errors import PyMongoError
 
 _REQUEST_STATUSES: set[str] = {
     "pending",
