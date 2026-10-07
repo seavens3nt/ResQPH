@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from app.integrations.routing import RoutingAdapter, RoutingIntegrationError
 from app.models.mission import Mission
+from app.models.rescue_request import RescueRequest
 from app.repositories.assignments import AssignmentRepository, DuplicateAssignmentError
 from app.repositories.rescue_requests import RescueRequestRepository
 from app.repositories.rescuers import RescuerRepository
@@ -57,6 +58,63 @@ class AssignmentService:
                 "Recommendations are only available for pending unassigned requests.",
             )
 
+        candidates, exclusions = await self._rank_eligible_teams(request)
+        return TeamRecommendationResponse(
+            request_id=request.id,
+            scenario_id="scenario-controlled-ubelt-001",
+            selection_mode="distance",
+            fixture_notice=load_station_catalog()["fixture_notice"],
+            candidates=candidates,
+            exclusions=exclusions,
+        )
+
+    async def auto_assign_best_team(
+        self,
+        request_id: str,
+        expected_request_version: int,
+    ) -> AssignmentResponse | None:
+        request = await self._requests.get_by_id(request_id)
+        if request is None:
+            raise ServiceError(404, "request_not_found", "Rescue request is unavailable.")
+        if request.version != expected_request_version:
+            raise ServiceError(
+                409,
+                "stale_request_version",
+                "Automatic assignment was skipped because the request version changed.",
+                [
+                    {
+                        "field": "expected_request_version",
+                        "reason": f"current version is {request.version}",
+                    }
+                ],
+            )
+        if request.status != "pending" or request.mission_id is not None:
+            raise ServiceError(
+                409,
+                "request_not_pending",
+                "Automatic assignment is only available for pending unassigned requests.",
+            )
+
+        candidates, _ = await self._rank_eligible_teams(request)
+        if not candidates:
+            return None
+
+        best = candidates[0]
+        coordinator = DemoActor(user_id="system-auto-assignment", role="coordinator")
+        return await self.assign_team(
+            request_id,
+            AssignmentCreate(
+                team_id=best.team_id,
+                expected_request_version=expected_request_version,
+            ),
+            coordinator,
+            precomputed_route=best.route,
+        )
+
+    async def _rank_eligible_teams(
+        self,
+        request: RescueRequest,
+    ) -> tuple[list[TeamRecommendationCandidate], list[TeamRecommendationExclusion]]:
         teams = await self._rescuers.list_all()
         candidates: list[TeamRecommendationCandidate] = []
         exclusions: list[TeamRecommendationExclusion] = []
@@ -115,20 +173,14 @@ class AssignmentService:
                 item.team_id,
             )
         )
-        return TeamRecommendationResponse(
-            request_id=request.id,
-            scenario_id="scenario-controlled-ubelt-001",
-            selection_mode="distance",
-            fixture_notice=load_station_catalog()["fixture_notice"],
-            candidates=candidates,
-            exclusions=exclusions,
-        )
+        return candidates, exclusions
 
     async def assign_team(
         self,
         request_id: str,
         payload: AssignmentCreate,
         actor: DemoActor,
+        precomputed_route: dict | None = None,
     ) -> AssignmentResponse:
         if actor.role != "coordinator":
             raise ServiceError(
@@ -177,9 +229,9 @@ class AssignmentService:
                     [{"field": "team_id", "reason": "missing or not available"}],
                 )
 
-            latest_route_result = None
+            latest_route_result = precomputed_route
             origin = _team_point(team)
-            if origin is not None:
+            if latest_route_result is None and origin is not None:
                 latest_route_result = self._evaluate_team_route(
                     origin,
                     request.location.point.coordinates,

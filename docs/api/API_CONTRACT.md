@@ -94,7 +94,12 @@ Allowed role: `citizen`.
 }
 ```
 
-Success: `201 Created` with the stored request, `status: "pending"`, `version: 1`, and server timestamps.
+Success: `201 Created` with the stored request and server timestamps. In the
+Phase 5 simulated workflow, the backend may immediately assign the closest
+eligible available team by shortest valid controlled-road distance and return the
+request as `status: "assigned"` with `assigned_team_id` and `mission_id`. If no
+eligible or reachable team is available, the request remains persisted as
+`status: "pending"` for coordinator review.
 
 ### List and retrieve rescue requests
 
@@ -132,7 +137,10 @@ Allowed role: `coordinator`.
 
 Returns deterministic simulated team candidates backed by the Sampaloc station catalog. Candidates are ranked by shortest valid road distance after road eligibility, directionality, controlled flood restrictions, and bounded snapping are applied. Unavailable, assigned, missing-position, stale-position, or unreachable teams are returned as exclusions rather than hidden.
 
-This endpoint uses controlled fixtures only. It does not contact real stations or create an assignment; the coordinator must still confirm through `POST /assignment`.
+This endpoint uses controlled fixtures only. It does not contact real stations.
+Manual coordinator assignment remains available through `POST /assignment`; the
+citizen create flow may also reuse the same ranking and assignment contract for
+automatic simulated dispatch.
 
 ### Retrieve missions
 

@@ -199,17 +199,22 @@ class InMemoryAssignments:
 
 
 class FakeRoutingAdapter:
+    def __init__(self, distances: dict[tuple[float, float], float] | None = None) -> None:
+        self.distances = distances or {}
+
     def evaluate(self, _payload: Any) -> RouteFoundResponse:
+        origin = tuple(_payload.origin.coordinates)
+        distance = self.distances.get(origin, 123.0)
         return RouteFoundResponse(
             fixture_notice="Synthetic academic scenario; not live flood evidence.",
             status="route-found",
-            route_id="route-test",
+            route_id=f"route-test-{int(distance)}",
             algorithm="astar",
             geometry={
                 "type": "LineString",
                 "coordinates": [[120.9931743, 14.5983287], [120.9938198, 14.5977093]],
             },
-            distance_m=123.0,
+            distance_m=distance,
             estimated_time_s=45.0,
             total_cost=45.0,
             edge_ids=["edge-test"],
@@ -391,3 +396,63 @@ def test_recommendations_rank_available_teams_by_valid_road_distance(
     assert body["candidates"][0]["team_id"] == "team-alpha"
     assert body["candidates"][0]["road_distance_m"] == 123.0
     assert body["exclusions"][0]["reason"] == "team_unavailable"
+
+
+@pytest.mark.asyncio
+async def test_auto_assignment_selects_closest_valid_road_distance_and_creates_mission(
+    state: AssignmentState,
+) -> None:
+    state.teams["team-alpha"] = state.teams["team-alpha"].model_copy(
+        update={
+            "base_location": {"type": "Point", "coordinates": [120.9931, 14.608]},
+            "current_location": {"type": "Point", "coordinates": [120.9931, 14.608]},
+        }
+    )
+    state.teams["team-bravo"] = state.teams["team-bravo"].model_copy(
+        update={
+            "base_location": {"type": "Point", "coordinates": [120.9922, 14.607]},
+            "current_location": {"type": "Point", "coordinates": [120.9922, 14.607]},
+        }
+    )
+    service = AssignmentService(
+        InMemoryRequests(state),  # type: ignore[arg-type]
+        InMemoryRescuers(state),  # type: ignore[arg-type]
+        InMemoryAssignments(state),  # type: ignore[arg-type]
+        FakeRoutingAdapter(
+            {
+                (120.9931, 14.608): 900.0,
+                (120.9922, 14.607): 300.0,
+            }
+        ),  # type: ignore[arg-type]
+    )
+
+    assigned = await service.auto_assign_best_team("request-1", 1)
+
+    assert assigned is not None
+    assert assigned.request.status == "assigned"
+    assert assigned.request.assigned_team_id == "team-bravo"
+    assert assigned.mission.team_id == "team-bravo"
+    assert assigned.mission.assigned_rescuer_id == "team-bravo"
+    assert assigned.mission.latest_route_result is not None
+    assert assigned.mission.latest_route_result["distance_m"] == 300.0
+    assert state.teams["team-alpha"].availability == "available"
+    assert state.teams["team-bravo"].availability == "assigned"
+
+
+@pytest.mark.asyncio
+async def test_auto_assignment_leaves_request_pending_when_no_team_is_reachable(
+    state: AssignmentState,
+) -> None:
+    service = AssignmentService(
+        InMemoryRequests(state),  # type: ignore[arg-type]
+        InMemoryRescuers(state),  # type: ignore[arg-type]
+        InMemoryAssignments(state),  # type: ignore[arg-type]
+        FakeRoutingAdapter(),  # type: ignore[arg-type]
+    )
+
+    assigned = await service.auto_assign_best_team("request-1", 1)
+
+    assert assigned is None
+    assert state.requests["request-1"].status == "pending"
+    assert state.requests["request-1"].mission_id is None
+    assert state.missions == {}

@@ -11,6 +11,7 @@ from app.schemas.rescue_requests import (
     RescueRequestListResponse,
     RescueRequestResponse,
 )
+from app.services.assignments import AssignmentService
 from pymongo.errors import PyMongoError
 
 _REQUEST_STATUSES: set[str] = {
@@ -28,9 +29,11 @@ class RescueRequestService:
         self,
         requests: RescueRequestRepository,
         assignments: AssignmentRepository,
+        auto_assignment: AssignmentService | None = None,
     ) -> None:
         self._requests = requests
         self._assignments = assignments
+        self._auto_assignment = auto_assignment
 
     async def create_request(
         self,
@@ -65,6 +68,29 @@ class RescueRequestService:
             created = await self._requests.create(request)
         except PyMongoError as exc:
             raise database_unavailable() from exc
+
+        if self._auto_assignment is not None:
+            try:
+                assigned = await self._auto_assignment.auto_assign_best_team(
+                    created.id,
+                    created.version,
+                )
+            except ServiceError as exc:
+                if exc.status_code >= 500:
+                    return RescueRequestResponse.model_validate(created.model_dump())
+                if exc.code not in {
+                    "request_not_pending",
+                    "stale_request_version",
+                    "team_unavailable",
+                    "team_unreachable",
+                    "duplicate_assignment",
+                    "assignment_conflict",
+                }:
+                    raise
+            else:
+                if assigned is not None:
+                    return assigned.request
+
         return RescueRequestResponse.model_validate(created.model_dump())
 
     async def list_requests(

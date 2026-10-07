@@ -52,22 +52,25 @@ class RescuerRepository:
             await self._collection.update_one(
                 {"id": station["team_id"]},
                 {
-                    "$setOnInsert": RescuerTeam(
-                        id=station["team_id"],
-                        team_name=station["name"],
-                        unit_type=station["unit_type"],
-                        member_count=station["member_count"],
-                        has_medical_unit=station["has_medical_unit"],
-                        availability="available",
-                        version=1,
-                        created_at=now,
-                        updated_at=now,
-                        station_id=station["station_id"],
-                        station_address=station["address"],
-                        base_location=point,
-                        current_location=point,
-                        position_updated_at=now,
-                    ).model_dump(mode="python")
+                    "$set": {
+                        "team_name": station["name"],
+                        "unit_type": station["unit_type"],
+                        "member_count": station["member_count"],
+                        "has_medical_unit": station["has_medical_unit"],
+                        "station_id": station["station_id"],
+                        "station_address": station["address"],
+                        "base_location": point,
+                        "current_location": point,
+                        "position_updated_at": now,
+                        "updated_at": now,
+                    },
+                    "$setOnInsert": {
+                        "id": station["team_id"],
+                        "availability": "available",
+                        "version": 1,
+                        "created_at": now,
+                        "data_source": "synthetic",
+                    },
                 },
                 upsert=True,
             )

@@ -42,6 +42,19 @@ function nameFromEmail(email: string): string {
     .join(' ') || 'Responder'
 }
 
+function demoActorIdFor(email: string, role: UserRole): string {
+  const normalized = email.trim().toLowerCase()
+  if (role !== 'rescuer') return normalized
+  if (['team-alpha', 'team-bravo', 'team-charlie'].includes(normalized)) {
+    return normalized
+  }
+  const handle = normalized.split('@')[0] ?? normalized
+  if (handle.includes('alpha')) return 'team-alpha'
+  if (handle.includes('bravo')) return 'team-bravo'
+  if (handle.includes('charlie')) return 'team-charlie'
+  return normalized
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => readStored())
 
@@ -54,7 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const login = useCallback<AuthContextValue['login']>(({ email, role, name }) => {
-    setUser({ email, role, name: name?.trim() || nameFromEmail(email) })
+    const trimmedEmail = email.trim()
+    setUser({
+      email: trimmedEmail,
+      role,
+      name: name?.trim() || nameFromEmail(trimmedEmail),
+      demoActorId: demoActorIdFor(trimmedEmail, role),
+    })
   }, [])
 
   const signup = useCallback<AuthContextValue['signup']>(({
@@ -71,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: name.trim() || nameFromEmail(email),
       email: email.trim(),
       role,
+      demoActorId: demoActorIdFor(email, role),
       phone: phone?.trim() || undefined,
       avatarUrl: avatarUrl || undefined,
       emergencyContact: emergencyContact ?? undefined,
@@ -87,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...input,
             name: input.name.trim() || current.name,
             email: input.email.trim() || current.email,
+            demoActorId: demoActorIdFor(input.email.trim() || current.email, current.role),
           }
         : current,
     )
