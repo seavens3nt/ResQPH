@@ -1,9 +1,18 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactElement } from 'react'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import { RescuerOfflineQueue } from './RescuerOfflineQueue'
 import { RescuerMissionCard } from './RescuerMissionCard'
 import type { OfflineQueueEntry, MissionDetail } from '../../../../api/missions'
+
+function renderMissionCard(ui: ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
+}
 
 describe('Rescuer Phase 2 UI States', () => {
   describe('SyncStatusBadge', () => {
@@ -156,7 +165,7 @@ describe('Rescuer Phase 2 UI States', () => {
 
     it('renders mission card with TAP EN ROUTE button when status is assigned', () => {
       const onAdvance = vi.fn()
-      render(
+      renderMissionCard(
         <RescuerMissionCard
           mission={mockMission}
           lastSyncedAt="2026-09-23T11:05:00Z"
@@ -174,7 +183,7 @@ describe('Rescuer Phase 2 UI States', () => {
     })
 
     it('renders collapsible status history with events', () => {
-      render(
+      renderMissionCard(
         <RescuerMissionCard
           mission={mockMission}
           lastSyncedAt="2026-09-23T11:05:00Z"

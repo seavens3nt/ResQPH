@@ -20,4 +20,9 @@ class RescuerTeam(BaseModel):
     updated_at: datetime
     assigned_request_id: str | None = None
     assigned_mission_id: str | None = None
+    station_id: str | None = None
+    station_address: str | None = None
+    base_location: dict[str, object] | None = None
+    current_location: dict[str, object] | None = None
+    position_updated_at: datetime | None = None
     data_source: Literal["synthetic"] = "synthetic"

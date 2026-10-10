@@ -18,7 +18,7 @@
 |---|---:|
 | South | `14.596000` |
 | West | `120.982000` |
-| North | `14.617500` |
+| North | `14.621000` |
 | East | `121.004000` |
 
 The authoritative polygon is [`../samples/study-area.geojson`](../samples/study-area.geojson). GeoJSON remains longitude, latitude; the Overpass bounding-box order is south, west, north, east.
@@ -130,3 +130,7 @@ Application maps, documentation, and demonstrations using OSM-derived data must 
 - `data/samples/ubelt-v1-flood-join.geojson` — 10-record sample controlled scenario (checked into Git)
 
 Full graph and full joined edges are regenerable via the build script and are gitignored. Because OpenStreetMap changes over time, a later forced download is a new source snapshot and may produce different counts. The committed fixtures and their checksums are the reviewed Team Phase 1 snapshot.
+
+## Sampaloc simulation coverage note (2026-10-07)
+
+The study-area validation boundary was expanded locally to include the supplied simulated Sampaloc station points. The committed `ubelt-v1-preview.geojson` road fixture remains a 30-edge reviewed preview subset whose coordinate extent is approximately longitude `120.9931743` to `121.0036428`, latitude `14.5976244` to `14.6167606`. Several supplied station points snap hundreds of metres to this preview graph; the feature uses an explicit configurable snap limit and exposes snap metadata. A future accepted full-graph extraction should regenerate the road fixture for the expanded rectangle before claiming complete Sampaloc road coverage.

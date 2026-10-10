@@ -104,6 +104,25 @@ def find_route(
         Route-found with ordered edge_ids and cost breakdown,
         or no-route if destination is unreachable.
     """
+    return _search(graph, origin, destination, weight_mode="cost")
+
+
+def find_shortest_distance_route(
+    graph: RoutingGraph,
+    origin: str,
+    destination: str,
+) -> RouteResult | NoRouteResult:
+    """Find the shortest admissible route by road length."""
+    return _search(graph, origin, destination, weight_mode="distance")
+
+
+def _search(
+    graph: RoutingGraph,
+    origin: str,
+    destination: str,
+    *,
+    weight_mode: str,
+) -> RouteResult | NoRouteResult:
     if not graph.has_node(origin) or not graph.has_node(destination):
         return NoRouteResult(
             warnings=_graph_warnings(graph),
@@ -163,9 +182,13 @@ def find_route(
             if breakdown.excluded:
                 continue
 
-            edge_cost = breakdown.total_cost
-            if edge_cost is None:
+            if breakdown.total_cost is None:
                 continue
+            edge_cost = (
+                edge.length_m
+                if weight_mode == "distance" and edge.length_m is not None
+                else breakdown.total_cost
+            )
 
             new_g = g_cost + edge_cost
             neighbor = edge.to_node

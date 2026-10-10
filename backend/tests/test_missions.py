@@ -3,10 +3,6 @@ from datetime import UTC, datetime
 from typing import Any, cast
 
 import pytest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-
 from app.api.routes.missions import (
     get_mission_service,
     router,
@@ -19,6 +15,9 @@ from app.repositories.mission_status_events import (
     MissionStatusEventRepository,
 )
 from app.services.missions import MissionService
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
 
 BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=UTC)
 

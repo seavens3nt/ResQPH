@@ -4,12 +4,11 @@ import json
 from datetime import datetime
 from typing import Any
 
+from app.models.rescue_request import RequestStatus, RescueRequest
 from pymongo import ASCENDING, DESCENDING, GEOSPHERE, ReturnDocument
 from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
-
-from app.models.rescue_request import RequestStatus, RescueRequest
 
 
 class DuplicateRescueRequestError(Exception):

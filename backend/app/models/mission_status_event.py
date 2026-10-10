@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from app.models.mission import MissionStatus
+from pydantic import BaseModel, ConfigDict, Field
 
 DemoRole = Literal["citizen", "volunteer", "rescuer", "coordinator"]
 EventSource = Literal["online", "offline-sync"]

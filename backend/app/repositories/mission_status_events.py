@@ -1,12 +1,11 @@
 from collections.abc import Awaitable, Callable
 from typing import TypeVar
 
+from app.models.mission_status_event import MissionStatusEvent
 from pymongo import ASCENDING
 from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
-
-from app.models.mission_status_event import MissionStatusEvent
 
 TransactionResult = TypeVar("TransactionResult")
 

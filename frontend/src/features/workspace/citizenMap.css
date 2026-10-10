@@ -51,6 +51,8 @@
 .workspace-shell .citizen-map-summary h4 { margin:0; color:var(--ink); font-size:max(13px,calc(20 * var(--figma-unit))); font-weight:550; }
 .workspace-shell[data-role] .citizen-map-status { flex-shrink:0; border:1px solid var(--line); border-radius:999px; padding:3px 12px; font-size:max(10px,calc(16 * var(--figma-unit))); color:var(--ink); background:var(--shared-inset); }
 .workspace-shell[data-role] .citizen-map-status.state-cancelled { border-color:#d92642; color:#d92642; background:#ffe5e9; }
+/* Keep status badges pill-shaped when the shared live-status notice rule loads later. */
+.workspace-shell[data-role] .citizen-map-status[role=status] { border-radius:999px; }
 .citizen-map-summary dl { margin:0; }
 .citizen-map-summary dl > div { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:12px; padding:calc(16 * var(--figma-unit)) calc(35 * var(--figma-unit)); min-height:calc(54.61 * var(--figma-unit)); font-size:max(11px,calc(16 * var(--figma-unit))); line-height:1.4; }
 .citizen-map-summary dl > div:not(:last-child) { background:url('/figma-map/summary-divider.svg') bottom center / 100% 1px no-repeat; }

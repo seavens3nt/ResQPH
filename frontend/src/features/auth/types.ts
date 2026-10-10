@@ -22,6 +22,7 @@ export interface AuthUser {
   name: string
   email: string
   role: UserRole
+  demoActorId?: string
   avatarUrl?: string
   phone?: string
   emergencyContact?: EmergencyContact

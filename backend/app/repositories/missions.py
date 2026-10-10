@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Any
 
+from app.models.mission import Mission, MissionStatus
 from pymongo import ReturnDocument
 from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
-
-from app.models.mission import Mission, MissionStatus
 
 
 class MissionLifecycleConflictError(Exception):
@@ -42,6 +41,26 @@ class MissionRepository:
 
     async def get_by_id(self, mission_id: str) -> Mission | None:
         document = await self._collection.find_one({"id": mission_id})
+        if document is None:
+            return None
+        return Mission.model_validate(document)
+
+    async def update_tracking_state(
+        self,
+        mission_id: str,
+        tracking_state: dict[str, Any],
+        updated_at: datetime,
+    ) -> Mission | None:
+        document = await self._collection.find_one_and_update(
+            {"id": mission_id},
+            {
+                "$set": {
+                    "tracking_state": tracking_state,
+                    "updated_at": updated_at,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
         if document is None:
             return None
         return Mission.model_validate(document)

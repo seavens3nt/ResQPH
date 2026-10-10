@@ -1,11 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.api.dependencies.demo_role import get_demo_actor
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
 from app.repositories.assignments import AssignmentRepository
 from app.repositories.rescue_requests import RescueRequestRepository
+from app.repositories.rescuers import RescuerRepository
 from app.schemas.common import DemoActor, ErrorEnvelope
 from app.schemas.rescue_requests import (
     RescueRequestCancel,
@@ -13,6 +16,7 @@ from app.schemas.rescue_requests import (
     RescueRequestListResponse,
     RescueRequestResponse,
 )
+from app.services.assignments import AssignmentService
 from app.services.rescue_requests import RescueRequestService
 
 router = APIRouter(prefix="/rescue-requests", tags=["rescue requests"])
@@ -27,9 +31,16 @@ ERROR_RESPONSES = {
 
 def get_rescue_request_service() -> RescueRequestService:
     database = get_database()
+    requests = RescueRequestRepository(database)
+    assignments = AssignmentRepository(database)
     return RescueRequestService(
-        RescueRequestRepository(database),
-        AssignmentRepository(database),
+        requests,
+        assignments,
+        AssignmentService(
+            requests,
+            RescuerRepository(database),
+            assignments,
+        ),
     )
 
 
@@ -41,9 +52,16 @@ def get_rescue_request_service() -> RescueRequestService:
 )
 async def create_rescue_request(
     payload: RescueRequestCreate,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[RescueRequestService, Depends(get_rescue_request_service)],
 ) -> RescueRequestResponse:
+    check_rate_limit(
+        request,
+        actor_id=actor.user_id,
+        action="report-submission",
+        limit=settings.report_rate_limit_per_minute,
+    )
     return await service.create_request(payload, actor)
 
 
