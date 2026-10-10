@@ -1,5 +1,27 @@
 # ResQPH API contract
 
+## Informational Google Weather (local amendment, 2026-10-10)
+
+`GET /api/v1/weather/ubelt` requires existing demo actor headers and returns
+`temperature`, `high`, `low` (Celsius), `condition`, `kind` (clear/cloud/rain),
+`feelsLike` (Celsius), `windSpeed` (km/h), `rainChance` (percent), `rainAmount`
+(millimeters), and `time` (provider timestamp with timezone). The four added
+measurements are nullable when omitted by Google. Fixed U-Belt coordinates; no
+caller-controlled URL or location. Missing server-only `GOOGLE_WEATHER_API_KEY`
+returns 503 `weather_not_configured`; provider/malformed-data errors return 503
+`weather_unavailable`. No key or upstream error details are exposed. Weather
+does not alter request, mission, offline or flood-routing contracts.
+
+Current weather also returns nullable `humidity` (0–100 percent) and
+`windDirection` (Google cardinal direction). `GET /api/v1/weather/ubelt/hourly`
+uses the same demo actor and server-only key and returns 1–6 validated forecast
+intervals: `time`, `endTime`, `temperature` (Celsius), `condition`, `kind`,
+nullable `isDaytime`, `rainChance` (percent), `rainAmount` (mm in the interval),
+`windSpeed` (km/h), `humidity` (percent), and `pressure` (hPa, sea level).
+Empty/malformed forecasts or provider failures return sanitized 503
+`weather_unavailable`; missing configuration returns `weather_not_configured`.
+No-store, fixed U-Belt point, no persistence and no live flood-routing coupling.
+
 **Status:** Completed and verified Phase 1 contract baseline
 **Base path:** `/api/v1`
 **Last updated:** 2026-09-22
@@ -19,7 +41,9 @@
 Protected demo operations accept:
 
 - `X-Demo-User-Id`
-- `X-Demo-Role`: `citizen`, `volunteer`, `rescuer`, or `coordinator`
+- `X-Demo-Role`: `citizen`, `rescuer`, or `coordinator`
+
+Current scope update (2026-10-07): Volunteer is retired. Requests with that role return `403 demo_role_required`. Hazard-report endpoints below describe the historical baseline and are no longer registered in the active API; they return `404`. Stored records remain intact. See [three-role decision](../decisions/2026-10-07-three-role-workflow.md).
 
 The backend validates whether the role may perform the operation. These headers are a prototype control and must never be described as production authentication.
 

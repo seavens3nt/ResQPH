@@ -1,5 +1,48 @@
 # Context Sync History
 
+## 2026-10-10 — Candidate packaging
+
+Current status links fresh candidate evidence. Account desktop sizing was consolidated,
+unused unregistered Volunteer source archived locally, and preview documentation reconciled.
+This records release preparation, not merge, deployment, issue closure or offline acceptance.
+
+## 2026-10-10 — Informational Google Weather local amendment
+
+Later authorized local updates: both Home cards now use Google current/day and
+six-hour forecast endpoints. Configured key and real HTTP 200 responses verified,
+and synthetic Citizen browser session rendered the forecast. Home controlled
+warning removed, light inner card/compact spacing added, automatic/manual refresh
+removed. Flood routing unchanged. Earlier key-unconfigured note below is superseded.
+
+Ranee authorized larger weather text, Google API integration and context updates.
+Citizen Home uses a backend Google Weather adapter; server-only key, fixed U-Belt
+location, validated current/day data, failure feedback, attribution and timestamps.
+Controlled rainfall, flood warnings and routing are unchanged. Local candidate
+only; external Google data cannot be confirmed until a valid key is configured.
+
+## 2026-10-09 — Confirmed superseded-ticket closure
+
+- Ranee explicitly confirmed: close #76/#77/#78/#82/#83 as superseded/not planned, #73 as completed for original PR #80 backend package, retain #70/#71/#72 with only remaining work.
+- GitHub mutations: closures/comments and labels; #70 in progress, #71/#72 blocked pending stable candidate for final execution. Existing #84/#74 states preserved. PR #80 merge and three successful checks re-read; recorded database results are historical, not rerun today.
+- Updated local status/dashboard/roadmap/Phase 5/current-context references. Earlier same-date in-progress issue observations below are superseded by this entry.
+- No issue deletion, source push/merge, new model activation or final acceptance inferred. Superseded ticket closure does not erase candidate regression; that remains under #70/#71/#72.
+
+## 2026-10-09 — Authorized issue/document scope reconciliation
+
+- Target: local `feature/local-desktop-role-workspaces` working tree, not a new merged baseline.
+- Applied: active scope/lifecycle/roadmap/status/architecture/presentation align with three retained roles, retired reporting/hotline/alternative UI, Inter, dashboard rescue/review/status modals, inline Map states and shared full-width page canvases. Removed contradictory inline request-details guidance.
+- GitHub readback: nine valid issues remain open; removed volunteer #84 is already closed as not planned, #74 remains completed. Ranee repair packages require local-delivery/verification notes, not false completion.
+- Evidence: inspected current source, dirty diff, live issue bodies/state, existing visual rules and historical audit. Latest width-only verification: 19 frontend tests/build pass; Citizen pages visually checked. This documentation reconciliation does not rerun full system acceptance.
+- Boundaries: preserve dated evidence, stored history, ownership, runtime ML disabled and final delivery/offline/release gates. No source push or merge authorized by this reconciliation.
+
+## 2026-10-07 — Authorized local three-role scope update
+
+- Target: current local working-tree change authorized by the user; not a new merged baseline.
+- Impact: active role simulation and hazard API registration -> README, current project Users/scope guidance and API contract.
+- Applied: Citizen, Dispatcher (`coordinator` internally) and Rescuer only; retire Volunteer entry/session/header and hazard endpoints while preserving existing collections and historical event-role decoding. Retain one controlled flood-aware route.
+- Evidence: active frontend role/session/Dashboard source, backend role dependency/router registration, 23 focused frontend tests, backend Ruff, and 145 backend tests passed with 28 environment-gated skips. Database preservation acceptance is among the MongoDB integration skips.
+- Boundary: historical phase evidence, accepted ownership, model restrictions and submission/deployment gates are unchanged. Full browser/visual acceptance is separate from this context update.
+
 ## 2026-10-06 — PR #80 backend acceptance repair
 
 - Baseline: main `44a03f9`; target: Issue #73 backend package review.

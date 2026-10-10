@@ -11,7 +11,7 @@ vi.mock('../rescuer/RescuerOfflineQueue', () => ({ RescuerOfflineQueue: (props: 
 
 describe('rescuer offline presentation wiring', () => {
   beforeEach(() => {
-    localStorage.setItem('resqph.auth.user', JSON.stringify({ email: 'rescuer-a', role: 'rescuer', name: 'Rescuer A' }))
+    sessionStorage.setItem('resqph.auth.user', JSON.stringify({ email: 'rescuer-a', role: 'rescuer', teamId: 'team-alpha', name: 'Rescuer A' }))
     vi.spyOn(MissionContext, 'useMissions').mockReturnValue({ activeRescuerMission: null, requests: [], isOffline: true } as never)
   })
 

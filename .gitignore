@@ -117,7 +117,10 @@ docker-compose.override.yml
 mongodb-data/
 
 # OSMnx local cache (created when running build scripts from repo root)
+.pytest-desktop-*/
+.pytest-local-temp/
 cache/
 PATH/
-cache/
-PATH/
+frontend/.vitest-home-temp/
+# Local visual iteration captures; verification findings are recorded in docs.
+qa/

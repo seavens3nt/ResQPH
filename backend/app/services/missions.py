@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from itertools import pairwise
 from typing import ClassVar
+
+from pymongo.asynchronous.client_session import AsyncClientSession
 
 from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
@@ -17,7 +19,6 @@ from app.schemas.missions import (
     MissionStatusEventCreate,
     MissionTrackingResponse,
 )
-from pymongo.asynchronous.client_session import AsyncClientSession
 
 
 class MissionServiceError(Exception):
@@ -149,7 +150,9 @@ class MissionService:
         payload: MissionStatusEventCreate,
         actor: DemoActor,
     ) -> MissionResponse:
-        mission = await self._get_operable_mission(mission_id, payload.new_status, actor)
+        mission = await self._get_operable_mission(
+            mission_id, payload.new_status, actor
+        )
 
         existing_event = await self._events.get_by_event_id(payload.event_id)
         if existing_event is not None:
@@ -161,7 +164,12 @@ class MissionService:
                 409,
                 "stale_mission_version",
                 "Mission status was not changed because the expected version is stale.",
-                [{"field": "expected_mission_version", "reason": f"current version is {mission.version}"}],
+                [
+                    {
+                        "field": "expected_mission_version",
+                        "reason": f"current version is {mission.version}",
+                    }
+                ],
             )
 
         expected_next = self._next_status.get(mission.status)
@@ -170,7 +178,12 @@ class MissionService:
                 409,
                 "invalid_transition",
                 f"Mission cannot move from {mission.status} to {payload.new_status}.",
-                [{"field": "new_status", "reason": f"expected {expected_next or 'terminal state'}"}],
+                [
+                    {
+                        "field": "new_status",
+                        "reason": f"expected {expected_next or 'terminal state'}",
+                    }
+                ],
             )
 
         recorded_at = utc_now()
@@ -195,7 +208,9 @@ class MissionService:
                 session=session,
             )
             if transaction_event is not None:
-                self._validate_idempotent_retry(transaction_event, mission_id, payload, actor)
+                self._validate_idempotent_retry(
+                    transaction_event, mission_id, payload, actor
+                )
                 return mission, transaction_event
 
             updated_mission = await self._missions.update_status_if_current(
@@ -229,10 +244,14 @@ class MissionService:
         except DuplicateMissionStatusEventError:
             existing_event = await self._events.get_by_event_id(payload.event_id)
             if existing_event is not None:
-                self._validate_idempotent_retry(existing_event, mission_id, payload, actor)
+                self._validate_idempotent_retry(
+                    existing_event, mission_id, payload, actor
+                )
                 current_mission = await self._missions.get_by_id(mission_id)
                 if current_mission is None:
-                    raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+                    raise MissionServiceError(
+                        404, "mission_not_found", "Mission is unavailable."
+                    )
                 return await self._to_response(current_mission)
             raise MissionServiceError(
                 409,
@@ -244,7 +263,9 @@ class MissionService:
         if transaction_event is not None:
             current_mission = await self._missions.get_by_id(mission_id)
             if current_mission is None:
-                raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+                raise MissionServiceError(
+                    404, "mission_not_found", "Mission is unavailable."
+                )
             return await self._to_response(current_mission)
 
         return await self._to_response(updated_mission)
@@ -252,12 +273,16 @@ class MissionService:
     async def _get_visible_mission(self, mission_id: str, actor: DemoActor) -> Mission:
         mission = await self._missions.get_by_id(mission_id)
         if mission is None:
-            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            raise MissionServiceError(
+                404, "mission_not_found", "Mission is unavailable."
+            )
 
         if actor.role == "rescuer":
             if mission.is_assigned_to(actor.user_id):
                 return mission
-            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            raise MissionServiceError(
+                404, "mission_not_found", "Mission is unavailable."
+            )
 
         if actor.role == "coordinator":
             return mission
@@ -301,6 +326,56 @@ class MissionService:
             "Simulated role is not allowed to control mission tracking.",
         )
 
+    async def cancel_mission(
+        self, mission_id: str, expected_version: int, reason: str, actor: DemoActor
+    ) -> MissionResponse:
+        if actor.role != "coordinator":
+            raise MissionServiceError(
+                403, "forbidden", "Only a coordinator may cancel an assigned mission."
+            )
+        mission = await self._get_visible_mission(mission_id, actor)
+        if mission.status != "assigned" or mission.version != expected_version:
+            raise MissionServiceError(
+                409,
+                "cancellation_conflict",
+                "Only a current assigned mission may be cancelled before travel.",
+            )
+        now = utc_now()
+        event = MissionStatusEvent(
+            event_id=f"cancel-{mission_id}-{expected_version}",
+            mission_id=mission_id,
+            prior_status="assigned",
+            new_status="cancelled",
+            actor_id=actor.user_id,
+            actor_role=actor.role,
+            source="online",
+            server_recorded_at=now,
+            note=reason,
+        )
+
+        async def persist(session: AsyncClientSession) -> Mission:
+            updated = await self._missions.update_status_if_current(
+                mission_id, expected_version, "assigned", "cancelled", now, session
+            )
+            if updated is None:
+                raise MissionServiceError(
+                    409,
+                    "mission_conflict",
+                    "Mission changed; cancellation was not stored.",
+                )
+            await self._missions.record_cancellation_reason(
+                mission.request_id, reason, now, session
+            )
+            await self._events.append(event, session=session)
+            return updated
+
+        try:
+            updated = await self._events.run_in_transaction(persist)
+        except MissionLifecycleConflictError:
+            raise MissionServiceError(
+                409, "lifecycle_conflict", "Linked request or team changed; cancellation was not stored."
+            ) from None
+        return await self._to_response(updated)
     async def _get_operable_mission(
         self,
         mission_id: str,
@@ -309,7 +384,9 @@ class MissionService:
     ) -> Mission:
         mission = await self._missions.get_by_id(mission_id)
         if mission is None:
-            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            raise MissionServiceError(
+                404, "mission_not_found", "Mission is unavailable."
+            )
 
         if actor.role == "rescuer":
             if mission.is_assigned_to(actor.user_id):
@@ -343,7 +420,9 @@ class MissionService:
             and existing_event.actor_id == actor.user_id
             and existing_event.actor_role == actor.role
             and existing_event.source == payload.source
-            and same_utc_instant(existing_event.client_recorded_at, payload.client_recorded_at)
+            and same_utc_instant(
+                existing_event.client_recorded_at, payload.client_recorded_at
+            )
             and existing_event.note == payload.note
         )
         if same_accepted_event:
@@ -413,7 +492,7 @@ class MissionService:
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def same_utc_instant(left: datetime | None, right: datetime | None) -> bool:
@@ -427,8 +506,8 @@ def bson_utc_millisecond(value: datetime) -> datetime:
     # MongoDB BSON Date stores UTC milliseconds, not Python microseconds.
     # https://www.mongodb.com/docs/manual/reference/bson-types/#date
     if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    normalized = value.astimezone(timezone.utc)
+        value = value.replace(tzinfo=UTC)
+    normalized = value.astimezone(UTC)
     return normalized.replace(microsecond=(normalized.microsecond // 1000) * 1000)
 
 
@@ -447,7 +526,7 @@ def _parse_utc(value: str) -> datetime | None:
     if not value.endswith("Z"):
         return None
     try:
-        return datetime.fromisoformat(value[:-1] + "+00:00")
+        return datetime.fromisoformat(value)
     except ValueError:
         return None
 

@@ -31,7 +31,7 @@ export function ResqWordmark({ scale = 1, className = '' }: ResqWordmarkProps) {
     >
       <span
         style={{
-          fontFamily: "'Montserrat', 'Outfit', 'Arial Black', sans-serif",
+          fontFamily: "'Inter', system-ui, sans-serif",
           fontWeight: 900,
           fontSize,
           color: '#8b0000',

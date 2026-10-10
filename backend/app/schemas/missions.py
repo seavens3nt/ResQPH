@@ -1,17 +1,19 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import escape
 from typing import Any, Literal
 
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
 from app.models.mission import MissionStatus
 from app.models.mission_status_event import DemoRole, EventSource
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from app.schemas.common import DemoRole as ActiveDemoRole
 
 WritableMissionStatus = Literal["assigned", "en-route", "arrived", "completed"]
 
 
 class DemoActor(BaseModel):
     user_id: str
-    role: DemoRole
+    role: ActiveDemoRole
 
 
 class ErrorDetail(BaseModel):
@@ -53,6 +55,19 @@ class MissionStatusEventCreate(BaseModel):
             return None
         sanitized = escape(value.strip(), quote=True)
         return sanitized or None
+
+
+class MissionCancel(BaseModel):
+    expected_mission_version: int = Field(ge=1)
+    reason: str = Field(min_length=3, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def nonblank_reason(cls, value: str) -> str:
+        value = escape(value.strip(), quote=True)
+        if len(value) < 3:
+            raise ValueError("reason must contain at least 3 non-blank characters")
+        return value
 
 
 class MissionStatusEventResponse(BaseModel):
@@ -101,7 +116,13 @@ def parse_status_filter(status_filter: str | None) -> list[MissionStatus] | None
     if status_filter is None or not status_filter.strip():
         return None
 
-    allowed: set[MissionStatus] = {"assigned", "en-route", "arrived", "completed", "cancelled"}
+    allowed: set[MissionStatus] = {
+        "assigned",
+        "en-route",
+        "arrived",
+        "completed",
+        "cancelled",
+    }
     statuses: list[MissionStatus] = []
     for raw_status in status_filter.split(","):
         status = raw_status.strip()
@@ -115,8 +136,8 @@ def serialize_utc(value: datetime | None) -> str | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 class MissionTrackingResponse(BaseModel):

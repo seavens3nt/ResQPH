@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.integrations.routing import RoutingAdapter, RoutingIntegrationError
@@ -190,7 +190,7 @@ class AssignmentService:
                 [{"field": "X-Demo-Role", "reason": "expected coordinator"}],
             )
 
-        assigned_at = datetime.now(timezone.utc)
+        assigned_at = datetime.now(UTC)
         mission_id = f"mission-{uuid4().hex}"
 
         async def persist_assignment(

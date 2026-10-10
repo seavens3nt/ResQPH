@@ -80,7 +80,7 @@
 
 .api-error-banner__req-id {
   font-size: 0.7rem;
-  font-family: var(--font-mono, monospace);
+  font-family:var(--font-body);
   color: #64748b;
   background: #f1f5f9;
   padding: 3px 8px;
@@ -129,7 +129,7 @@
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid transparent;
-  font-family: var(--font-body);
+  font-family:var(--font-body);
 }
 
 .api-error-banner__btn--retry {

@@ -17,3 +17,5 @@ async def initialize_database(database: AsyncDatabase) -> None:
     await assignments.ensure_indexes()
     await mission_events.ensure_indexes()
     await rescuers.ensure_synthetic_teams()
+    await database["hazard_reports"].create_index("id", unique=True)
+    await database["hazard_reports"].create_index([("actor_id", 1), ("created_at", -1)])

@@ -1,8 +1,8 @@
 # ResQPH MVP scope
 
-**Status:** Active MVP scope; Phase 1 baseline amended by D-019
+**Status:** Active MVP scope; historical baseline amended by D-019 and Ranee's three-role/local UI decisions
 **Decision owner:** Ranee
-**Last updated:** 2026-09-29
+**Last updated:** 2026-10-09
 
 ## Purpose
 
@@ -13,7 +13,6 @@ ResQPH is not an official emergency-response, flood-forecasting, or guaranteed r
 ## Approved users
 
 - **Citizen:** submits and tracks a rescue request.
-- **Volunteer:** submits a controlled hazard report and views relevant rescue information without dispatch authority.
 - **Coordinator:** reviews requests, assigns rescuers, monitors missions, and reviews route explanations.
 - **Rescuer:** views an assigned mission and route, reports status, and views a cached mission during temporary connectivity loss.
 
@@ -25,7 +24,7 @@ This rectangle is a project-controlled scope boundary. It is not an official adm
 
 ## Required MVP capabilities
 
-1. Simulate login and one of the four approved roles.
+1. Simulate login and one of the three approved roles in independent tabs, without a role-switch control.
 2. Create and store a sanitized citizen rescue request.
 3. Let a coordinator review and assign the request to a rescue team.
 4. Let a rescuer retrieve the assigned mission and update its status.
@@ -90,6 +89,9 @@ The team must finish and verify Tier 1 before expanding Tier 3. An unfinished op
 
 ## Explicit exclusions
 
+- Volunteer role and hazard-report submission/review workflow (stored historical observations are preserved)
+- Rescuer hotline and alternative-route selection UI (retain one calculated flood-aware route and no-route handling)
+- Manual longitude/latitude editor (map/GPS/demo selection and boundary validation remain)
 - Nationwide or complete Metro Manila routing
 - Official real-time flood forecasts
 - A hydrological prediction model
@@ -112,7 +114,7 @@ The MVP succeeds when a reviewer can complete this sanitized demonstration:
 4. The rescuer retrieves the assigned mission.
 5. A* calculates an initial route.
 6. A controlled scenario marks one road risky or impassable.
-7. The engine returns an alternative route and a human-readable explanation.
+7. The engine calculates one flood-aware route and a human-readable explanation, or explicitly returns no route. Algorithm detour tests remain valid; a selectable alternative-route UI is not required.
 8. XGBoost results are reported as external exploratory evidence. The current
    artifact does not contribute a runtime penalty; a future accepted artifact
    may contribute only the bounded penalty.
@@ -121,5 +123,7 @@ The MVP succeeds when a reviewer can complete this sanitized demonstration:
 11. The rescuer can view the cached mission and synchronize one queued valid status update after reconnecting.
 
 ## Approval gate
+
+The current local implementation uses a dashboard rescue modal with edit/review/submit steps, a shared request-status popup for Home/My Requests, an inline Map inspector, and server-confirmed transient submission feedback. Inter and the shared visual rules supersede earlier SF Pro Rounded/Fredoka references. Roads and boundary stay enabled; flood visibility and recenter remain controls. See [local visual rules](../ui/LOCAL_VISUAL_RULES.md) and [three-role decision](../decisions/2026-10-07-three-role-workflow.md). These working-tree changes are not yet a merged or finally accepted release.
 
 Ranee approved and verified the Phase 1 scope baseline on 2026-09-22 and approved the XGBoost amendment in D-019 on 2026-09-29. Later implementation phases must still produce working code, automated tests, trained-model evidence when applicable, and Ranee's acceptance; neither the original baseline nor the amendment makes externally reported model metrics repository-verified.

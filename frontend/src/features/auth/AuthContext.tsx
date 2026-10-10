@@ -1,37 +1,26 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { QueryClientContext } from '@tanstack/react-query'
+import { readSession, writeSession } from './session'
 import type { ReactNode } from 'react'
 import type { AuthUser, ProfileUpdate, UserRole } from './types'
+import { isUserRole } from './types'
 
 /*
  * Prototype-only client auth. This is NOT real authentication: it persists a
- * chosen profile to localStorage so the landing -> login -> dashboard flow can
+ * chosen profile to sessionStorage so the landing -> login -> dashboard flow can
  * be demonstrated without a backend identity service. No passwords are stored.
  * Phase 1 defers the real authentication decision (see docs/ROADMAP.md).
  */
 
-const STORAGE_KEY = 'resqph.auth.user'
-
 interface AuthContextValue {
   user: AuthUser | null
-  login: (input: { email: string; role: UserRole; name?: string }) => void
+  login: (input: { email: string; role: UserRole; name?: string; teamId?: string }) => void
   signup: (input: ProfileUpdate & { role: UserRole; locationPermission?: boolean }) => void
   updateProfile: (input: ProfileUpdate) => void
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-
-function readStored(): AuthUser | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as AuthUser
-    if (parsed?.email && parsed?.role) return parsed
-    return null
-  } catch {
-    return null
-  }
-}
 
 function nameFromEmail(email: string): string {
   const handle = email.split('@')[0] ?? 'Responder'
@@ -42,12 +31,8 @@ function nameFromEmail(email: string): string {
     .join(' ') || 'Responder'
 }
 
-function demoActorIdFor(email: string, role: UserRole): string {
+function demoActorIdFor(email: string): string {
   const normalized = email.trim().toLowerCase()
-  if (role !== 'rescuer') return normalized
-  if (['team-alpha', 'team-bravo', 'team-charlie'].includes(normalized)) {
-    return normalized
-  }
   const handle = normalized.split('@')[0] ?? normalized
   if (handle.includes('alpha')) return 'team-alpha'
   if (handle.includes('bravo')) return 'team-bravo'
@@ -56,25 +41,27 @@ function demoActorIdFor(email: string, role: UserRole): string {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => readStored())
+  const [user, setUser] = useState<AuthUser | null>(readSession)
+  const queryClient = useContext(QueryClientContext)
+  const save = useCallback((next: AuthUser | null) => {
+    if (next && !isUserRole(next.role)) next = null
+    writeSession(next)
+    queryClient?.clear()
+    setUser(next)
+  }, [queryClient])
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
-    } else {
-      localStorage.removeItem(STORAGE_KEY)
-    }
-  }, [user])
-
-  const login = useCallback<AuthContextValue['login']>(({ email, role, name }) => {
-    const trimmedEmail = email.trim()
-    setUser({
-      email: trimmedEmail,
+  const login = useCallback<AuthContextValue['login']>(({ email, role, name, teamId }) => {
+    const normalizedEmail = email.trim().toLowerCase()
+    const mappedActorId = demoActorIdFor(normalizedEmail)
+    const resolvedTeamId = role === 'rescuer' ? teamId ?? mappedActorId : undefined
+    save({
+      email: normalizedEmail,
       role,
-      name: name?.trim() || nameFromEmail(trimmedEmail),
-      demoActorId: demoActorIdFor(trimmedEmail, role),
+      teamId: resolvedTeamId,
+      demoActorId: resolvedTeamId ?? normalizedEmail,
+      name: name?.trim() || nameFromEmail(email),
     })
-  }, [])
+  }, [save])
 
   const signup = useCallback<AuthContextValue['signup']>(({
     name,
@@ -86,34 +73,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     medicalInfo,
     locationPermission,
   }) => {
-    setUser({
+    save({
       name: name.trim() || nameFromEmail(email),
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       role,
-      demoActorId: demoActorIdFor(email, role),
+      demoActorId: role === 'rescuer' ? demoActorIdFor(email) : email.trim().toLowerCase(),
+      teamId: role === 'rescuer' ? demoActorIdFor(email) : undefined,
       phone: phone?.trim() || undefined,
       avatarUrl: avatarUrl || undefined,
       emergencyContact: emergencyContact ?? undefined,
       medicalInfo: medicalInfo ?? undefined,
       locationPermission: locationPermission ?? false,
     })
-  }, [])
+  }, [save])
 
   const updateProfile = useCallback<AuthContextValue['updateProfile']>((input) => {
-    setUser((current) =>
-      current
+    save(user
         ? {
-            ...current,
+            ...user,
             ...input,
-            name: input.name.trim() || current.name,
-            email: input.email.trim() || current.email,
-            demoActorId: demoActorIdFor(input.email.trim() || current.email, current.role),
+            name: input.name.trim() || user.name,
+            email: user.email,
+            demoActorId: user.role === 'rescuer' ? user.teamId ?? demoActorIdFor(user.email) : user.email,
           }
-        : current,
+        : user,
     )
-  }, [])
+  }, [save, user])
 
-  const logout = useCallback(() => setUser(null), [])
+  const logout = useCallback(() => save(null), [save])
 
   const value = useMemo(
     () => ({ user, login, signup, updateProfile, logout }),

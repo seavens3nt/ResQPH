@@ -9,7 +9,7 @@
   border: 1px solid var(--border-default);
   border-radius: 8px;
   color: var(--text-primary);
-  font-family: var(--font-body);
+  font-family:var(--font-body);
   font-size: 0.875rem;
   line-height: 1.5;
   transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -64,7 +64,7 @@
   gap: 0.25rem;
   padding: 0.125rem 0.5rem;
   border-radius: 4px;
-  font-family: var(--font-mono);
+  font-family:var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -103,7 +103,7 @@
 }
 
 .map-notice__timestamp {
-  font-family: var(--font-mono);
+  font-family:var(--font-body);
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
@@ -177,7 +177,7 @@
   border: 1px solid var(--border-default);
   border-radius: 4px;
   color: var(--text-primary);
-  font-family: var(--font-body);
+  font-family:var(--font-body);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;

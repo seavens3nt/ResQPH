@@ -16,6 +16,9 @@ import { controlMissionTracking, getMissionTracking, nextValidStatus } from '../
 import { StatusBadge } from '../shared'
 import { Button } from '../../../../components/ui/Button'
 import { Icon } from '../../../../components/art/Icon'
+import { WorkspaceProgress } from '../../../../features/workspace/WorkspaceUI'
+import { MISSION_STAGES } from '../../../../features/workspace/missionStages'
+import { RecordId } from '../../../../features/workspace/Records'
 import './RescuerMissionCard.css'
 
 interface RescuerMissionCardProps {
@@ -74,9 +77,9 @@ export function RescuerMissionCard({
       {/* Header */}
       <div className="rescuer-mission-card__head">
         <div>
-          <h3 className="rescuer-mission-card__id" id={titleId}>
-            <span>Mission</span> <code>{mission.id}</code>
-          </h3>
+          <div className="rescuer-mission-card__id" id={titleId} aria-label={`Mission ${mission.id}`}>
+            <strong>Mission</strong> <RecordId id={mission.id}/>
+          </div>
           <StatusBadge status={mission.status} />
         </div>
         <SyncStatusBadge
@@ -97,10 +100,10 @@ export function RescuerMissionCard({
           <span>
             <Icon name="pin" size={12} /> {req.location.address}
           </span>
-          <span>👤 {req.headcount} persons</span>
+          <span><Icon name="volunteers" size={16}/> {req.headcount} persons</span>
           {req.medical_needs && (
             <span style={{ color: 'var(--color-danger-text)', fontWeight: 600 }}>
-              🩺 Medical needed
+              <Icon name="medical" size={16}/> Medical needed
             </span>
           )}
           <span>Flood level: {req.reported_flood_level}</span>
@@ -110,6 +113,8 @@ export function RescuerMissionCard({
           Request summary is unavailable. Refresh before beginning the mission.
         </p>
       )}
+
+      {mission.status !== 'cancelled' && <WorkspaceProgress stages={MISSION_STAGES} current={mission.status} label="Mission progress"/>}
 
       {/* Non-production prototype notice */}
       <p className="proto-notice" role="note" style={{ marginTop: 8 }}>

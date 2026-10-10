@@ -78,7 +78,7 @@ export interface MissionDetail {
     medical_needs: boolean
     medical_details?: string | null
     reported_flood_level: string
-    situation_summary: string
+    situation_summary: string | null
     fixture_notice?: string
   } | null
   status_history: MissionStatusHistoryItem[]

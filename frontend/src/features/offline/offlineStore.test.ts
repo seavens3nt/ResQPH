@@ -16,6 +16,13 @@ const event: OfflineQueueEntry & { actor_id: string } = {
 }
 
 describe('offline record validation', () => {
+  it('caches a fresh API mission with omitted optional request details', () => {
+    const record = {schema_version: 1, actor_id: 'rescuer-alpha', last_synced_at: mission.updated_at,
+      mission: {...mission, request_summary: {headcount: 2, vulnerabilities: [], medical_needs: false, reported_flood_level: 'unknown',
+        location: {address: 'Synthetic U-Belt test', point: {type: 'Point', coordinates: [120.9946, 14.6042]}, landmark: null, description: null},
+        situation_summary: null}}}
+    expect(validateCacheRecord(record, 'rescuer-alpha')).toBe(true)
+  })
   it('accepts actual API history fields and nulls but rejects unrelated history', () => {
     const history = { event_id: 'accepted', mission_id: mission.id, prior_status: 'assigned',
       new_status: 'en-route', actor_id: 'rescuer-alpha', actor_role: 'rescuer', source: 'online',

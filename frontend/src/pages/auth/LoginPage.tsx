@@ -6,6 +6,8 @@ import { RoleChooser } from './RoleChooser'
 import { Icon } from '../../components/art/Icon'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { UserRole } from '../../features/auth/types'
+import { validEmail, validPassword } from '../../features/auth/validation'
+import { TEAM_IDS } from '../../features/auth/session'
 import './auth.css'
 
 export function LoginPage() {
@@ -20,15 +22,16 @@ export function LoginPage() {
     requestedRole === 'coordinator' || requestedRole === 'rescuer' ? requestedRole : 'citizen',
   )
   const [error, setError] = useState('')
+  const [teamId, setTeamId] = useState<string>('team-alpha')
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!email.trim() || !password.trim()) {
-      setError('Enter your email and password to continue.')
+    if (!validEmail(email) || !validPassword(password)) {
+      setError('Enter a valid email address and a password of at least 6 characters.')
       return
     }
     setError('')
-    login({ email: email.trim(), role })
+    login({ email: email.trim(), role, teamId: role === 'rescuer' ? teamId : undefined })
     navigate('/dashboard', { replace: true })
   }
 
@@ -41,9 +44,9 @@ export function LoginPage() {
           <button
             type="button"
             className="auth-text-btn muted"
-            onClick={() => alert('For prototype demo: enter any email & password to sign in immediately.')}
+            onClick={() => alert('Prototype only: use a valid synthetic email and at least 6 password characters. No account verification or recovery service is provided.')}
           >
-            Having trouble to sign in?
+            Trouble signing in?
           </button>
           <p className="auth-signup-switch">
             Don't have an account?{' '}
@@ -61,16 +64,19 @@ export function LoginPage() {
       <form className="auth-clean-form" onSubmit={handleSubmit} noValidate>
         {/* Segmented Portal Role Chooser */}
         <RoleChooser value={role} onChange={setRole} />
+        {role === 'rescuer' && <label>Simulated rescue team<select aria-label="Simulated rescue team" value={teamId} onChange={e => setTeamId(e.target.value)}>{TEAM_IDS.map(id => <option key={id} value={id}>{id}</option>)}</select></label>}
 
         {/* Email Field with Pill Border and Icon */}
         <div className="auth-pill-field">
+          <label className="auth-field-label" htmlFor="login-email">Email</label>
           <span className="auth-pill-icon">
             <Icon name="user" size={17} />
           </span>
           <input
+            id="login-email"
             type="email"
             className="auth-pill-input"
-            placeholder="Enter your username/email"
+            placeholder="citizen@example.test"
             aria-label="Email"
             autoComplete="email"
             value={email}
@@ -80,10 +86,12 @@ export function LoginPage() {
 
         {/* Password Field with Pill Border and Icon */}
         <div className="auth-pill-field">
+          <label className="auth-field-label" htmlFor="login-password">Password</label>
           <span className="auth-pill-icon">
             <Icon name="shield" size={17} />
           </span>
           <input
+            id="login-password"
             type={showPassword ? 'text' : 'password'}
             className="auth-pill-input"
             placeholder="Enter your password"

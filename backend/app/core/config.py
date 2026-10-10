@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     tracking_rate_limit_per_minute: int = 60
     simulation_control_rate_limit_per_minute: int = 10
     broad_ip_rate_limit_per_minute: int = 180
+    google_weather_api_key: SecretStr = SecretStr("")
 
     # -----------------------------------------------------------------------
     # ML runtime adapter

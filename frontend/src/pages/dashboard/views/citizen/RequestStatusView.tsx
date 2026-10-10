@@ -1,447 +1,56 @@
-/**
- * RequestStatusView — authoritative rescue-request status tracker.
- *
- * Fetches status from GET /rescue-requests/{id} via useRescueRequest and
- * auto-polls while the request is in a non-terminal state (every 10 s).
- * Implements all required observable states from UI_STATES.md:
- *   loading · cached/stale · conflict (409) · system-error · success
- *   (pending / assigned / en-route / arrived / completed / cancelled)
- *
- * Always shows:
- *  - The authoritative request ID and status (replaces any stale local state).
- *  - A "Controlled/historical information only" label per the wireframe.
- *  - Last-updated timestamp so the user knows whether data is fresh.
- *  - Refresh button for manual re-fetch.
- *  - Cancel action when the request is still pending.
- *
- * No ETA or route-safety guarantee is presented.
- */
-
+import { useState } from 'react'
+import { LoadingState } from '../../../../components/ui/LoadingState'
 import { useRescueRequest, useCancelRescueRequest } from '../../../../features/requests/hooks'
-import { useQuery } from '@tanstack/react-query'
-import { getMissionTracking } from '../../../../api/missions'
 import { PrototypeNotice } from './PrototypeNotice'
 import { StatusBadge } from './StatusBadge'
-import type { RequestStatus } from '../../../../features/requests/types'
-import { useState } from 'react'
+import { RecordId } from '../../../../features/workspace/Records'
+import { WorkspaceFacts, WorkspaceProgress, WorkspaceTimeline } from '../../../../features/workspace/WorkspaceUI'
+import { RequestStatusPresentation } from '../../../../features/workspace/RequestStatusPresentation'
 
-const STAGE_ORDER: RequestStatus[] = ['pending', 'assigned', 'en-route', 'arrived', 'completed']
+const STAGES = [
+  {value:'pending',label:'Pending dispatch'}, {value:'assigned',label:'Team assigned'},
+  {value:'en-route',label:'En route'}, {value:'arrived',label:'Arrived at location'},
+  {value:'completed',label:'Completed'},
+] as const
 
-const STAGE_LABELS: Record<RequestStatus, string> = {
-  pending: 'Pending dispatch',
-  assigned: 'Team assigned',
-  'en-route': 'En route',
-  arrived: 'Arrived at location',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-}
-
-interface RequestStatusViewProps {
-  requestId: string
-  /** Called when user confirms cancellation */
-  onCancelled?: () => void
-}
-
-export function RequestStatusView({ requestId, onCancelled }: RequestStatusViewProps) {
-  const { data, isLoading, isError, error, dataUpdatedAt, isFetching, refetch } = useRescueRequest(requestId)
-  const { mutate: cancel, isPending: isCancelling } = useCancelRescueRequest()
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-  const [cancelError, setCancelError] = useState<string | null>(null)
-  const tracking = useQuery({
-    queryKey: ['citizen-mission-tracking', data?.mission_id],
-    queryFn: () => getMissionTracking(data?.mission_id ?? ''),
-    enabled: Boolean(data?.mission_id) && !['pending', 'cancelled', 'completed'].includes(data?.status ?? 'pending'),
-    refetchInterval: 3000,
-    retry: false,
-  })
-
-  // ---------------------------------------------------------------------------
-  // Loading
-  // ---------------------------------------------------------------------------
-  if (isLoading) {
-    return (
-      <div
-        aria-live="polite"
-        aria-busy="true"
-        data-testid="status-loading"
-        style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.88rem' }}
-      >
-        <span aria-hidden="true">⏳</span> Loading request status…
-      </div>
-    )
-  }
-
-  // ---------------------------------------------------------------------------
-  // Error
-  // ---------------------------------------------------------------------------
-  if (isError || !data) {
-    const msg = error instanceof Error ? error.message : 'Unable to load request status.'
-    return (
-      <div
-        role="alert"
-        data-testid="status-error"
-        style={{
-          padding: '1rem',
-          background: '#fef2f2',
-          border: '1px solid #fca5a5',
-          borderRadius: '8px',
-          color: '#7f1d1d',
-          fontSize: '0.85rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
-        }}
-      >
-        <strong>⚠ Could not load request status</strong>
-        <span>{msg}</span>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          style={{
-            alignSelf: 'flex-start',
-            padding: '4px 12px',
-            borderRadius: '6px',
-            border: '1px solid #fca5a5',
-            background: '#fff',
-            color: '#7f1d1d',
-            fontWeight: 600,
-            fontSize: '0.8rem',
-            cursor: 'pointer',
-          }}
-        >
-          Retry
-        </button>
-      </div>
-    )
-  }
-
-  // ---------------------------------------------------------------------------
-  // Success — data loaded
-  // ---------------------------------------------------------------------------
-  const { id, status, location, headcount, reported_flood_level, updated_at, status_history, version } = data
-  const hasAssignedTeam = !!data.assigned_team_id && status !== 'pending'
-
-  const currentStageIdx = STAGE_ORDER.indexOf(status as RequestStatus)
-  const isCancelled = status === 'cancelled'
-  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'unknown'
-  const serverUpdated = updated_at ? new Date(updated_at).toLocaleString() : '—'
-
+export function RequestStatusView({requestId, onCancelled, compact = false, popup = false}: {requestId: string; onCancelled?: () => void; compact?: boolean; popup?: boolean}) {
+  const {data, isLoading, isError, error, dataUpdatedAt, isFetching, refetch} = useRescueRequest(requestId)
+  const {mutate:cancel,isPending:isCancelling} = useCancelRescueRequest()
+  const [cancelError,setCancelError] = useState<string|null>(null)
+  if(isLoading) return <div data-testid="status-loading"><LoadingState layout="detail" label="Loading request status…"/></div>
+  if(isError || !data) return <div role="alert" data-testid="status-error"><strong>Could not load request status</strong><p>{error instanceof Error ? error.message : 'Unable to load request status.'}</p><button onClick={() => void refetch()}>Retry</button></div>
+  const {id,status,location,headcount,reported_flood_level,updated_at,status_history,version} = data
   function handleCancel() {
+    if (status !== 'pending' || isCancelling) return
     setCancelError(null)
-    cancel(
-      { requestId: id, payload: { reason: 'Citizen cancelled via prototype UI', version } },
-      {
-        onSuccess: () => {
-          setShowCancelConfirm(false)
-          onCancelled?.()
-        },
-        onError: (err) => {
-          const axiosErr = err as { response?: { status?: number; data?: { error?: { message?: string } } } }
-          if (axiosErr.response?.status === 409) {
-            void refetch()
-            setCancelError(
-              'Conflict: the request state changed before cancellation. ' +
-              'The latest authoritative status is being refreshed.',
-            )
-          } else {
-            setCancelError('Cancellation failed. Your input is preserved — try again.')
-          }
-        },
+    cancel({requestId:id,payload:{reason:'Citizen cancelled via prototype UI',version}},{
+      onSuccess:() => {onCancelled?.()},
+      onError:err => {
+        const response = (err as {response?:{status?:number}}).response
+        if(response?.status === 409) {void refetch();setCancelError('Conflict: the request state changed before cancellation. The latest authoritative status is being refreshed.')}
+        else setCancelError('Cancellation failed. Your input is preserved — try again.')
       },
-    )
+    })
   }
-
-  return (
-    <div
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-      data-testid="status-view"
-    >
-      <PrototypeNotice variant="status" />
-
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div
-        className="modern-clean-card"
-        style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>
-            Request {id}
-          </h3>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {/* Stale indicator */}
-            {isFetching && (
-              <span
-                aria-label="Refreshing…"
-                style={{ fontSize: '0.72rem', color: '#64748b' }}
-              >
-                ↻ Refreshing…
-              </span>
-            )}
-            <button
-              type="button"
-              aria-label="Refresh request status"
-              onClick={() => void refetch()}
-              style={{
-                padding: '3px 10px',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                background: '#f8fafc',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                color: '#475569',
-              }}
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        <StatusBadge status={status as RequestStatus} large />
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.78rem', color: '#64748b' }}>
-          <span>Last updated (server): <strong style={{ color: '#0f172a' }}>{serverUpdated}</strong></span>
-          <span>Last fetched: <strong style={{ color: '#0f172a' }}>{lastUpdated}</strong></span>
-        </div>
-
-        {/* Data source notice — required by wireframe */}
-        <div
-          style={{
-            padding: '4px 8px',
-            background: '#f1f5f9',
-            borderRadius: '4px',
-            fontSize: '0.72rem',
-            color: '#64748b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-          }}
-        >
-          <span aria-hidden="true">ℹ</span>
-          Controlled/historical information only — not live or official dispatch data
-        </div>
-      </div>
-
-      {/* ── Stage stepper ────────────────────────────────────────────── */}
-      {!isCancelled && (
-        <div
-          aria-label="Request progress"
-          className="modern-clean-card"
-          style={{
-            padding: '1rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-            gap: '0.5rem',
-          }}
-        >
-          {STAGE_ORDER.map((stage, idx) => {
-            const isPast = idx <= currentStageIdx
-            const isCurrent = status === stage
-            return (
-              <div
-                key={stage}
-                aria-current={isCurrent ? 'step' : undefined}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  opacity: isPast ? 1 : 0.4,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      background: isCurrent ? '#dc2626' : isPast ? '#0f172a' : '#e2e8f0',
-                      color: isPast ? '#fff' : '#94a3b8',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {idx + 1}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: isCurrent ? 700 : 500,
-                      color: isCurrent ? '#dc2626' : '#0f172a',
-                    }}
-                  >
-                    {STAGE_LABELS[stage]}
-                  </span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* ── Request summary ──────────────────────────────────────────── */}
-      <div
-        className="modern-clean-card"
-        style={{ padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.85rem' }}
-      >
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Location</span>
-          <strong style={{ color: '#0f172a' }}>{location.address}</strong>
-        </div>
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>People</span>
-          <strong style={{ color: '#0f172a' }}>{headcount}</strong>
-        </div>
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Reported flood level</span>
-          <strong style={{ color: '#0f172a', textTransform: 'capitalize' }}>{reported_flood_level}</strong>
-        </div>
-      </div>
-
-      {hasAssignedTeam && (
-        <div
-          className="modern-clean-card"
-          style={{ padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}
-        >
-          <div>
-            <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b' }}>Assigned team</span>
-            <strong style={{ color: '#0f172a' }}>{data.assigned_team_id}</strong>
-            <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-              Simulated team contact for this prototype
-            </span>
-          </div>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
-            Contact: 09XX XXX XXXX
-          </span>
-        </div>
-      )}
-
-      {tracking.data && (
-        <div
-          className="modern-clean-card"
-          style={{ padding: '1rem 1.25rem', display: 'grid', gap: '0.5rem', fontSize: '0.84rem' }}
-        >
-          <strong style={{ color: '#0f172a' }}>Shared simulated responder tracking</strong>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', color: '#475569' }}>
-            <span>Status: <strong>{tracking.data.simulation_status}</strong></span>
-            <span>Remaining: <strong>{Math.round(tracking.data.remaining_distance_m)} m</strong></span>
-            <span>ETA: <strong>{Math.ceil(tracking.data.estimated_remaining_time_s / 60)} min</strong></span>
-            <span>Updated: <strong>{new Date(tracking.data.timestamp).toLocaleTimeString()}</strong></span>
-          </div>
-        </div>
-      )}
-      {tracking.error && (
-        <p role="status" style={{ color: '#92400e', fontSize: '0.78rem', margin: 0 }}>
-          Simulated tracking is temporarily unavailable. Status polling continues separately.
-        </p>
-      )}
-
-      {/* ── Status history ───────────────────────────────────────────── */}
-      {status_history && status_history.length > 0 && (
-        <div
-          className="modern-clean-card"
-          style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
-        >
-          <h4 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Status history
-          </h4>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {status_history.map((entry, idx) => (
-              <li
-                key={idx}
-                style={{ display: 'flex', gap: '10px', fontSize: '0.8rem', alignItems: 'baseline' }}
-              >
-                <span style={{ color: '#94a3b8', fontFamily: 'monospace', flexShrink: 0 }}>
-                  {new Date(entry.occurred_at).toLocaleString()}
-                </span>
-                <span style={{ color: '#475569' }}>—</span>
-                <span style={{ color: '#0f172a', fontWeight: 600, textTransform: 'capitalize' }}>
-                  {entry.status}
-                </span>
-                {entry.note && (
-                  <span style={{ color: '#64748b' }}>{entry.note}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ── Cancel action ────────────────────────────────────────────── */}
-      {status === 'pending' && !showCancelConfirm && (
-        <button
-          type="button"
-          onClick={() => setShowCancelConfirm(true)}
-          style={{
-            alignSelf: 'flex-start',
-            padding: '6px 14px',
-            borderRadius: '7px',
-            border: '1px solid #e2e8f0',
-            background: '#fff',
-            color: '#475569',
-            fontWeight: 600,
-            fontSize: '0.82rem',
-            cursor: 'pointer',
-          }}
-        >
-          Cancel request
-        </button>
-      )}
-
-      {showCancelConfirm && (
-        <div
-          role="dialog"
-          aria-label="Cancel request confirmation"
-          style={{
-            padding: '0.85rem 1rem',
-            background: '#fff7ed',
-            border: '1px solid #fed7aa',
-            borderRadius: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.6rem',
-          }}
-        >
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#7c2d12' }}>
-            <strong>Cancel this request?</strong> If you are in immediate danger, keep the request active or call 911.
-          </p>
-          {cancelError && (
-            <p role="alert" style={{ margin: 0, fontSize: '0.8rem', color: '#dc2626' }}>
-              {cancelError}
-            </p>
-          )}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              onClick={() => { setShowCancelConfirm(false); setCancelError(null) }}
-              disabled={isCancelling}
-              style={{
-                padding: '4px 12px', borderRadius: '6px', border: '1px solid #fed7aa',
-                background: '#fff', color: '#7c2d12', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
-              }}
-            >
-              Keep active
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={isCancelling}
-              aria-busy={isCancelling}
-              style={{
-                padding: '4px 12px', borderRadius: '6px', border: 'none',
-                background: '#dc2626', color: '#fff', fontWeight: 700, fontSize: '0.8rem',
-                cursor: isCancelling ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {isCancelling ? 'Cancelling…' : 'Yes, cancel'}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+  return <div className={`request-tracker ${compact ? 'is-compact' : 'is-full'}`} data-testid="status-view">
+    {popup ? <RequestStatusPresentation data={data} isFetching={isFetching} isCancelling={isCancelling} onRefresh={()=>void refetch()} onCancel={handleCancel}/> : <>
+    <div className="workspace-panel-heading"><h3 aria-label={`Request ${id}`}>Request status</h3><StatusBadge status={status} large/></div>
+    <RecordId id={id}/>
+    <p className="workspace-caption">Controlled/historical information only — not live or official dispatch data</p>
+    {status !== 'cancelled' && <WorkspaceProgress stages={STAGES} current={status} label="Request progress"/>}
+    <section><h4>Request details</h4><WorkspaceFacts items={[
+      {label:'Location',value:location.address},
+      {label:'People',value:headcount},
+      {label:'Reported flood level',value:reported_flood_level},
+      {label:'Situation summary',value:data.situation_summary || 'No optional situation details.'},
+      {label:'Accessibility needs',value:data.vulnerabilities.join(', ') || 'None reported'},
+      {label:'Medical needs',value:data.medical_needs ? data.medical_details || 'Medical assistance requested' : 'None reported'},
+    ]}/></section>
+    {status_history && status_history.length > 0 && <details className="request-history" open={!compact}><summary>Status history</summary><WorkspaceTimeline events={status_history.map((entry,index) => ({id:String(index),status:entry.status,timestamp:entry.occurred_at,note:entry.note}))}/></details>}
+    <details className="workspace-technical"><summary>Data freshness and limitations</summary><p>Last updated (server): {updated_at ? new Date(updated_at).toLocaleString() : '—'}</p><p>Last fetched: {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'unknown'}</p><PrototypeNotice variant="status"/></details>
+    <button aria-label="Refresh request status" onClick={() => void refetch()} disabled={isFetching}>{isFetching ? 'Refreshing…' : 'Refresh'}</button>
+    {status === 'pending' && <div className="workspace-cancel-panel"><strong>Cancel request</strong><p>You can cancel while this request is awaiting assignment.</p><button disabled={isCancelling} aria-busy={isCancelling} onClick={handleCancel}>{isCancelling ? 'Cancelling…' : 'Cancel request'}</button></div>}
+    </>}
+    {cancelError && <p role="alert">{cancelError}</p>}
+  </div>
 }

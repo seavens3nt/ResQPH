@@ -268,7 +268,7 @@ def test_role_headers_and_list_filters_use_common_error_envelope(
     assert no_headers.status_code == 403
     assert no_headers.json()["error"]["code"] == "demo_identity_required"
     assert volunteer.status_code == 403
-    assert volunteer.json()["error"]["code"] == "forbidden"
+    assert volunteer.json()["error"]["code"] == "demo_role_required"
     assert bad_status.status_code == 422
     assert bad_status.json()["error"]["code"] == "invalid_status_filter"
     assert bad_cursor.status_code == 422

@@ -39,7 +39,7 @@ describe('Issue 71 production offline shell checks (mocked worker APIs)', () => 
       respondWith: (value: Promise<unknown>) => { result = value } } as never)
 
     await expect(result).resolves.toEqual({ source: 'cached' })
-    expect(cache.match).toHaveBeenCalledWith('/index.html')
+    expect(cache.match).toHaveBeenCalledWith('/index.html', { ignoreVary: true })
   })
 
   it('leaves API requests, tiles, POSTs, and non-navigation data out of the cache', () => {
@@ -65,7 +65,7 @@ describe('Issue 71 production offline shell checks (mocked worker APIs)', () => 
     let result: Promise<unknown> | undefined
     listeners.fetch({ request, respondWith: (value: Promise<unknown>) => { result = value } } as never)
     await expect(result).resolves.toEqual({ source: 'cached' })
-    expect(cache.match).toHaveBeenCalledWith(request)
+    expect(cache.match).toHaveBeenCalledWith(request, { ignoreVary: true })
   })
 
   it('does not invent a shell if the network and cache are both unavailable', async () => {

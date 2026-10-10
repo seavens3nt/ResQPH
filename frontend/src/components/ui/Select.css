@@ -1,0 +1,58 @@
+/* Shared native selects: keep browser keyboard/touch behavior and page sizing. */
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select {
+  --select-surface: var(--shared-inset, #27272a);
+  --select-text: var(--ink, #f4f4f5);
+  --select-border: var(--line, #71717a);
+  appearance: none !important;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 10px 48px 10px 16px !important;
+  border: 1px solid var(--select-border) !important;
+  border-radius: 999px !important;
+  background-color: var(--select-surface) !important;
+  background-image: url('/figma-rescue/select-arrow.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position: right 18px center !important;
+  background-size: 14px 8px !important;
+  color: var(--select-text) !important;
+  font-family: var(--font-body);
+  font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form select {
+  border-radius: 999px !important;
+  border-color: var(--line) !important;
+  background-color: var(--shared-inset) !important;
+  padding-right: 48px !important;
+}
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:hover:not(:disabled) {
+  border-color: #648bab !important;
+}
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:focus-visible {
+  outline: 3px solid #376d9c;
+  outline-offset: 3px;
+}
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select[aria-invalid=true] {
+  border-color: #c52a46 !important;
+}
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select option {
+  background: var(--select-surface);
+  color: var(--select-text);
+  font-family: var(--font-body);
+}
+.auth-mobile-page .auth-clean-form select { width: 100%; margin-top: 8px; }
+.workspace-shell[data-theme=dark] select { color-scheme: dark; }
+.auth-mobile-page select { color-scheme: dark; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select { transition: none; }
+}

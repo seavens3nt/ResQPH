@@ -1,12 +1,14 @@
 # Team Phase 5 — Integration, Testing, and Presentation
 
-**Status:** Ready to start after the Phase 4 gate merge and green main checks.
+**Status:** In progress; local revised candidate requires delivery and renewed end-to-end acceptance.
 **Gate owner:** Ranee
 **Deadline:** To be set by Ranee; no date assumed.
 
 ## Locked inputs
 
-Accepted main, Phase 4 gate/evidence, MVP_SCOPE, API/lifecycle/routing/offline contracts, sanitized fixtures and the accepted external ML evidence. No new feature scope is opened.
+Accepted main, historical Phase 4 gate/evidence, current MVP_SCOPE, API/lifecycle/routing/offline contracts, sanitized fixtures and accepted external ML evidence. Ranee's approved local amendments retire Volunteer/hazard reporting, rescuer hotline and alternative-route UI; retain three separate roles and one calculated route. Shared Figma/modal/Inter presentation is defined in [visual rules](../ui/LOCAL_VISUAL_RULES.md). Do not expand backend scope from a visual reference.
+
+Ranee confirmed closure of superseded repair packages #76/#77/#78/#82/#83 as not planned; #84 is also retired. Jared's original #73 package is completed through merged PR #80; Matthew's #74 remains completed. Only #70 candidate integration/final gate, #71 remaining positive browser/offline acceptance and #72 remaining presentation/rehearsal remain active. Reuse merged PR #79 tests and PR #81 documents rather than assigning them as unstarted work. Main does not contain the local candidate merely because this document describes it. Repeat the same fresh request/mission across three tabs and production offline reload/replay before final acceptance.
 
 ## Independent packages
 
@@ -18,7 +20,7 @@ Accepted main, Phase 4 gate/evidence, MVP_SCOPE, API/lifecycle/routing/offline c
 | Jared | API/database negative regression and safe local operational checks | backend/tests/test_phase5_acceptance.py; docs/testing/TEAM-PHASE-05-BACKEND.md |
 | Matthew | Deterministic routing/fallback and external ML evidence reconciliation | tests/integration/test_phase5_routing_acceptance.py; docs/testing/TEAM-PHASE-05-ROUTING-ML.md |
 
-Each issue uses the eight-section work-package format with exact commands, expected outputs and prohibited layers. All members can start from accepted main independently; no personal handoffs. Elle resumes her permanent role. QA/presentation packages do not silently change product code: report a named defect in the assigned issue; Ranee owns scoped corrections and acceptance.
+The table records original Phase 5 ownership, not five unstarted assignments. Active issues use the eight-section format; #71/#72 distinguish already delivered packages from remaining evidence and are blocked for final browser/rehearsal execution until the candidate is ready. Elle remains the frontend owner. No personal handoffs. QA/presentation do not silently change product code; Ranee owns scoped corrections and final acceptance under #70.
 
 ## Required outputs
 

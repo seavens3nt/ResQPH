@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -26,7 +26,7 @@ pytestmark = [
 
 
 def request_fixture(request_id: str) -> RescueRequest:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return RescueRequest(
         id=request_id,
         citizen_id="citizen-integration-demo",

@@ -77,7 +77,8 @@ describe('rescuer offline presentation', () => {
       'dateTime',
       fixture.last_synced_at,
     )
-    expect(screen.getByText('En route')).toBeInTheDocument()
+    expect(screen.getByText('En route', {selector:'.status-badge'})).toBeInTheDocument()
+    expect(screen.getByRole('list', {name:'Mission progress'}).querySelector('[aria-current="step"]')).toHaveTextContent('En route')
   })
 
   it('locks a second status action while a queued event remains unaccepted', () => {

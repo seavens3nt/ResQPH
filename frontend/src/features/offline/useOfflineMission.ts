@@ -139,7 +139,8 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean) 
         // label a failed local transaction as a durable success.
         const retained = { ...syncing, syncState: 'pending' as const }
         try { await updateQueue(actorId, retained) } catch { /* Syncing recovers on reload. */ }
-        if (current()) setState((value) => ({ ...value, entry: retained, storageError: message(error), serverConfirmed: false }))
+        if (current()) setState((value) => ({ ...value, mission: accepted, entry: retained, lastSyncedAt: null,
+          storageError: `Server accepted this update; local acknowledgement failed: ${message(error)}`, serverConfirmed: true }))
       }
     } finally { inFlight.current = false; setBusy(false) }
   }, [actorId, demoOffline, online, state.actorId, state.entry, state.loading])
@@ -152,7 +153,7 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean) 
     void Promise.resolve().then(synchronize)
   }, [actorId, busy, isOffline, state.actorId, state.entry, state.loading, synchronize])
 
-  const advance = useCallback(async () => {
+  const advance = useCallback(async (note?: string) => {
     if (!actorId || sessionActor.current !== actorId || state.actorId !== actorId || state.loading || !state.mission || state.entry || inFlight.current) return
     const next = nextValidStatus(state.mission.status)
     if (!next) return
@@ -164,7 +165,7 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean) 
     const entry: OfflineQueueEntry = {
       localId: eventId, missionId: state.mission.id,
       body: { event_id: eventId, new_status: next, expected_mission_version: state.mission.version,
-        client_recorded_at: recordedAt, source: 'offline-sync' },
+        client_recorded_at: recordedAt, source: 'offline-sync', ...(note ? {note} : {}) },
       syncState: 'pending', enqueuedAt: recordedAt,
     }
     // Persist before every send, even online, so a lost response can replay

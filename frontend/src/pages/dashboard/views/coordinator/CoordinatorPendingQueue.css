@@ -139,7 +139,7 @@
 }
 
 .coord-req-card .item-card__title {
-  font-family: var(--font-mono, monospace);
+  font-family:var(--font-body);
   font-weight: 700;
   font-size: 0.92rem;
   color: #0f172a;

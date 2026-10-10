@@ -135,14 +135,15 @@ records those integration gaps.
 
 ## 3. Browser rehearsal — required after repairs, not recorded as passed
 
-Use separate Citizen, Volunteer, Coordinator and Rescuer workspaces in separate
-tabs after #82 is merged and verified; no Switch demo role or Citizen/Volunteer
-toggle belongs in the approved final flow. At this baseline, shared localStorage
-identity still prevents dependable independent-role tabs. Independent browser
-profiles can isolate diagnostic runs, but are not a substitute for fixing #82.
+Use separate Citizen, Coordinator/Dispatcher and Rescuer workspaces in separate
+tabs after the local candidate is delivered and verified. No role-switch control
+belongs in the approved final flow. Local code now uses tab-scoped identity;
+repeat sign-out/reload/copied-tab isolation on the delivered revision rather than
+treating the older shared-localStorage finding as its current implementation.
 
-1. Citizen: valid synthetic email/password -> SOS triage -> rescue details.
-   Submit with optional summary/landmark blank. Record the actual request ID.
+1. Citizen: valid synthetic email/password -> Request rescue modal -> edit ->
+   Review request -> final submit. Leave optional details blank, verify API-confirmed
+   transient success and tracking popup, and record the actual request ID.
 2. Coordinator: verify the same request in the API queue and selected inspector.
    Assign the seeded `team-alpha`, not `rescuer-alpha@example.com`.
 3. Rescuer: login identity must resolve to that team, retrieve the same mission
@@ -162,12 +163,14 @@ profiles can isolate diagnostic runs, but are not a substitute for fixing #82.
    review/discard. Do not manufacture a version bump or invent reassignment.
 8. Test another team with no cached mission, rejected corrupt cache, keyboard
    focus entry/trap/Escape/restore, navigation, and 320px/desktop layouts.
-9. Volunteer: submit/review/reload a report; coordinator review must persist;
-   saving/verification must not falsely claim routing application.
+9. Verify retired Volunteer entry, hazard-report workflow, rescuer hotline and
+   alternative-route controls are absent. Keep one calculated route and explicit
+   no-route behavior. Preserve historical records; do not run a reporting demo.
 
 **Current stop condition:** #76 cache/status/route defects, #77 validation,
-#78 navigation/focus, and #82–#84 product-flow repairs remain unresolved on this
-baseline. Do not bypass null fields with richer sample data, replace API records
+#78 navigation/focus, and #82/#83 product-flow repairs require delivered-candidate
+acceptance. #84 is closed as not planned, not a demonstration prerequisite.
+Do not bypass null fields with richer sample data, replace API records
 with local cards, or call fixture-only offline evidence full MVP acceptance.
 
 ## 4. Evidence and recovery

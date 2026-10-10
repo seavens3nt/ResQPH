@@ -1,0 +1,15 @@
+.workspace-shell[data-role] .request-submitted-notice {
+  box-sizing:border-box; width:100%; min-height:75px; margin:0 0 24px;
+  display:flex; align-items:center; padding:18px 36px;
+  background:rgba(189,255,219,.49); border:1px solid #5b8d72;
+  border-radius:30px; color:#294536; font-family:var(--font-body);
+  font-size:24px; font-weight:500; line-height:1.4;
+}
+.workspace-shell[data-role] .request-cancelled-notice {
+  background:#fff0dc;
+  border-color:#b48445;
+  color:#754715;
+}
+@media(max-width:700px) {
+  .workspace-shell[data-role] .request-submitted-notice { font-size:17px; padding:16px 20px; min-height:64px; }
+}
