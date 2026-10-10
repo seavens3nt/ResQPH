@@ -1,337 +1,964 @@
 /* ═══════════════════════════════════════════════════════════════
-   ResQPH Landing Page
+   ResQPH Landing Page Styles — Flood Rescue Light Theme
+   AirLume layout format with flood rescue photography in hero
+   at lowered opacity, high-contrast dark slate typography,
+   floating 3-card showcase deck, and clean 8-card capabilities grid.
 ═══════════════════════════════════════════════════════════════ */
 
-/* ── Root ────────────────────────────────────────────────────── */
-.lp-root {
-  position: relative;
-  min-height: 100dvh;
+/* ── Global Page Shell ───────────────────────────────────────── */
+.al-page {
+  min-height: 100vh;
   width: 100%;
-  display: flex;
+  background-color: #0c0c0e; /* Matches Login and Signup #0c0c0e */
+  color: #f4f4f5;
+  font-family: var(--font-body, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.al-page *,
+.al-page *::before,
+.al-page *::after {
+  box-sizing: border-box;
+}
+
+.al-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(20px, 4vw, 36px);
+  padding-right: clamp(20px, 4vw, 36px);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.al-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: #0c0c0e;
-  color: #fff;
-  font-family:var(--font-body);
-  -webkit-font-smoothing: antialiased;
+  gap: 8px;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-family: var(--font-body, inherit);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* ── Background ──────────────────────────────────────────────── */
-.lp-bg {
+.al-btn--primary {
+  background-color: #e11d1d; /* Vivid Red matching Login & Signup */
+  color: #ffffff;
+  padding: 10px 22px;
+  box-shadow: 0 4px 14px rgba(225, 29, 29, 0.35);
+}
+
+.al-btn--primary:hover {
+  background-color: #c81a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(225, 29, 29, 0.45);
+}
+
+.al-btn--hero {
+  background-color: #e11d1d;
+  color: #ffffff;
+  padding: 8px 10px 8px 24px;
+  font-size: 1rem;
+  box-shadow: 0 6px 22px rgba(225, 29, 29, 0.4);
+}
+
+.al-btn--hero:hover {
+  background-color: #c81a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(225, 29, 29, 0.5);
+}
+
+.al-btn__circle-arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #e11d1d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.al-btn:hover .al-btn__circle-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* ── Hero Shell (Atmospheric Flood Rescue Backdrop with Dark Base Color) ─── */
+.al-hero-shell {
+  position: relative;
+  width: 100%;
+  background-color: #0c0c0e;
+  background-image: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(26, 18, 18, 0.45) 0%, rgba(12, 12, 14, 0.95) 100%);
+  color: #ffffff;
+  overflow: hidden;
+  padding-bottom: clamp(60px, 8vw, 100px);
+  border-bottom: 1px solid #27272a;
+}
+
+/* Flood Rescue background container */
+.al-hero-bg {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   z-index: 0;
+  overflow: hidden;
 }
 
-.lp-bg-img {
+/* Flood Rescue Image with lowered opacity — natural disaster scene clearly visible on dark base color */
+.al-hero-bg-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 38%;
-  opacity: 0.72;
-  filter: saturate(0.85) brightness(0.62);
-  /* slow Ken Burns zoom */
-  animation: lp-kenburns 18s ease-out forwards;
+  object-position: center 28%;
+  opacity: 0.35; /* Lowered opacity over dark base color */
+  filter: saturate(1.2) contrast(1.1);
+  transform: scale(1.02);
+  animation: al-ken-burns 24s ease-out forwards;
 }
 
-@keyframes lp-kenburns {
-  from { transform: scale(1.08); }
-  to   { transform: scale(1.0);  }
+@keyframes al-ken-burns {
+  from { transform: scale(1.05); }
+  to   { transform: scale(1); }
 }
 
-/* Lighter overlay */
-.lp-bg-overlay {
+/* Atmospheric dark gradient overlay — rich emergency disaster ambiance */
+.al-hero-overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(0deg, rgba(6, 6, 8, 0.18) 0%, rgba(6, 6, 8, 0.18) 100%),
-    radial-gradient(ellipse 45% 100% at 0%   50%, rgba(6, 6, 8, 0.62) 0%, transparent 65%),
-    radial-gradient(ellipse 45% 100% at 100% 50%, rgba(6, 6, 8, 0.62) 0%, transparent 65%),
-    radial-gradient(ellipse 100% 35% at 50%  0%,  rgba(6, 6, 8, 0.60) 0%, transparent 65%),
-    linear-gradient(to top,
-      rgba(6, 6, 8, 0.70) 0%,
-      rgba(6, 6, 8, 0.28) 22%,
-      transparent          44%
-    );
-  /* fade overlay in so bg image is visible first */
-  animation: lp-overlay-in 1.2s ease forwards;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 12, 14, 0.7) 0%,
+    rgba(12, 12, 14, 0.3) 35%,
+    rgba(12, 12, 14, 0.65) 75%,
+    #0c0c0e 100%
+  );
+  pointer-events: none;
 }
 
-@keyframes lp-overlay-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.al-hero-glow-blue {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.16) 0%, transparent 70%);
+  filter: blur(80px);
+  animation: al-glow-breathe 8s ease-in-out infinite alternate;
 }
 
-/* ── Keyframes ───────────────────────────────────────────────── */
-@keyframes lp-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.al-hero-glow-red {
+  position: absolute;
+  top: 25%;
+  left: 10%;
+  width: 550px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(225, 29, 29, 0.18) 0%, transparent 70%);
+  filter: blur(90px);
+  animation: al-glow-breathe 9s ease-in-out infinite alternate-reverse;
 }
 
-@keyframes lp-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@keyframes al-glow-breathe {
+  0%   { transform: translateX(-50%) scale(0.96); opacity: 0.75; }
+  100% { transform: translateX(-50%) scale(1.08); opacity: 1; }
 }
 
-/* ── Centred content ─────────────────────────────────────────── */
-.lp-content {
+/* ── Header ──────────────────────────────────────────────────── */
+.al-header {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.al-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand */
+.al-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #ffffff;
+  user-select: none;
+}
+
+.al-brand__logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  mix-blend-mode: screen; /* Displays crisp white rescuer emblem on dark hero */
+  display: block;
+}
+
+.al-brand__name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.al-brand__p {
+  color: #3b82f6; /* Bright Philippine Blue */
+}
+
+.al-brand__h {
+  color: #ef4444; /* Bright Philippine Red */
+}
+
+/* Nav links */
+.al-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.al-nav__link {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.al-nav__link:hover,
+.al-nav__link.is-active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.al-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.al-nav-login {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.al-nav-login:hover {
+  color: #ffffff;
+}
+
+/* ── Hero Main Content ───────────────────────────────────────── */
+.al-hero-content {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 48px 24px 80px;
-  width: 100%;
-  max-width: 560px;
-  box-sizing: border-box;
+  padding-top: clamp(24px, 4vw, 44px);
 }
 
-/* ── Entrance animations (staggered) ────────────────────────── */
-/* Start all invisible */
-.lp-anim-title,
-.lp-anim-tagline,
-.lp-anim-tagline2,
-.lp-anim-ctas {
-  opacity: 0;
+/* Pill badge at top */
+.al-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  color: #f1f5f9;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 22px;
+  backdrop-filter: blur(8px);
 }
 
-.lp-anim-title {
-  animation: lp-fade-up 0.7s cubic-bezier(0.22, 0.68, 0.2, 1) 0.3s both;
+.al-hero-pill__pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  animation: al-pulse 2s infinite;
 }
 
-.lp-anim-tagline {
-  animation: lp-fade-up 0.7s cubic-bezier(0.22, 0.68, 0.2, 1) 0.55s both;
+@keyframes al-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-.lp-anim-tagline2 {
-  animation: lp-fade-up 0.7s cubic-bezier(0.22, 0.68, 0.2, 1) 0.72s both;
+/* Big Hero Headline */
+.al-hero-title {
+  color: #ffffff;
+  font-size: clamp(2.6rem, 5.8vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  margin: 0 0 18px 0;
 }
 
-.lp-anim-ctas {
-  animation: lp-fade-up 0.7s cubic-bezier(0.22, 0.68, 0.2, 1) 0.92s both;
-}
-
-/* ── Typewriter ──────────────────────────────────────────────── */
-.lp-typewriter {
-  display: flex;
-  flex-wrap: wrap;
+.al-hero-title__sub {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0 6px;
-  margin-bottom: 14px;
-  min-height: 2.2rem;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.lp-tw-prefix {
-  font-family:var(--font-body);
-  font-size: clamp(0.82rem, 2vw, 0.96rem);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.lp-tw-dynamic {
+.al-hero-title__icons {
   display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+}
+
+.al-hero-icon--boat {
+  color: #ef4444;
+  filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.5));
+}
+
+.al-hero-icon--nav {
+  color: #3b82f6;
+  filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.5));
+}
+
+.al-hero-desc {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(0.98rem, 1.8vw, 1.12rem);
+  font-weight: 400;
+  max-width: 600px;
+  margin: 0 auto 32px auto;
+  line-height: 1.6;
+}
+
+.al-hero-cta {
+  margin-bottom: clamp(48px, 6vw, 68px);
+}
+
+/* ── Floating Showcase Deck (Clean Elevated Composition) ─────── */
+.al-showcase-deck {
+  width: 100%;
+  max-width: 1100px;
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 22px;
   align-items: center;
 }
 
-.lp-tw-text {
-  font-family:var(--font-body);
-  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+/* 1. Left Card: Stat & Snippet Pills */
+.al-deck-card--left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.al-stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
+  padding: 22px;
+  color: #0f172a;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
+  text-align: left;
+}
+
+.al-stat-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.al-stat-card__label {
+  display: block;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  text-shadow: 0 2px 12px rgba(225, 29, 29, 0.4);
+  color: #475569;
 }
 
-.lp-tw-cursor {
-  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
-  font-weight: 300;
-  color: #e11d1d;
-  margin-left: 2px;
-  animation: lp-blink 0.9s infinite;
+.al-stat-card__time {
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
 }
 
-@keyframes lp-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+.al-stat-badge {
+  background-color: #dcfce7;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 9999px;
 }
 
-/* ── Brand title ─────────────────────────────────────────────── */
-.lp-title {
-  display: inline-flex;
-  align-items: baseline;
-  margin: 0 0 18px;
-  line-height: 1;
-  filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.8));
+.al-stat-card__metric {
+  margin-bottom: 14px;
 }
 
-/* "ResQ" — Montserrat Black, pure white */
-.lp-title__resq {
-  font-family:var(--font-body);
-  font-size: clamp(3.8rem, 16vw, 6.4rem);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #ffffff;
+.al-stat-card__num {
+  display: block;
+  font-size: 1.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
-/* "P" — blue */
-.lp-title__p {
-  font-family:var(--font-body);
-  font-size: clamp(3.8rem, 16vw, 6.4rem);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  margin-left: 4px;
+.al-stat-card__sublabel {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.al-stat-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.al-stat-dot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.al-stat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #dc2626;
+}
+
+.al-mini-arrow {
   color: #2563eb;
 }
 
-/* "H" — red */
-.lp-title__h {
-  font-family:var(--font-body);
-  font-size: clamp(3.8rem, 16vw, 6.4rem);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #e11d1d;
-}
-
-/* ── Tagline ─────────────────────────────────────────────────── */
-.lp-tagline {
-  font-family:var(--font-body);
-  font-size: clamp(0.9rem, 2.4vw, 1rem);
-  font-weight: 400;
-  line-height: 1.72;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8), 0 3px 10px rgba(0,0,0,0.5);
-  max-width: 340px;
-  margin: 0 0 40px;
-  letter-spacing: 0.01em;
-}
-
-/* ── CTA buttons ─────────────────────────────────────────────── */
-.lp-ctas {
+/* Floating message pills */
+.al-snippet-pill {
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 9999px;
+  padding: 8px 16px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  max-width: 340px;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  text-align: left;
 }
 
-.lp-btn {
+.al-snippet-icon {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: #ffffff;
+}
+
+.al-snippet-icon--red { background-color: #dc2626; }
+.al-snippet-icon--blue { background-color: #2563eb; }
+
+.al-snippet-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 2. Center Card: Main Phone / Tablet Showcase */
+.al-center-card {
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
+  padding: 24px 22px 20px 22px;
+  box-shadow:
+    0 28px 60px -10px rgba(0, 0, 0, 0.4),
+    0 12px 24px -4px rgba(0, 0, 0, 0.2);
+  color: #0f172a;
+  position: relative;
+  z-index: 5;
+}
+
+.al-center-card__top-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background-color: #eff6ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.al-center-card__title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px 0;
+  line-height: 1.25;
+}
+
+.al-center-card__title strong {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.al-center-card__gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.al-gauge-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 3px solid #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  flex-shrink: 0;
+}
+
+.al-gauge-num {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.al-gauge-text {
+  font-size: 0.76rem;
+  color: #475569;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.al-center-card__media {
+  position: relative;
   width: 100%;
-  min-height: 54px;
-  padding: 0 28px;
-  border-radius: 999px;
-  font-family:var(--font-body);
-  font-size: 1rem;
-  font-weight: 700;
-  text-decoration: none;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease,
-              background 0.18s ease, border-color 0.18s ease;
-  box-sizing: border-box;
+  height: 195px;
+  border-radius: 18px;
+  overflow: hidden;
+  background-color: #0c1322;
 }
 
-/* Primary — vivid red, not muddy */
-.lp-btn--primary {
-  background: #e11d1d;
-  color: #fff;
-  border: 2px solid transparent;
-  box-shadow:
-    0 4px 18px rgba(225, 29, 29, 0.45),
-    0 1px 0 rgba(255,255,255,0.12) inset;
+.al-center-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 36%;
+  filter: saturate(1.1) brightness(0.95);
 }
 
-.lp-btn--primary span {
-  font-size: 1.1rem;
-  line-height: 1;
+.al-center-card__media-grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(10, 16, 28, 0.75) 100%);
 }
 
-.lp-btn--primary:hover {
-  background: #c81a1a;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 26px rgba(225, 29, 29, 0.55);
-}
-
-.lp-btn--primary:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(225, 29, 29, 0.3);
-}
-
-/* Secondary — clean white outline */
-.lp-btn--secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+.al-center-card__floating-proof {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.lp-btn--secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.75);
-  transform: translateY(-1px);
+.al-avatar-stack {
+  display: flex;
+  align-items: center;
 }
 
-.lp-btn--secondary:active {
-  transform: translateY(0);
+.al-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  margin-left: -6px;
 }
 
-/* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .lp-content {
-    padding: 40px 20px 88px;
+.al-avatar:first-child { margin-left: 0; }
+.al-avatar--1 { background-color: #dc2626; }
+.al-avatar--2 { background-color: #2563eb; }
+.al-avatar--3 { background-color: #059669; }
+
+.al-proof-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.al-proof-text strong {
+  font-size: 0.74rem;
+  color: #0f172a;
+}
+
+.al-proof-text span {
+  font-size: 0.66rem;
+  color: #64748b;
+}
+
+/* 3. Right Card: Clean Route Path Card */
+.al-deck-card--right {
+  display: flex;
+  flex-direction: column;
+}
+
+.al-glass-card {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 24px;
+  padding: 22px;
+  color: #0f172a;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
+  text-align: left;
+}
+
+.al-glass-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.74rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.al-glass-label {
+  display: block;
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.al-glass-destination {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.al-glass-eta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+.al-glass-tag {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.al-glass-note {
+  font-size: 0.76rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0 0 18px 0;
+}
+
+.al-glass-card__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.al-glass-cta {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e11d1d;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(225, 29, 29, 0.35);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.al-glass-cta:hover {
+  transform: scale(1.08);
+  background: #c81a1a;
+}
+
+/* ── Capabilities Section (Obsidian Dark Canvas - Seamless Flow) ─────────────── */
+.al-features-section {
+  width: 100%;
+  background-color: #0c0c0e;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: clamp(64px, 8vw, 100px);
+  padding-bottom: clamp(64px, 8vw, 100px);
+}
+
+.al-features-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto clamp(40px, 5vw, 60px) auto;
+}
+
+.al-features-pill {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background-color: rgba(225, 29, 29, 0.12);
+  color: #e11d1d;
+  border: 1px solid rgba(225, 29, 29, 0.25);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.al-features-title {
+  color: #ffffff;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  margin: 0 0 14px 0;
+}
+
+.al-features-subtitle {
+  color: #a1a1aa;
+  font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 8-Card Grid Layout */
+.al-features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.al-feature-card {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 22px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* On mouse hover: Box turns Vivid Red with white typography and white icon */
+.al-feature-card:hover {
+  transform: translateY(-6px);
+  background: linear-gradient(145deg, #e11d1d 0%, #b91c1c 100%);
+  border-color: #e11d1d;
+  box-shadow: 0 16px 36px rgba(225, 29, 29, 0.4);
+}
+
+.al-card-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background-color: #27272a;
+  color: #e11d1d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  transition:
+    transform 0.22s ease,
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+
+.al-feature-card:hover .al-card-icon-box {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.al-card-title {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #f4f4f5;
+  letter-spacing: -0.015em;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+  transition: color 0.22s ease;
+}
+
+.al-feature-card:hover .al-card-title {
+  color: #ffffff;
+}
+
+.al-card-desc {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #a1a1aa;
+  margin: 0;
+  flex-grow: 1;
+  transition: color 0.22s ease;
+}
+
+.al-feature-card:hover .al-card-desc {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ── Footer (Pure Black at Very Bottom) ────────────────────────── */
+.al-footer {
+  width: 100%;
+  padding-top: 50px;
+  padding-bottom: 60px;
+  background-color: #000000;
+  color: #ffffff;
+  border-top: 1px solid #1c1c20;
+}
+
+.al-footer__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.al-brand__logo--footer {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  mix-blend-mode: screen; /* Shows crisp white rescuer emblem on pure black footer */
+  display: block;
+}
+
+.al-footer .al-brand__name {
+  color: #ffffff;
+}
+
+.al-footer__tagline {
+  font-size: 0.88rem;
+  color: #a1a1aa;
+  margin: 0;
+  max-width: 480px;
+}
+
+.al-footer__copy {
+  font-size: 0.78rem;
+  color: #52525b;
+  margin-top: 8px;
+}
+
+/* ── Responsive Breakpoints ──────────────────────────────────── */
+@media (max-width: 1080px) {
+  .al-showcase-deck {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto;
   }
 
-  .lp-ctas {
-    max-width: 100%;
+  .al-deck-card--left,
+  .al-deck-card--right {
+    display: none;
   }
 
-  .lp-btn {
-    min-height: 52px;
-    font-size: 0.97rem;
+  .al-features-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 900px) {
-  .lp-title__resq,
-  .lp-title__p,
-  .lp-title__h {
-    font-size: 7.2rem;
+@media (max-width: 640px) {
+  .al-header__inner {
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
-  .lp-tagline {
-    font-size: 1.05rem;
-    max-width: 400px;
+  .al-nav {
+    display: none;
   }
 
-  .lp-btn {
-    min-height: 56px;
-    font-size: 1.05rem;
+  .al-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .al-hero-title {
+    font-size: 2.2rem;
   }
 }
 
-/* Respect reduced motion preference */
+/* ── Reduced Motion Preference ───────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .lp-bg-img       { animation: none; }
-  .lp-bg-overlay   { animation: none; opacity: 1; }
-  .lp-anim-title,
-  .lp-anim-tagline,
-  .lp-anim-tagline2,
-  .lp-anim-ctas    { animation: none; opacity: 1; }
-  .lp-tw-cursor    { animation: none; opacity: 1; }
+  .al-btn,
+  .al-feature-card,
+  .al-brand__logo,
+  .al-hero-bg-img {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
 }
