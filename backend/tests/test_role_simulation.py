@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -17,7 +17,7 @@ from app.repositories.mission_status_events import DuplicateMissionStatusEventEr
 from app.schemas.common import ServiceError, service_error_handler
 from app.services.missions import MissionService
 
-BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
+BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=UTC)
 
 
 class RoleMissionRepository:

@@ -9,6 +9,7 @@ Branch: `feature/local-desktop-role-workspaces`. This is not final acceptance or
 - Eight unused, unregistered Volunteer/report files archived outside the checkout, not destroyed. Historical database records remain intact.
 - Superseded local preview instructions replaced with current three-role and informational-weather scope.
 - CORS acceptance tests the configured allowlist instead of hard-coding a developer port; rejection of an untrusted origin remains checked.
+- Initial hosted CI exposed Python-target-dependent lint differences. UTC aliases/imports and UTC timestamp parsing were updated for the approved Python 3.12 baseline; CI now specifies that target explicitly. Regression remained 201 passed/28 skipped after this change.
 
 ## Fresh verification
 

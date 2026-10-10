@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from pymongo.errors import PyMongoError
@@ -248,7 +248,7 @@ def parse_request_status(value: str | None) -> RequestStatus | None:
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def database_unavailable() -> ServiceError:

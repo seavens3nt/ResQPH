@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pymongo import ASCENDING, ReturnDocument
 from pymongo.asynchronous.client_session import AsyncClientSession
@@ -23,7 +23,7 @@ class RescuerRepository:
         )
 
     async def ensure_synthetic_teams(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         fixtures = [
             ("team-alpha", "U-Belt Demo Team Alpha", "Rubber Boat", 4, True),
             ("team-bravo", "U-Belt Demo Team Bravo", "High-Clearance Truck", 3, False),

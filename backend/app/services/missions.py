@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import ClassVar
 
 from pymongo.asynchronous.client_session import AsyncClientSession
@@ -346,7 +346,7 @@ class MissionService:
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def same_utc_instant(left: datetime | None, right: datetime | None) -> bool:
@@ -360,6 +360,6 @@ def bson_utc_millisecond(value: datetime) -> datetime:
     # MongoDB BSON Date stores UTC milliseconds, not Python microseconds.
     # https://www.mongodb.com/docs/manual/reference/bson-types/#date
     if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    normalized = value.astimezone(timezone.utc)
+        value = value.replace(tzinfo=UTC)
+    normalized = value.astimezone(UTC)
     return normalized.replace(microsecond=(normalized.microsecond // 1000) * 1000)

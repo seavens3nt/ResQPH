@@ -39,9 +39,9 @@ jobs:
             backend/requirements-dev.txt
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements.txt -r requirements-dev.txt
-      - run: python -m ruff check app tests
+      - run: python -m ruff check app tests --target-version py312
       - run: python -m pytest
-      - run: python -m ruff check ../tests/integration
+      - run: python -m ruff check ../tests/integration --target-version py312
       - run: python -m pytest ../tests/integration
 
   ml-evidence:

@@ -1,7 +1,7 @@
 """Real production API/database acceptance; never substitutes fake services."""
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -90,7 +90,7 @@ def test_fresh_minimal_request_route_status_history_and_team_release(api):
             "new_status": status,
             "expected_mission_version": version,
             "source": "offline-sync",
-            "client_recorded_at": datetime.now(timezone.utc).isoformat(),
+            "client_recorded_at": datetime.now(UTC).isoformat(),
             "note": "Sanitized acceptance note",
         }
         result = client.post(

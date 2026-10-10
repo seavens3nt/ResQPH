@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, cast
 
 import pytest
@@ -20,7 +20,7 @@ from app.repositories.mission_status_events import (
 )
 from app.services.missions import MissionService
 
-BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
+BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=UTC)
 
 
 class InMemoryMissionRepository:

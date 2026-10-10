@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -24,7 +24,7 @@ from app.schemas.common import (
 )
 from app.services.assignments import AssignmentService
 
-BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
+BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=UTC)
 
 
 class AssignmentState:
