@@ -52,6 +52,7 @@ export function useMyRescueRequests(enabled = true) {
     },
     enabled: !!user && enabled,
     staleTime: 30_000,
+    refetchInterval: 10_000,
   })
 }
 

@@ -4,11 +4,13 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { SignupPage } from './pages/auth/SignupPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { RequireAuth } from './features/auth/RequireAuth'
-import { MissionProvider } from './features/missions/MissionContext'
+// Load shared visual rules after page styles so every role has the same baseline.
+import './features/workspace/sharedVisualSystem.css'
+import './components/ui/Select.css'
+import './features/workspace/desktopDensity.css'
 
 export default function App() {
   return (
-    <MissionProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -22,6 +24,5 @@ export default function App() {
           }
         />
       </Routes>
-    </MissionProvider>
   )
 }

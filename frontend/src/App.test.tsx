@@ -49,7 +49,7 @@ describe('App', () => {
   it('renders the signup page at /signup', () => {
     renderApp('/signup')
     expect(screen.getByRole('heading', { name: /Create an account/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
   })
 
   it('redirects /dashboard to /login when not authenticated', () => {

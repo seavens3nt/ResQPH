@@ -13,7 +13,7 @@
   overflow: hidden;
   background: #0c0c0e;
   color: #fff;
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -131,7 +131,7 @@
 }
 
 .lp-tw-prefix {
-  font-family: 'Outfit', sans-serif;
+  font-family:var(--font-body);
   font-size: clamp(0.82rem, 2vw, 0.96rem);
   font-weight: 500;
   text-transform: uppercase;
@@ -145,7 +145,7 @@
 }
 
 .lp-tw-text {
-  font-family: 'Outfit', sans-serif;
+  font-family:var(--font-body);
   font-size: clamp(1.1rem, 3.5vw, 1.4rem);
   font-weight: 700;
   color: #ffffff;
@@ -178,7 +178,7 @@
 
 /* "ResQ" — Montserrat Black, pure white */
 .lp-title__resq {
-  font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  font-family:var(--font-body);
   font-size: clamp(3.8rem, 16vw, 6.4rem);
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -187,7 +187,7 @@
 
 /* "P" — blue */
 .lp-title__p {
-  font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  font-family:var(--font-body);
   font-size: clamp(3.8rem, 16vw, 6.4rem);
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -197,7 +197,7 @@
 
 /* "H" — red */
 .lp-title__h {
-  font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  font-family:var(--font-body);
   font-size: clamp(3.8rem, 16vw, 6.4rem);
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -206,7 +206,7 @@
 
 /* ── Tagline ─────────────────────────────────────────────────── */
 .lp-tagline {
-  font-family: 'Outfit', sans-serif;
+  font-family:var(--font-body);
   font-size: clamp(0.9rem, 2.4vw, 1rem);
   font-weight: 400;
   line-height: 1.72;
@@ -235,7 +235,7 @@
   min-height: 54px;
   padding: 0 28px;
   border-radius: 999px;
-  font-family: 'Outfit', sans-serif;
+  font-family:var(--font-body);
   font-size: 1rem;
   font-weight: 700;
   text-decoration: none;

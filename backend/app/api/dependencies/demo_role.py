@@ -4,7 +4,7 @@ from fastapi import Header
 
 from app.schemas.common import DemoActor, ServiceError
 
-_ALLOWED_DEMO_ROLES = {"citizen", "volunteer", "rescuer", "coordinator"}
+_ALLOWED_DEMO_ROLES = {"citizen", "rescuer", "coordinator"}
 
 
 def get_demo_actor(

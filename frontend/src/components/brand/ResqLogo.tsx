@@ -169,7 +169,7 @@ export function ResqLogo({ size = 100, iconOnly = false, className = '' }: ResqL
           x="50"
           y="132"
           textAnchor="middle"
-          fontFamily="'Montserrat', 'Outfit', 'Arial Black', sans-serif"
+          fontFamily="'Inter', system-ui, sans-serif"
           fontWeight="800"
           fontSize="20"
           letterSpacing="1"

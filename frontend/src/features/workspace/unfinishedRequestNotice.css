@@ -1,0 +1,24 @@
+.workspace-shell[data-role=citizen][data-view] .workspace-main .workspace-card.unfinished-request-notice {
+  --draft-unit:var(--figma-unit,1px);
+  box-sizing:border-box;
+  margin:0 0 20px;
+  padding:18px clamp(20px,calc(32 * var(--draft-unit)),32px);
+  min-height:0;
+  height:auto;
+  border:1px solid #7da4c0;
+  border-radius:calc(30 * var(--draft-unit));
+  background:rgb(125 164 192 / 15%);
+  box-shadow:0 calc(6 * var(--draft-unit)) calc(9.8 * var(--draft-unit)) rgb(125 164 192 / 40%);
+}
+.workspace-shell[data-role=citizen] .unfinished-request-notice > p {margin:0 0 calc(6 * var(--draft-unit));font-size:calc(20 * var(--draft-unit));line-height:1.3;color:var(--muted,#4b5a77);}
+.workspace-shell[data-role=citizen] .unfinished-request-notice h2 {margin:0;font-size:calc(40 * var(--draft-unit));line-height:1.2;font-weight:550;color:var(--ink,#011e55);}
+.unfinished-request-actions {display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;}
+.workspace-shell[data-role=citizen] .unfinished-request-actions button {margin:0;min-height:calc(54.37 * var(--draft-unit));width:calc(281.11 * var(--draft-unit));padding:10px 22px;border:1px solid #42598e;border-radius:30px;background:#fbfcfe;color:#011e55;font-size:calc(20 * var(--draft-unit));font-weight:500;}
+.workspace-shell[data-role=citizen] .unfinished-request-actions .unfinished-request-discard {width:calc(295.379 * var(--draft-unit));background:linear-gradient(to top,#ce5657,#c82624);border-color:#890d1d;color:white;}
+@media(max-width:700px) {
+  .workspace-shell[data-role=citizen][data-view] .workspace-main .workspace-card.unfinished-request-notice {padding:16px 20px;min-height:0;margin-bottom:20px;border-radius:24px;}
+  .workspace-shell[data-role=citizen] .unfinished-request-notice > p {font-size:14px;}
+  .workspace-shell[data-role=citizen] .unfinished-request-notice h2 {font-size:25px;}
+  .unfinished-request-actions {margin-top:14px;gap:12px;}
+  .workspace-shell[data-role=citizen] .unfinished-request-actions button {width:auto;min-height:44px;font-size:15px;flex:1 1 140px;}
+}

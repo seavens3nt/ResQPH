@@ -1,0 +1,192 @@
+.workspace-shell .request-rescue-modal {
+  padding:24px; background:rgb(5 35 84 / 34%); backdrop-filter:blur(6px);
+}
+.workspace-shell .request-rescue-modal .modal-card {
+  max-height:calc(100dvh - 48px); border:1px solid #9bc4df;
+  border-radius:18px; background:var(--shared-surface,#e4edf4);
+  box-shadow:0 12px 36px rgb(46 109 143 / 24%); color:var(--ink,#052354);
+}
+.workspace-shell .request-rescue-modal .modal-header { padding:24px 26px 10px; border:0; }
+.workspace-shell .request-rescue-modal .modal-draft-note { margin:0 0 12px; font-size:13px; line-height:1.6; color:var(--muted); }
+.workspace-shell .request-rescue-modal .modal-title { margin:0; font-size:20px; letter-spacing:-.02em; font-weight:550; }
+.workspace-shell .request-rescue-modal .modal-body { padding:0 26px 24px; }
+.request-form-modal .request-essentials { display:none; }
+.request-form-modal .request-edit-fields { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; margin:0; min-width:0; }
+.request-form-modal .request-edit-fields[disabled] { display:none !important; }
+.request-form-modal .request-edit-fields:has([data-testid=submit-error-banner]) > [role=alert] { grid-column:1 / -1; }
+.request-form-modal :is(.request-location-fields,.request-assistance-fields) { min-width:0; }
+.request-form-modal .request-assistance-fields > label { display:flex; flex-direction:column; gap:8px; }
+.request-form-modal .request-assistance-fields select { width:100%; padding:10px 12px; border:1px solid var(--line); }
+.request-form-modal :is(label,legend,summary) { color:var(--ink) !important; font-weight:500 !important; }
+.workspace-shell .request-rescue-modal .modal-body label { display:block; }
+.workspace-shell .request-rescue-modal .modal-body label:has(> input[type=radio]),
+.workspace-shell .request-rescue-modal .modal-body label:has(> input[type=checkbox]) { display:flex; flex-direction:row !important; align-items:center !important; }
+.workspace-shell .request-rescue-modal .request-assistance-fields > label { display:flex; flex-direction:column; }
+.workspace-shell .request-rescue-modal .request-assistance-fields { gap:14px !important; }
+.workspace-shell .request-rescue-modal .request-assistance-fields details > div { margin-top:10px !important; gap:12px !important; }
+.request-form-modal :is(input,select,textarea) { font:inherit; }
+.request-form-modal input[type=number] { max-width:100% !important; }
+.request-form-modal .request-assistance-fields > details { border:0 !important; padding:0 !important; }
+.request-form-modal .request-assistance-fields > details > summary { list-style:none; }
+.request-form-modal .request-assistance-fields > details > summary::-webkit-details-marker { display:none; }
+.request-form-modal .request-assistance-fields > details > summary > span { display:none !important; }
+.request-form-modal .request-review { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; padding:24px; border:1px solid #9bc4df; border-radius:16px; background:var(--shared-surface); }
+.request-form-modal .request-review > * { min-width:0; }
+.request-form-modal .request-review .workspace-facts { display:block; }
+.request-form-modal .request-review .workspace-facts > div { display:grid; grid-template-columns:36% 1fr; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); }
+.request-form-modal .request-review .workspace-facts :is(dt,dd) { font-size:12px; line-height:1.5; }
+.request-form-modal .request-review h3 { margin:0 0 12px; font-size:14px; }
+.workspace-shell .request-form-modal .request-review .workspace-facts dd { color:var(--ink); }
+.request-form-modal .request-location-fields section > div > fieldset {
+  position:static !important; max-width:none !important; margin:8px !important;
+  display:flex; flex-wrap:wrap; gap:8px 16px; box-shadow:none !important;
+}
+.request-form-modal .request-review [aria-label="U-Belt pilot map. Select a point to set the request location."] { height:324px !important; }
+.request-form-modal .request-review button { border-radius:999px; }
+.workspace-shell .request-form-modal > div:last-child { padding-top:8px !important; }
+.workspace-shell .request-form-modal > div:last-child button { min-height:40px; padding:10px 20px !important; }
+@media (max-width:700px) {
+  .workspace-shell .request-rescue-modal { padding:12px; }
+  .workspace-shell .request-rescue-modal .modal-card { max-height:calc(100dvh - 24px); }
+  .workspace-shell .request-rescue-modal .modal-header { padding:18px 18px 10px; }
+  .workspace-shell .request-rescue-modal .modal-body { padding:0 18px 18px; }
+  .request-form-modal :is(.request-edit-fields,.request-review) { grid-template-columns:1fr; gap:18px; }
+  .request-form-modal .request-review { padding:16px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .request-rescue-modal,.request-rescue-modal .modal-card { animation:none; }
+}
+.request-location-map .leaflet-control-zoom {
+  border:1px solid #7da4c0 !important;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 2px 5px rgb(125 164 192 / 25%);
+}
+.request-location-map .leaflet-control-zoom a {
+  background:#fbfcfe;
+  color:#011e55;
+  width:36px;
+  height:36px;
+  line-height:36px;
+}
+.request-location-map .leaflet-control-zoom a:first-child { border-radius:17px 17px 0 0; border-bottom:1px solid #7da4c0; }
+.request-location-map .leaflet-control-zoom a:last-child { border-radius:0 0 17px 17px; }
+.request-location-map .leaflet-control-zoom a:focus-visible { outline-offset:-4px; }
+.request-location-map .leaflet-bottom.leaflet-left .leaflet-control { margin:0 0 14px 14px; }
+/* Keep existing bookmarked full-page forms usable with the same grouped fields. */
+.workspace-shell[data-role] .request-rescue-modal .modal-card { border-color:#7da4c0; border-radius:30px; background:var(--shared-surface,#e4ecf4); }
+.workspace-shell[data-role] .request-rescue-modal #citizen-request-form :is(input:not([type=radio]):not([type=checkbox]),select,textarea) { border-radius:30px !important; border-color:#4b5a77 !important; font-weight:400; color:#4b5a77; background-color:#fbfcfe; }
+.workspace-shell[data-role] .request-rescue-modal #citizen-request-form input[id$='-address'] { background:#e4ecf4; }
+.workspace-shell[data-role] .request-rescue-modal #citizen-request-form .request-flood-field select { background-image:url('/figma-rescue/select-arrow.svg') !important; background-repeat:no-repeat !important; background-position:right 22px center !important; }
+.workspace-shell .request-rescue-modal .modal-header { padding:36px 32px 18px; }
+.workspace-shell .request-rescue-modal .modal-draft-note { font-size:20px; line-height:1.35; margin-bottom:4px; }
+.workspace-shell .request-rescue-modal .modal-title { font-size:40px; font-weight:550; }
+.workspace-shell .request-rescue-modal .modal-body { padding:0 32px 30px; }
+.request-form-modal .request-edit-fields { grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:32px; }
+.request-form-modal .request-location-fields > div:first-child { padding:24px; background:#fff; border:1px solid #7da4c0; border-radius:30px; box-shadow:0 4px 7px rgb(125 164 192 / 45%); gap:16px !important; }
+.request-form-modal .request-location-fields section > div { border-radius:26px !important; border-color:#7da4c0 !important; box-shadow:0 3px 6px rgb(125 164 192 / 32%); }
+.request-form-modal .request-location-fields [aria-label="U-Belt pilot map. Select a point to set the request location."] { height:clamp(300px,29vw,414px) !important; }
+.request-form-modal .request-location-fields section > div > fieldset { position:absolute !important; top:12px !important; left:12px !important; margin:0 !important; display:block; border:1px solid #4b5a77 !important; border-radius:28px !important; padding:12px 16px !important; max-width:240px !important; background:#fbfcfe !important; }
+.request-form-modal .request-location-fields section > div > fieldset legend { float:left; width:100%; padding:0; font-size:16px !important; }
+.workspace-shell .request-rescue-modal .request-location-fields section > div > fieldset label { font-size:14px !important; gap:6px; clear:both; width:100%; white-space:nowrap; }
+.request-form-modal .request-location-fields .workspace-caption { margin:2px 24px; font-size:14px; line-height:1.4; }
+.workspace-shell .request-rescue-modal .request-assistance-fields { display:grid !important; grid-template-columns:1fr 1fr; align-content:start; gap:36px 28px !important; }
+.workspace-shell .request-rescue-modal .request-assistance-fields > .request-flood-field,
+.workspace-shell .request-rescue-modal .request-assistance-fields > .request-people-field { align-self:end; gap:8px !important; }
+.workspace-shell .request-rescue-modal .request-people-field > label { display:block !important; }
+.workspace-shell .request-rescue-modal .request-people-field > label > span[aria-hidden=true] { display:inline !important; }
+.request-form-modal :is(.request-responder-section,.request-conditions-section) { grid-column:1 / -1; border:0 !important; padding:0 !important; }
+.request-form-modal :is(.request-responder-section,.request-conditions-section) h3 { font-size:20px !important; font-weight:550 !important; margin:0 0 16px; }
+.request-form-modal :is(.request-responder-section,.request-conditions-section) h3 > span { display:none !important; }
+.request-form-modal .request-responder-panel { border:1px solid #4b5a77; border-radius:30px; background:#fbfcfe; padding:18px 24px; margin:0 !important; }
+.request-form-modal .request-responder-panel fieldset { border:0 !important; padding:0 0 18px !important; border-radius:0 !important; border-bottom:1px solid #7da4c0 !important; }
+.request-form-modal .request-responder-panel legend { font-size:16px !important; color:#4b5a77 !important; }
+.request-form-modal .request-responder-panel fieldset label { background:#e4ecf4 !important; border:1px solid #4b5a77 !important; font-size:15px !important; min-height:32px; padding:4px 12px !important; }
+.request-form-modal .request-responder-panel input[type=checkbox] { accent-color:#7fa5c2; }
+.request-form-modal .request-medical-details label { font-size:14px !important; }
+.request-form-modal .request-conditions-section > div { margin:0 !important; }
+.request-form-modal .request-conditions-section :is(label,span) { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.workspace-shell .request-form-modal :is(input[type=text],input[type=number],select,textarea) { border:1px solid #4b5a77 !important; border-radius:30px !important; color:#4b5a77; font-size:18px !important; padding:12px 22px !important; background:#fbfcfe; box-sizing:border-box; width:100%; }
+.workspace-shell .request-form-modal input[id$='-address'] { background:#e4ecf4; }
+.request-form-modal .request-assistance-fields > label,.request-form-modal .request-people-field > label,.request-form-modal .request-location-fields > div > label { font-size:20px !important; font-weight:550 !important; }
+.request-form-modal .request-flood-field select { appearance:none; background-image:url('/figma-rescue/select-arrow.svg'); background-repeat:no-repeat; background-position:right 22px center; padding-right:50px !important; }
+.workspace-shell .request-form-modal .request-conditions-section textarea { min-height:74px; font-size:16px !important; }
+.workspace-shell .request-form-modal .request-form-actions { padding-top:16px !important; gap:24px !important; }
+.workspace-shell .request-form-modal .request-form-actions button { border-radius:30px !important; min-height:51px; font-size:20px !important; font-weight:500 !important; border:1px solid #4b5a77 !important; }
+.workspace-shell .request-form-modal .request-form-actions button[type=submit] { background:#d92642 !important; border-color:#890d1d !important; }
+@media(max-width:900px) {
+  .request-form-modal .request-edit-fields { gap:24px; }
+  .workspace-shell .request-rescue-modal .modal-title { font-size:30px; }
+  .workspace-shell .request-rescue-modal .modal-draft-note { font-size:16px; }
+  .workspace-shell .request-rescue-modal .request-assistance-fields { gap:24px 16px !important; }
+  .request-form-modal .request-assistance-fields > label,.request-form-modal .request-people-field > label,.request-form-modal .request-location-fields > div > label { font-size:17px !important; }
+}
+@media(max-width:700px) {
+  .workspace-shell .request-rescue-modal .modal-header { padding:24px 18px 16px; }
+  .workspace-shell .request-rescue-modal .modal-body { padding:0 18px 20px; }
+  .request-form-modal .request-edit-fields { grid-template-columns:1fr; }
+  .request-form-modal .request-location-fields > div:first-child { padding:16px; }
+  .request-form-modal .request-responder-panel { padding:16px; }
+}
+.workspace-editor .request-assistance-fields > label { display:flex; flex-direction:column; gap:8px; }
+.workspace-editor .request-assistance-fields > label select { padding:10px; border:1px solid var(--line); border-radius:12px; }
+.workspace-shell .request-form-modal .request-review-figma {
+  display:grid; grid-template-columns:minmax(0,565fr) minmax(0,593fr); gap:36px;
+  padding:0; border:0; border-radius:0; background:transparent; align-items:start;
+}
+.request-review-figma .request-review-location-card { gap:20px !important; }
+.request-review-figma .request-review-location-card > label { font-size:20px !important; font-weight:550 !important; }
+.workspace-shell .request-form-modal .request-review-figma [aria-label="U-Belt pilot map. Select a point to set the request location."] { height:clamp(300px,29vw,414px) !important; }
+.workspace-shell .request-form-modal .request-review-figma input[readonly] {
+  background:transparent url('/figma-rescue/review-address.svg') center / 100% 100% no-repeat !important;
+  border:0 !important; min-height:47px; font-size:18px !important; padding:10px 22px !important;
+}
+.request-review-figma .request-location-fields section > div > fieldset {
+  background:transparent url('/figma-rescue/review-source.svg') center / 100% 100% no-repeat !important;
+  border:0 !important; box-shadow:none !important;
+}
+.request-review-figma .request-location-fields input[type=radio] {
+  appearance:none; width:13.1667px; height:13.1667px; margin:0;
+  background:url('/figma-rescue/review-radio.svg') center no-repeat;
+}
+.request-review-figma .request-location-fields input[type=radio]:checked { outline:2px solid #7da4c0; outline-offset:2px; border-radius:50%; }
+.request-review-figma .request-location-fields input[type=radio]:disabled { opacity:1; }
+.workspace-shell .request-review-figma .request-review-summary {
+  position:relative; border:0; border-radius:30px;
+  background:transparent; min-width:0; isolation:isolate;
+}
+.request-review-summary::before {
+  content:''; position:absolute; inset:-5px -11px -17px; z-index:-1;
+  background:url('/figma-rescue/review-table.svg') center / 100% 100% no-repeat; pointer-events:none;
+}
+.workspace-shell .request-review-figma .request-review-summary h3 {
+  margin:0; padding:22px 46px; min-height:72px; box-sizing:border-box;
+  background:rgb(127 165 194 / 50%); border-radius:29px 29px 0 0;
+  font-size:24px; line-height:1.2; font-weight:550; color:#011e55;
+}
+.request-review-summary dl { margin:0; }
+.request-review-summary dl > div {
+  display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:22px;
+  min-height:81.5px; padding:20px 46px; box-sizing:border-box; align-items:center;
+  background:url('/figma-rescue/review-divider.svg') top / 100% 1px no-repeat;
+}
+.request-review-summary dl > div:first-child { background:none; }
+.workspace-shell .request-review-summary :is(dt,dd) { margin:0; color:#4b5a77; font-size:20px; line-height:1.3; overflow-wrap:anywhere; }
+.workspace-shell .request-form-modal.is-reviewing .request-form-actions { padding:0 40px 14px 0 !important; gap:30px !important; }
+.workspace-shell .request-form-modal.is-reviewing .request-form-actions button:first-child { min-width:102px; background:#fbfcfe; color:#1d3869; }
+.workspace-shell .request-form-modal.is-reviewing .request-form-actions button[type=submit] { min-width:188px; background:linear-gradient(to top,#ce5657,#c82624) !important; }
+.workspace-shell[data-role=citizen] .request-rescue-modal #citizen-request-form.is-reviewing .request-form-actions button[type=submit] { background:linear-gradient(to top,#ce5657,#c82624) !important; }
+@media(max-width:900px) {
+  .workspace-shell .request-review-figma .request-review-summary h3 { padding:20px 24px; font-size:21px; }
+  .request-review-summary dl > div { padding:18px 24px; gap:16px; min-height:76px; }
+  .workspace-shell .request-review-summary :is(dt,dd) { font-size:17px; }
+}
+@media(max-width:700px) {
+  .workspace-shell .request-form-modal .request-review-figma { grid-template-columns:1fr; gap:24px; }
+  .workspace-shell .request-form-modal.is-reviewing .request-form-actions { padding:16px 0 0 !important; gap:12px !important; flex-wrap:wrap; }
+  .workspace-shell .request-form-modal.is-reviewing .request-form-actions button { min-width:0; font-size:17px !important; }
+}
+@media (min-width:1000px) {
+  .workspace-editor #citizen-request-form > fieldset > .request-location-fields { grid-column:2; grid-row:2 / span 8; }
+  .workspace-editor #citizen-request-form > fieldset > .request-assistance-fields { grid-column:1; grid-row:2; }
+}

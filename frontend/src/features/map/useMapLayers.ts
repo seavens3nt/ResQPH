@@ -157,6 +157,7 @@ export function useMapLayers(options: UseMapLayersOptions = {}): UseMapLayersRes
   }, [roadFixture, floodFixture, studyAreaFixture, simulatedState, reloadKey])
 
   const toggleLayer = useCallback((layer: keyof LayerVisibilityState) => {
+    if (layer === 'roads' || layer === 'boundary') return
     setLayerVisibility((prev) => ({
       ...prev,
       [layer]: !prev[layer],
@@ -164,6 +165,7 @@ export function useMapLayers(options: UseMapLayersOptions = {}): UseMapLayersRes
   }, [])
 
   const setLayerVisible = useCallback((layer: keyof LayerVisibilityState, visible: boolean) => {
+    if (layer === 'roads' || layer === 'boundary') return
     setLayerVisibility((prev) => ({
       ...prev,
       [layer]: visible,

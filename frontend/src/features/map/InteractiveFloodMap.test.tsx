@@ -26,34 +26,39 @@ const routeFound: RouteFoundResult = {
 }
 
 describe('InteractiveFloodMap Component', () => {
-  it('renders default fixture-driven map with source time and non-live disclaimer', () => {
+  it('can omit the duplicate route status panel while retaining the map', () => {
+    render(<InteractiveFloodMap showRouteStatus={false} routeState={{status:'route-found', result:routeFound}}/>)
+    expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
+    expect(document.querySelector('.route-state-panel')).toBeNull()
+  })
+  it('renders a compact map without the visible scenario metadata bar', () => {
     render(<InteractiveFloodMap />)
 
     // Map container exists
     expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
 
     // Legend tags with stats
-    expect(screen.getByText(/OpenStreetMap · U-Belt controlled scenario/i)).toBeInTheDocument()
+    expect(screen.queryByText(/OpenStreetMap · U-Belt controlled scenario/i)).not.toBeInTheDocument()
     expect(screen.getByText(/● Passable/i)).toBeInTheDocument()
     expect(screen.getByText(/▲ Restricted/i)).toBeInTheDocument()
     expect(screen.getByText(/✕ Impassable/i)).toBeInTheDocument()
 
     // Scenario metadata
-    expect(screen.getByText(/Scenario:/i)).toBeInTheDocument()
-    const dataset = buildMapLayerDataset()
-    expect(screen.getByText(dataset.scenarioId)).toBeInTheDocument()
-    expect(screen.getByText(dataset.sourceType.toUpperCase())).toBeInTheDocument()
+    expect(screen.queryByText(/^Scenario:$/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Source:$/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Timestamp:$/i)).not.toBeInTheDocument()
+    expect(document.querySelector('.map-metadata-bar')).toBeNull()
 
     // Non-live disclaimer
     expect(screen.getByText(/Controlled scenario data · Not live PAGASA forecasting or official emergency dispatch/i)).toBeInTheDocument()
 
     // Tile switcher and layer toggles
-    expect(screen.getByRole('button', { name: 'OpenStreetMap' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tactical Dark' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Satellite View' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Roads: ON/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'OpenStreetMap' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tactical Dark' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Satellite View' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Roads:/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Flood Hazard: ON/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Boundary: ON/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Boundary:/i })).not.toBeInTheDocument()
   })
 
   it('renders observable loading state banner when loading', () => {
@@ -83,22 +88,18 @@ describe('InteractiveFloodMap Component', () => {
   it('toggles layer buttons between ON and OFF', () => {
     render(<InteractiveFloodMap />)
 
-    const roadsBtn = screen.getByRole('button', { name: /Roads: ON/i })
-    fireEvent.click(roadsBtn)
-    expect(screen.getByRole('button', { name: /Roads: OFF/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Flood Hazard: ON/i }))
+    expect(screen.getByRole('button', { name: /Flood Hazard: OFF/i })).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Roads: OFF/i }))
-    expect(screen.getByRole('button', { name: /Roads: ON/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Flood Hazard: OFF/i }))
+    expect(screen.getByRole('button', { name: /Flood Hazard: ON/i })).toBeInTheDocument()
   })
 
-  it('toggles accessible text alternative table and renders edge rows', () => {
+  it('retains screen-reader road data without a visible text-alternative toggle', () => {
     render(<InteractiveFloodMap />)
 
-    const textAltBtn = screen.getByRole('button', { name: /View Text Alternative/i })
-    expect(textAltBtn).toBeInTheDocument()
-
-    fireEvent.click(textAltBtn)
-    expect(screen.getByRole('button', { name: /Hide Text Alternative/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Text Alternative/i })).not.toBeInTheDocument()
+    expect(document.querySelector('.map-screen-reader-summary')).toBeInTheDocument()
 
     // Check table headers and rows
     expect(screen.getByText(/Accessible Road Network & Flood Passability Summary/i)).toBeInTheDocument()

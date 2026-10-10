@@ -14,6 +14,7 @@ from app.api.routes.missions import (
 from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import DuplicateMissionStatusEventError
+from app.schemas.common import ServiceError, service_error_handler
 from app.services.missions import MissionService
 
 BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=timezone.utc)
@@ -123,6 +124,7 @@ def client(role_repository: RoleMissionRepository) -> TestClient:
     app = FastAPI()
     app.include_router(router, prefix="/api/v1")
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(ServiceError, service_error_handler)
 
     def service_override() -> MissionService:
         return MissionService(role_repository, event_repository)  # type: ignore[arg-type]
@@ -144,8 +146,8 @@ def payload(event_id: str = "event-1", new_status: str = "en-route", version: in
     }
 
 
-@pytest.mark.parametrize("role", ["citizen", "volunteer"])
-def test_citizen_and_volunteer_cannot_retrieve_or_update_missions(
+@pytest.mark.parametrize("role", ["citizen"])
+def test_citizen_cannot_retrieve_or_update_missions(
     client: TestClient,
     role_repository: RoleMissionRepository,
     role: str,
@@ -178,11 +180,15 @@ def test_unassigned_rescuer_cannot_retrieve_or_operate_known_mission_id(
     assert role_repository.mission.version == 1
 
 
-def test_unsupported_demo_role_is_forbidden(client: TestClient) -> None:
-    response = client.get("/api/v1/missions/mission-1", headers=headers("demo-user", "pilot"))
+@pytest.mark.parametrize("role", ["pilot", "volunteer"])
+def test_unsupported_demo_role_is_forbidden(client: TestClient, role: str) -> None:
+    response = client.get("/api/v1/missions/mission-1", headers=headers("demo-user", role))
 
     assert response.status_code == 403
-    assert response.json()["error"]["code"] == "forbidden"
+    assert response.json()["error"]["code"] == "demo_role_required"
+    update = client.post("/api/v1/missions/mission-1/status-events", json=payload(), headers=headers("demo-user", role))
+    assert update.status_code == 403
+    assert update.json()["error"]["code"] == "demo_role_required"
 
 
 def test_coordinator_may_only_update_completion_transition(client: TestClient) -> None:

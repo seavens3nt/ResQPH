@@ -12,8 +12,25 @@
 
 - `frontend/public/offline-shell.js`: production UI-shell-only service worker; no API or map-tile caching.
 - `frontend/src/features/offline/`: validated actor-scoped Dexie storage and reconnect controller.
+- `frontend/src/features/workspace/`: active three-role local workspaces and shared shell/cards/modal presentation. Current UI authority: `docs/ui/LOCAL_VISUAL_RULES.md`; it supersedes older wireframe details for the local candidate without changing API payloads.
 
 ## Locked interfaces
+
+Citizen Home weather: frontend `api/weather.ts` and `useUbeltWeather.ts` call
+GET /api/v1/weather/ubelt. Backend `api/routes/weather.py` requests Google Weather
+current conditions and one-day forecast for 14.6042,120.9946, with eight-second
+timeouts and validated Celsius data. GOOGLE_WEATHER_API_KEY is server-only.
+Optional normalized fields: feelsLike (Celsius), windSpeed (km/h), rainChance
+(percent), rainAmount (mm); omitted values are null, never synthetic zeroes.
+No stored weather or routing coupling; client loads on Home mount/reload only,
+no disk persistence, explicit unavailable/stale feedback and Google Maps attribution.
+Missing key returns 503 weather_not_configured; provider failures return a sanitized
+503 weather_unavailable. Runtime dependency httpx is required.
+GET /api/v1/weather/ubelt/hourly separately requests six Google forecast intervals;
+`HourlyWeather.tsx` renders real columns instead of `/figma-home/5d940.png`.
+Current weather adds humidity and windDirection. First-hour forecast rain is mm
+in its interval, not an observed mm/hr rate. Both queries run independently,
+load on mount/reload only, and retain explicit unavailable/stale states.
 
 - API: `docs/api/API_CONTRACT.md`
 - MongoDB: `docs/database/MONGODB_SCHEMA.md`

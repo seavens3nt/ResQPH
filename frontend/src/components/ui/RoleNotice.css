@@ -67,7 +67,7 @@
 }
 
 .role-notice__proto-disclaimer code {
-  font-family: var(--font-mono, monospace);
+  font-family:var(--font-body);
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
   color: #0f172a;

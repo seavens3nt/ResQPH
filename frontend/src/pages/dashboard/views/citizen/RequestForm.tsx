@@ -18,7 +18,7 @@
  *   - Color is never the only indicator (shape + text used alongside).
  */
 
-import { type FormEvent, useId, useState } from 'react'
+import { type FormEvent, useEffect, useId, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useCreateRescueRequest } from '../../../../features/requests/hooks'
 import {
@@ -29,10 +29,10 @@ import {
 } from '../../../../features/requests/types'
 import {
   CreateRequestSchema,
-  UBELT_BOUNDS,
 } from '../../../../features/requests/validation'
-import { PrototypeNotice } from './PrototypeNotice'
 import { RequestLocationMap } from './RequestLocationMap'
+import { RequestReview } from './RequestReview'
+import { useCitizenDraft } from '../../../../features/workspace/CitizenDraftContext'
 
 // ---------------------------------------------------------------------------
 // Default sanitised demo coordinates (inside U-Belt boundary)
@@ -45,6 +45,9 @@ interface FieldError {
 }
 
 interface RequestFormProps {
+  modalLayout?: boolean
+  onBusyChange?: (busy: boolean) => void
+  requireReview?: boolean
   initialFloodLevel?: FloodLevel
   /** Called when the API confirms the request was created */
   onSuccess: (record: RescueRequestRecord) => void
@@ -52,28 +55,57 @@ interface RequestFormProps {
   onCancel: () => void
 }
 
-export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown' }: RequestFormProps) {
+export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown', requireReview = false, modalLayout = false, onBusyChange }: RequestFormProps) {
   const uid = useId()
+  const draftContext = useCitizenDraft()
+  const draft = draftContext?.draft
+  const saveDraft = draftContext?.saveDraft
+  const formRef = useRef<HTMLFormElement>(null)
 
   // Form field state (kept across validation failures — "preserve safe input")
-  const [address, setAddress] = useState('Sanitized demonstration address, Sampaloc, Manila')
-  const [lngStr, setLngStr] = useState(String(DEMO_LNG))
-  const [latStr, setLatStr] = useState(String(DEMO_LAT))
-  const [locationSource, setLocationSource] = useState<'gps' | 'demo' | 'map'>('demo')
+  const [address, setAddress] = useState(draft?.address ?? 'Sanitized demonstration address, Sampaloc, Manila')
+  const [lngStr, setLngStr] = useState(draft?.lngStr ?? String(DEMO_LNG))
+  const [latStr, setLatStr] = useState(draft?.latStr ?? String(DEMO_LAT))
+  const [locationSource, setLocationSource] = useState<'gps' | 'demo' | 'map'>(draft?.locationSource ?? 'demo')
   const [isLocating, setIsLocating] = useState(false)
   const [gpsError, setGpsError] = useState('')
-  const [headcountStr, setHeadcountStr] = useState('1')
-  const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityTag[]>([])
-  const [medicalNeeds, setMedicalNeeds] = useState(false)
-  const [medicalDetails, setMedicalDetails] = useState('')
-  const [situationSummary, setSituationSummary] = useState('')
+  const [headcountStr, setHeadcountStr] = useState(draft?.headcountStr ?? '1')
+  const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityTag[]>(draft?.vulnerabilities ?? [])
+  const [medicalNeeds, setMedicalNeeds] = useState(draft?.medicalNeeds ?? false)
+  const [medicalDetails, setMedicalDetails] = useState(draft?.medicalDetails ?? '')
+  const [situationSummary, setSituationSummary] = useState(draft?.situationSummary ?? '')
 
   // UI state
   const [fieldErrors, setFieldErrors] = useState<FieldError>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitErrorCode, setSubmitErrorCode] = useState<string | null>(null)
+  const [review, setReview] = useState(false)
+  const [floodLevel, setFloodLevel] = useState<FloodLevel>(draft?.floodLevel ?? initialFloodLevel)
+
+  useEffect(() => {
+    const dirty = address !== 'Sanitized demonstration address, Sampaloc, Manila' ||
+      lngStr !== String(DEMO_LNG) || latStr !== String(DEMO_LAT) || locationSource !== 'demo' ||
+      headcountStr !== '1' || vulnerabilities.length > 0 || medicalNeeds || medicalDetails !== '' ||
+      situationSummary !== '' || floodLevel !== initialFloodLevel
+    saveDraft?.(dirty ? { address, lngStr, latStr, locationSource, headcountStr, vulnerabilities,
+      medicalNeeds, medicalDetails, situationSummary, floodLevel } : null)
+  }, [address, lngStr, latStr, locationSource, headcountStr, vulnerabilities, medicalNeeds,
+    medicalDetails, situationSummary, floodLevel, initialFloodLevel, saveDraft])
+
+  useEffect(() => {
+    if (Object.keys(fieldErrors).length) {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+    }
+  }, [fieldErrors])
 
   const { mutate, isPending } = useCreateRescueRequest()
+  const wasReview = useRef(false)
+  useEffect(() => { onBusyChange?.(isPending) }, [isPending, onBusyChange])
+  useEffect(() => {
+    if (review) formRef.current?.querySelector<HTMLElement>('.request-review h3')?.focus()
+    else if (wasReview.current) formRef.current?.querySelector<HTMLElement>('input[type=text]')?.focus()
+    wasReview.current = review
+  }, [review])
 
   function chooseLocationSource(source: 'gps' | 'demo') {
     setGpsError('')
@@ -133,9 +165,9 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setSubmitError(null)
     setSubmitErrorCode(null)
 
-    const lng = parseFloat(lngStr)
-    const lat = parseFloat(latStr)
-    const headcount = parseInt(headcountStr, 10)
+    const lng = lngStr.trim() ? Number(lngStr) : NaN
+    const lat = latStr.trim() ? Number(latStr) : NaN
+    const headcount = headcountStr.trim() ? Number(headcountStr) : NaN
 
     const raw = {
       location: {
@@ -150,7 +182,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       medical_needs: medicalNeeds,
       medical_details: medicalDetails || undefined,
       // Flood depth is collected once in SOS triage and carried into the API request.
-      reported_flood_level: initialFloodLevel,
+      reported_flood_level: floodLevel,
       situation_summary: situationSummary || undefined,
     }
 
@@ -159,19 +191,27 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     if (!parsed.success) {
       const errs: FieldError = {}
       for (const issue of parsed.error.issues) {
-        const key = issue.path.join('.')
+        const path = issue.path.join('.')
+        const key = path.startsWith('location.point.coordinates') ? 'location.point.coordinates' : path
         // Surface the outside-boundary error on the coordinates field
-        errs[key || 'general'] = issue.message
+        errs[key || 'general'] = path.endsWith('coordinates.0')
+          ? 'Enter a valid longitude between -180 and 180, then check the U-Belt location.'
+          : path.endsWith('coordinates.1')
+            ? 'Enter a valid latitude between -90 and 90, then check the U-Belt location.'
+            : issue.message
       }
       setFieldErrors(errs)
       return
     }
 
+    if (requireReview && !review) { setReview(true); return }
     mutate(parsed.data, {
       onSuccess: (record) => {
+        saveDraft?.(null)
         onSuccess(record)
       },
       onError: (err) => {
+        setReview(false)
         if (isAxiosError(err) && err.response) {
           const status = err.response.status
           const body = err.response.data as { error?: { code?: string; message?: string }; message?: string } | undefined
@@ -204,11 +244,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             setSubmitError(msg || 'An unexpected error occurred. Your input has been preserved.')
           }
         } else {
-          setSubmitError(
-            err instanceof Error
-              ? err.message
-              : 'A network error occurred. Check your connection and try again.',
-          )
+          setSubmitError('Could not reach the request service. Your details have been preserved. Check your connection and try again; if this continues, ask the project team to check the API.')
         }
       },
     })
@@ -217,22 +253,29 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   // ---------------------------------------------------------------------------
   // Boundary helper text
   // ---------------------------------------------------------------------------
-  const boundaryHint = `U-Belt pilot area — Longitude ${UBELT_BOUNDS.west}–${UBELT_BOUNDS.east}, Latitude ${UBELT_BOUNDS.south}–${UBELT_BOUNDS.north}`
 
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
   return (
     <form
+      ref={formRef}
       id="citizen-request-form"
+      className={modalLayout ? `request-form-modal${review ? ' is-reviewing' : ''}` : undefined}
       onSubmit={handleSubmit}
       noValidate
       aria-label="Citizen rescue request form"
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
     >
-      <PrototypeNotice variant="form" />
+      {Object.keys(fieldErrors).length > 0 && <div className="request-error-summary" role="alert">
+        <strong>Check your request before continuing</strong>
+        <ul>{[...new Set(Object.values(fieldErrors))].map(message => <li key={message}>{message}</li>)}</ul>
+        <p>Your details are still here. Correct the highlighted fields, then try again.</p>
+      </div>}
+      {review && <RequestReview coordinates={[Number(lngStr),Number(latStr)]} source={locationSource} address={address} headcount={headcountStr} floodLevel={floodLevel} situation={situationSummary} accessibility={vulnerabilities.join(', ')} medical={medicalNeeds ? medicalDetails || 'Medical assistance requested' : ''}/>}
+      <fieldset className="request-edit-fields" disabled={isPending || review} style={{border: 0, padding: 0, display: review ? 'none' : 'contents'}}>
 
-      <div style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+      <div className="request-essentials" style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
         <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Start with the essentials</strong>
         <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Add a location and number of people. Extra details are optional.</span>
       </div>
@@ -269,6 +312,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       )}
 
       {/* ── Location — address ──────────────────────────────────────── */}
+      <div className="request-location-fields" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <RequestLocationMap
           coordinates={[
@@ -276,6 +320,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             Number.isFinite(parseFloat(latStr)) ? parseFloat(latStr) : DEMO_LAT,
           ]}
           source={locationSource}
+          showInstruction={!modalLayout}
           isLocating={isLocating}
           disabled={isPending}
           gpsError={gpsError}
@@ -316,88 +361,15 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           </span>
         )}
       </div>
+      {modalLayout && <p className="workspace-caption">Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</p>}
 
-      {/* ── Location — coordinates ──────────────────────────────────── */}
-      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
-          Adjust map coordinates
-          <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
-            Coordinates come from your chosen source and can be adjusted here.
-          </span>
-        </summary>
-      <fieldset
-        style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
-        aria-describedby={`${uid}-coords-hint`}
-      >
-        <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', padding: '0 4px' }}>
-          Coordinates (longitude, latitude)
-        </legend>
-        <span
-          id={`${uid}-coords-hint`}
-          style={{ fontSize: '0.75rem', color: '#64748b' }}
-        >
-          {boundaryHint}
-        </span>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: '120px' }}>
-            <label htmlFor={`${uid}-lng`} style={{ fontSize: '0.8rem', color: '#475569' }}>
-              Longitude
-            </label>
-            <input
-              id={`${uid}-lng`}
-              type="number"
-              step="any"
-              value={lngStr}
-              onChange={(e) => setLngStr(e.target.value)}
-              aria-required="true"
-              aria-describedby={fieldErrors['location.point.coordinates'] ? `${uid}-coords-err` : `${uid}-coords-hint`}
-              aria-invalid={!!fieldErrors['location.point.coordinates']}
-              disabled={isPending}
-              style={{
-                padding: '0.45rem 0.6rem',
-                borderRadius: '6px',
-                border: `1px solid ${fieldErrors['location.point.coordinates'] ? '#dc2626' : '#cbd5e1'}`,
-                fontSize: '0.85rem',
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: '120px' }}>
-            <label htmlFor={`${uid}-lat`} style={{ fontSize: '0.8rem', color: '#475569' }}>
-              Latitude
-            </label>
-            <input
-              id={`${uid}-lat`}
-              type="number"
-              step="any"
-              value={latStr}
-              onChange={(e) => setLatStr(e.target.value)}
-              aria-required="true"
-              aria-describedby={fieldErrors['location.point.coordinates'] ? `${uid}-coords-err` : `${uid}-coords-hint`}
-              aria-invalid={!!fieldErrors['location.point.coordinates']}
-              disabled={isPending}
-              style={{
-                padding: '0.45rem 0.6rem',
-                borderRadius: '6px',
-                border: `1px solid ${fieldErrors['location.point.coordinates'] ? '#dc2626' : '#cbd5e1'}`,
-                fontSize: '0.85rem',
-              }}
-            />
-          </div>
-        </div>
-        {fieldErrors['location.point.coordinates'] && (
-          <span
-            id={`${uid}-coords-err`}
-            role="alert"
-            style={{ color: '#dc2626', fontSize: '0.77rem' }}
-          >
-            {fieldErrors['location.point.coordinates']}
-          </span>
-        )}
-      </fieldset>
-      </details>
+      {fieldErrors['location.point.coordinates'] && <p id={`${uid}-coords-err`} role="alert" tabIndex={-1} aria-invalid="true" style={{color:'#dc2626'}}>{fieldErrors['location.point.coordinates']} Choose a location inside the pilot area using the map or demonstration location.</p>}
+      </div>
+      <div className="request-assistance-fields" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+      {requireReview && <label className="request-flood-field">Reported flood level<select value={floodLevel} onChange={e => setFloodLevel(e.target.value as FloodLevel)}>{['none','low','moderate','high','unknown'].map(v => <option key={v}>{v}</option>)}</select></label>}
 
       {/* ── Headcount ───────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div className="request-people-field" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <label
           htmlFor={`${uid}-headcount`}
           style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
@@ -436,19 +408,19 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       </div>
 
       {/* ── Vulnerabilities ─────────────────────────────────────────── */}
-      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+      <section className="request-responder-section" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
+        <h3 style={{ color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
           Add details for responders (optional)
           <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
             Note who may need extra help and describe the situation.
           </span>
-        </summary>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.9rem' }}>
+        </h3>
+        <div className="request-responder-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.9rem' }}>
       <fieldset style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem' }}>
         <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', padding: '0 4px' }}>
           Vulnerabilities (select all that apply)
         </legend>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.75rem' }}>
           {VULNERABILITY_OPTIONS.map((tag) => {
             const checked = vulnerabilities.includes(tag)
             const inputId = `${uid}-vuln-${tag}`
@@ -459,8 +431,11 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '5px',
-                  padding: '4px 10px',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  minHeight: '40px',
+                  boxSizing: 'border-box',
                   borderRadius: '9999px',
                   border: `1px solid ${checked ? '#dc2626' : '#e2e8f0'}`,
                   background: checked ? 'rgba(220,38,38,0.06)' : '#fff',
@@ -500,8 +475,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           />
           Medical assistance needed
         </label>
-        {medicalNeeds && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="request-medical-details" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label
               htmlFor={`${uid}-medical-details`}
               style={{ fontSize: '0.8rem', color: '#475569' }}
@@ -524,19 +498,18 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
               }}
             />
           </div>
-        )}
       </div>
         </div>
-      </details>
+      </section>
 
       {/* ── Situation summary ───────────────────────────────────────── */}
-      <details style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-        <summary style={{ cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
+      <section className="request-conditions-section" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
+        <h3 style={{ color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
           Describe the immediate conditions (optional)
           <span style={{ display: 'block', marginTop: '3px', fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
             Water movement, blocked exits, or urgent needs.
           </span>
-        </summary>
+        </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '0.9rem' }}>
         <label
           htmlFor={`${uid}-situation`}
@@ -566,13 +539,14 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           }}
         />
       </div>
-      </details>
-
+      </section>
+      </div>
+      </fieldset>
       {/* ── Actions ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '0.25rem' }}>
+      <div className="request-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '0.25rem' }}>
         <button
           type="button"
-          onClick={onCancel}
+          onClick={review ? () => setReview(false) : onCancel}
           disabled={isPending}
           style={{
             padding: '0.55rem 1.1rem',
@@ -586,7 +560,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             opacity: isPending ? 0.6 : 1,
           }}
         >
-          Cancel
+          {review ? 'Back' : 'Cancel'}
         </button>
         <button
           type="submit"
@@ -614,7 +588,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
               Submitting…
             </>
           ) : (
-            'Submit request'
+            requireReview && !review ? 'Review request' : review ? 'Submit Request' : 'Submit request'
           )}
         </button>
       </div>

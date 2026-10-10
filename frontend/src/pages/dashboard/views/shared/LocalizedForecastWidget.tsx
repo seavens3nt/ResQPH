@@ -95,7 +95,7 @@ export function LocalizedForecastWidget({ hourly = [] }: LocalizedForecastWidget
             <div key={idx} className="hourly-cell">
               <span className="hourly-cell__time">{item.time}</span>
               <span className="hourly-cell__icon">{item.icon || '🌧️'}</span>
-              <span className="hourly-cell__temp">{item.temp ?? 28}°</span>
+              <span className="hourly-cell__temp">{String(item.temp ?? 28).replace(/°/g, '')}°</span>
               <span className="hourly-cell__pop">{item.pop || (item.rainMm ? `${item.rainMm}mm` : '80%')}</span>
             </div>
           ))}

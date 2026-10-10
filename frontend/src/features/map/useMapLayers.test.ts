@@ -81,13 +81,25 @@ describe('useMapLayers Hook', () => {
     expect(result.current.layerVisibility.boundary).toBe(true)
 
     act(() => {
-      result.current.toggleLayer('roads')
+      result.current.toggleLayer('flood')
     })
-    expect(result.current.layerVisibility.roads).toBe(false)
+    expect(result.current.layerVisibility.flood).toBe(false)
 
     act(() => {
-      result.current.setLayerVisible('roads', true)
+      result.current.setLayerVisible('flood', true)
+    })
+    expect(result.current.layerVisibility.flood).toBe(true)
+  })
+
+  it('keeps roads and boundary enabled even when visibility changes are requested', () => {
+    const { result } = renderHook(() => useMapLayers())
+    act(() => {
+      result.current.toggleLayer('roads')
+      result.current.toggleLayer('boundary')
+      result.current.setLayerVisible('roads', false)
+      result.current.setLayerVisible('boundary', false)
     })
     expect(result.current.layerVisibility.roads).toBe(true)
+    expect(result.current.layerVisibility.boundary).toBe(true)
   })
 })

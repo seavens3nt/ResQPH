@@ -33,7 +33,7 @@
 .rescuer-mission-card__id {
   margin: 0;
   color: #0f172a;
-  font-family: var(--font-mono, monospace);
+  font-family:var(--font-body);
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: -0.02em;

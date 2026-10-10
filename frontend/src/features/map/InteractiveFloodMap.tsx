@@ -1,5 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { LoadingState } from '../../components/ui/LoadingState'
+import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
 import L from 'leaflet'
+import { formatDuration } from '../routing/presentation/formatDuration'
 import 'leaflet/dist/leaflet.css'
 import { Icon } from '../../components/art/Icon'
 import { RouteOverlay } from '../routing/RouteOverlay'
@@ -10,6 +12,9 @@ import { useMapLayers, type UseMapLayersOptions } from './useMapLayers'
 import './map.css'
 
 export interface MapProps extends UseMapLayersOptions {
+  center?: [number,number]
+  controlsSlot?: ReactNode
+  records?: {id: string; label: string; coordinates: [number, number]}[]
   activeStage?: 'pending' | 'assigned' | 'en-route' | 'arrived' | 'completed' | 'all' | 'none'
   highlightStreet?: string
   showAlternatives?: boolean
@@ -18,6 +23,7 @@ export interface MapProps extends UseMapLayersOptions {
   routeExplanation?: string
   etaMinutes?: number
   routeState?: RouteState
+  showRouteStatus?: boolean
   operationContext?: {
     requestId: string
     address: string
@@ -66,11 +72,15 @@ const IDLE_ROUTE_STATE: RouteState = { status: 'idle' }
 export function InteractiveFloodMap({
   activeStage = 'en-route',
   routeState,
+  showRouteStatus = true,
   operationContext,
   roadFixture,
   floodFixture,
   studyAreaFixture,
   simulatedState,
+  records,
+  center,
+  controlsSlot,
 }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
@@ -78,8 +88,6 @@ export function InteractiveFloodMap({
   const overlaysLayerGroupRef = useRef<L.LayerGroup | null>(null)
   const uid = useId()
 
-  const [mapLayerMode, setMapLayerMode] = useState<'osm' | 'dark' | 'satellite'>('osm')
-  const [showTextAlt, setShowTextAlt] = useState(false)
 
   // Fixture-driven layer state hook
   const {
@@ -155,7 +163,7 @@ export function InteractiveFloodMap({
       }).addTo(map)
       currentTileLayerRef.current = initialTile
 
-      L.control.zoom({ position: 'topright' }).addTo(map)
+      L.control.zoom({ position: 'bottomleft' }).addTo(map)
 
       const overlayGroup = L.layerGroup().addTo(map)
       overlaysLayerGroupRef.current = overlayGroup
@@ -173,27 +181,10 @@ export function InteractiveFloodMap({
     }
   }, [])
 
-  // Switch Tile Layer
-  useEffect(() => {
-    const map = mapInstanceRef.current
-    if (!map) return
+  useEffect(()=>{
+    if(center?.every(Number.isFinite)) mapInstanceRef.current?.setView(center,15)
+  },[center])
 
-    try {
-      if (currentTileLayerRef.current) {
-        map.removeLayer(currentTileLayerRef.current)
-      }
-
-      const provider = TILE_PROVIDERS[mapLayerMode]
-      const newTileLayer = L.tileLayer(provider.url, {
-        attribution: provider.attribution,
-        maxZoom: provider.maxZoom,
-      }).addTo(map)
-
-      currentTileLayerRef.current = newTileLayer
-    } catch (err) {
-      console.warn('Failed to switch tile layer:', err)
-    }
-  }, [mapLayerMode])
 
   // Update Dynamic Map Overlays from Adapter Dataset
   useEffect(() => {
@@ -203,6 +194,11 @@ export function InteractiveFloodMap({
 
     try {
       overlayGroup.clearLayers()
+      records?.forEach(record => {
+        if (record.coordinates.every(Number.isFinite)) {
+          L.circleMarker([record.coordinates[1], record.coordinates[0]], {radius:8,color:'#ef334f',fillOpacity:.8}).bindPopup(escapeHtml(record.label)).addTo(overlayGroup)
+        }
+      })
 
       // 1. Study Area Pilot Boundary Polygon
       if (layerVisibility.boundary && dataset?.studyArea.leafletPolygon.length) {
@@ -289,7 +285,7 @@ export function InteractiveFloodMap({
             <strong style="color:#22c55e;">CONTROLLED-SCENARIO ROUTE</strong><br/>
             <span>Route: ${escapeHtml(routeResult.route_id)}</span><br/>
             <span>Edges: ${escapeHtml(routeResult.edge_ids.join(', '))}</span><br/>
-            <span>Estimated transit: ${Math.ceil(routeResult.estimated_time_s / 60)} minutes</span><br/>
+            <span>Estimated transit: ${formatDuration(routeResult.estimated_time_s)}</span><br/>
             <span>${escapeHtml(routeResult.explanation)}</span>
           </div>
         `)
@@ -337,7 +333,7 @@ export function InteractiveFloodMap({
             <div class="leaflet-popup-rescuer">
               <strong style="color:#38bdf8;">${operationContext ? escapeHtml(operationContext.teamName) : 'Simulated Rescue Unit'}</strong><br/>
               <span>${operationContext ? `Status: ${escapeHtml(operationContext.status.replace('-', ' '))} · Assigned route` : 'Status: Controlled scenario only'}</span><br/>
-              <span>Estimated transit: ${Math.ceil(routeResult.estimated_time_s / 60)} minutes</span>
+              <span>Estimated transit: ${formatDuration(routeResult.estimated_time_s)}</span>
             </div>
           `)
           overlayGroup.addLayer(boatMarker)
@@ -353,6 +349,7 @@ export function InteractiveFloodMap({
     routeCoordinates,
     operationContext,
     boatCurrentPos,
+    records,
   ])
 
   function handleRecenter() {
@@ -362,17 +359,15 @@ export function InteractiveFloodMap({
       map.fitBounds(routeCoordinates)
       return
     }
-    map.setView(DEFAULT_MAP_CENTER, 15)
+    map.setView(center ?? DEFAULT_MAP_CENTER, 15)
   }
 
   return (
     <div className="flood-map-container" role="region" aria-label="Interactive Realistic Flood-Aware Rescue Map">
+      {controlsSlot}
       {/* Top Map HUD & Cartography Controls */}
       <div className="flood-map-controls">
         <div className="flood-map-legend-items">
-          <span className="legend-tag legend-study">
-            🗺️ OpenStreetMap · U-Belt controlled scenario · 14.6042° N, 120.9946° E
-          </span>
           <span className="legend-tag legend-safe">
             ● Passable ({metadata.stats.passableCount})
           </span>
@@ -387,51 +382,11 @@ export function InteractiveFloodMap({
         <div className="flood-map-toggles">
           <button
             type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'osm' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('osm')}
-            title="Standard OpenStreetMap Cartography"
-          >
-            OpenStreetMap
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'dark' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('dark')}
-            title="Tactical Night Response OpenStreetMap"
-          >
-            Tactical Dark
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${mapLayerMode === 'satellite' ? 'is-active' : ''}`}
-            onClick={() => setMapLayerMode('satellite')}
-            title="Satellite Aerial Imagery"
-          >
-            Satellite View
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${layerVisibility.roads ? 'is-active' : ''}`}
-            onClick={() => toggleLayer('roads')}
-            title="Toggle Road Network Layer"
-          >
-            Roads: {layerVisibility.roads ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
             className={`map-toggle-btn ${layerVisibility.flood ? 'is-active' : ''}`}
             onClick={() => toggleLayer('flood')}
             title="Toggle Flood Scenario Layer"
           >
             Flood Hazard: {layerVisibility.flood ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
-            className={`map-toggle-btn ${layerVisibility.boundary ? 'is-active' : ''}`}
-            onClick={() => toggleLayer('boundary')}
-            title="Toggle U-Belt Pilot Boundary"
-          >
-            Boundary: {layerVisibility.boundary ? 'ON' : 'OFF'}
           </button>
           <button
             type="button"
@@ -444,45 +399,10 @@ export function InteractiveFloodMap({
         </div>
       </div>
 
-      {/* Scenario Metadata & Non-live Disclaimer Sub-bar */}
-      <div className="map-metadata-bar">
-        <div className="map-metadata-left">
-          <span className="map-meta-item">
-            <span>Scenario:</span>
-            <strong className="map-meta-tag">{metadata.scenarioId}</strong>
-          </span>
-          <span className="map-meta-item">
-            <span>Source:</span>
-            <strong className="map-meta-tag">{metadata.sourceType.toUpperCase()}</strong>
-          </span>
-          <span className="map-meta-item">
-            <span>Timestamp:</span>
-            <strong className="map-meta-tag">{metadata.scenarioTimestamp}</strong>
-          </span>
-        </div>
-        <div className="map-metadata-right">
-          <span className="map-disclaimer-notice">
-            <Icon name="alert" size={14} />
-            <span>{NON_LIVE_DATA_DISCLAIMER}</span>
-          </span>
-          <button
-            type="button"
-            className={`map-toggle-btn ${showTextAlt ? 'is-active' : ''}`}
-            onClick={() => setShowTextAlt((v) => !v)}
-            aria-expanded={showTextAlt}
-            aria-controls={`${uid}-map-table`}
-          >
-            {showTextAlt ? 'Hide Text Alternative' : 'View Text Alternative'}
-          </button>
-        </div>
-      </div>
 
       {/* State Banners (Loading, Empty, Error) */}
       {layerStatus === 'loading' && (
-        <div className="map-state-banner is-loading" role="status">
-          <Icon name="clock" size={16} />
-          <span>Loading road network and flood scenario map layers…</span>
-        </div>
+        <div className="map-state-banner is-loading"><LoadingState layout="compact" label="Loading road network and flood scenario map layers…"/></div>
       )}
 
       {layerStatus === 'empty' && (
@@ -501,21 +421,21 @@ export function InteractiveFloodMap({
         </div>
       )}
 
-      <RouteOverlay state={effectiveRouteState} />
+      {showRouteStatus && <RouteOverlay state={effectiveRouteState} />}
 
       {/* OpenStreetMap Leaflet Canvas */}
       <div className="flood-map-leaflet-wrapper">
         <div
           ref={mapContainerRef}
-          className={`flood-map-leaflet-canvas ${mapLayerMode === 'dark' ? 'leaflet-theme-dark' : ''}`}
+          className="flood-map-leaflet-canvas"
           id="openmap-hazard-map"
-          style={{ width: '100%', height: '460px' }}
+          style={{ width: '100%', height: 'var(--workspace-map-height, 460px)' }}
         />
       </div>
 
       {/* Accessible Text / Table Alternative for Essential Geospatial Data */}
-      {showTextAlt && (
-        <div id={`${uid}-map-table`} className="map-text-alternative" aria-label="Accessible Road Network Data Table">
+        <div id={`${uid}-map-table`} className="map-screen-reader-summary" aria-label="Accessible Road Network Data Table">
+          <p>{NON_LIVE_DATA_DISCLAIMER}</p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <strong style={{ fontSize: '0.84rem', color: '#f4f4f5' }}>
               Accessible Road Network & Flood Passability Summary ({metadata.scenarioId})
@@ -571,7 +491,6 @@ export function InteractiveFloodMap({
             </p>
           )}
         </div>
-      )}
 
     </div>
   )

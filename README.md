@@ -9,6 +9,8 @@ missions during controlled or historical flood scenarios. Citizens submit
 requests, coordinators assign missions, and rescuers review assignments and
 update mission status.
 
+Current local scope (2026-10-07): Citizen, Dispatcher and Rescuer. Dispatcher uses the existing `coordinator` role in code and API headers. The Volunteer workflow, rescuer hotline and alternative-route UI are retired; one controlled flood-aware mission route remains. Old Volunteer sessions return to entry, hazard-report endpoints are unavailable, and existing stored records are preserved. See the [three-role decision](docs/decisions/2026-10-07-three-role-workflow.md). This local update does not change the historical verification or final-acceptance gates below.
+
 The foundation, core request-to-mission workflow, mapping/geospatial pipeline,
 and **Team Phase 2 — Flood-Aware Routing** are verified. Matthew's early
 **Team Phase 3 — AI/ML** package is accepted as external exploratory evidence;
@@ -33,7 +35,7 @@ Support is verified. Team Phase 5 — Integration, Testing, and Presentation is 
 
 ## Delivery status
 
-Verified now:
+Historically verified (the revised local candidate still requires final regression):
 
 - Basic citizen, coordinator, and rescuer role simulation
 - Validated rescue-request creation and status tracking
@@ -49,7 +51,10 @@ Verified now:
   mission and one queued status update with safe replay and conflict review
 
 Still required for final acceptance:
-- Final end-to-end verification and presentation evidence
+- Deliver and reverify the local three-role/modal/shared-style candidate, including fresh-request mission caching, status acknowledgement, identity, dispatcher data and mission-specific routing
+- Final end-to-end verification, production offline reload/replay and presentation evidence
+
+The current local UI uses Inter, shared full-width desktop page canvases, an outlined collapsing sidebar, dashboard rescue/review modals and request-status popups. Map roads/boundary remain enabled. See [visual rules](docs/ui/LOCAL_VISUAL_RULES.md) and [current status](docs/STATUS.md); these local changes have not been pushed or merged.
 
 The external XGBoost metrics are exploratory. They were produced with a random
 row split and were not retrained from raw source data in this repository. The

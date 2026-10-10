@@ -1,0 +1,65 @@
+/* Keep the original desktop composition. Size its existing design units
+   against both viewport dimensions, without clipping or rearranging content. */
+@media (min-width:851px) {
+  .workspace-shell[data-role][data-view] {
+    --nav-unit:clamp(.658031px,min(calc(100vw / 1135),calc(100dvh / 730)),1.268394px);
+  }
+  /* Page canvases fill the space between the sidebar and the page gutters.
+     Do not stretch nested cards, dialog surfaces, or individual form controls. */
+  .workspace-shell[data-role][data-view] .workspace-main,
+  .workspace-shell[data-role][data-view] .workspace-main > :is(.workspace-card,.workspace-stack,.workspace-editor,.screenshot-home,.screenshot-requests,.citizen-map-page) {
+    width:100%; min-width:0; max-width:none;
+  }
+  .workspace-shell[data-role][data-view] :is(.workspace-editor,.account-profile) {
+    width:100%; max-width:none;
+  }
+  .workspace-shell[data-role][data-view] {
+    --figma-unit:clamp(.52px,min(calc(100vw / 1956),calc(100dvh / 1235)),.85px);
+    --sidebar-unit:clamp(.52px,calc(100vw / 1728),.85px);
+    --nav-unit:calc(1.816 * var(--figma-unit));
+    grid-template-columns:calc(325 * var(--sidebar-unit)) minmax(0,1fr);
+    transition:grid-template-columns 280ms cubic-bezier(.16,1,.3,1);
+  }
+  .workspace-shell[data-role][data-view][data-nav-collapsed=true] {
+    grid-template-columns:calc(150 * var(--sidebar-unit)) minmax(0,1fr);
+  }
+  .workspace-shell[data-role][data-view] .workspace-nav {
+    --figma-unit:var(--sidebar-unit);
+    transition:margin 280ms cubic-bezier(.16,1,.3,1),padding 280ms cubic-bezier(.16,1,.3,1),border-radius 280ms cubic-bezier(.16,1,.3,1),gap 280ms cubic-bezier(.16,1,.3,1),height 280ms cubic-bezier(.16,1,.3,1),top 280ms cubic-bezier(.16,1,.3,1);
+  }
+  .workspace-shell[data-role][data-view] .workspace-nav:focus-visible {
+    outline:2px solid #376d9c; outline-offset:-4px;
+  }
+  .workspace-shell[data-role][data-view] .workspace-brand {
+    overflow:hidden;
+  }
+  .workspace-shell[data-role][data-view] .workspace-nav nav button {
+    transition:background-color 150ms ease,color 150ms ease,padding 280ms cubic-bezier(.16,1,.3,1),gap 280ms cubic-bezier(.16,1,.3,1),border-radius 280ms cubic-bezier(.16,1,.3,1);
+  }
+  .workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav {
+    align-items:center; border:1px solid #9eaabd;
+  }
+  .workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav nav {
+    align-items:center;
+  }
+  .workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand img.citizen-brand-lockup {
+    width:calc(62 * var(--sidebar-unit)); height:calc(62 * var(--sidebar-unit)); object-fit:contain;
+  }
+  .workspace-shell[data-role][data-view] .workspace-topbar {
+    height:calc(150 * var(--figma-unit)); margin-bottom:calc(80 * var(--figma-unit));
+  }
+  .workspace-shell[data-role][data-view] .home-temperature > strong {
+    flex-shrink:0; white-space:nowrap;
+  }
+  .workspace-shell[data-role][data-view] .home-temperature p {
+    font-size:calc(20 * var(--figma-unit)); line-height:calc(24 * var(--figma-unit));
+  }
+  .workspace-shell[data-role][data-view] .figma-hourly-chart {
+    width:100%; height:100%; object-fit:contain;
+  }
+}
+@media (min-width:851px) and (prefers-reduced-motion:reduce) {
+  .workspace-shell[data-role][data-view],
+  .workspace-shell[data-role][data-view] .workspace-nav,
+  .workspace-shell[data-role][data-view] .workspace-nav nav button { transition:none; }
+}

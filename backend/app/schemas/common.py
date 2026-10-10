@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-DemoRole = Literal["citizen", "volunteer", "rescuer", "coordinator"]
+DemoRole = Literal["citizen", "rescuer", "coordinator"]
 
 
 class DemoActor(BaseModel):

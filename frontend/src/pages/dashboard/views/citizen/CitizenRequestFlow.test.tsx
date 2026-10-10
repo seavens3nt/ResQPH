@@ -93,9 +93,9 @@ function renderWithProviders(
   ui: React.ReactElement,
   role: 'citizen' | 'rescuer' | 'coordinator' = 'citizen',
 ) {
-  localStorage.setItem(
+  sessionStorage.setItem(
     'resqph.auth.user',
-    JSON.stringify({ email: 'maria@example.com', role, name: 'Maria Santos' }),
+    JSON.stringify({ email: 'maria@example.com', role, teamId: 'team-alpha', name: 'Maria Santos' }),
   )
   const queryClient = makeQueryClient()
   return {
@@ -135,16 +135,16 @@ describe('RequestForm', () => {
 
   // ── Prototype notice ─────────────────────────────────────────────────────
 
-  it('shows the academic-prototype warning banner', () => {
+  it('does not show the removed academic-prototype form banner', () => {
     renderForm()
     expect(
-      screen.getByText(/Academic prototype — do not use for a real emergency/i),
-    ).toBeInTheDocument()
+      screen.queryByText(/Academic prototype — do not use for a real emergency/i),
+    ).not.toBeInTheDocument()
   })
 
-  it('shows a call-911 advisory in the prototype notice', () => {
+  it('does not show the removed form advisory', () => {
     renderForm()
-    expect(screen.getByText(/Call 911 for real emergencies/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Call 911 for real emergencies/i)).not.toBeInTheDocument()
   })
 
   // ── Form fields presence ─────────────────────────────────────────────────
@@ -154,8 +154,9 @@ describe('RequestForm', () => {
     expect(screen.getByLabelText(/Location — street address/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/People needing assistance/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/Adjust map coordinates/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Longitude/i)).not.toBeVisible()
+    expect(screen.queryByText(/Adjust map coordinates/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Longitude/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Latitude/i)).not.toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /Use current GPS/i })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
@@ -178,12 +179,13 @@ describe('RequestForm', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/GPS is not available/i)
   })
 
-  it('reveals optional responder details when requested', () => {
+  it('keeps optional responder and medical fields visible without disclosures', () => {
     renderForm()
-    fireEvent.click(screen.getByText(/Add details for responders \(optional\)/i))
+    expect(screen.getByRole('heading', {name: /Add details for responders \(optional\)/i})).toBeInTheDocument()
+    expect(document.querySelector('.request-assistance-fields details')).toBeNull()
     expect(screen.getByText(/Vulnerabilities \(select all that apply\)/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Medical assistance needed/i)).toBeInTheDocument()
-    fireEvent.click(screen.getByText(/Describe the immediate conditions \(optional\)/i))
+    expect(screen.getByLabelText(/Medical details/i)).toBeVisible()
     expect(screen.getByLabelText(/What is happening right now/i)).toBeInTheDocument()
     expect(screen.getByText(/whether the water is rising, any blocked exits/i)).toBeInTheDocument()
   })
@@ -197,7 +199,7 @@ describe('RequestForm', () => {
     fireEvent.submit(screen.getByRole('form', { hidden: true }) ?? screen.getByLabelText(/Citizen rescue request form/i))
 
     await waitFor(() => {
-      expect(screen.getByText(/at least 5 characters/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/at least 5 characters/i)).toHaveLength(2)
     })
     // Input should be aria-invalid
     expect(addressInput).toHaveAttribute('aria-invalid', 'true')
@@ -213,7 +215,7 @@ describe('RequestForm', () => {
     fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
 
     await waitFor(() => {
-      expect(screen.getByText(/At least 1 person/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/At least 1 person/i)).toHaveLength(2)
     })
   })
 
@@ -221,15 +223,15 @@ describe('RequestForm', () => {
 
   it('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
     renderForm()
-    fireEvent.click(screen.getByText(/Adjust map coordinates/i))
-    // Set coordinates outside U-Belt boundary (far from pilot area)
-    fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: '121.05' } })
-    fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: '14.7' } })
+    vi.stubGlobal('navigator',{geolocation:{getCurrentPosition:(success:(position:unknown)=>void)=>success({coords:{longitude:121.05,latitude:14.7}})}})
+    fireEvent.click(screen.getByRole('radio',{name:/Use current GPS/i}))
+    vi.unstubAllGlobals()
+    fireEvent.change(screen.getByLabelText(/street address/i),{target:{value:'Synthetic outside-boundary address'}})
     fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
 
     await waitFor(() => {
       expect(
-        screen.getByText(/inside the U-Belt pilot area/i),
+        screen.getAllByText(/inside the U-Belt pilot area/i)[0],
       ).toBeInTheDocument()
     })
   })
@@ -463,8 +465,10 @@ describe('RequestStatusView', () => {
       expect(screen.getByRole('status', { name: /Team assigned/i })).toBeInTheDocument()
     })
     expect(screen.queryByRole('link', { name: /Call assigned team/i })).not.toBeInTheDocument()
-    expect(screen.getByText(/Contact: 09XX XXX XXXX/i)).toBeInTheDocument()
-    expect(screen.getByText(/Simulated team contact for this prototype/i)).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Assigned team' })).not.toBeInTheDocument()
+    expect(screen.queryByText('team-alpha')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Contact: 09XX XXX XXXX/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Simulated team contact for this prototype/i)).not.toBeInTheDocument()
   })
 
   // ── En-route status ───────────────────────────────────────────────────────
@@ -555,7 +559,7 @@ describe('RequestStatusView', () => {
     })
   })
 
-  it('shows confirmation dialog when Cancel request is clicked', async () => {
+  it('cancels immediately without an extra confirmation dialog', async () => {
     mockGet.mockResolvedValueOnce(FIXTURE_REQUEST)
 
     renderWithProviders(
@@ -568,9 +572,9 @@ describe('RequestStatusView', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Cancel request/i }))
 
-    expect(screen.getByText(/Cancel this request\?/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Keep active/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Yes, cancel/i })).toBeInTheDocument()
+    await waitFor(() => expect(mockCancel).toHaveBeenCalledOnce())
+    expect(screen.queryByRole('dialog', { name: /Cancel request confirmation/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Yes, cancel/i })).not.toBeInTheDocument()
   })
 
   it('shows conflict error message when cancellation returns 409', async () => {
@@ -591,7 +595,6 @@ describe('RequestStatusView', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: /Cancel request/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Yes, cancel/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/Conflict: the request state changed/i)).toBeInTheDocument()
@@ -694,8 +697,8 @@ describe('CitizenView — API-backed request flow', () => {
     expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Add a location and number of people/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/Academic prototype — do not use for a real emergency/i),
-    ).toBeInTheDocument()
+      screen.queryByText(/Academic prototype — do not use for a real emergency/i),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
   })
 
