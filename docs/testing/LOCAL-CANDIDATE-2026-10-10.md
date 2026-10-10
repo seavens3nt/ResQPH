@@ -20,7 +20,7 @@ Branch: `feature/local-desktop-role-workspaces`. This is not final acceptance or
 - Browser: synthetic Citizen login, same-route rescue modal, review before submission, API-confirmed submission to My Requests, status popup, Escape/focus return, and cancellation closing the popup with page feedback.
 - Rescuer Account and Dispatcher overview/Account rendered with the shared shell. Not an exhaustive visual review of all role states.
 
-## Outstanding release gates
+## Initial release gates (superseded by the follow-up evidence below)
 
 ### Continuation evidence
 
@@ -37,3 +37,14 @@ Branch: `feature/local-desktop-role-workspaces`. This is not final acceptance or
 
 The synthetic Citizen request created during verification was cancelled through its own UI.
 No existing preview mission was cancelled/completed, and no deployment or issue closure was performed.
+
+## Startup repair and isolated browser acceptance follow-up
+
+- Reproduced the blank page with the production preview stopped. Temporary startup diagnostics identified failed JavaScript and CSS assets despite a controlled service worker. Those diagnostics were removed before delivery.
+- The preview serves `Vary: Origin`; precache and module requests can differ in their Origin headers. Matching the strictly allowlisted public shell/build assets with `ignoreVary: true` resolved the reproduced outage reload. Content-hashed assets are cache-first; denied cache access/write failures cannot convert a successful network response into a failed load. HTTP error responses can use an existing cached copy. API requests, submissions, arbitrary resources and cross-origin tiles remain excluded.
+- Reopened the production rescuer dashboard with both frontend and API stopped; cached mission data was marked possibly stale. Queued one arrival update, reloaded while both servers remained stopped, and observed the same pending event. After restarting services, Retry Sync Now produced server-confirmed Arrived. An earlier en-route event also persisted and replayed after API recovery.
+- Isolated browser journey completed: synthetic Citizen request -> Dispatcher assignment to the available test team -> Rescuer route evaluation (98 m, rule-based fallback) -> en-route -> arrived -> completion with sanitized notes. MongoDB readback confirmed mission version 4/completed, request history pending/assigned/en-route/arrived/completed, and team-alpha available with no assigned mission.
+- This exercised origin/API outages, not an operating-system network disconnect; the browser's network indicator remained online. Offline conflict cases remain covered by automated tests, not a new manual conflict exercise.
+- Final frontend suite: 349 passed across 46 files; lint passes with the same four existing warnings; production build passes with the existing large-chunk warning. Backend code is unchanged by this startup repair; earlier backend/real-MongoDB results above still apply.
+- Fresh production login rendered without manual refresh. The repaired cache mismatch explains the reproduced unavailable-origin blank screen; it does not prove the cause of every earlier intermittent transport failure.
+- GitHub main uses a ruleset requiring one approving code-owner review. PR #86 has a review request for Elle; approval and merge are still separate from the completed local repair. Do not bypass that rule. No deployment or issue closure is authorized by this verification.
