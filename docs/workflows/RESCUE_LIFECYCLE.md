@@ -1,14 +1,14 @@
 # Rescue request and mission lifecycle
 
-**Status:** Completed and verified Phase 1 lifecycle baseline
+**Status:** Active lifecycle; historical Phase 1 baseline with local three-role UI amendment
 **Decision owner:** Ranee
-**Last updated:** 2026-09-22
+**Last updated:** 2026-10-09
 
 ## Authoritative terms
 
 - **Rescue request:** a citizen record describing who needs assistance, where they are, and the reported situation.
 - **Mission:** the assignment and status lifecycle connecting one rescue request to one rescue team.
-- **Coordinator:** the role authorized to review and assign requests. Use `coordinator` in UI, API, database, and documentation; “dispatcher” may appear only as explanatory wording.
+- **Coordinator/Dispatcher:** the role authorized to review and assign requests. Keep `coordinator` as the API/database role value; Dispatcher is presentation terminology, not a fourth role.
 - **Controlled scenario:** a documented simulated or historical-data-based condition used for testing and demonstration.
 
 ## Main lifecycle
@@ -73,13 +73,15 @@ Every accepted transition appends an immutable history item containing event ID,
 - Use a request version or equivalent conditional update so stale clients cannot silently overwrite a newer state.
 - Mission assignment must not leave a request assigned without a mission or a team unavailable without a corresponding mission.
 
-## Volunteer hazard report flow
+## Current citizen presentation
 
-1. A volunteer submits a sanitized hazard report with a GeoJSON point, category, severity, observed time, and optional note.
-2. The backend validates and stores it as unverified.
-3. The coordinator may mark it verified for the controlled scenario.
-4. Only verified scenario hazards may affect deterministic route costs.
-5. The UI always shows source, observed time, verification state, and whether the information is simulated or historical.
+Request rescue opens the existing form in a dashboard modal, without changing the route. Edit -> review -> final API submission remains one flow. Closing preserves the memory-only draft; reload/sign-out clears it. An unfinished-draft notice appears only after dismissing an edited unsent form. Direct discard and permitted request cancellation have no extra confirmation popup; server validation and version checks remain authoritative.
+
+Home/My Requests use a shared tracking popup with server-confirmed progress; Map retains its inline inspector. Citizen presentation hides internal team identifiers without removing assignment links from storage or rescuer/coordinator workflows. Success feedback appears only after API acceptance and expires after eight idle seconds, paused while hovered/focused.
+
+## Retired workflow
+
+Volunteer entry and hazard-report submission/list/review are retired. Old volunteer sessions return to entry, protected calls fail closed, and hazard routes are not registered. Preserve existing historical records and controlled flood fixtures. See [scope decision](../decisions/2026-10-07-three-role-workflow.md).
 
 ## Offline rule
 

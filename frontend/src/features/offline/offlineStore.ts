@@ -40,11 +40,11 @@ const missionSchema = z.object({
     location: z.object({
       address: z.string(),
       point: z.object({ type: z.literal('Point'), coordinates: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]) }).strict(),
-      landmark: z.string().optional(), description: z.string().optional(),
+      landmark: z.string().nullable().optional(), description: z.string().nullable().optional(),
     }).strict(),
     headcount: z.number().int().positive(), vulnerabilities: z.array(z.string()),
     medical_needs: z.boolean(), medical_details: z.string().nullable().optional(),
-    reported_flood_level: z.string(), situation_summary: z.string(), fixture_notice: z.string().optional(),
+    reported_flood_level: z.string(), situation_summary: z.string().nullable(), fixture_notice: z.string().optional(),
   }).strict().nullable().optional(),
   status_history: z.array(z.object({
     event_id: z.string().min(1), mission_id: z.string().min(1).optional(), prior_status: status, new_status: status,

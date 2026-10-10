@@ -6,7 +6,9 @@ For verified scope, contracts, architecture, active status, and context-sync gui
 
 ResQPH is a flood-aware emergency rescue coordination and routing system for COM243 and CCSFEN1L. It is an academic engineering prototype for the project-defined U-Belt pilot area in the City of Manila and controlled or historical flood scenarios. It is not a certified emergency-dispatch, flood-forecasting, or road-safety system.
 
-The primary workflow is: citizen rescue request -> FastAPI validation -> MongoDB storage -> coordinator assignment -> flood-aware route -> rescuer status updates -> optional rerouting -> completion and history.
+The primary workflow is: citizen rescue request -> FastAPI validation -> MongoDB storage -> coordinator assignment -> one flood-aware route -> rescuer status updates -> completion and history. Current local scope retains Citizen, Dispatcher (`coordinator` internally) and Rescuer only; Volunteer/hazard-report workflow, rescuer hotline and alternative-route UI are retired. Preserve historical records and deterministic routing tests.
+
+For current local Figma/modal/Inter/shared-width rules use `docs/ui/LOCAL_VISUAL_RULES.md`. Local working-tree implementation is not merged completion; `docs/STATUS.md` records the pending delivery and renewed fresh-request acceptance gate.
 
 ## Delivery phases
 
@@ -35,6 +37,14 @@ Runtime model integration remains unapproved.
 4. Defer optional historical/elevation enrichment, extra map layers, analytics, and visual polish before delaying the core path.
 
 Runtime copy and test fixtures must say when data are controlled, simulated, historical, cached, or stale. Never claim live PAGASA data, official dispatch, nationwide coverage, guaranteed safe navigation, or secure production authentication.
+
+Local weather amendment (2026-10-10): Citizen Home may display informational
+Google Weather current conditions and daily high/low. Use a server-only
+GOOGLE_WEATHER_API_KEY, attribution, timestamps and unavailable/stale feedback.
+The adjacent hourly card now displays informational Google hourly forecasts;
+the former controlled Home warning is removed. Flood-routing scenarios remain
+controlled. Weather must not become a live flood-risk or routing input.
+Never fake live values; no automatic weather refresh is enabled.
 
 ## Approved stack
 

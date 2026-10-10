@@ -59,7 +59,7 @@ Unmarked means not established, not a failure hidden behind a PASS label.
 | Reconnect and duplicate replay | Accepted API event exactly once; queue cleared | Real API replay can be checked independently; browser rerun still needed |
 | Same-team conflict and review | 409; preserved event; current server state; deliberate discard | Browser rerun after cache repair; no invented reassignment |
 | Other-team/no-cache/corrupt-cache | No leakage or fabricated record | #82 plus fresh browser rerun |
-| Volunteer report and coordinator review | Persisted unverified -> reviewed; application label truthful | #77/#84: validation/persistence |
+| Retired features absent | Three roles only; no hazard submission/review, rescuer hotline or alternative-route UI; stored history preserved | #82 retirement; #84 closed as not planned |
 | Keyboard/navigation/mobile | Focus enters/traps/restores; working navigation; 320px/desktop | #78; no blanket accessibility pass |
 
 See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for exact endpoints and recovery. Do not

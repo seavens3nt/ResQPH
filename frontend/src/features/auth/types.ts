@@ -1,7 +1,12 @@
 export type UserRole = 'citizen' | 'coordinator' | 'rescuer'
 
+export function isUserRole(value: unknown): value is UserRole {
+  return value === 'citizen' || value === 'coordinator' || value === 'rescuer'
+}
+
 export interface EmergencyContact {
   name: string
+  address?: string
   relationship: string
   phone: string
 }
@@ -13,6 +18,7 @@ export interface MedicalInfo {
 }
 
 export interface AuthUser {
+  teamId?: string
   name: string
   email: string
   role: UserRole
@@ -34,7 +40,7 @@ export type ProfileUpdate = {
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   citizen: 'Citizen',
-  coordinator: 'Coordinator',
+  coordinator: 'Dispatcher',
   rescuer: 'Rescuer',
 }
 

@@ -4,8 +4,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pymongo.errors import PyMongoError
 
-from app.api.routes import assignments, health, missions, ml, rescue_requests, routing
+from app.api.routes import (
+    assignments,
+    health,
+    missions,
+    ml,
+    rescue_requests,
+    routing,
+    teams,
+    weather,
+)
 from app.core.config import settings
 from app.db.mongodb import close_mongodb, connect_mongodb, get_database
 from app.db.setup import initialize_database
@@ -48,8 +59,24 @@ app.include_router(health.router, prefix=settings.api_prefix)
 app.include_router(rescue_requests.router, prefix=settings.api_prefix)
 app.include_router(assignments.router, prefix=settings.api_prefix)
 app.include_router(missions.router, prefix=settings.api_prefix)
+app.include_router(teams.router, prefix=settings.api_prefix)
+app.include_router(weather.router, prefix=settings.api_prefix)
 app.include_router(ml.router, prefix=settings.api_prefix)
 app.include_router(routing.router, prefix=settings.api_prefix)
 
 app.add_exception_handler(ServiceError, service_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+
+@app.exception_handler(PyMongoError)
+async def database_error(_, exc: PyMongoError) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": "database_unavailable",
+                "message": "The prototype database is unavailable. No success is confirmed.",
+                "details": [],
+            }
+        },
+    )

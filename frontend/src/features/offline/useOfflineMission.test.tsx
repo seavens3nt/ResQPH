@@ -207,7 +207,9 @@ describe('useOfflineMission', () => {
     await waitFor(() => expect(result.current.storageError).toContain('QuotaExceededError'))
     expect(result.current.entry?.localId).toBe(queued.localId)
     expect(result.current.entry?.syncState).toBe('pending')
-    expect(result.current.mission?.status).toBe('en-route')
+    expect(result.current.mission?.status).toBe('arrived')
+    expect(result.current.serverConfirmed).toBe(true)
+    expect(result.current.storageError).toContain('Server accepted')
   })
 
   it.each([403, 404, 422])('blocks permanent %s rejection for review without auto retry', async (status) => {

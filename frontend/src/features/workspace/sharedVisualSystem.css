@@ -1,0 +1,427 @@
+/* Home-derived visual rules shared by all role workspaces and account access.
+   Keep page-specific composition, semantic status colors, and map layers intact. */
+:root {
+  --resqph-rounded-font:var(--font-body);
+  --resqph-card-radius:clamp(12px,calc(18 * var(--nav-unit,1px)),27px);
+  --resqph-control-radius:12px;
+  --resqph-inner-shadow:0 1px 2px rgba(46,109,143,.12);
+  --resqph-card-shadow:0 3px 6px rgba(46,109,143,.16);
+}
+.workspace-shell[data-role] {
+  --ink:#052354;
+  --muted:#405677;
+  --line:#a6c5db;
+  --accent:#f02546;
+  --surface-radius:var(--resqph-card-radius);
+  --surface-shadow:var(--resqph-card-shadow);
+  --shared-surface:#e4edf5;
+  --shared-inset:#fff;
+  font-family:var(--font-body);
+  background:#f5f8fc;
+}
+.workspace-shell[data-role][data-view] { font-family:var(--font-body); }
+.workspace-shell[data-role][data-theme=dark] {
+  --ink:#edf5ff; --muted:#c4d6e9; --line:#55728e;
+  --shared-surface:#20354c; --surface-shadow:0 3px 6px #0003;
+  --shared-inset:#172a40;
+  background:#101d31;
+}
+.workspace-shell[data-role] :is(h1,h2,h3,strong,b,.workspace-brand) {
+  font-family:var(--font-body); font-weight:550;
+}
+.workspace-shell[data-role] :is(button,input,select,textarea) { font-family:var(--font-body); }
+.workspace-shell[data-role] .workspace-nav {
+  border:1px solid #9eaabd; border-left:0;
+  background:var(--shared-surface); box-shadow:none;
+}
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav { border:1px solid #9eaabd; }
+.workspace-shell[data-role][data-view] .workspace-nav .figma-home-asset {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:calc(17 * var(--nav-unit)); height:calc(17 * var(--nav-unit));
+  flex:0 0 calc(17 * var(--nav-unit)); aspect-ratio:1;
+}
+.workspace-shell[data-role][data-view] .workspace-nav .figma-home-asset > img {
+  position:static; width:100% !important; height:100% !important;
+  max-width:100% !important; object-fit:contain; transform:none;
+}
+/* The Figma Account export has vertically elongated path coordinates.
+   Normalize its viewport to a square so the enclosing ring is circular. */
+.workspace-shell[data-role][data-view] .workspace-nav .figma-home-asset--account > img {
+  object-fit:fill;
+}
+.workspace-shell[data-role][data-view] .workspace-nav button > svg {
+  flex:0 0 calc(17 * var(--nav-unit)); aspect-ratio:1;
+  width:calc(17 * var(--nav-unit)); height:calc(17 * var(--nav-unit));
+}
+.workspace-shell[data-role] .workspace-nav nav button { font-weight:500; }
+.workspace-shell[data-role][data-view] .workspace-nav nav button {
+  color:var(--ink);
+}
+.workspace-shell[data-role][data-view] .workspace-nav button[aria-current],
+.workspace-shell[data-role][data-view] .workspace-nav button[aria-current]:hover {
+  background:var(--home-selected,#a5c2d6); color:white;
+}
+.workspace-shell[data-role] .workspace-card:not(.home-rescue-card) {
+  background:var(--shared-surface); border:1px solid var(--line);
+}
+.workspace-shell[data-role] :is(.workspace-inspector,.rescuer-mission-card,.account-profile fieldset,.flood-map-container) {
+  border:1px solid var(--line); border-radius:var(--resqph-card-radius);
+}
+.workspace-shell[data-role] :is(.workspace-inspector,.rescuer-mission-card) {
+  background:var(--shared-surface); box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role] :is(.workspace-form input,.workspace-form select,.workspace-form textarea,.workspace-toolbar input,.workspace-toolbar select,.workspace-picker select) {
+  border-radius:var(--resqph-control-radius); padding:12px 14px;
+}
+.workspace-shell[data-role][data-view] table :is(th,td) { padding:11px 16px; vertical-align:middle; height:auto; }
+.workspace-shell[data-role] .workspace-table th { background:var(--shared-surface); color:var(--ink); }
+.workspace-shell[data-role] :is(.requests-inset-panel,.requests-table-scroll,.requests-details-empty,.request-tracker > section,.workspace-route-result) {
+  box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role] :is(input,textarea) { caret-color:var(--accent); }
+.workspace-shell[data-role] ::selection { background:#b9cede; color:#052354; }
+.auth-mobile-page { font-family:var(--font-body); }
+.auth-mobile-page :is(h1,h2,h3,p,label,a,button,input,select,textarea,span) { font-family:var(--font-body); }
+.auth-mobile-page :is(h1,h2,h3,strong,b,.signup-step-title,.auth-main-title) { font-weight:550; }
+.auth-mobile-page :is(button,label,.auth-mode-tabs a) { font-weight:500; }
+.auth-mobile-page .auth-phone-shell {
+  border-radius:var(--resqph-card-radius); border:1px solid #555963;
+  box-shadow:0 4px 16px #0003;
+}
+.auth-mobile-page :is(.auth-pill-field,.auth-btn-pill-submit,.auth-btn-primary,.signup-summary-card) {
+  border-radius:var(--resqph-control-radius); box-shadow:none;
+}
+.auth-mobile-page :is(.auth-btn-pill-submit,.auth-btn-primary):hover { box-shadow:none; }
+@media (max-width:559px) {
+  .workspace-shell[data-role][data-view] table :is(th,td) { padding:10px 10px; }
+}
+
+/* All dashboard roles use the same header and surface hierarchy. */
+@media(min-width:701px) {
+  .workspace-shell[data-role][data-view] {
+    --workspace-header-height:max(64px,calc(62 * var(--nav-unit)));
+    --workspace-header-gap:calc(28 * var(--nav-unit));
+    --workspace-bottom-clearance:calc(44 * var(--nav-unit));
+    --workspace-page-height:calc(100dvh - var(--workspace-header-height) - var(--workspace-header-gap) - var(--workspace-bottom-clearance));
+  }
+  .workspace-shell[data-role][data-view] .workspace-main .workspace-topbar {
+    height:var(--workspace-header-height); min-height:64px; padding-top:0;
+    margin-bottom:var(--workspace-header-gap);
+  }
+  .workspace-shell[data-role][data-view] .workspace-main .workspace-topbar h1 {
+    font-size:clamp(24px,calc(26 * var(--nav-unit)),38px); line-height:1.15;
+  }
+  .workspace-shell[data-role][data-view] .workspace-main {
+    padding-bottom:var(--workspace-bottom-clearance);
+  }
+  /* Content determines card height. Map and Home own their deliberate fill rules. */
+  .workspace-shell[data-role][data-view] .workspace-main > :is(.workspace-card,.workspace-stack,.coordinator-overview),
+  .workspace-shell[data-role][data-view] .screenshot-requests { min-height:0; }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home {
+    --home-extra-height:max(0px,calc(var(--workspace-page-height) - 842 * var(--figma-unit)));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-rescue-card,.home-current-card) {
+    height:calc(215 * var(--figma-unit) + .3 * var(--home-extra-height));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-scenario-card,.home-hourly-card) {
+    height:calc(420 * var(--figma-unit) + .7 * var(--home-extra-height));
+    display:flex; flex-direction:column;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-weather-warning {
+    margin-top:auto; flex-shrink:0;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-temperature {
+    flex:1; align-items:center; margin:calc(20 * var(--figma-unit)) 0;
+    gap:calc(23 * var(--figma-unit));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-weather-metrics {
+    margin-top:calc(24 * var(--figma-unit)); margin-bottom:calc(20 * var(--figma-unit));
+    flex-shrink:0;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-weather-metric {
+    height:calc(86 * var(--figma-unit) + .15 * var(--home-extra-height));
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-hourly-row {
+    margin-top:0; flex:1; min-height:calc(154 * var(--figma-unit));
+    padding:calc(16 * var(--figma-unit)) calc(28 * var(--figma-unit));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .figma-hourly-chart {
+    width:100%; height:100%; max-height:100%; object-fit:contain;
+  }
+}
+/* Give the desktop weather row more room without compressing request text.
+   Stacked layouts retain their natural card heights. */
+@media (min-width:851px) {
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-rescue-card,.home-current-card) {
+    height:calc(185 * var(--figma-unit) + .15 * var(--home-extra-height));
+    min-height:136px;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-current-card {
+    padding:calc(18 * var(--figma-unit)) calc(29 * var(--figma-unit));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-current-card > p {
+    margin-top:calc(10 * var(--figma-unit));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-current-bottom p {
+    margin-top:calc(8 * var(--figma-unit));
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-no-request p {
+    margin:6px 0;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-no-request button {
+    min-height:28px; padding:4px 12px;
+  }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-weather-grid {
+    min-height:calc(500 * var(--figma-unit) + .85 * var(--home-extra-height));
+  }
+}
+.workspace-shell[data-role][data-view] .workspace-main { max-width:none; padding:0 calc(48 * var(--nav-unit)) 32px calc(28 * var(--nav-unit)); }
+.workspace-shell[data-role][data-view] .workspace-topbar {
+  height:calc(70 * var(--nav-unit)); min-height:46px;
+  margin:0 calc(-48 * var(--nav-unit)) calc(32 * var(--nav-unit)) calc(-28 * var(--nav-unit));
+  padding:0 calc(48 * var(--nav-unit)) 0 calc(18 * var(--nav-unit));
+  border-bottom:1px solid #9faabd; gap:16px;
+}
+.workspace-shell[data-role][data-view] .workspace-topbar h1 { font-size:clamp(18px,calc(28 * var(--nav-unit)),42px); font-weight:550; color:var(--ink); }
+.workspace-shell[data-role][data-view] .workspace-topbar > div { gap:calc(14 * var(--nav-unit)); }
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle {
+  display:flex; align-items:center; justify-content:center; gap:3px; margin:0; padding:3px;
+  width:calc(71 * var(--nav-unit)); height:calc(36 * var(--nav-unit)); min-height:28px;
+  border:1px solid #748dac; border-radius:999px; background:#b9cede; color:#365b80;
+}
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-role-pill {
+  width:auto; min-width:calc(96 * var(--nav-unit)); padding:0 16px;
+  height:calc(36 * var(--nav-unit)); min-height:28px; font-size:clamp(11px,calc(13 * var(--nav-unit)),20px);
+  border-radius:999px; background:#b9cede; color:#052354;
+  border:1px solid #748dac;
+}
+.workspace-header-status { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.workspace-intro { color:var(--muted); margin:-8px 0 24px; line-height:1.5; }
+.workspace-shell[data-role][data-view] .workspace-main :is(h1,h2,h3,strong,b) { font-weight:550; }
+.workspace-shell[data-role][data-view] .workspace-main :is(h1,h2,h3) { color:var(--ink); }
+.workspace-shell[data-role][data-view] .workspace-card,
+.workspace-shell[data-role][data-view] :is(.rescuer-mission-card,.workspace-inspector,.account-profile fieldset) { border-radius:var(--resqph-card-radius); }
+.workspace-shell[data-role][data-view] .workspace-card:not(.home-rescue-card) { box-shadow:var(--surface-shadow); }
+.workspace-shell[data-role][data-view] :is(.workspace-inspector,.requests-details-empty,.requests-inset-panel,.requests-table-scroll) { box-shadow:var(--resqph-inner-shadow); }
+.workspace-shell[data-role][data-view] .workspace-main button:where(:not(.home-rescue-card button,.home-current-card button,.requests-reference-table button,.citizen-theme-toggle,.map-toggle-btn,.leaflet-control button,.workspace-stats > button)) { border-radius:999px; }
+.workspace-shell[data-role] .workspace-tabs button { background:#80a7c5; color:#fff; border:1px solid #6e95b2; }
+.workspace-shell[data-role] .workspace-tabs button[aria-pressed=true] { background:#ffe6eb; color:#b41937; border-color:#ef8ba0; }
+.workspace-shell[data-role] .workspace-table-wrap { background:var(--shared-inset); border:1px solid var(--line); border-radius:var(--resqph-card-radius); }
+.workspace-shell[data-role] .workspace-split > * { min-width:0; max-width:100%; }
+.workspace-shell[data-role] .workspace-table { color:var(--muted); font-size:max(14px,calc(24 * var(--figma-unit,.65px))); line-height:1.4; }
+.workspace-shell[data-role] .workspace-table th { background:#b0cadd; color:#052354; font-weight:500; }
+.workspace-shell[data-role] .workspace-table tr.is-selected { background:#c5daea; color:#052354; }
+.workspace-shell[data-role][data-view] .workspace-main :is(.workspace-table,.requests-reference-table) button { min-height:0; height:auto; margin:0; padding:6px 12px; font-size:inherit; }
+.workspace-shell[data-role][data-view] .workspace-main .requests-reference-table button { padding:0; border-radius:0; }
+.workspace-shell[data-role][data-view] .requests-reference-table { line-height:1.4; }
+.workspace-shell[data-role][data-view] .requests-reference-table :is(th,td) { white-space:nowrap; }
+.requests-selectable-row { cursor:pointer; }
+.requests-selectable-row:hover td { background:#d3e3ee; }
+.requests-selectable-row:focus-within { outline:2px solid #376d9c; outline-offset:-2px; }
+.workspace-shell[data-theme=dark] .requests-selectable-row:hover td { background:#355976; }
+.workspace-shell[data-role] :is(.workspace-toolbar,.workspace-picker,.workspace-form) :is(input,select,textarea) { color:var(--ink); background:var(--shared-inset); border-color:var(--line); }
+.workspace-shell[data-role] .workspace-stats > button { background:var(--shared-surface); color:var(--ink); border:1px solid var(--line); border-radius:var(--resqph-card-radius); box-shadow:var(--surface-shadow); }
+.workspace-shell[data-role] .workspace-team-grid .workspace-record { background:var(--shared-inset); border:1px solid var(--line); }
+.workspace-shell[data-role] .workspace-badge { border-radius:999px; padding:5px 10px; }
+.workspace-shell[data-role] :is(.workspace-queue-preview p,.workspace-queue-preview time,.workspace-facts dt,.workspace-technical) { color:var(--muted); }
+.workspace-shell[data-role] :is(.rescuer-mission-card__head,.rescuer-mission-card__meta > span,.request-tracker > section) { background:var(--shared-inset); border:1px solid var(--line); border-radius:12px; }
+.workspace-shell[data-role] :focus-visible { outline:3px solid #376d9c; outline-offset:3px; }
+.workspace-shell[data-role] button:disabled { opacity:.6; cursor:not-allowed; }
+
+/* One density and content hierarchy for every role, not just the Citizen skin. */
+.workspace-shell[data-role][data-view] {
+  --ink:#011e55; --muted:#4b5a77; --line:#7da4c0;
+  --home-page:#f6f9fd; --home-surface:#e4ecf4; --shared-surface:#e4ecf4;
+  --home-selected:#aac5d8; background:var(--home-page);
+}
+.workspace-shell[data-role][data-view][data-theme=dark] {
+  --home-page:#101d31; --home-surface:#20354c; --shared-surface:#20354c;
+  --ink:#edf5ff; --muted:#c4d6e9; --line:#55728e; --home-selected:#3d6889;
+}
+.workspace-shell[data-role][data-view] .workspace-nav { background:var(--shared-surface); backdrop-filter:none; }
+.workspace-shell[data-role][data-view][data-nav-collapsed=false] .workspace-nav-label {
+  white-space:normal; overflow:visible; max-width:none; line-height:1.3;
+}
+.workspace-shell[data-role][data-view] .workspace-main > .workspace-stack { gap:24px; }
+.workspace-shell[data-role][data-view] .workspace-stack > button { align-self:flex-start; margin:0; }
+.workspace-shell[data-role][data-view] .mission-route-controls > h3 { font-size:20px; line-height:1.25; }
+.workspace-shell[data-role][data-view] .workspace-route-result { border-radius:var(--resqph-card-radius); }
+.workspace-shell[data-role][data-view] .workspace-card > h2,
+.workspace-shell[data-role][data-view] .workspace-panel-heading > h2 {
+  font-size:clamp(24px,calc(40 * var(--figma-unit,.65px)),34px); line-height:1.2;
+}
+.workspace-shell[data-role][data-view] .workspace-card:where(:not(.home-current-card,.home-scenario-card,.home-hourly-card,.requests-list-card)) > h3,
+.workspace-shell[data-role][data-view] .workspace-inspector h3 {
+  font-size:clamp(20px,calc(32 * var(--figma-unit,.65px)),28px); line-height:1.25;
+}
+.workspace-shell[data-role][data-view] .workspace-table :is(th,td) {
+  padding:11px clamp(18px,calc(32 * var(--figma-unit,.65px)),28px);
+}
+.workspace-shell[data-role][data-view] .workspace-table th { font-size:inherit; }
+.workspace-shell[data-role][data-view] .workspace-table caption { padding:12px 24px; margin:0; color:var(--ink); }
+.workspace-shell[data-role][data-view] .workspace-table :is(th,td):nth-child(2) { min-width:240px; }
+.workspace-shell[data-role][data-view] .workspace-table :is(th,td):not(:nth-child(2)),
+.workspace-shell[data-role][data-view] .workspace-table .record-id summary { white-space:nowrap; }
+.workspace-shell[data-role][data-view] .workspace-table td { background:var(--shared-surface); }
+.workspace-shell[data-role][data-view] .workspace-table tr.is-selected td { background:var(--home-selected); color:var(--ink); }
+.workspace-shell[data-role][data-view] .workspace-facts { font-size:14px; line-height:1.5; }
+.workspace-shell[data-role][data-view] .workspace-inspector { background:var(--shared-inset); }
+.workspace-shell[data-role][data-view] .workspace-split > .workspace-card { background:var(--shared-inset); }
+.workspace-shell[data-role][data-view] .workspace-toolbar { align-items:end; gap:16px; margin-bottom:20px; }
+.workspace-shell[data-role][data-view] .workspace-toolbar label { display:flex; flex-direction:column; gap:8px; min-width:0; color:var(--ink); font-size:14px; }
+.workspace-shell[data-role][data-view] .workspace-main :is(.workspace-toolbar,.workspace-picker) input {
+  border-radius:999px; min-height:40px; padding:10px 16px; box-sizing:border-box;
+}
+.workspace-shell[data-role][data-view] :is(.rescuer-mission-card,.offline-queue-panel) {
+  background:var(--shared-surface); color:var(--ink); border:1px solid var(--line);
+  border-radius:var(--resqph-card-radius); box-shadow:var(--surface-shadow);
+}
+.workspace-shell[data-role][data-view] :is(.rescuer-mission-card__id,.rescuer-mission-card__meta,.rescuer-mission-card .proto-notice) { color:var(--ink); }
+.workspace-shell[data-role][data-view] .rescuer-mission-card .proto-notice {
+  background:var(--shared-inset); border-color:var(--line); border-radius:12px;
+}
+.workspace-shell[data-role][data-view] .rescuer-mission-card__meta { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+.workspace-shell[data-role][data-view] .rescuer-mission-card__meta > span { font-size:14px; }
+.workspace-shell[data-role][data-view] .workspace-main :is(.workspace-primary,.btn--primary) {
+  background:linear-gradient(to top,#ce5657,#c82624); border-color:#890d1d; color:#fff;
+  box-shadow:var(--resqph-inner-shadow); font-weight:550;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-current-card {
+  height:auto; min-height:136px;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-rescue-card {
+  height:100%; min-height:136px;
+}
+@media(max-width:559px) {
+  .workspace-shell[data-role][data-view] .workspace-table :is(th,td) { padding:10px 14px; }
+}
+.workspace-shell[data-role] .modal-card { background:var(--shared-surface); color:var(--ink); border:1px solid var(--line); border-radius:var(--resqph-card-radius); box-shadow:0 12px 32px #05235433; }
+.workspace-shell[data-role] :is(.modal-header,.modal-footer) { background:var(--shared-surface); border-color:var(--line); }
+.workspace-shell[data-role] .modal-title { color:var(--ink); font-family:var(--font-body); }
+.workspace-shell[data-role][data-view] .workspace-main .modal-close { color:var(--ink); background:var(--shared-inset); width:36px; height:36px; padding:8px; flex-shrink:0; }
+.workspace-shell[data-role] .modal-body :is(select,textarea) { border-radius:var(--resqph-control-radius); background:var(--shared-inset); border-color:var(--line); color:var(--ink); }
+/* The original request form has inline presentation styles; override only its
+   visual tokens here, leaving validation, errors, layout and map controls intact. */
+.workspace-shell[data-role] #citizen-request-form :is(input:not([type=radio]):not([type=checkbox]),select,textarea) {
+  border-radius:var(--resqph-control-radius) !important; border-color:var(--line) !important;
+  background:var(--shared-inset); color:var(--ink);
+}
+.workspace-shell[data-role] #citizen-request-form > div:last-child button { border-radius:999px !important; font-weight:550 !important; }
+.workspace-shell[data-role] #citizen-request-form > div:last-child button[type=submit]:not(:disabled) { background:var(--accent) !important; }
+.workspace-shell[data-role] #citizen-request-form fieldset > details { border-radius:var(--resqph-control-radius) !important; border-color:var(--line) !important; }
+.workspace-shell[data-role][data-theme=dark] .workspace-table th { background:#3d6889; color:var(--ink); }
+.workspace-shell[data-role][data-theme=dark] :is(.workspace-table,.requests-reference-table) tr.is-selected { background:#355976; color:#edf5ff; }
+.workspace-shell[data-role][data-theme=dark] .requests-reference-table tr.is-selected button { color:#edf5ff; }
+.workspace-shell[data-role][data-theme=dark] .requests-reference-table tr.is-selected td { background:#355976; color:#edf5ff; }
+.workspace-shell[data-role][data-view][data-theme=dark] .workspace-topbar .citizen-role-pill { color:#052354; }
+.workspace-shell[data-role][data-theme=dark] .workspace-progress li.is-current,
+.workspace-shell[data-role][data-theme=dark] .workspace-progress li.is-done,
+.workspace-shell[data-role][data-theme=dark] .workspace-progress li.is-reached { color:#ff90a5; }
+.workspace-shell[data-role][data-view] .rescuer-mission-card__history summary { color:var(--ink); }
+.workspace-shell[data-role][data-view] .rescuer-mission-card__history :is(.history-item__states,.history-item__meta,.history-item__note) { color:var(--muted); }
+.workspace-shell[data-role][data-theme=dark] #citizen-request-form :is(label,summary) { color:var(--ink) !important; }
+@media (max-width:559px) {
+  .workspace-shell[data-role][data-view][data-nav-collapsed] .workspace-nav {
+    flex-direction:row; flex-wrap:wrap; align-items:center;
+  }
+  .workspace-shell[data-role][data-view][data-nav-collapsed] .workspace-nav nav {
+    flex:1 1 180px; width:auto; flex-direction:row; flex-wrap:wrap; align-items:center;
+  }
+  .workspace-shell[data-role][data-view][data-nav-collapsed=false] .workspace-brand { flex-basis:100%; }
+  .workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav nav button { flex:0 0 44px; width:44px; height:44px; min-height:44px; padding:12px; }
+  .workspace-shell[data-role][data-view][data-nav-collapsed] .workspace-nav > button { margin-left:auto; }
+  .workspace-shell[data-role][data-view] .workspace-main { padding:0 16px 24px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar { height:auto; min-height:64px; margin:0 -16px 24px; padding:12px 16px; flex-wrap:wrap; }
+  .workspace-shell[data-role][data-view] .workspace-topbar h1 { font-size:24px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar > div { gap:8px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar .citizen-role-pill { min-width:72px; font-size:12px; }
+}
+@media (min-width:560px) and (max-width:800px) {
+  .workspace-shell[data-role][data-view] .requests-reference-table :is(th,td) { padding:11px 6px; }
+}
+
+/* Citizen-derived composition, without copying Citizen content into other roles. */
+.workspace-shell[data-role][data-view] .role-workspace {
+  width:100%; min-width:0; max-width:none;
+}
+.workspace-shell[data-role][data-view] .workspace-section-heading {
+  display:flex; align-items:center; gap:10px; margin:0 0 20px;
+  color:var(--ink); font-size:clamp(22px,calc(40 * var(--figma-unit, .7px)),30px);
+  line-height:1.25; font-weight:550;
+}
+.workspace-section-heading > :first-child { width:26px; height:26px; flex:0 0 26px; object-fit:contain; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-card {
+  padding:clamp(18px,2vw,28px); min-width:0;
+}
+.workspace-shell[data-role][data-view] .role-workspace :is(h2,h3) {
+  color:var(--ink); font-weight:550; line-height:1.3;
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-card > :is(h2,h3) {
+  font-size:clamp(20px,1.6vw,26px); margin:0 0 18px;
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-table-panel {
+  min-width:0; padding:16px; background:var(--shared-inset,#fff);
+  border:1px solid var(--line); border-radius:var(--resqph-card-radius);
+  box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-table-wrap { margin:0; box-shadow:none; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-table :is(th,td) {
+  padding:11px 20px; vertical-align:middle; font-size:14px; line-height:1.5;
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-table th { font-weight:550; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-table td button { margin:0; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-record {
+  display:flex; align-items:center; gap:14px; width:100%; margin:0 0 12px;
+  padding:18px; border:1px solid var(--line); border-radius:var(--resqph-card-radius);
+  background:var(--shared-inset,#fff); color:var(--ink); text-align:left;
+  line-height:1.5; box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-record:last-child { margin-bottom:0; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-record:hover { background:var(--home-surface); }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-record > svg { flex-shrink:0; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-record span { min-width:0; overflow-wrap:anywhere; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-queue-preview {
+  padding:8px 18px; margin:0 0 14px; background:var(--shared-inset,#fff);
+  border:1px solid var(--line); border-radius:var(--resqph-card-radius);
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-queue-preview li { padding:16px 0; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-queue-preview strong { font-weight:550; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-inspector {
+  padding:20px; background:var(--shared-inset,#fff); border:1px solid var(--line);
+  border-radius:var(--resqph-card-radius); min-width:0;
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-split { align-items:start; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-stats > button {
+  margin:0; min-width:0; padding:20px; border-radius:var(--resqph-card-radius);
+  background:var(--shared-surface); color:var(--ink); border:1px solid var(--line);
+  box-shadow:var(--resqph-card-shadow);
+}
+.workspace-shell[data-role][data-view] .role-workspace .workspace-stats strong { font-size:30px; font-weight:550; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-stats small { color:var(--muted); font-size:13px; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-tabs { gap:8px; margin-bottom:18px; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-tabs button { margin:0; padding:7px 20px; text-transform:capitalize; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-tabs button[aria-pressed=true] { background:#ffedf0; color:#b92140; border-color:#e87a8e; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-facts { margin:16px 0; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-facts > div { padding:12px 0; }
+.workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card { padding:24px; }
+.workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card__meta { gap:12px; padding:16px; }
+.workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card__meta span { line-height:1.5; }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-team-caption { margin:0; font-size:14px; color:var(--muted); }
+.workspace-shell[data-role][data-view] .role-workspace .workspace-empty > svg { display:block; margin:0 auto 12px; }
+.workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card .btn--primary {
+  background:var(--accent,#f52249); background-image:none; border:1px solid #d31c3e;
+  color:#fff; font-weight:550; box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card :is(.sync-status-badge,.status-badge) { border-radius:999px; }
+@media (max-width:1400px) {
+  .workspace-shell[data-role][data-view] .role-workspace .workspace-split { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:1100px) {
+  .workspace-shell[data-role][data-view] .role-workspace .workspace-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:700px) {
+  .workspace-shell[data-role][data-view] .role-workspace .coordinator-overview { grid-template-columns:minmax(0,1fr); }
+  .workspace-shell[data-role][data-view] .role-workspace .workspace-team-grid { grid-template-columns:minmax(0,1fr); }
+  .workspace-shell[data-role][data-view] .role-workspace .workspace-table-panel { padding:10px; }
+}

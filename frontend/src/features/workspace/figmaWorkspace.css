@@ -1,0 +1,231 @@
+/* Shared role chrome derived from Figma mxh4jCIQFEX80EzMRsRgBW / 1:2.
+   Home content rules apply only where those components exist.
+   Native design coordinates become fluid layout measurements, not a screenshot.
+   Inter, restrained inner shadows, and interactive states remain intentional. */
+.workspace-shell[data-role][data-view] {
+  --figma-unit:clamp(.52px,calc(100vw / 1728),1px);
+  --nav-unit:calc(1.816 * var(--figma-unit));
+  --ink:#011e55; --muted:#4b5a77; --line:#7da4c0;
+  --home-page:#f6f9fd; --home-surface:#e4ecf4; --shared-surface:#e4ecf4;
+  --home-selected:#aac5d8;
+  grid-template-columns:calc(325 * var(--figma-unit)) minmax(0,1fr);
+  background:var(--home-page);
+}
+.figma-home-asset {
+  position:relative; display:inline-block; flex-shrink:0;
+  width:calc(var(--asset-width) * var(--figma-unit, .75px));
+  height:calc(var(--asset-height) * var(--figma-unit, .75px));
+  vertical-align:middle;
+}
+.figma-home-asset > img {
+  position:absolute; left:0; top:0; display:block;
+  width:auto !important; height:auto !important; max-width:none !important;
+  transform:scale(calc(var(--figma-unit, .75px) / 1px)); transform-origin:top left;
+}
+.workspace-shell[data-role][data-view] .workspace-nav {
+  top:calc(36 * var(--figma-unit)); height:calc(100dvh - 64 * var(--figma-unit));
+  margin:calc(36 * var(--figma-unit)) 0 calc(28 * var(--figma-unit));
+  padding:calc(54 * var(--figma-unit)) calc(33 * var(--figma-unit)) calc(53 * var(--figma-unit)) calc(45 * var(--figma-unit));
+  border-color:#5e687b; border-radius:0 calc(40 * var(--figma-unit)) calc(40 * var(--figma-unit)) 0;
+  gap:calc(31 * var(--figma-unit)); background:var(--home-surface);
+}
+.workspace-shell[data-role][data-view] .workspace-brand {
+  height:calc(73 * var(--figma-unit)); min-height:calc(73 * var(--figma-unit)); margin:0;
+}
+.workspace-shell[data-role][data-view] .workspace-brand img.citizen-brand-lockup {
+  width:calc(220 * var(--figma-unit)); height:calc(73 * var(--figma-unit)); object-fit:cover;
+}
+.workspace-shell[data-role][data-view] .workspace-nav nav { gap:calc(34 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .workspace-nav nav button {
+  min-height:calc(68 * var(--figma-unit)); padding:calc(15 * var(--figma-unit)) calc(23 * var(--figma-unit));
+  gap:calc(24 * var(--figma-unit)); font-size:calc(24 * var(--figma-unit));
+  border-radius:calc(15 * var(--figma-unit)) calc(34 * var(--figma-unit)) calc(34 * var(--figma-unit)) calc(15 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .workspace-nav > button {
+  min-height:calc(58 * var(--figma-unit)); padding:calc(15 * var(--figma-unit)) calc(23 * var(--figma-unit));
+  gap:calc(24 * var(--figma-unit)); font-size:calc(18 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .workspace-nav nav button[aria-current] .figma-home-asset { filter:brightness(0) invert(1); }
+.workspace-shell[data-role][data-view][data-theme=light] .workspace-nav nav button:not([aria-current]) .figma-home-asset--home { filter:brightness(0) saturate(100%) invert(10%) sepia(62%) saturate(1912%) hue-rotate(200deg) brightness(93%) contrast(110%); }
+.workspace-shell[data-role][data-view] .workspace-main {
+  padding:0 calc(90 * var(--figma-unit)) calc(86 * var(--figma-unit)) calc(53 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .workspace-topbar {
+  position:relative;
+  height:calc(132 * var(--figma-unit));
+  margin:0 calc(-90 * var(--figma-unit)) calc(57 * var(--figma-unit)) calc(-53 * var(--figma-unit));
+  padding:calc(14 * var(--figma-unit)) calc(90 * var(--figma-unit)) 0 calc(33 * var(--figma-unit));
+  border-bottom:0;
+}
+.workspace-shell[data-role][data-view] .workspace-topbar::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:url('/figma-home/e4a8d.svg') center / 100% 1px no-repeat;
+}
+.workspace-shell[data-role][data-view] .workspace-topbar h1 { font-size:calc(48 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .workspace-topbar > div { gap:calc(28 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle {
+  position:relative; width:calc(123 * var(--figma-unit)); height:calc(61 * var(--figma-unit));
+  padding:calc(8 * var(--figma-unit)); gap:calc(4 * var(--figma-unit)); overflow:hidden;
+  border-color:#2f416a; background:#b7cedf;
+}
+.workspace-shell[data-role][data-view] .citizen-theme-toggle::before {
+  content:''; position:absolute; left:calc(4 * var(--figma-unit)); top:calc(4 * var(--figma-unit));
+  width:calc(48 * var(--figma-unit)); height:calc(52 * var(--figma-unit));
+  border-radius:calc(30 * var(--figma-unit)) calc(15 * var(--figma-unit)) calc(15 * var(--figma-unit)) calc(30 * var(--figma-unit)); background:#7fa4c2;
+  transition:transform 180ms ease;
+}
+.workspace-shell[data-role][data-view] .citizen-theme-toggle[aria-pressed=true]::before { transform:translateX(calc(65 * var(--figma-unit))); }
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-role-pill {
+  width:calc(168 * var(--figma-unit)); min-width:0; height:calc(61 * var(--figma-unit));
+  padding:0; font-size:calc(24 * var(--figma-unit)); border-color:#2f416a; background:#b7cedf;
+}
+.workspace-shell[data-role][data-view] .home-section-title {
+  margin:0 0 calc(24 * var(--figma-unit)) calc(8 * var(--figma-unit));
+  gap:calc(12 * var(--figma-unit)); font-size:calc(40 * var(--figma-unit));
+  line-height:calc(48 * var(--figma-unit)); letter-spacing:-.025em;
+}
+.workspace-shell[data-role][data-view] .home-status-grid { grid-template-columns:636fr 599fr; gap:calc(25 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .screenshot-home .workspace-card {
+  border-radius:calc(30 * var(--figma-unit)); border:1px solid var(--line);
+  background:var(--home-surface); box-shadow:0 calc(6 * var(--figma-unit)) calc(9.8 * var(--figma-unit)) #7da4c080;
+}
+.workspace-shell[data-role][data-view] .screenshot-home .home-rescue-card {
+  height:calc(215 * var(--figma-unit)); padding:0; border-color:#890d1d;
+  background:linear-gradient(to top,#ce5657,#c82624);
+  box-shadow:0 calc(6 * var(--figma-unit)) calc(9.8 * var(--figma-unit)) #890d1d60;
+}
+.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card button {
+  gap:calc(55 * var(--figma-unit)); padding:calc(38 * var(--figma-unit));
+  border-radius:calc(30 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-rescue-card strong {
+  font-size:calc(48 * var(--figma-unit)); line-height:1.1; letter-spacing:-.025em;
+}
+.workspace-shell[data-role][data-view] .home-rescue-card small {
+  margin-top:calc(8 * var(--figma-unit)); font-size:calc(24 * var(--figma-unit)); line-height:1.2;
+}
+.workspace-shell[data-role][data-view] .screenshot-home .home-current-card {
+  height:calc(215 * var(--figma-unit)); padding:calc(26 * var(--figma-unit)) calc(29 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-current-card h3 {
+  font-size:calc(20 * var(--figma-unit)); line-height:calc(25 * var(--figma-unit)); color:var(--muted);
+}
+.workspace-shell[data-role][data-view] .home-request-label {
+  font-size:calc(40 * var(--figma-unit)); line-height:calc(48 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-current-top { min-height:calc(48 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-current-top .workspace-badge {
+  top:calc(26 * var(--figma-unit)); right:calc(27 * var(--figma-unit));
+  padding:calc(5 * var(--figma-unit)) calc(23 * var(--figma-unit)); font-size:calc(20 * var(--figma-unit));
+  line-height:calc(24 * var(--figma-unit)); border-color:#42598e;
+}
+.workspace-shell[data-role][data-view] .home-current-card p {
+  font-size:calc(20 * var(--figma-unit)); line-height:calc(27 * var(--figma-unit));
+  gap:calc(13 * var(--figma-unit)); margin:calc(21 * var(--figma-unit)) 0 0;
+}
+.workspace-shell[data-role][data-view] .home-current-card > p { text-overflow:ellipsis; overflow:hidden; }
+.workspace-shell[data-role][data-view] .home-current-bottom p { margin-top:calc(14 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .workspace-main .home-current-bottom button {
+  font-size:calc(20 * var(--figma-unit)); gap:calc(20 * var(--figma-unit)); align-self:flex-end;
+  line-height:calc(27 * var(--figma-unit)); min-height:calc(32 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .screenshot-home .home-weather-title {
+  margin-top:calc(63 * var(--figma-unit)); margin-bottom:calc(24 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-weather-grid { grid-template-columns:468fr 765fr; gap:calc(27 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .screenshot-home .home-scenario-card {
+  height:calc(420 * var(--figma-unit)); padding:calc(39 * var(--figma-unit)) calc(32 * var(--figma-unit)) calc(28 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .screenshot-home .home-hourly-card {
+  height:calc(420 * var(--figma-unit)); padding:calc(39 * var(--figma-unit)) calc(32 * var(--figma-unit)) calc(34 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-card-caption { font-size:calc(20 * var(--figma-unit)); line-height:calc(24 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] :is(.home-scenario-card,.home-hourly-card) h3 {
+  font-size:calc(40 * var(--figma-unit)); line-height:calc(48 * var(--figma-unit)); margin:0;
+}
+.workspace-shell[data-role][data-view] .home-hourly-card > :is(h3,.home-card-caption) { margin-left:calc(23 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-temperature {
+  margin-top:calc(30 * var(--figma-unit)); gap:calc(23 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-temperature > strong { font-size:calc(96 * var(--figma-unit)); line-height:calc(115 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-temperature > div > span { font-size:calc(20 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-temperature p { font-size:calc(24 * var(--figma-unit)); line-height:calc(29 * var(--figma-unit)); margin-top:calc(7 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-weather-warning {
+  margin:calc(31 * var(--figma-unit)) calc(-11 * var(--figma-unit)) 0;
+  height:calc(106 * var(--figma-unit)); min-height:0; padding:calc(20 * var(--figma-unit)) calc(32 * var(--figma-unit));
+  gap:calc(18 * var(--figma-unit)); border-radius:calc(30 * var(--figma-unit));
+  border-color:#a78a56; background:#f2f0e7; color:#764d00;
+  font-size:calc(20 * var(--figma-unit)); line-height:calc(24 * var(--figma-unit)); box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role][data-view] .home-weather-metrics {
+  grid-template-columns:218fr 237fr 222fr; gap:calc(18 * var(--figma-unit));
+  margin:calc(19 * var(--figma-unit)) calc(-6 * var(--figma-unit)) calc(17 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view] .home-weather-metric {
+  height:calc(86 * var(--figma-unit)); padding:calc(20 * var(--figma-unit)) calc(26 * var(--figma-unit));
+  border-radius:calc(30 * var(--figma-unit)); box-shadow:var(--resqph-inner-shadow);
+}
+.workspace-shell[data-role][data-view] .home-weather-metric > span { font-size:calc(15 * var(--figma-unit)); line-height:calc(19 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-weather-metric strong { font-size:calc(26 * var(--figma-unit)); line-height:calc(30 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view] .home-hourly-row {
+  display:flex; align-items:center; justify-content:center; height:calc(154 * var(--figma-unit));
+  padding:calc(11 * var(--figma-unit)) calc(42 * var(--figma-unit));
+  margin:0 calc(-8 * var(--figma-unit)); border-radius:calc(30 * var(--figma-unit)); box-shadow:var(--resqph-inner-shadow);
+}
+.figma-hourly-chart { width:100%; max-width:100%; height:auto; object-fit:contain; }
+.home-hourly-text { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); }
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] { grid-template-columns:calc(150 * var(--figma-unit)) minmax(0,1fr); }
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav {
+  margin:calc(36 * var(--figma-unit)) calc(15 * var(--figma-unit)) calc(28 * var(--figma-unit));
+  padding:calc(54 * var(--figma-unit)) calc(15 * var(--figma-unit)) calc(53 * var(--figma-unit));
+  border-radius:calc(60 * var(--figma-unit));
+}
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand img.citizen-brand-lockup { object-fit:contain; }
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav :is(nav,.workspace-brand) { width:calc(74 * var(--figma-unit)); }
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav button {
+  width:calc(74 * var(--figma-unit)); height:calc(74 * var(--figma-unit)); min-height:calc(74 * var(--figma-unit)); padding:calc(20 * var(--figma-unit)); gap:0;
+}
+.workspace-shell[data-role][data-view][data-theme=dark] {
+  --home-page:#101d31; --home-surface:#20354c; --shared-surface:#20354c;
+  --ink:#edf5ff; --muted:#c4d6e9; --line:#55728e; --home-selected:#3d6889;
+}
+.workspace-shell[data-role][data-view][data-theme=dark] .figma-home-asset:not(.figma-home-asset--add,.figma-home-asset--warning,.figma-home-asset--pin,.figma-home-asset--people,.figma-home-asset--sun,.figma-home-asset--moon) { filter:brightness(0) invert(1); }
+/* The chart is an exact static Figma asset; retain its white surface in dark mode. */
+.workspace-shell[data-role][data-view][data-theme=dark] .home-hourly-row { background:white; }
+@media (max-width:850px) {
+  .workspace-shell[data-role][data-view] { --figma-unit:.7px; grid-template-columns:170px minmax(0,1fr); }
+  .workspace-shell[data-role][data-view] .workspace-nav { padding:28px 14px; }
+  .workspace-shell[data-role][data-view] .workspace-brand img.citizen-brand-lockup { width:135px; height:45px; }
+  .workspace-shell[data-role][data-view] .workspace-nav nav button { padding:12px 10px; gap:14px; font-size:15px; }
+  .workspace-shell[data-role][data-view] .workspace-main { padding:0 20px 30px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar { margin:0 -20px 30px; padding:0 20px; height:80px; }
+  .workspace-shell[data-role][data-view] :is(.home-status-grid,.home-weather-grid) { grid-template-columns:1fr; gap:18px; }
+  .workspace-shell[data-role][data-view] .screenshot-home .home-rescue-card { min-height:150px; height:auto; }
+  .workspace-shell[data-role][data-view] .screenshot-home .home-current-card { height:auto; min-height:150px; }
+  .workspace-shell[data-role][data-view] .screenshot-home .home-hourly-card { height:auto; }
+  .workspace-shell[data-role][data-view] .screenshot-home .home-scenario-card { height:auto; }
+  .workspace-shell[data-role][data-view] .home-weather-warning { margin-top:22px; height:auto; min-height:74px; }
+  .workspace-shell[data-role][data-view] .home-section-title { line-height:1.25; font-size:24px; }
+  .workspace-shell[data-role][data-view] .home-rescue-card strong { white-space:normal; font-size:30px; }
+  .workspace-shell[data-role][data-view] .home-weather-metric { padding:14px 10px; }
+  .workspace-shell[data-role][data-view] .home-weather-metric strong { font-size:16px; }
+}
+@media (max-width:559px) {
+  .workspace-shell[data-role][data-view],.workspace-shell[data-role][data-view][data-nav-collapsed=true] { display:block; --figma-unit:.65px; }
+  .workspace-shell[data-role][data-view] .workspace-nav,.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-nav { position:static; height:auto; margin:8px; padding:12px; border:1px solid #9eaabd; border-radius:20px; gap:8px; }
+  .workspace-shell[data-role][data-view] .workspace-brand { min-height:36px; height:36px; }
+  .workspace-shell[data-role][data-view] .workspace-brand img.citizen-brand-lockup { height:36px; width:110px; }
+  .workspace-shell[data-role][data-view] .workspace-nav nav { gap:5px; }
+  .workspace-shell[data-role][data-view] .workspace-nav nav button { min-height:44px; padding:8px; gap:6px; font-size:12px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar { min-height:72px; height:auto; margin-bottom:24px; padding:12px 20px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar h1 { font-size:26px; }
+  .workspace-shell[data-role][data-view] .workspace-topbar > div { gap:10px; }
+  .workspace-shell[data-role][data-view] .workspace-main .home-rescue-card button { padding:22px; gap:24px; }
+  .workspace-shell[data-role][data-view] .home-weather-metric strong { font-size:14px; }
+  .workspace-shell[data-role][data-view] .home-weather-metric { padding:12px 8px; }
+  .workspace-shell[data-role][data-view] .home-hourly-row { padding:10px 12px; }
+  .workspace-shell[data-role][data-view] .home-current-card > p { white-space:normal; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .workspace-shell[data-role][data-view] .citizen-theme-toggle::before { transition:none; }
+}

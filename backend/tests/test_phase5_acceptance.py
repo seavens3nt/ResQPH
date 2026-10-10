@@ -213,16 +213,19 @@ def test_phase5_openapi_cors_and_safe_boundary_contracts() -> None:
     route_schema = paths["/api/v1/routes/evaluate"]["post"]
     assert route_schema["responses"]["200"]["description"] == "Successful Response"
 
+    # Exercise the configured allowlist, not a developer-specific preview port.
+    assert settings.cors_origins
+    allowed_origin = settings.cors_origins[0]
     allowed_preflight = client.options(
         "/api/v1/rescue-requests",
         headers={
-            "Origin": "http://localhost:5173",
+            "Origin": allowed_origin,
             "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "X-Demo-User-Id,X-Demo-Role,Content-Type",
         },
     )
     assert allowed_preflight.status_code == 200
-    assert allowed_preflight.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert allowed_preflight.headers["access-control-allow-origin"] == allowed_origin
 
     blocked_preflight = client.options(
         "/api/v1/rescue-requests",
@@ -265,7 +268,7 @@ def test_phase5_invalid_inputs_and_roles_leave_database_unchanged(
         headers={"X-Demo-User-Id": "volunteer-phase5", "X-Demo-Role": "volunteer"},
     )
     assert prohibited_role.status_code == 403
-    assert prohibited_role.json()["error"]["code"] == "forbidden"
+    assert prohibited_role.json()["error"]["code"] == "demo_role_required"
     assert database["rescue_requests"].count_documents({}) == 0
 
 

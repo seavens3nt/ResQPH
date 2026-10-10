@@ -295,7 +295,7 @@ def predict_road_risk(payload: dict[str, Any]) -> dict[str, Any]:
         "risk_level": _risk_level(probability),
         "model_name": model_name,
         "model_version": model_version,
-        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "generated_at": dt.datetime.now(dt.UTC).isoformat(),
         "fallback_used": fallback_used,
         "fallback_reason": fallback_reason,
         "ml_penalty_seconds": _ml_penalty(probability),

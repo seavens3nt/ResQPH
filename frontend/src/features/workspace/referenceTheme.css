@@ -1,0 +1,88 @@
+/* MarineAtlas-inspired composition, implemented for ResQPH's existing components.
+   Shared role surfaces; domain-specific maps, validation and states remain intact. */
+.workspace-shell[data-role] {
+  --accent: #d92642;
+  --ink: #20242b;
+  --muted: #535e6d;
+  --line: #dde2e8;
+  --surface-radius: 25px;
+  --surface-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 14px 30px rgba(29,40,57,.07);
+  --shell-ease: cubic-bezier(.16,1,.3,1);
+  background: #eef1f6;
+  grid-template-columns: 224px minmax(0,1fr);
+  transition: grid-template-columns 360ms var(--shell-ease);
+}
+.workspace-shell[data-role] .workspace-nav {
+  top: 13px; height: calc(100dvh - 26px); margin: 13px 0;
+  padding: 30px 18px; gap: 22px;
+  background: rgba(255,255,255,.85); border: 0;
+  border-radius: 0 27px 27px 0; box-shadow: var(--surface-shadow);
+  cursor: pointer;
+  transition: margin 360ms var(--shell-ease), padding 360ms var(--shell-ease), border-radius 360ms var(--shell-ease), gap 360ms var(--shell-ease);
+}
+.workspace-shell[data-role] .workspace-nav button {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+  border-radius: 12px; font-size: .9rem;
+  transition: background-color 180ms ease, color 180ms ease, gap 360ms var(--shell-ease), border-radius 360ms var(--shell-ease);
+}
+.workspace-shell[data-role] .workspace-nav button[aria-current] { background: var(--accent); color: white; }
+.workspace-shell[data-role] .workspace-nav svg, .workspace-shell[data-role] .workspace-brand img { flex-shrink: 0; }
+.workspace-shell[data-role] .workspace-nav :is(.workspace-nav-label,.workspace-brand > div) {
+  min-width: 0; max-width: 180px; overflow: hidden; white-space: nowrap;
+  opacity: 1; transform: translateX(0);
+  transition: max-width 360ms var(--shell-ease), opacity 180ms ease, transform 360ms var(--shell-ease);
+}
+.workspace-shell[data-role] .workspace-nav > p { max-height: 40px; overflow: hidden; opacity: 1; transition: max-height 360ms var(--shell-ease), opacity 180ms ease; }
+.workspace-shell[data-role][data-nav-collapsed=true] { grid-template-columns: 100px minmax(0,1fr); }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav { top: 13px; height: calc(100dvh - 26px); margin: 13px 12px; padding: 24px 10px; border-radius: 38px; gap: 18px; align-items: center; min-width: 0; }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav :is(.workspace-nav-label,.workspace-brand > div) { max-width: 0; opacity: 0; transform: translateX(-8px); }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav > p { display: none; }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-brand { gap: 0; width: 44px; min-height: 44px; justify-content: center; flex-shrink: 0; }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav nav { width: 44px; min-height: 0; }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav button { gap: 0; width: 44px; height: 44px; padding: 12px; flex-shrink: 0; justify-content: center; border-radius: 50%; position: relative; }
+.workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav button:is(:hover,:focus-visible)::after {
+  content: attr(aria-label); position: absolute; left: calc(100% + 16px); top: 50%; transform: translateY(-50%);
+  background: #20242b; color: white; padding: 8px 12px; border-radius: 8px;
+  white-space: nowrap; font-size: .8rem; pointer-events: none; z-index: 1000;
+}
+.workspace-shell[data-role] .workspace-main { padding: 36px clamp(24px,4vw,64px); max-width: 1560px; }
+.workspace-shell[data-role] .workspace-header { border: 0; align-items: center; padding-bottom: 0; margin-bottom: 28px; }
+.workspace-shell[data-role] .workspace-eyebrow { display: none; }
+.workspace-shell[data-role] .workspace-header h1 { font-size: clamp(1.7rem,2.7vw,2.3rem); line-height: 1.15; }
+.workspace-shell[data-role] .workspace-subtitle { color: var(--muted); font-size: .95rem; line-height: 1.5; }
+.workspace-shell[data-role] .workspace-card { border: 0; border-radius: var(--surface-radius); box-shadow: var(--surface-shadow); padding: 28px; }
+.workspace-shell[data-role] .workspace-card p { font-size: .92rem; line-height: 1.6; }
+.workspace-shell[data-role] .workspace-stack { gap: 24px; }
+.workspace-shell[data-role] :is(.workspace-inspector,.rescuer-mission-card) { border: 0; border-radius: var(--surface-radius); background: #f8fafc; padding: 24px; }
+.workspace-shell[data-role] .workspace-main button { min-height: 44px; border-radius: 12px; font-size: .875rem; }
+.workspace-shell[data-role] .workspace-main .rescue-hero { padding: 0; overflow: hidden; }
+.workspace-shell[data-role] .workspace-main :is(.citizen-rescue-action,.workspace-stats > button) { border-radius: var(--surface-radius); }
+.workspace-shell[data-role] .rescue-hero:focus-within { outline: 3px solid #ac1e38; outline-offset: 4px; }
+.workspace-shell[data-role] .citizen-current-summary .record-id { min-width: 0; }
+.workspace-shell[data-role] .citizen-current-summary > div > :not(.record-id) { flex-shrink: 0; }
+.workspace-shell[data-role] .workspace-table { font-variant-numeric: tabular-nums; }
+.workspace-shell[data-role] .workspace-table th { background: #f5f7fa; }
+.workspace-shell[data-role] :focus-visible { outline: 3px solid #ac1e38; outline-offset: 4px; }
+.workspace-shell[data-role] ::selection { background: #fbd5dc; color: #20242b; }
+@media (max-width: 850px) {
+  .workspace-shell[data-role] { display: block; }
+  .workspace-shell[data-role] .workspace-nav { position: static; height: auto; margin: 0; padding: 20px 16px; border-radius: 0 0 25px 25px; gap: 12px; }
+  .workspace-shell[data-role] .workspace-nav nav { flex-direction: row; flex-wrap: wrap; }
+  .workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav { margin: 12px; padding: 12px; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav nav { flex: 1 1 180px; width: auto; }
+  .workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav button:is(:hover,:focus-visible)::after { left: 50%; top: 100%; transform: translateX(-50%); }
+  .workspace-shell[data-role] .workspace-main { padding: 24px 16px; }
+  .workspace-shell[data-role] .workspace-card { padding: 22px; }
+}
+/* Keep every action reachable on short desktop windows instead of clipping the rail. */
+@media (min-width: 851px) and (max-height: 560px) {
+  .workspace-shell[data-role] .workspace-nav { overflow-y: auto; scrollbar-width: thin; }
+  .workspace-shell[data-role] .workspace-nav nav { flex: 0 0 auto; }
+  .workspace-shell[data-role][data-nav-collapsed=true] .workspace-nav button:is(:hover,:focus-visible)::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell[data-role], .workspace-shell[data-role] .workspace-nav, .workspace-shell[data-role] .workspace-nav :is(button,p,.workspace-nav-label,.workspace-brand > div) { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .workspace-shell[data-role] .workspace-nav { background: #fff; backdrop-filter: none; }
+}

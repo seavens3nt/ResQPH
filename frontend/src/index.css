@@ -2,9 +2,7 @@
  * ResQPH design system — Red & White edition
  *
  * Fonts
- *   Bebas Neue      — condensed all-caps display (impact, urgency)
- *   Outfit          — geometric humanist sans, clean at every size
- *   JetBrains Mono  — coordinates, codes, status labels
+ *   Inter — shared interface font for headings, body text, and controls
  *
  * Palette: rescue red (#D62828) on pure white. Dark surfaces use a
  * deep red-tinted near-black — never brown, never grey.
@@ -17,7 +15,11 @@
  *   Raw hex      → only inside THIS file
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+button, input, select, textarea { font-family:var(--font-body); }
+.leaflet-container, .leaflet-control-attribution, .leaflet-tooltip,
+.leaflet-popup-content, .leaflet-bar a { font-family:var(--font-body) !important; }
 
 /* ── Primitives (raw hex – never used in component CSS) ───────────── */
 :root {
@@ -96,9 +98,9 @@
   --border-strong:   rgb(255 255 255 / 24%);
 
   /* ── Fonts ───────────────────────────────────────────────────────── */
-  --font-display: 'Bebas Neue', 'Arial Narrow', 'Impact', sans-serif;
-  --font-body:    'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono:    'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --font-display: var(--font-body);
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-body);
 
   /* ── Layout & motion ─────────────────────────────────────────────── */
   --shell: min(1200px, calc(100% - 48px));
@@ -120,7 +122,7 @@ body {
   margin: 0;
   min-height: 100vh;
   line-height: 1.65;
-  font-family: var(--font-body);
+  font-family:var(--font-body);
   font-size: 1rem;
   color: var(--text-primary);
   background-color: var(--surface-base);
@@ -130,9 +132,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Bebas Neue is all-caps by nature — no weight axis, single face */
+/* Headings share Inter; keep their existing size and emphasis rules. */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
+  font-family:var(--font-body);
   font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.0;
@@ -221,9 +223,9 @@ img, svg { display: block; max-width: 100%; }
   --border-subtle: #f1f5f9;
   --border-default: #e2e8f0;
   --border-strong: #cbd5e1;
-  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --font-body: 'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --font-display: var(--font-body);
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-body);
 }
 
 body { color-scheme: light; background: var(--surface-base); color: var(--text-primary); }

@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://localhost:27017/?replicaSet=rs0"
     mongodb_database: str = "resqph"
     frontend_origins: str = "http://localhost:5173"
+    google_weather_api_key: SecretStr = SecretStr("")
 
     # -----------------------------------------------------------------------
     # ML runtime adapter

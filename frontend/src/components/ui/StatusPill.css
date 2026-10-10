@@ -33,7 +33,7 @@
 .status-pill__label  { color: var(--text-secondary); }
 .status-pill__detail {
   color: var(--text-tertiary);
-  font-family: var(--font-mono);
+  font-family:var(--font-body);
   font-size: 0.68rem;
   letter-spacing: 0;
   text-transform: none;

@@ -1,15 +1,15 @@
 # ResQPH project roadmap
 
-**Status:** Team Phase 3 completed; Team Phase 4 ready to start
+**Status:** Team Phase 5 in progress; local integration/UI candidate pending delivery and final acceptance
 **Decision owner:** Ranee
-**Last updated:** 2026-10-04
+**Last updated:** 2026-10-09
 
 ## Delivery structure
 
 Ranee completed the Project Foundation through PR #25, Team Phase 1 through
 the accepted mapping gate, and Team Phase 2 through PR #55 and its routing
 gate. Matthew's early Team Phase 3 experiment was accepted as external
-exploratory evidence with runtime integration deferred. The post-routing reconciliation is merged through PR #58; Team Phase 4 is active.
+exploratory evidence with runtime integration deferred. The post-routing reconciliation is merged through PR #58. Phase 4 has historical gate evidence; Phase 5 is active and must repeat fresh-request offline acceptance after the browser audit.
 
 Because delivery time is constrained, every phase must protect the smallest end-to-end demonstration. Deterministic rescue coordination and rule-based A* routing are the critical path. ML experimentation remains required, while runtime ML integration and optional data enrichment are conditional and must not block that path.
 
@@ -156,11 +156,13 @@ verified against [the phase evidence](testing/TEAM-PHASE-04-EVIDENCE.md).
 
 ## Team Phase 5 — Integration, Testing, and Presentation
 
-**Status:** Ready to start; active delivery phase
+**Status:** In progress; active delivery phase
 **Gate owner:** Ranee
 **Participants:** All members
 
 See [the independent Phase 5 work packages](phases/TEAM-PHASE-05.md).
+
+Current scope has three roles, no volunteer/hazard-report workflow, rescuer hotline or alternative-route UI. Retain one calculated route, controlled layers and limited offline support. Ranee's local Figma/modal/shared-style work is pending delivery; see [status](STATUS.md) and [visual rules](ui/LOCAL_VISUAL_RULES.md). Old repair packages #76/#77/#78/#82/#83 and volunteer #84 are closed as not planned/superseded. #73 is completed through PR #80. Remaining work is consolidated into #70 integration/final gate, #71 positive browser/offline acceptance and #72 presentation/rehearsal; closure is not product acceptance.
 
 Verify the complete rescue scenario, failure and fallback cases, accessibility, performance within agreed targets, privacy, data/source labels, deployment or reliable local-demo instructions, rollback, documentation, paper alignment, backup video, and rehearsals. No unverified feature enters the final presentation.
 

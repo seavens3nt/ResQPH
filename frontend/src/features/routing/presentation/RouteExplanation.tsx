@@ -12,7 +12,8 @@ export function RouteExplanation({ explanation }: RouteExplanationProps) {
   return (
     <section className="route-summary__section" aria-labelledby={headingId}>
       <h3 id={headingId}>Route explanation</h3>
-      <p>{explanation}</p>
+      <p>The route follows eligible roads in the controlled scenario, using deterministic flood penalties and excluding impassable edges. This is not a road-safety guarantee.</p>
+      <details><summary>Technical route explanation</summary><p>{explanation}</p></details>
     </section>
   )
 }

@@ -10,12 +10,12 @@ import { CoordinatorView } from './CoordinatorView'
 import { DashboardPage } from '../DashboardPage'
 
 function renderWithProviders(ui: React.ReactElement, initialRole: 'citizen' | 'rescuer' | 'coordinator' = 'citizen') {
-  // Pre-seed localStorage with authenticated user
-  localStorage.setItem(
+  // Pre-seed sessionStorage with authenticated user
+  sessionStorage.setItem(
     'resqph.auth.user',
     JSON.stringify({
       email: 'maria@example.com',
-      role: initialRole,
+      role: initialRole, teamId: 'team-alpha',
       name: 'Maria Santos',
     }),
   )
@@ -56,52 +56,16 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.queryByText(/Rescue teams deployed/i)).not.toBeInTheDocument()
   })
 
-  it('renders the redesigned citizen dashboard sections', () => {
+  it('renders the API-only citizen dashboard and distinct navigation', () => {
     renderWithProviders(<DashboardPage />, 'citizen')
-
-    // Header & Role
-    expect(screen.getByText('Logged in as')).toBeInTheDocument()
-    expect(screen.getByText('Maria Santos')).toBeInTheDocument()
-
-    // Sanitized U-Belt demonstration location
-    expect(screen.getByText(/Sanitized address, Jhocson St\., U-Belt pilot/i)).toBeInTheDocument()
-    expect(screen.getByText(/14\.6042 N · 120\.9946 E/i)).toBeInTheDocument()
-    expect(screen.getByText(/Demo Location/i)).toBeInTheDocument()
-
-    // Emergency actions
-    expect(screen.getByRole('button', { name: /REQUEST EMERGENCY RESCUE/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Direct 911 Hotline/i })).toBeInTheDocument()
-
-    // 4 Services
-    expect(screen.getByText(/Request Assistance/i)).toBeInTheDocument()
-    expect(screen.getByText(/4 Service Types/i)).toBeInTheDocument()
-    expect(screen.getByText('Flood Rescue')).toBeInTheDocument()
-    expect(screen.getByText('Evacuation')).toBeInTheDocument()
-    expect(screen.getByText('Medical Aid')).toBeInTheDocument()
-    expect(screen.getByText('Relief Goods')).toBeInTheDocument()
-
-    // Controlled responder fixtures must not present operational ETAs.
-    expect(screen.getByText(/Simulated Responders/i)).toBeInTheDocument()
-    expect(screen.getByText(/Rescue Team Alpha/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/No live ETA/i)).toHaveLength(2)
-    expect(screen.queryByText(/ETA 6 min/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/Rescue Boat 4/i)).toBeInTheDocument()
-    expect(screen.queryByText(/ETA 11 min/i)).not.toBeInTheDocument()
-
-    // Controlled-scenario notices
-    expect(screen.getByText(/Scenario Notices/i)).toBeInTheDocument()
-    expect(screen.getByText(/Controlled flood scenario active/i)).toBeInTheDocument()
-    expect(screen.getByText(/Heavy-rain demonstration condition/i)).toBeInTheDocument()
-    expect(screen.getByText(/Evacuation center at 70% capacity/i)).toBeInTheDocument()
-
-    // Portal navigation
-    expect(screen.getByRole('button', { name: 'Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Inquiries' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Hazard Map' })).toBeInTheDocument()
+    expect(screen.getByText(/Citizen workspace/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', {name: 'Request rescue'})).toBeInTheDocument()
+    expect(screen.getByRole('button', {name: 'My Requests'})).toBeInTheDocument()
+    expect(screen.queryByText('Maria Santos / RQ-0042')).not.toBeInTheDocument()
   })
 
   it('renders localized rainfall forecast widget', () => {
-    renderWithProviders(<DashboardPage />, 'citizen')
+    renderWithProviders(<CitizenView />, 'citizen')
     expect(screen.getByText(/U-Belt Pilot Area/i)).toBeInTheDocument()
     expect(screen.getByText(/Controlled rainfall scenario · demonstration data/i)).toBeInTheDocument()
     expect(screen.getByText(/Hourly Intensity/i)).toBeInTheDocument()
@@ -120,11 +84,11 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
   it('renders the controlled-scenario map without inventing a calculated route', () => {
     renderWithProviders(<CitizenView navSection="map" />, 'citizen')
 
-    // Verify OpenStreetMap HUD indicator and layer buttons
-    expect(screen.getByText(/OpenStreetMap · U-Belt controlled scenario/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'OpenStreetMap' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tactical Dark' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Satellite View' })).toBeInTheDocument()
+    // The simplified map retains layers without the removed style selector.
+    expect(screen.queryByText(/OpenStreetMap · U-Belt controlled scenario/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'OpenStreetMap' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tactical Dark' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Satellite View' })).not.toBeInTheDocument()
 
     // Verify OpenStreetMap container element
     expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
@@ -245,10 +209,9 @@ describe('Dispatcher / Coordinator Dashboard Flows', () => {
 
 
 describe('Dashboard Prototype Controls', () => {
-  it('renders current portal view and provides portal switcher', () => {
+  it('does not offer a role switch inside a workspace', () => {
     renderWithProviders(<DashboardPage />, 'citizen')
-
-    expect(screen.getByText(/Citizen Distress & Volunteer Portal/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Switch portal/i })).toBeInTheDocument()
+    expect(screen.getByText(/Citizen workspace/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', {name: /Switch portal/i})).not.toBeInTheDocument()
   })
 })

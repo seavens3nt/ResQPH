@@ -4,7 +4,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/art/Icon'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { UserRole } from '../../features/auth/types'
+import { validEmail, validPhone, validPassword } from '../../features/auth/validation'
 import './auth.css'
+import { AuthModeTabs } from './AuthLayout'
 
 type Step = 'name' | 'phone' | 'email' | 'password' | 'emergency' | 'location'
 
@@ -47,19 +49,20 @@ export function SignupPage() {
       next(); return
     }
     if (step === 'phone') {
-      if (!phone.trim()) { setError('Enter your mobile number.'); return }
+      if (!validPhone(phone)) { setError('Enter a valid Philippine mobile number: 09XXXXXXXXX or +639XXXXXXXXX.'); return }
       next(); return
     }
     if (step === 'email') {
-      if (!email.trim() || !email.includes('@')) { setError('Enter a valid email address.'); return }
+      if (!validEmail(email)) { setError('Enter a valid email address.'); return }
       next(); return
     }
     if (step === 'password') {
-      if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+      if (!validPassword(password)) { setError('Password must be at least 6 non-blank characters.'); return }
       if (password !== confirmPassword) { setError('Passwords do not match.'); return }
       next(); return
     }
     if (step === 'emergency') {
+      if ((ecName.trim() || ecPhone.trim() || ecRelationship.trim()) && (!ecName.trim() || !ecRelationship.trim() || !validPhone(ecPhone))) { setError('Complete the emergency contact name, relationship and valid mobile number, or leave all blank.'); return }
       // all optional — just proceed
       next(); return
     }
@@ -97,6 +100,7 @@ export function SignupPage() {
       <div className="auth-mobile-page">
         <div className="auth-phone-shell">
           <div className="auth-location-screen">
+            <p className="signup-step-count">Optional final step · Location access</p>
             <div className="auth-location-icon" aria-hidden="true">
               <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/>
@@ -105,7 +109,7 @@ export function SignupPage() {
             </div>
             <h2 className="auth-location-title">Help rescuers find you faster.</h2>
             <p className="auth-location-body">
-              ResQPH shares your location only when you send an SOS. It's never tracked in the background.
+              Choose whether to use your browser location for a rescue request. You can skip this and choose a map point later. No background tracking.
             </p>
             <button className="auth-btn-pill-submit" onClick={handleAllowLocation}>
               Allow Location
@@ -127,7 +131,7 @@ export function SignupPage() {
   const stepMeta: Record<Exclude<Step, 'location'>, { title: string; subtitle: string }> = {
     name:      { title: "What's your name?",         subtitle: 'This is how rescuers will identify you.' },
     phone:     { title: 'Your mobile number',         subtitle: 'Used to reach you during an emergency.' },
-    email:     { title: 'Your email address',         subtitle: 'For account recovery and alerts.' },
+    email:     { title: 'Your email address',         subtitle: 'Synthetic prototype identity only; no account recovery or alerts.' },
     password:  { title: 'Create a password',          subtitle: 'At least 6 characters.' },
     emergency: { title: 'Emergency contact',          subtitle: 'Who should we call if you need help? You can skip this.' },
   }
@@ -155,7 +159,7 @@ export function SignupPage() {
 
         {/* Form area */}
         <div className="auth-body-container">
-
+          <AuthModeTabs/>
           {/* Back + step count */}
           <div className="signup-step-nav">
             {currentNum > 1 ? (
@@ -182,12 +186,13 @@ export function SignupPage() {
             {step === 'name' && (
               <>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-first-name">First name</label>
                   <span className="auth-pill-icon"><Icon name="user" size={16} /></span>
                   <input
+                    id="signup-first-name"
                     className="auth-pill-input"
                     type="text"
                     placeholder="First name"
-                    aria-label="First name / full name"
                     autoComplete="given-name"
                     autoFocus
                     value={firstName}
@@ -195,8 +200,10 @@ export function SignupPage() {
                   />
                 </div>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-last-name">Last name</label>
                   <span className="auth-pill-icon"><Icon name="user" size={16} /></span>
                   <input
+                    id="signup-last-name"
                     className="auth-pill-input"
                     type="text"
                     placeholder="Last name"
@@ -211,8 +218,10 @@ export function SignupPage() {
 
             {step === 'phone' && (
               <div className="auth-pill-field">
+                <label className="auth-field-label" htmlFor="signup-phone">Mobile number</label>
                 <span className="auth-pill-icon"><Icon name="phone" size={16} /></span>
                 <input
+                  id="signup-phone"
                   className="auth-pill-input"
                   type="tel"
                   placeholder="09XX XXX XXXX"
@@ -227,12 +236,14 @@ export function SignupPage() {
 
             {step === 'email' && (
               <div className="auth-pill-field">
+                <label className="auth-field-label" htmlFor="signup-email">Email</label>
                 <span className="auth-pill-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                   </svg>
                 </span>
                 <input
+                  id="signup-email"
                   className="auth-pill-input"
                   type="email"
                   placeholder="Email address"
@@ -248,12 +259,14 @@ export function SignupPage() {
             {step === 'password' && (
               <>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-password">Password</label>
                   <span className="auth-pill-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                   </span>
                   <input
+                    id="signup-password"
                     className="auth-pill-input"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Password"
@@ -263,17 +276,19 @@ export function SignupPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                   />
-                  <button type="button" className="auth-pill-toggle" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Hide' : 'Show'}>
+                  <button type="button" className="auth-pill-toggle" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                     <Icon name={showPassword ? 'eye-off' : 'eye'} size={16} />
                   </button>
                 </div>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-confirm-password">Confirm password</label>
                   <span className="auth-pill-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                   </span>
                   <input
+                    id="signup-confirm-password"
                     className="auth-pill-input"
                     type={showConfirm ? 'text' : 'password'}
                     placeholder="Confirm password"
@@ -282,7 +297,7 @@ export function SignupPage() {
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                   />
-                  <button type="button" className="auth-pill-toggle" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? 'Hide' : 'Show'}>
+                  <button type="button" className="auth-pill-toggle" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? 'Hide confirmed password' : 'Show confirmed password'}>
                     <Icon name={showConfirm ? 'eye-off' : 'eye'} size={16} />
                   </button>
                 </div>
@@ -292,8 +307,10 @@ export function SignupPage() {
             {step === 'emergency' && (
               <>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-contact-name">Emergency contact name</label>
                   <span className="auth-pill-icon"><Icon name="user" size={16} /></span>
                   <input
+                    id="signup-contact-name"
                     className="auth-pill-input"
                     type="text"
                     placeholder="Contact name"
@@ -304,6 +321,7 @@ export function SignupPage() {
                   />
                 </div>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-relationship">Relationship</label>
                   <span className="auth-pill-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -311,6 +329,7 @@ export function SignupPage() {
                     </svg>
                   </span>
                   <input
+                    id="signup-relationship"
                     className="auth-pill-input"
                     type="text"
                     placeholder="Relationship (e.g. Mother)"
@@ -320,8 +339,10 @@ export function SignupPage() {
                   />
                 </div>
                 <div className="auth-pill-field">
+                  <label className="auth-field-label" htmlFor="signup-contact-phone">Emergency contact number</label>
                   <span className="auth-pill-icon"><Icon name="phone" size={16} /></span>
                   <input
+                    id="signup-contact-phone"
                     className="auth-pill-input"
                     type="tel"
                     placeholder="Contact mobile number"

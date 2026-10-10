@@ -18,11 +18,13 @@ explainable route penalties and limited operation during connectivity loss.
 These are project motivations, not findings from an unprovided user study.
 Add a primary citation before presenting flood prevalence or outage statistics.
 
-## Slide 3 — Four roles and final flow
+## Slide 3 — Three roles and final flow
 
-Citizen requests/tracking; Volunteer observations; Coordinator review/assignment;
-Rescuer mission/status. The approved independent-tab flow is still a repair
-requirement (#82–#84), not verified functionality of this baseline.
+Citizen requests/tracking; Coordinator/Dispatcher review/assignment;
+Rescuer mission/status. Volunteer reporting, rescuer hotline and alternative-route
+UI are retired; #84 is closed as not planned. The local independent-tab/modal
+candidate (#82/#83/#78) still needs delivery and full acceptance, not merely
+screenshots or fixture checks. Use Inter and current shared visual rules.
 Use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) to distinguish API demonstration from browser blockers.
 
 ## Slide 4 — Stack and architecture
@@ -80,8 +82,9 @@ Reference: [offline contract](../offline/OFFLINE_CONTRACT.md).
 Historical fixture-based Phase 4 evidence is useful but is not fresh-mission
 acceptance. PR #79's real browser journey exposed null-summary cache rejection,
 accepted status falsely shown pending, team/email mismatch, mixed coordinator
-records and missing mission route controls. Modal focus/navigation and report
-persistence also require work. Show this accurately; do not use nonexistent
+records and missing mission route controls. Modal focus/navigation require
+delivered-candidate acceptance; report persistence is retired, not remaining work.
+Show this accurately; do not use nonexistent
 screenshots or assert a completed rehearsal.
 Reference: [current frontend evidence](../testing/TEAM-PHASE-05-FRONTEND.md).
 

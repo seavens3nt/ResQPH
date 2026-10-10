@@ -14,7 +14,6 @@ import { MissionProvider } from '../features/missions/MissionContext'
 import { RequestForm } from '../pages/dashboard/views/citizen/RequestForm'
 import { CoordinatorAssignModal } from '../pages/dashboard/views/coordinator/CoordinatorAssignModal'
 import { RescuerMissionCard } from '../pages/dashboard/views/rescuer/RescuerMissionCard'
-import { VolunteerView } from '../pages/dashboard/views/VolunteerView'
 
 const previousAdapter = apiClient.defaults.adapter
 
@@ -22,8 +21,8 @@ function response(config: Parameters<AxiosAdapter>[0], status: number, data: unk
   return { config, status, data, statusText, headers: {} } as AxiosResponse
 }
 
-function renderForRole(ui: React.ReactElement, role: 'citizen' | 'volunteer' | 'coordinator' | 'rescuer') {
-  localStorage.setItem('resqph.auth.user', JSON.stringify({ email: `${role}-demo`, role, name: 'Demo Actor' }))
+function renderForRole(ui: React.ReactElement, role: 'citizen' | 'coordinator' | 'rescuer') {
+  sessionStorage.setItem('resqph.auth.user', JSON.stringify({ email: `${role}-demo`, role, teamId: 'team-alpha', name: 'Demo Actor' }))
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -32,15 +31,10 @@ function renderForRole(ui: React.ReactElement, role: 'citizen' | 'volunteer' | '
   )
 }
 
-beforeEach(() => { localStorage.clear() })
+beforeEach(() => { sessionStorage.clear() })
 afterEach(() => { apiClient.defaults.adapter = previousAdapter })
 
 describe('Issue 71 all-role frontend contract regression', () => {
-  it('volunteer view opens its SOS queue with the no-active-items state', () => {
-    renderForRole(<VolunteerView navSection="inquiries" />, 'volunteer')
-    expect(screen.getByText('Active Citizen SOS Signals')).toBeInTheDocument()
-  })
-
   it('citizen submits through the API client, exposes pending state, and accepts the server record', async () => {
     let resolveRequest!: (value: ReturnType<typeof response>) => void
     let requestConfig!: Parameters<AxiosAdapter>[0]
@@ -118,12 +112,17 @@ describe('Issue 71 all-role frontend contract regression', () => {
   it.each([
     ['blank address', /Location .* street address/i, '   '],
     ['zero people', /People needing assistance/i, '0'],
-    ['outside boundary', /Longitude/i, '121.5'],
+    ['outside boundary', /Location .* street address/i, 'Synthetic outside-boundary address'],
   ])('citizen rejects %s locally without sending a request', async (_case, label, value) => {
     const transport = vi.fn()
     const onSuccess = vi.fn()
     apiClient.defaults.adapter = transport
     renderForRole(<RequestForm onSuccess={onSuccess} onCancel={vi.fn()} />, 'citizen')
+    if (_case==='outside boundary') {
+      vi.stubGlobal('navigator',{geolocation:{getCurrentPosition:(success:(position:unknown)=>void)=>success({coords:{longitude:121.5,latitude:14.6}})}})
+      fireEvent.click(screen.getByRole('radio',{name:/Use current GPS/i}))
+      vi.unstubAllGlobals()
+    }
     fireEvent.change(screen.getByLabelText(label), { target: { value } })
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
     expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
@@ -162,7 +161,7 @@ describe('Issue 71 all-role frontend contract regression', () => {
       requestConfig = config
       return response(config, 200, completed, 'OK')
     })
-    localStorage.setItem('resqph.auth.user', JSON.stringify({ email: 'rescuer-demo', role: 'rescuer', name: 'Demo Rescuer' }))
+    sessionStorage.setItem('resqph.auth.user', JSON.stringify({ email: 'rescuer-demo', role: 'rescuer', teamId: 'team-alpha', name: 'Demo Rescuer' }))
     const accepted = await updateMissionStatus(completed.id, {
       event_id: 'event-issue71-synthetic', new_status: 'completed', expected_mission_version: 3,
       client_recorded_at: '2026-10-05T00:02:00Z', source: 'online', note: 'Synthetic completion.',

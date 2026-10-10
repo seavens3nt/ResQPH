@@ -1,16 +1,18 @@
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.api.dependencies.demo_role import get_demo_actor
 from app.db.mongodb import get_database
 from app.repositories.mission_status_events import MissionStatusEventRepository
 from app.repositories.missions import MissionRepository
 from app.schemas.missions import (
     DemoActor,
     ErrorEnvelope,
+    MissionCancel,
     MissionResponse,
     MissionStatusEventCreate,
     parse_status_filter,
@@ -18,15 +20,6 @@ from app.schemas.missions import (
 from app.services.missions import MissionService, MissionServiceError
 
 router = APIRouter(prefix="/missions", tags=["missions"])
-_ALLOWED_DEMO_ROLES = {"citizen", "volunteer", "rescuer", "coordinator"}
-
-
-def get_demo_actor(
-    x_demo_user_id: Annotated[str | None, Header(alias="X-Demo-User-Id")] = None,
-    x_demo_role: Annotated[str | None, Header(alias="X-Demo-Role")] = None,
-) -> DemoActor:
-    role = x_demo_role if x_demo_role in _ALLOWED_DEMO_ROLES else "citizen"
-    return DemoActor(user_id=(x_demo_user_id or "").strip(), role=role)  # type: ignore[arg-type]
 
 
 def get_mission_service() -> MissionService:
@@ -35,6 +28,21 @@ def get_mission_service() -> MissionService:
         MissionRepository(database),
         MissionStatusEventRepository(database),
     )
+
+
+@router.post("/{mission_id}/cancel", response_model=MissionResponse)
+async def cancel_mission(
+    mission_id: str,
+    payload: MissionCancel,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[MissionService, Depends(get_mission_service)],
+) -> MissionResponse | JSONResponse:
+    try:
+        return await service.cancel_mission(
+            mission_id, payload.expected_mission_version, payload.reason, actor
+        )
+    except MissionServiceError as exc:
+        return error_response(exc)
 
 
 @router.get("", response_model=list[MissionResponse])
@@ -85,7 +93,9 @@ async def create_status_event(
         return error_response(exc)
 
 
-def error_response(exc: MissionServiceError, request_id: str | None = None) -> JSONResponse:
+def error_response(
+    exc: MissionServiceError, request_id: str | None = None
+) -> JSONResponse:
     envelope = ErrorEnvelope(
         error={
             "code": exc.code,
@@ -94,10 +104,14 @@ def error_response(exc: MissionServiceError, request_id: str | None = None) -> J
             "request_id": request_id or f"trace-{uuid4().hex}",
         }
     )
-    return JSONResponse(status_code=exc.status_code, content=envelope.model_dump(mode="json"))
+    return JSONResponse(
+        status_code=exc.status_code, content=envelope.model_dump(mode="json")
+    )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     details = [
         {
             "field": ".".join(str(part) for part in error["loc"]),
@@ -106,6 +120,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         for error in exc.errors()
     ]
     return error_response(
-        MissionServiceError(422, "validation_error", "Request validation failed.", details),
+        MissionServiceError(
+            422, "validation_error", "Request validation failed.", details
+        ),
         request_id=request.headers.get("X-Request-Id"),
     )

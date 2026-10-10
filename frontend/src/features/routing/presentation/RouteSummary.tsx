@@ -1,4 +1,6 @@
+import { LoadingState } from '../../../components/ui/LoadingState'
 import { useId } from 'react'
+import { formatDuration } from './formatDuration'
 import type { NoRouteResult, RouteFoundResult, RouteResult } from '../types'
 import { NoRouteState } from './NoRouteState'
 import { RouteCostBreakdown } from './RouteCostBreakdown'
@@ -24,15 +26,6 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat('en', { maximumFractionDigits: 2 }).format(value)
 }
 
-function formatDuration(seconds: number) {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-
-  if (minutes === 0) return `${formatNumber(seconds)} sec`
-  if (remainingSeconds === 0) return `${formatNumber(minutes)} min`
-  return `${formatNumber(minutes)} min ${formatNumber(remainingSeconds)} sec`
-}
-
 function RouteFacts({ result }: { result: RouteFoundResult }) {
   return (
     <>
@@ -56,7 +49,7 @@ function RouteFacts({ result }: { result: RouteFoundResult }) {
           <time dateTime={result.scenario_timestamp}>{result.scenario_timestamp}</time>
         </p>
       )}
-      <RouteCostBreakdown breakdown={result.cost_breakdown} />
+      <details><summary>Technical route costs and edges</summary><RouteCostBreakdown breakdown={result.cost_breakdown} /><p>{result.edge_ids.join(', ')}</p></details>
       <RouteExplanation explanation={result.explanation} />
       <RouteWarnings
         warnings={result.warnings}
@@ -122,11 +115,8 @@ export function RouteSummary(props: RouteSummaryProps) {
     return (
       <section
         className="route-summary route-summary--loading"
-        role="status"
-        aria-live="polite"
-        aria-busy="true"
       >
-        <h2>Loading route result</h2>
+        <LoadingState layout="detail" label="Loading route result"/>
         <p>Waiting for the controlled-scenario route result.</p>
       </section>
     )

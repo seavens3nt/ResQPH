@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { actorId, readSession } from '../features/auth/session'
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1',
@@ -9,11 +10,13 @@ export const apiClient = axios.create({
 // These are a non-production control and must never be used as real authentication.
 apiClient.interceptors.request.use((config) => {
   try {
-    const raw = localStorage.getItem('resqph.auth.user')
-    if (raw) {
-      const user = JSON.parse(raw) as { role?: string; email?: string }
-      if (user.role) config.headers['X-Demo-Role'] = user.role
-      if (user.email) config.headers['X-Demo-User-Id'] = user.email
+    const user = readSession()
+    if (user) {
+      config.headers['X-Demo-Role'] = user.role
+      config.headers['X-Demo-User-Id'] = actorId(user)
+    } else {
+      delete config.headers['X-Demo-Role']
+      delete config.headers['X-Demo-User-Id']
     }
   } catch {
     // localStorage unavailable or malformed — proceed without headers

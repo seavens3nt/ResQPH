@@ -187,7 +187,7 @@ def _validate_utc_timestamp(value: str) -> str:
     if not isinstance(value, str) or not value.endswith("Z"):
         raise ValueError("scenario_timestamp must be an ISO 8601 UTC timestamp ending in Z")
     try:
-        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+        parsed = datetime.fromisoformat(value)
     except ValueError as exc:
         raise ValueError(
             "scenario_timestamp must be an ISO 8601 UTC timestamp ending in Z"

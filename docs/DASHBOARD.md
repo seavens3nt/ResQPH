@@ -1,6 +1,6 @@
 # ResQPH project dashboard
 
-**Last updated:** 2026-10-05 (Asia/Manila)
+**Last updated:** 2026-10-09 (Asia/Manila)
 **Decision owner:** Ranee
 
 | Phase | Status | Evidence |
@@ -9,8 +9,10 @@
 | Team 1 | Completed and verified | Bounded controlled U-Belt mapping |
 | Team 2 | Completed and verified | Deterministic route API/UI and no-route |
 | Team 3 | Completed and verified with conditions | External exploratory ML; runtime disabled |
-| Team 4 | Completed and verified | [Offline gate](phases/TEAM-PHASE-04-GATE.md) |
-| Team 5 | Ready to start; active | [Work packages](phases/TEAM-PHASE-05.md) |
+| Team 4 | Historical gate; fresh-mission regression must be reverified | [Offline gate](phases/TEAM-PHASE-04-GATE.md), qualification in [status](STATUS.md) |
+| Team 5 | In progress; revised local candidate not delivered | [Work packages](phases/TEAM-PHASE-05.md) |
+
+Current scope: three roles; Volunteer/hazard reporting, rescuer hotline and alternative-route UI retired. #76/#77/#78/#82/#83/#84 are closed as not planned/superseded. #73 is completed through PR #80. Only #70 (candidate integration/final gate), #71 (remaining browser/offline acceptance) and #72 (remaining presentation/rehearsal) stay active. See [current status](STATUS.md). Do not interpret issue cleanup as a merge or accepted release.
 
 ## Start here
 

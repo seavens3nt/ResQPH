@@ -39,6 +39,8 @@ The initial backend is a modular application rather than several independently d
 
 ## Frontend boundary
 
+Current local presentation lives in `frontend/src/features/workspace/`: shared shell/sidebar/header/cards, role-specific workspaces and API-backed record views. Citizen rescue reuses the existing request form/review/API inside a modal; tracking uses a shared status popup while Map retains an inline inspector. Inter and shared styling/desktop width rules are authoritative in [local visual rules](ui/LOCAL_VISUAL_RULES.md). Three roles remain; volunteer/hazard-report routes are retired without deleting stored history. Backend identifiers remain intact even when hidden in citizen UI. Local implementation still requires delivery and acceptance; see [status](STATUS.md).
+
 The frontend owns citizen, rescuer, and dispatcher workflows; map interaction; route and risk presentation; stale-data indicators; and limited device-local offline state. It communicates with application data only through the versioned backend API.
 
 ## Backend boundary

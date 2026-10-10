@@ -19,6 +19,7 @@ from app.api.routes.missions import (
     router,
     validation_exception_handler,
 )
+from app.schemas.common import ServiceError, service_error_handler
 from app.services.missions import MissionService
 
 
@@ -31,6 +32,7 @@ def harness():
     application = FastAPI()
     application.include_router(router, prefix="/api/v1")
     application.add_exception_handler(RequestValidationError, validation_exception_handler)
+    application.add_exception_handler(ServiceError, service_error_handler)
     application.dependency_overrides[get_mission_service] = lambda: service
     with TestClient(application) as client:
         yield client, fixture, missions, events

@@ -302,7 +302,7 @@ export function CitizenView({
                     <span aria-hidden="true">✓</span>
                     <div>
                       <strong>Request submitted.</strong> Your request ID is{' '}
-                      <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>{apiRequestId}</code>.
+                      <code style={{ fontFamily: 'var(--font-body)', fontWeight: 700 }}>{apiRequestId}</code>.
                       The current status below comes from the API. No response time is guaranteed.
                     </div>
                   </div>

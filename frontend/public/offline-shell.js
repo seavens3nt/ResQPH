@@ -1,5 +1,6 @@
-/* Production UI shell only. Never cache API responses, map tiles, or private data. */
-const CACHE = 'resqph-ui-shell-v1'
+/* Production UI shell only. Public build files must remain available during an origin outage.
+ * Never cache API responses, map tiles, or private data. */
+const CACHE = 'resqph-ui-shell-v2'
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const response = await fetch('/index.html', { cache: 'reload' })
@@ -22,14 +23,42 @@ self.addEventListener('fetch', (event) => {
   const navigation = event.request.mode === 'navigate' && !url.pathname.startsWith('/api/')
   const asset = /^\/assets\/[^/]+\.(js|css)$/.test(url.pathname)
   if (!navigation && !asset) return
+  const readCached = async () => {
+    try {
+      const cache = await caches.open(CACHE)
+      // Vite can add Vary: Origin. Precache requests and module requests carry
+      // different Origin headers, but these public, content-hashed files are
+      // identical. Never apply this relaxation to API or private resources.
+      return await cache.match(navigation ? '/index.html' : event.request, { ignoreVary: true })
+    } catch {
+      // Browser storage can be denied or unavailable independently of the network.
+      return undefined
+    }
+  }
   event.respondWith((async () => {
-    const cache = await caches.open(CACHE)
+    // Build filenames are content-hashed. A cached copy is already the exact
+    // requested version and must not wait for an unreachable origin to time out.
+    if (asset) {
+      const cached = await readCached()
+      if (cached) return cached
+    }
     try {
       const response = await fetch(event.request)
-      if (response.ok && asset) await cache.put(event.request, response.clone())
+      if (response.ok && asset) {
+        const copy = response.clone()
+        event.waitUntil((async () => {
+          try {
+            const cache = await caches.open(CACHE)
+            await cache.put(event.request, copy)
+          } catch {
+            // Caching is best effort: never fail a successful application response.
+          }
+        })())
+      }
+      if (!response.ok) return (await readCached()) || response
       return response
     } catch (error) {
-      const cached = await cache.match(navigation ? '/index.html' : event.request)
+      const cached = await readCached()
       if (cached) return cached
       throw error
     }

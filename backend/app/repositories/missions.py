@@ -88,12 +88,12 @@ class MissionRepository:
             },
             session=session,
         )
-        availability = {"en-route": "en-route", "arrived": "on-scene", "completed": "available"}
+        availability = {"en-route": "en-route", "arrived": "on-scene", "completed": "available", "cancelled": "available"}
         team_update: dict[str, Any] = {
             "$set": {"availability": availability[new_status], "updated_at": recorded_at},
             "$inc": {"version": 1},
         }
-        if new_status == "completed":
+        if new_status in {"completed", "cancelled"}:
             team_update["$set"].update({"assigned_request_id": None, "assigned_mission_id": None})
         team_result = await self._teams.update_one(
             {
@@ -107,3 +107,13 @@ class MissionRepository:
         if request_result.modified_count != 1 or team_result.modified_count != 1:
             raise MissionLifecycleConflictError("Linked mission lifecycle records no longer match.")
         return Mission.model_validate(document)
+
+    async def record_cancellation_reason(
+        self, request_id: str, reason: str, recorded_at: datetime,
+        session: AsyncClientSession,
+    ) -> None:
+        await self._requests.update_one(
+            {"id": request_id, "status": "cancelled"},
+            {"$set": {"cancellation_reason": reason, "cancelled_at": recorded_at}},
+            session=session,
+        )

@@ -1,4 +1,5 @@
 import { Icon } from '../../components/art/Icon'
+import { formatDuration } from './presentation/formatDuration'
 import type { RouteState } from './types'
 
 export function RouteOverlay({ state }: { state: RouteState }) {
@@ -56,20 +57,17 @@ export function RouteOverlay({ state }: { state: RouteState }) {
         <Icon name="route" size={17} />
         <strong>Controlled-scenario route displayed</strong>
       </div>
-      <p className="route-state-meta">
-        Route {result.route_id} · {result.edge_ids.length} edges · approximately {Math.ceil(result.estimated_time_s / 60)} minutes
-      </p>
-      <p className="route-state-meta">Scenario time: {result.scenario_timestamp}</p>
+      <p className="route-state-meta">Estimated {formatDuration(result.estimated_time_s)} · {result.edge_ids.length} eligible road edges</p>
       {result.fallback_used && (
         <p className="route-fallback-notice" role="status">
           Rule-based fallback is active; runtime ML was not applied.
         </p>
       )}
-      {result.warnings.length > 0 && (
+      <details className="route-technical"><summary>Route notices and provenance</summary><p className="route-state-meta">Route {result.route_id}</p><p className="route-state-meta">Scenario time: {result.scenario_timestamp}</p>{result.warnings.length > 0 && (
         <ul className="route-warning-list">
           {result.warnings.map((warning) => <li key={warning}>{warning}</li>)}
         </ul>
-      )}
+      )}</details>
     </section>
   )
 }

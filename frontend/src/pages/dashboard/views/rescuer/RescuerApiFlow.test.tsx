@@ -37,9 +37,9 @@ const backendMission: MissionDetail = {
 
 describe('Rescuer API mission flow', () => {
   beforeEach(() => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       'resqph.auth.user',
-      JSON.stringify({ email: 'team-alpha', role: 'rescuer', name: 'Team Alpha' }),
+      JSON.stringify({ email: 'team-alpha', role: 'rescuer', teamId: 'team-alpha', name: 'Team Alpha' }),
     )
     vi.spyOn(MissionContext, 'useMissions').mockReturnValue({
       activeRescuerMission: null,
