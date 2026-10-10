@@ -21,6 +21,7 @@ import './RescuerMissionCard.css'
 import { useAuth } from '../../../../features/auth/AuthContext'
 import { InteractiveFloodMap } from '../../../../features/map/InteractiveFloodMap'
 import { retryAfterDelay } from '../../../../api/retryAfter'
+import { isMissionTrackingActive } from '../../../../features/missions/useMissionJourney'
 
 interface RescuerMissionCardProps {
   mission: MissionDetail
@@ -67,7 +68,7 @@ export function RescuerMissionCard({
       return cached && Date.parse(received.timestamp) < Date.parse(cached.timestamp) ? cached : received
     },
     enabled: Boolean(user && !isCached && !['completed', 'cancelled'].includes(mission.status)),
-    refetchInterval: query => !pageVisible ? false : query.state.error
+    refetchInterval: query => !pageVisible || !isMissionTrackingActive(mission.status) ? false : query.state.error
       ? retryAfterDelay(query.state.error, Math.min(30_000, 3_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
       : 3_000,
     refetchIntervalInBackground: false,
@@ -77,12 +78,17 @@ export function RescuerMissionCard({
     mutationFn: (action: 'start' | 'pause' | 'resume' | 'reset') => controlMissionTracking(mission.id, action),
     onSuccess: () => void tracking.refetch(),
   })
+  const refreshTracking = tracking.refetch
 
   useEffect(() => {
     const onVisibility = () => setPageVisible(document.visibilityState === 'visible')
     document.addEventListener('visibilitychange', onVisibility)
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
+
+  useEffect(() => {
+    if (mission.status === 'arrived' && !isCached) void refreshTracking()
+  }, [mission.status, isCached, refreshTracking])
 
   return (
     <article className="rescuer-mission-card" aria-labelledby={titleId}>

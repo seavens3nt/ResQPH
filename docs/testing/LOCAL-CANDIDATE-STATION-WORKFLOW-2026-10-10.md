@@ -94,7 +94,9 @@ the same event ID, mission, actor, transition, source, and resulting version.
 Pending intent makes the status badge stale until that evidence is present.
 
 Arrival freezes shared tracking at the route endpoint and rejects further
-tracking controls. Completion remains an explicit separate status transition.
+tracking controls. The citizen and rescuer tracking pollers make one final
+arrival refresh, then stop tracking polls while the mission query continues to
+observe explicit completion. Completion remains a separate status transition.
 Citizen cancellation remains pending-only; assigned and terminal requests are
 rejected with a refreshable conflict. The disposable Mongo acceptance exercises
 owner/foreign cancellation, repeat cancellation, and a cancellation versus
@@ -136,7 +138,7 @@ so their session cookies cannot overlap.
 Automated verification on 2026-10-11:
 
 - `cd frontend && npm run lint && npm test -- --run && npm run build`: lint
-  exited 0, 362 tests passed, and production build succeeded. Existing lint
+  exited 0, 363 tests passed, and production build succeeded. Existing lint
   warnings, Node localStorage warnings during tests, and the large-bundle build
   warning remain.
 - `cd backend && .venv/bin/python -m pytest -q`: 172 passed, 24 skipped.

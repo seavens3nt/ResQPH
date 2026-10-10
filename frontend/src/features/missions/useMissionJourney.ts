@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getMission, getMissionTracking } from '../../api/missions'
 import type { MissionDetail, MissionTracking } from '../../api/missions'
@@ -5,6 +6,8 @@ import { useAuth } from '../auth/AuthContext'
 import { retryAfterDelay } from '../../api/retryAfter'
 
 const terminal = (status: string | undefined) => status === 'completed' || status === 'cancelled'
+export const isMissionTrackingActive = (status: string | undefined) =>
+  status !== 'arrived' && status !== 'completed' && status !== 'cancelled'
 
 export function useMissionJourney(missionId: string | null | undefined) {
   const { user } = useAuth()
@@ -33,13 +36,17 @@ export function useMissionJourney(missionId: string | null | undefined) {
       return received
     },
     enabled: Boolean(user && missionId && mission.data && !terminal(mission.data.status)),
-    refetchInterval: query => query.state.error
+    refetchInterval: query => !isMissionTrackingActive(mission.data?.status) ? false : query.state.error
       ? retryAfterDelay(query.state.error, Math.min(30_000, 3_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
       : 3_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     retry: false,
   })
+  const refreshTracking = tracking.refetch
+  useEffect(() => {
+    if (mission.data?.status === 'arrived') void refreshTracking()
+  }, [mission.data?.status, refreshTracking])
   return { mission, tracking }
 }
 
