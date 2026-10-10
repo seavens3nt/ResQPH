@@ -8,6 +8,7 @@ import { RequireAuth } from './features/auth/RequireAuth'
 import './features/workspace/sharedVisualSystem.css'
 import './components/ui/Select.css'
 import './features/workspace/desktopDensity.css'
+import './features/workspace/dispatcherOverview.css'
 
 export default function App() {
   return (

@@ -2,10 +2,12 @@ import { WorkspaceBadge, WorkspaceEmpty } from './WorkspaceUI'
 import type { RescueRequestRecord } from '../requests/types'
 
 /** Location-first overview; the Requests workspace owns the full table and inspector. */
-export function RequestQueuePreview({ requests, onSelect, onViewAll }: {
+export function RequestQueuePreview({ requests, onSelect, onViewAll, previewLimit = 5, showAllLink = true }: {
   requests: RescueRequestRecord[]
   onSelect: (id: string) => void
   onViewAll: () => void
+  previewLimit?: number
+  showAllLink?: boolean
 }) {
   const pending = requests.filter(request => request.status === 'pending')
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at))
@@ -14,7 +16,7 @@ export function RequestQueuePreview({ requests, onSelect, onViewAll }: {
   </WorkspaceEmpty>
   return <>
     <ul className="workspace-queue-preview" aria-label="Pending request overview">
-      {pending.slice(0, 5).map(request => <li key={request.id}>
+      {pending.slice(0, previewLimit).map(request => <li key={request.id}>
         <div><strong>{request.location.address}</strong>
           <p>{request.headcount} {request.headcount === 1 ? 'person' : 'people'} needing assistance</p>
           <time dateTime={request.created_at}>Received {new Date(request.created_at).toLocaleString()}</time>
@@ -24,6 +26,6 @@ export function RequestQueuePreview({ requests, onSelect, onViewAll }: {
         </div>
       </li>)}
     </ul>
-    <button className="workspace-text-action" onClick={onViewAll}>View all {pending.length} pending requests</button>
+    {showAllLink && <button className="workspace-text-action" onClick={onViewAll}>View all {pending.length} pending requests</button>}
   </>
 }
