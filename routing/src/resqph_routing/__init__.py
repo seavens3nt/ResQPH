@@ -9,6 +9,7 @@ from resqph_routing.astar import (
     RouteResult,
     calculate_path_cost,
     find_route,
+    find_shortest_distance_route,
 )
 from resqph_routing.costs import (
     EdgeCostBreakdown,
@@ -39,5 +40,6 @@ __all__ = [
     "compute_edge_cost",
     "explain_route",
     "find_route",
+    "find_shortest_distance_route",
     "format_explanation",
 ]

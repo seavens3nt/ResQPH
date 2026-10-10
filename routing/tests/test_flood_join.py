@@ -6,14 +6,13 @@ from pathlib import Path
 
 import geopandas as gpd
 import pytest
-from shapely.geometry import LineString
-
 from resqph_routing import config
 from resqph_routing.flood_join import (
     _validate_record,
     build_sample_scenario,
     join_scenario_to_edges,
 )
+from shapely.geometry import LineString
 
 
 # ---------------------------------------------------------------------------

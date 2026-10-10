@@ -31,6 +31,15 @@ function nameFromEmail(email: string): string {
     .join(' ') || 'Responder'
 }
 
+function demoActorIdFor(email: string): string {
+  const normalized = email.trim().toLowerCase()
+  const handle = normalized.split('@')[0] ?? normalized
+  if (handle.includes('alpha')) return 'team-alpha'
+  if (handle.includes('bravo')) return 'team-bravo'
+  if (handle.includes('charlie')) return 'team-charlie'
+  return normalized
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(readSession)
   const queryClient = useContext(QueryClientContext)
@@ -42,7 +51,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   const login = useCallback<AuthContextValue['login']>(({ email, role, name, teamId }) => {
-    save({ email: email.trim().toLowerCase(), role, teamId, name: name?.trim() || nameFromEmail(email) })
+    const normalizedEmail = email.trim().toLowerCase()
+    const mappedActorId = demoActorIdFor(normalizedEmail)
+    const resolvedTeamId = role === 'rescuer' ? teamId ?? mappedActorId : undefined
+    save({
+      email: normalizedEmail,
+      role,
+      teamId: resolvedTeamId,
+      demoActorId: resolvedTeamId ?? normalizedEmail,
+      name: name?.trim() || nameFromEmail(email),
+    })
   }, [save])
 
   const signup = useCallback<AuthContextValue['signup']>(({
@@ -59,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: name.trim() || nameFromEmail(email),
       email: email.trim().toLowerCase(),
       role,
+      demoActorId: role === 'rescuer' ? demoActorIdFor(email) : email.trim().toLowerCase(),
+      teamId: role === 'rescuer' ? demoActorIdFor(email) : undefined,
       phone: phone?.trim() || undefined,
       avatarUrl: avatarUrl || undefined,
       emergencyContact: emergencyContact ?? undefined,
@@ -74,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...input,
             name: input.name.trim() || user.name,
             email: user.email,
+            demoActorId: user.role === 'rescuer' ? user.teamId ?? demoActorIdFor(user.email) : user.email,
           }
         : user,
     )

@@ -1,0 +1,56 @@
+{
+  "fixture_notice": "User-supplied simulated station coordinates for academic demonstration only; not independently surveyed or official rescue participation.",
+  "coordinate_order": "longitude_latitude",
+  "stations": [
+    {
+      "station_id": "sampaloc-fire-station",
+      "team_id": "team-sampaloc-fire-station",
+      "name": "Sampaloc Fire Station",
+      "address": "A.H. Lacson Ave. cor. J.F. Fajardo St.",
+      "unit_type": "Rubber Boat",
+      "member_count": 4,
+      "has_medical_unit": true,
+      "point": { "type": "Point", "coordinates": [120.9931, 14.608] }
+    },
+    {
+      "station_id": "central-sampaloc-algeciras",
+      "team_id": "team-central-sampaloc-algeciras",
+      "name": "Central Sampaloc Fire and Rescue Volunteer Brigade",
+      "address": "Algeciras St.",
+      "unit_type": "High-Clearance Truck",
+      "member_count": 3,
+      "has_medical_unit": false,
+      "point": { "type": "Point", "coordinates": [120.9909, 14.6181] }
+    },
+    {
+      "station_id": "central-sampaloc-lacson-hq",
+      "team_id": "team-central-sampaloc-lacson-hq",
+      "name": "Central Sampaloc Fire and Rescue Brigade HQ",
+      "address": "156 A.H. Lacson Ave.",
+      "unit_type": "Rubber Boat",
+      "member_count": 4,
+      "has_medical_unit": true,
+      "point": { "type": "Point", "coordinates": [120.9918, 14.6067] }
+    },
+    {
+      "station_id": "iverson-fire-rescue",
+      "team_id": "team-iverson-fire-rescue",
+      "name": "Iverson Fire and Rescue Volunteer",
+      "address": "622 Sobriedad St.",
+      "unit_type": "Rescue Van",
+      "member_count": 3,
+      "has_medical_unit": false,
+      "point": { "type": "Point", "coordinates": [120.9972, 14.6071] }
+    },
+    {
+      "station_id": "david-fire-rescue-hq",
+      "team_id": "team-david-fire-rescue-hq",
+      "name": "David Fire and Rescue Volunteer Inc. HQ",
+      "address": "519 Vicente Cruz St.",
+      "unit_type": "Rubber Boat",
+      "member_count": 4,
+      "has_medical_unit": true,
+      "point": { "type": "Point", "coordinates": [120.9986, 14.6088] }
+    }
+  ]
+}

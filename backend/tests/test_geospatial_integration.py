@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from app.integrations.geospatial import (
     AUTHORITATIVE_CONTRACT_REVISION,
     BASELINE_CONTRACT_REVISION,

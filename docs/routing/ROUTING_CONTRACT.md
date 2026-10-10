@@ -65,9 +65,14 @@ The authoritative verification input is [`../../data/samples/routing-known-graph
   "destination": { "type": "Point", "coordinates": [120.9946, 14.6042] },
   "scenario_id": "scenario-controlled-001",
   "algorithm": "astar",
-  "include_ml_penalty": true
+  "include_ml_penalty": true,
+  "selection_mode": "cost"
 }
 ```
+
+`selection_mode` defaults to `cost`, preserving the flood-aware route endpoint behavior. `distance` is used by simulated team recommendation when “closest” means shortest valid road distance; impassable/restricted eligibility is still applied before search, but flood-risk penalties are not treated as distance or ETA seconds.
+
+Route evaluation performs bounded point-to-road snapping against eligible controlled-road coverage. The default local snap limit is `ROUTE_SNAP_MAX_DISTANCE_M=900`. Responses may include original route geometry plus `snapped_origin` and `snapped_destination` metadata. Points beyond the snap limit return `no-route` rather than a fabricated straight line.
 
 ## Successful result
 
