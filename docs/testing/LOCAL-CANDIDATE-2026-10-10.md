@@ -22,6 +22,14 @@ Branch: `feature/local-desktop-role-workspaces`. This is not final acceptance or
 
 ## Outstanding release gates
 
+### Continuation evidence
+
+- GitHub CI passed all three jobs (frontend, backend, ML evidence) for commit `550eb8b`, run `38048534500`.
+- A separate production build on port 5193 and API on 8034 use a new native MongoDB replica set on 27034, database `resqph_release_browser_20261010_1930`. Existing preview data was not modified.
+- First production tab rendered and submitted a synthetic request on retry; the first attempt showed preserved-draft transport failure and no POST in the API log. Its cause is not established.
+- A second production login tab remained blank after one reload. Its DOM contained the expected root/script/style elements but no mounted application. Direct HTTP checks returned 200 for the 853,071-byte JavaScript asset and the expected CORS allowlist. Browser error capture returned no entries. This does not establish whether the cause is application/service-worker behavior or the embedded browser environment.
+- Stop gate: reproduce the blank production page in a regular browser and inspect its Console/Network before declaring reload/offline acceptance. Do not merge merely because CI passed.
+
 - Fresh production-build offline reload, one queued status update, reconnect/replay, durable server state and conflict recovery need browser verification. Development-server and unit-test results do not replace this.
 - Fresh cross-role browser assignment-to-completion is incomplete in this run: all three preview teams were assigned and existing missions were left untouched. Use an isolated seeded preview.
 - Teammate review and hosted CI remain separate gates. Keep the PR draft until outstanding acceptance is resolved.
