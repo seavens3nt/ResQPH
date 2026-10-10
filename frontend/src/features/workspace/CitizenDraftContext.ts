@@ -3,15 +3,18 @@ import type { FloodLevel, VulnerabilityTag } from '../requests/types'
 
 export interface CitizenRequestDraft {
   address: string
+  landmark: string
   lngStr: string
   latStr: string
   locationSource: 'gps' | 'demo' | 'map'
+  locationConfirmed: boolean
   headcountStr: string
   vulnerabilities: VulnerabilityTag[]
   medicalNeeds: boolean
   medicalDetails: string
   situationSummary: string
   floodLevel: FloodLevel
+  reportedSeverity: 'low' | 'moderate' | 'high' | 'critical'
 }
 
 export const CitizenDraftContext = createContext<{

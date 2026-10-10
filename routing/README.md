@@ -25,6 +25,7 @@ From the repository root, with the routing venv active:
 ```powershell
 python routing/scripts/build_ubelt_graph.py
 python routing/scripts/build_ubelt_graph.py --force
+python routing/scripts/build_station_network.py
 ```
 
 ### What it produces
@@ -36,6 +37,7 @@ python routing/scripts/build_ubelt_graph.py --force
 | `data/processed/ubelt-v1-edges.geojson` | no (gitignored) | Full joined edges (~2,168) |
 | `data/samples/ubelt-v1-preview.geojson` | yes | 30-edge committed fixture |
 | `data/samples/ubelt-v1-flood-join.geojson` | yes | 10-record committed scenario |
+| `data/samples/ubelt-station-network.geojson` | yes | 2,533-edge bounded station-coverage snapshot |
 
 ## Run tests
 

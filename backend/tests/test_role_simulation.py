@@ -2,6 +2,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
+
 from app.api.routes.missions import (
     get_mission_service,
     router,
@@ -12,9 +16,6 @@ from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import DuplicateMissionStatusEventError
 from app.schemas.common import ServiceError, service_error_handler
 from app.services.missions import MissionService
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
 
 BASE_TIME = datetime(2026, 9, 21, 4, 0, tzinfo=UTC)
 
@@ -59,6 +60,8 @@ class RoleMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: Any = None,
     ) -> Mission | None:
         if (
@@ -68,7 +71,12 @@ class RoleMissionRepository:
         ):
             return None
         self.mission = self.mission.model_copy(
-            update={"status": new_status, "version": self.mission.version + 1, "updated_at": recorded_at}
+            update={
+                "status": new_status,
+                "version": self.mission.version + 1,
+                "updated_at": recorded_at,
+                **({"tracking_state": tracking_state} if tracking_state is not None else {}),
+            }
         )
         return self.mission
 

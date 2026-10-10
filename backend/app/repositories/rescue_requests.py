@@ -4,11 +4,12 @@ import json
 from datetime import datetime
 from typing import Any
 
-from app.models.rescue_request import RequestStatus, RescueRequest
 from pymongo import ASCENDING, DESCENDING, GEOSPHERE, ReturnDocument
 from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
+
+from app.models.rescue_request import RequestStatus, RescueRequest
 
 
 class DuplicateRescueRequestError(Exception):
@@ -32,6 +33,12 @@ class RescueRequestRepository:
         await self._collection.create_index(
             [("citizen_id", ASCENDING), ("created_at", DESCENDING)],
             name="ix_rescue_request_citizen_history",
+        )
+        await self._collection.create_index(
+            [("citizen_id", ASCENDING), ("idempotency_key", ASCENDING)],
+            name="uq_citizen_idempotency_key",
+            unique=True,
+            partialFilterExpression={"idempotency_key": {"$type": "string"}},
         )
         await self._collection.create_index(
             [("location.point", GEOSPHERE)],
@@ -61,6 +68,21 @@ class RescueRequestRepository:
         if document is None:
             return None
         return RescueRequest.model_validate(document)
+
+    async def get_by_idempotency_key(
+        self, citizen_id: str, idempotency_key: str
+    ) -> RescueRequest | None:
+        document = await self._collection.find_one({
+            "citizen_id": citizen_id,
+            "idempotency_key": idempotency_key,
+        })
+        return RescueRequest.model_validate(document) if document else None
+
+    async def set_assignment_reason(self, request_id: str, reason: str) -> None:
+        await self._collection.update_one(
+            {"id": request_id, "status": "pending", "mission_id": None},
+            {"$set": {"assignment_reason": reason}},
+        )
 
     async def list_visible(
         self,
@@ -149,6 +171,7 @@ class RescueRequestRepository:
         request_id: str,
         expected_version: int,
         team_id: str,
+        station_id: str | None,
         mission_id: str,
         assigned_at: datetime,
         session: AsyncClientSession,
@@ -164,6 +187,8 @@ class RescueRequestRepository:
                 "$set": {
                     "status": "assigned",
                     "assigned_team_id": team_id,
+                    "assigned_station_id": station_id,
+                    "assignment_reason": "assigned",
                     "mission_id": mission_id,
                     "updated_at": assigned_at,
                 },

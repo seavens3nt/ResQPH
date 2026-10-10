@@ -36,6 +36,7 @@ function normalizeError(err: unknown): never {
       envelope?.message ?? err.message,
       envelope?.details ?? [],
       envelope?.request_id,
+      Number(err.response.headers?.['retry-after']) || undefined,
     )
   }
   if (isAxiosError(err) && !err.response) {
@@ -67,6 +68,7 @@ export interface MissionDetail {
   id: string
   request_id: string
   team_id: string
+  station_id?: string | null
   assigned_rescuer_id?: string | null
   status: MissionApiStatus
   version: number
@@ -78,6 +80,7 @@ export interface MissionDetail {
     medical_needs: boolean
     medical_details?: string | null
     reported_flood_level: string
+    reported_severity?: string
     situation_summary: string | null
     fixture_notice?: string
   } | null

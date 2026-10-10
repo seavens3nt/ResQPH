@@ -4,10 +4,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from './AuthLayout'
 import { RoleChooser } from './RoleChooser'
 import { Icon } from '../../components/art/Icon'
-import { useAuth } from '../../features/auth/AuthContext'
-import type { UserRole } from '../../features/auth/types'
+import { readApiMessage, useAuth } from '../../features/auth/AuthContext'
 import { validEmail, validPassword } from '../../features/auth/validation'
-import { TEAM_IDS } from '../../features/auth/session'
+import { RESCUE_STATIONS } from '../../features/map/stations'
+import type { UserRole } from '../../features/auth/types'
 import './auth.css'
 
 export function LoginPage() {
@@ -19,32 +19,44 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const requestedRole = searchParams.get('role')
   const [role, setRole] = useState<UserRole>(
-    requestedRole === 'coordinator' || requestedRole === 'rescuer' ? requestedRole : 'citizen',
+    requestedRole === 'rescuer' ? requestedRole : 'citizen',
   )
   const [error, setError] = useState('')
-  const [teamId, setTeamId] = useState<string>('team-alpha')
+  const [stationId, setStationId] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!validEmail(email) || !validPassword(password)) {
-      setError('Enter a valid email address and a password of at least 6 characters.')
+      setError('Enter a valid email address and a password of at least 12 characters.')
+      return
+    }
+    if (role === 'rescuer' && !RESCUE_STATIONS.some((station) => station.station_id === stationId)) {
+      setError('Select your rescue station to continue.')
       return
     }
     setError('')
-    login({ email: email.trim(), role, teamId: role === 'rescuer' ? teamId : undefined })
-    navigate('/dashboard', { replace: true })
+    setSubmitting(true)
+    try {
+      await login({ email: email.trim(), password, stationId: role === 'rescuer' ? stationId : undefined })
+      navigate('/dashboard', { replace: true })
+    } catch (reason) {
+      setError(readApiMessage(reason))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <AuthLayout
       title="Login"
-      subtitle="Prototype role simulation only — this is not secure production authentication"
+      subtitle="Sign in to access your ResQPH account"
       footer={
         <div className="auth-sub-links-col">
           <button
             type="button"
             className="auth-text-btn muted"
-            onClick={() => alert('Prototype only: use a valid synthetic email and at least 6 password characters. No account verification or recovery service is provided.')}
+            onClick={() => setError('Check your email and password. If you still cannot sign in, contact your account administrator.')}
           >
             Trouble signing in?
           </button>
@@ -64,7 +76,15 @@ export function LoginPage() {
       <form className="auth-clean-form" onSubmit={handleSubmit} noValidate>
         {/* Segmented Portal Role Chooser */}
         <RoleChooser value={role} onChange={setRole} />
-        {role === 'rescuer' && <label>Simulated rescue team<select aria-label="Simulated rescue team" value={teamId} onChange={e => setTeamId(e.target.value)}>{TEAM_IDS.map(id => <option key={id} value={id}>{id}</option>)}</select></label>}
+        {role === 'rescuer' && <div className="auth-station-field">
+          <p className="auth-station-guidance">Station accounts are provided by the project administrator.</p>
+          <label className="auth-field-label" htmlFor="rescue-station">Which rescue station are you from?</label>
+          <select id="rescue-station" aria-label="Which rescue station are you from?" value={stationId} onChange={(event) => setStationId(event.target.value)} required>
+            <option value="">Select your station</option>
+            {RESCUE_STATIONS.map((station) => <option key={station.station_id} value={station.station_id}>{station.name}</option>)}
+          </select>
+          {stationId && <p className="auth-station-address">{RESCUE_STATIONS.find((station) => station.station_id === stationId)?.address}</p>}
+        </div>}
 
         {/* Email Field with Pill Border and Icon */}
         <div className="auth-pill-field">
@@ -117,8 +137,8 @@ export function LoginPage() {
         ) : null}
 
         {/* Main Red Login In Button */}
-        <button type="submit" className="auth-btn-pill-submit">
-          Log In
+        <button type="submit" className="auth-btn-pill-submit" disabled={submitting}>
+          {submitting ? 'Signing in…' : 'Log In'}
         </button>
       </form>
     </AuthLayout>

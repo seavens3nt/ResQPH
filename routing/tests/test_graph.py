@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from resqph_routing.graph import (
     GraphValidationError,
     build_graph,

@@ -5,13 +5,14 @@ import { ApiError, type MissionDetail, type OfflineQueueEntry } from '../../api/
 const store = vi.hoisted(() => {
   const missions = new Map<string, { mission: MissionDetail; last_synced_at: string }>()
   const queues = new Map<string, OfflineQueueEntry>()
-  return { missions, queues, clearMission: vi.fn(), readMission: vi.fn(), readQueue: vi.fn(), writeMission: vi.fn(), enqueueEvent: vi.fn(), updateQueue: vi.fn(), acknowledgeEvent: vi.fn(), discardEvent: vi.fn() }
+  return { missions, queues, clearMission: vi.fn(), readMission: vi.fn(), readQueue: vi.fn(), readQuarantined: vi.fn(), writeMission: vi.fn(), enqueueEvent: vi.fn(), updateQueue: vi.fn(), acknowledgeEvent: vi.fn(), discardEvent: vi.fn() }
 })
 
 vi.mock('./offlineStore', () => ({
   readMission: store.readMission,
   clearMission: store.clearMission,
   readQueue: store.readQueue,
+  readQuarantined: store.readQuarantined,
   writeMission: store.writeMission,
   enqueueEvent: store.enqueueEvent,
   updateQueue: store.updateQueue,
@@ -46,6 +47,7 @@ describe('useOfflineMission', () => {
     store.enqueueEvent.mockClear(); store.updateQueue.mockClear(); store.acknowledgeEvent.mockClear()
     store.readMission.mockImplementation(async (actor: string) => store.missions.get(actor) ?? null)
     store.readQueue.mockImplementation(async (actor: string) => store.queues.get(actor) ?? null)
+    store.readQuarantined.mockResolvedValue([])
     store.clearMission.mockImplementation(async (actor: string) => store.missions.delete(actor))
     store.discardEvent.mockImplementation(async (actor: string) => store.queues.delete(actor))
     store.writeMission.mockImplementation(async (actor: string, value: MissionDetail) => {
@@ -106,7 +108,23 @@ describe('useOfflineMission', () => {
     expect(result.current.entry?.localId).toBe('event-retry')
     await waitFor(() => expect(store.updateQueue).toHaveBeenCalledTimes(2))
     await act(async () => result.current.retry())
-    await waitFor(() => expect(store.acknowledgeEvent).toHaveBeenCalledWith('rescuer-a', 'event-retry', accepted))
+    await waitFor(() => expect(store.acknowledgeEvent).toHaveBeenCalledWith('rescuer-a', 'event-retry', accepted, undefined, undefined))
+  })
+
+  it('clears a queued event only when authoritative mission history proves that exact event was accepted', async () => {
+    const queued = makeEntry()
+    store.queues.set('account-7', queued)
+    const accepted = { ...mission, status: 'arrived' as const, version: 3, status_history: [{
+      event_id: queued.localId, mission_id: mission.id, prior_status: 'en-route' as const,
+      new_status: 'arrived' as const, actor_id: 'team-sampaloc-fire-station', actor_role: 'rescuer',
+      source: 'offline-sync' as const, server_recorded_at: '2026-10-04T00:06:00Z',
+    }] }
+    api.getMission.mockResolvedValue(accepted)
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    const { result } = renderHook(() => useOfflineMission('account-7', false, 'sampaloc-fire-station', 'team-sampaloc-fire-station'))
+    await waitFor(() => expect(result.current.entry).toBeNull())
+    expect(store.acknowledgeEvent).toHaveBeenCalledWith('account-7', queued.localId, accepted, 'sampaloc-fire-station', 'team-sampaloc-fire-station')
+    expect(api.updateMissionStatus).not.toHaveBeenCalled()
   })
 
   it('preserves a conflict for review and never replays it as a different actor', async () => {

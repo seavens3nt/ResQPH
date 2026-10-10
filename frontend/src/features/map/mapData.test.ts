@@ -3,9 +3,9 @@ import {
   UBELT_BOUNDS,
   NON_LIVE_DATA_DISCLAIMER,
   isWithinUBeltBounds,
-  geojsonToLeafletLatLng,
-  geojsonLineToLeaflet,
-  geojsonPolygonToLeaflet,
+  geojsonToMapLatLng,
+  geojsonLineToMapCoordinates,
+  geojsonPolygonToMapCoordinates,
   parseRoadEdgeFixture,
   parseFloodScenarioFixture,
   parseStudyAreaFixture,
@@ -13,9 +13,15 @@ import {
   LOCKED_ROAD_EDGE_FIXTURE,
   LOCKED_FLOOD_SCENARIO_FIXTURE,
   LOCKED_STUDY_AREA_FIXTURE,
+  isInsideStudyAreaPolygon,
 } from './mapData'
 
 describe('mapData - Geospatial Coordinate & Boundary Helpers', () => {
+  it('validates rescue pins against the accepted study-area polygon fixture', () => {
+    expect(isInsideStudyAreaPolygon(120.9946, 14.6042)).toBe(true)
+    expect(isInsideStudyAreaPolygon(121.01, 14.6042)).toBe(false)
+    expect(isInsideStudyAreaPolygon(Number.NaN, 14.6042)).toBe(false)
+  })
   it('correctly validates coordinates within U-Belt pilot boundary', () => {
     // Center of U-Belt pilot (120.9946, 14.6042)
     expect(isWithinUBeltBounds(120.9946, 14.6042)).toBe(true)
@@ -29,35 +35,35 @@ describe('mapData - Geospatial Coordinate & Boundary Helpers', () => {
     expect(isWithinUBeltBounds(NaN, 14.6042)).toBe(false)
   })
 
-  it('converts GeoJSON [lng, lat] order to Leaflet [lat, lng] order', () => {
+  it('converts GeoJSON [lng, lat] order to map [lat, lng] order', () => {
     const geojsonPoint: [number, number] = [120.9946, 14.6042]
-    const leafletPoint = geojsonToLeafletLatLng(geojsonPoint)
-    expect(leafletPoint).toEqual([14.6042, 120.9946])
+    const mapPoint = geojsonToMapLatLng(geojsonPoint)
+    expect(mapPoint).toEqual([14.6042, 120.9946])
   })
 
-  it('converts GeoJSON LineString coordinates to Leaflet lat/lng array', () => {
+  it('converts GeoJSON LineString coordinates to map path order', () => {
     const line: [number, number][] = [
       [120.994, 14.6035],
       [120.9946, 14.6042],
     ]
-    const leafletLine = geojsonLineToLeaflet(line)
-    expect(leafletLine).toEqual([
+    const mapLine = geojsonLineToMapCoordinates(line)
+    expect(mapLine).toEqual([
       [14.6035, 120.994],
       [14.6042, 120.9946],
     ])
   })
 
-  it('converts GeoJSON Polygon ring to Leaflet coordinates', () => {
+  it('converts GeoJSON Polygon ring to map path order', () => {
     const ring: [number, number][] = [
       [120.982, 14.596],
       [121.004, 14.596],
-      [121.004, 14.6175],
+      [121.004, 14.621],
     ]
-    const leafletRing = geojsonPolygonToLeaflet(ring)
-    expect(leafletRing).toEqual([
+    const mapRing = geojsonPolygonToMapCoordinates(ring)
+    expect(mapRing).toEqual([
       [14.596, 120.982],
       [14.596, 121.004],
-      [14.6175, 121.004],
+      [14.621, 121.004],
     ])
   })
 })
@@ -66,8 +72,8 @@ describe('mapData - Fixture Parsing & Validation', () => {
   it('parses authoritative locked road edge fixture', () => {
     const parsed = parseRoadEdgeFixture(LOCKED_ROAD_EDGE_FIXTURE)
     expect(parsed.type).toBe('FeatureCollection')
-    expect(parsed.name).toBe('ubelt-v1-preview')
-    expect(parsed.features).toHaveLength(30)
+    expect(parsed.name).toBe('ubelt-station-network')
+    expect(parsed.features).toHaveLength(2533)
     expect(parsed.features[0].properties.edge_id).toMatch(/^ubelt-v1:/)
     expect(parsed.features[0].geometry.type).toBe('LineString')
     expect(parsed.features.some((feature) => feature.properties.observed_at === 'not provided')).toBe(true)
@@ -168,7 +174,7 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
     expect(dataset.sourceType).toBe(parsedFlood.scenario?.source_type)
     expect(dataset.isLive).toBe(false)
     expect(dataset.fixtureNotice).toBeTruthy()
-    expect(dataset.edges).toHaveLength(30)
+    expect(dataset.edges).toHaveLength(2533)
     expect(dataset.floodFeatures).toHaveLength(10)
     expect(dataset.stats.unmatchedFloodCount).toBe(0)
 
@@ -182,7 +188,7 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
       )
       expect(joined).toBeDefined()
       expect(joined?.geojsonCoordinates).toEqual(road.geometry.coordinates)
-      expect(joined?.leafletCoordinates[0]).toEqual([
+      expect(joined?.mapCoordinates[0]).toEqual([
         road.geometry.coordinates[0][1],
         road.geometry.coordinates[0][0],
       ])
@@ -203,7 +209,7 @@ describe('mapData - buildMapLayerDataset Adapter', () => {
 
     // Check study area boundary
     expect(dataset.studyArea.name).toMatch(/U-Belt/i)
-    expect(dataset.studyArea.leafletPolygon.length).toBeGreaterThanOrEqual(4)
+    expect(dataset.studyArea.mapPolygon.length).toBeGreaterThanOrEqual(4)
   })
 
   it('rejects a flood fixture assigned to a different study area', () => {

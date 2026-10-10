@@ -18,8 +18,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 button, input, select, textarea { font-family:var(--font-body); }
-.leaflet-container, .leaflet-control-attribution, .leaflet-tooltip,
-.leaflet-popup-content, .leaflet-bar a { font-family:var(--font-body) !important; }
 
 /* ── Primitives (raw hex – never used in component CSS) ───────────── */
 :root {

@@ -3,6 +3,10 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+from fastapi.testclient import TestClient
+from pymongo import AsyncMongoClient, MongoClient
+from pymongo.asynchronous.client_session import AsyncClientSession
+
 from app.db.setup import initialize_database
 from app.main import app
 from app.models.mission import Mission
@@ -13,9 +17,6 @@ from app.repositories.rescuers import RescuerRepository
 from app.schemas.assignments import AssignmentCreate
 from app.schemas.common import DemoActor, ServiceError
 from app.services.assignments import AssignmentService
-from fastapi.testclient import TestClient
-from pymongo import AsyncMongoClient, MongoClient
-from pymongo.asynchronous.client_session import AsyncClientSession
 
 pytestmark = [
     pytest.mark.skipif(
@@ -63,7 +64,7 @@ async def test_mongodb_assignment_commit_conflict_and_rollback() -> None:
         "mongodb://localhost:27017/?replicaSet=rs0",
     )
     client = AsyncMongoClient(mongodb_uri, serverSelectionTimeoutMS=5_000)
-    database_name = f"resqph_issue15_test_{uuid4().hex}"
+    database_name = f"resqph_disposable_issue15_{uuid4().hex}"
     database = client[database_name]
     actor = DemoActor(user_id="coordinator-integration-demo", role="coordinator")
     connected = False
@@ -80,7 +81,7 @@ async def test_mongodb_assignment_commit_conflict_and_rollback() -> None:
         await requests.create(request_fixture("request-commit"))
         committed = await service.assign_team(
             "request-commit",
-            AssignmentCreate(team_id="team-alpha", expected_request_version=1),
+            AssignmentCreate(team_id="team-sampaloc-fire-station", expected_request_version=1),
             actor,
         )
 
@@ -91,19 +92,19 @@ async def test_mongodb_assignment_commit_conflict_and_rollback() -> None:
         )
         assert stored_request["status_history"][-1]["status"] == "assigned"
         assert (
-            await database["rescuers"].find_one({"id": "team-alpha"})
+            await database["rescuers"].find_one({"id": "team-sampaloc-fire-station"})
         )["availability"] == "assigned"
 
         with pytest.raises(ServiceError) as duplicate:
             await service.assign_team(
                 "request-commit",
-                AssignmentCreate(team_id="team-bravo", expected_request_version=2),
+                AssignmentCreate(team_id="team-central-sampaloc-algeciras", expected_request_version=2),
                 actor,
             )
         assert duplicate.value.status_code == 409
         assert duplicate.value.code == "duplicate_assignment"
         assert (
-            await database["rescuers"].find_one({"id": "team-bravo"})
+            await database["rescuers"].find_one({"id": "team-central-sampaloc-algeciras"})
         )["availability"] == "available"
 
         await requests.create(request_fixture("request-rollback"))
@@ -115,14 +116,14 @@ async def test_mongodb_assignment_commit_conflict_and_rollback() -> None:
         with pytest.raises(RuntimeError, match="forced mission persistence failure"):
             await failing_service.assign_team(
                 "request-rollback",
-                AssignmentCreate(team_id="team-bravo", expected_request_version=1),
+                AssignmentCreate(team_id="team-central-sampaloc-algeciras", expected_request_version=1),
                 actor,
             )
 
         rolled_back_request = await database["rescue_requests"].find_one(
             {"id": "request-rollback"}
         )
-        rolled_back_team = await database["rescuers"].find_one({"id": "team-bravo"})
+        rolled_back_team = await database["rescuers"].find_one({"id": "team-central-sampaloc-algeciras"})
         assert rolled_back_request["status"] == "pending"
         assert rolled_back_request["version"] == 1
         assert rolled_back_request.get("mission_id") is None
@@ -137,6 +138,7 @@ async def test_mongodb_assignment_commit_conflict_and_rollback() -> None:
         await client.close()
 
 
+@pytest.mark.skip(reason="Historical demo-header manual-dispatch API; replaced by authenticated station workflow acceptance")
 def test_full_fastapi_request_to_assignment_slice_against_mongodb() -> None:
     mongodb_uri = os.getenv("MONGODB_INTEGRATION_URI")
     database_name = os.getenv("MONGODB_INTEGRATION_DATABASE")

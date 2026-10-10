@@ -3,6 +3,11 @@ from datetime import datetime
 from typing import Any
 
 import pytest
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
+from pymongo.errors import PyMongoError
+
 from app.api.routes.rescue_requests import get_rescue_request_service, router
 from app.models.rescue_request import RequestStatus, RequestStatusHistory, RescueRequest
 from app.schemas.common import (
@@ -11,10 +16,6 @@ from app.schemas.common import (
     validation_exception_handler,
 )
 from app.services.rescue_requests import RescueRequestService
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-from pymongo.errors import PyMongoError
 
 
 class InMemoryRequestRepository:
@@ -219,6 +220,23 @@ def test_citizen_create_list_get_and_sanitization(
     assert rescuer_get.status_code == 200
 
 
+def test_pin_only_request_defaults_to_a_truthful_location_label(client: TestClient) -> None:
+    payload = valid_payload()
+    payload["location"].pop("address")
+    result = client.post("/api/v1/rescue-requests", json=payload, headers=headers())
+    assert result.status_code == 201, result.text
+    assert result.json()["location"]["address"] == "Pinned location"
+
+
+def test_outside_study_area_coordinates_are_rejected_without_relocation(client: TestClient) -> None:
+    payload = valid_payload()
+    payload["location"]["address"] = "Pinned location"
+    payload["location"]["point"]["coordinates"] = [121.01, 14.6042]
+    result = client.post("/api/v1/rescue-requests", json=payload, headers=headers())
+    assert result.status_code == 422
+    assert "ubelt-pilot-v1" in result.text
+
+
 def test_outside_boundary_and_malformed_inputs_store_nothing(
     client: TestClient,
     stores: tuple[InMemoryRequestRepository, InMemoryAssignmentVisibility],
@@ -265,8 +283,8 @@ def test_role_headers_and_list_filters_use_common_error_envelope(
         headers=headers(),
     )
 
-    assert no_headers.status_code == 403
-    assert no_headers.json()["error"]["code"] == "demo_identity_required"
+    assert no_headers.status_code == 401
+    assert no_headers.json()["error"]["code"] == "authentication_required"
     assert volunteer.status_code == 403
     assert volunteer.json()["error"]["code"] == "demo_role_required"
     assert bad_status.status_code == 422

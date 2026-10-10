@@ -1,6 +1,7 @@
+from pydantic import BaseModel, Field
+
 from app.schemas.missions import MissionResponse
 from app.schemas.rescue_requests import RescueRequestResponse
-from pydantic import BaseModel, Field
 
 
 class AssignmentCreate(BaseModel):
@@ -20,10 +21,13 @@ class TeamRecommendationCandidate(BaseModel):
     station_name: str | None = None
     station_address: str | None = None
     availability: str
+    origin_source: str = Field(pattern=r"^(current_location|base_location)$")
+    routing_origin: list[float] = Field(min_length=2, max_length=2)
     road_distance_m: float
     estimated_travel_time_s: float
     route_id: str
     route: dict
+    team_version: int = Field(ge=1)
     warnings: list[str] = Field(default_factory=list)
 
 

@@ -1,6 +1,5 @@
-import { useEffect, useId, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useId } from 'react'
+import { InteractiveFloodMap } from '../../../../features/map/InteractiveFloodMap'
 
 type LocationSource = 'gps' | 'demo' | 'map'
 
@@ -14,6 +13,9 @@ interface RequestLocationMapProps {
   showInstruction?: boolean
   onChooseSource: (source: 'gps' | 'demo') => void
   onChooseCoordinates: (coordinates: [number, number]) => void
+  locationConfirmed?: boolean
+  onConfirmLocation?: () => void
+  showConfirmation?: boolean
 }
 
 export function RequestLocationMap({
@@ -26,87 +28,27 @@ export function RequestLocationMap({
   showInstruction = true,
   onChooseSource,
   onChooseCoordinates,
+  locationConfirmed = true,
+  onConfirmLocation,
+  showConfirmation = true,
 }: RequestLocationMapProps) {
   const uid = useId()
-  const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<L.Map | null>(null)
-  const markerRef = useRef<L.CircleMarker | null>(null)
-  const onChooseCoordinatesRef = useRef(onChooseCoordinates)
-  const disabledRef = useRef(disabled)
-  useEffect(() => { disabledRef.current = disabled }, [disabled])
-
-  useEffect(() => {
-    onChooseCoordinatesRef.current = onChooseCoordinates
-  }, [onChooseCoordinates])
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return
-    try {
-      const map = L.map(containerRef.current, { zoomControl: false }).setView([14.6042, 120.9946], 15)
-      L.control.zoom({ position: 'bottomleft' }).addTo(map)
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(map)
-      const marker = L.circleMarker([14.6042, 120.9946], {
-        radius: 8,
-        color: '#fff',
-        weight: 3,
-        fillColor: '#dc2626',
-        fillOpacity: 1,
-      }).addTo(map)
-      map.on('click', (event: L.LeafletMouseEvent) => {
-        if (disabledRef.current) return
-        onChooseCoordinatesRef.current([event.latlng.lng, event.latlng.lat])
-      })
-      mapRef.current = map
-      markerRef.current = marker
-      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => map.invalidateSize())
-      observer?.observe(containerRef.current)
-      return () => { observer?.disconnect(); map.remove(); mapRef.current = null; markerRef.current = null }
-    } catch (error) {
-      console.warn('Request location map could not initialize:', error)
-    }
-
-    return () => {
-      mapRef.current?.remove()
-      mapRef.current = null
-      markerRef.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    const map = mapRef.current
-    const marker = markerRef.current
-    if (!map || !marker || !coordinates.every(Number.isFinite)) return
-    const latLng: L.LatLngExpression = [coordinates[1], coordinates[0]]
-    marker.setLatLng(latLng)
-    map.panTo(latLng)
-  }, [coordinates])
-
   const radioStyle = { display: 'flex', gap: '0.35rem', alignItems: 'flex-start', fontSize: '0.74rem', color: '#334155' }
+  const controls = showSourceControls && <fieldset disabled={disabled || isLocating} style={{ margin: 8, padding: '0.55rem 0.65rem', maxWidth: 220, border: '1px solid #cbd5e1', borderRadius: 8, background: 'rgba(255,255,255,0.96)', boxShadow: '0 2px 8px rgba(15,23,42,0.14)' }}>
+    <legend style={{ padding: '0 3px', color: '#0f172a', fontSize: '0.75rem', fontWeight: 700 }}>Location source</legend>
+    <label style={radioStyle}><input type="radio" name={`${uid}-location-source`} checked={source === 'gps'} onChange={() => onChooseSource('gps')} /><span>Use my location</span></label>
+    <label style={radioStyle}><input type="radio" name={`${uid}-location-source`} checked={source === 'demo'} onChange={() => onChooseSource('demo')} /><span>Use demo location</span></label>
+    {isLocating && <span role="status">Getting GPS location…</span>}
+    {gpsError && <span role="alert">{gpsError}</span>}
+  </fieldset>
 
-  return (
-    <section className="request-location-map" aria-label="Choose rescue request location on map" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-      <div style={{ position: 'relative', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden' }}>
-        <div ref={containerRef} aria-label="U-Belt pilot map. Select a point to set the request location." style={{ height: '260px', width: '100%', background: '#e2e8f0' }} />
-        {showSourceControls && <fieldset style={{ position: 'absolute', zIndex: 1000, top: '0.6rem', left: '0.6rem', margin: 0, padding: '0.55rem 0.65rem', maxWidth: '220px', border: '1px solid #cbd5e1', borderRadius: '8px', background: 'rgba(255,255,255,0.96)', boxShadow: '0 2px 8px rgba(15,23,42,0.14)' }}>
-          <legend style={{ padding: '0 3px', color: '#0f172a', fontSize: '0.75rem', fontWeight: 700 }}>Location source</legend>
-          <label style={radioStyle}>
-            <input type="radio" name={`${uid}-location-source`} checked={source === 'gps'} disabled={disabled || isLocating} onChange={() => onChooseSource('gps')} />
-            <span>Use current GPS</span>
-          </label>
-          <label style={radioStyle}>
-            <input type="radio" name={`${uid}-location-source`} checked={source === 'demo'} disabled={disabled || isLocating} onChange={() => onChooseSource('demo')} />
-            <span>Use demo location</span>
-          </label>
-          {isLocating && <span role="status" style={{ display: 'block', marginTop: '0.35rem', fontSize: '0.72rem', color: '#475569' }}>Getting GPS location…</span>}
-          {gpsError && <span role="alert" style={{ display: 'block', marginTop: '0.35rem', fontSize: '0.72rem', color: '#b91c1c' }}>{gpsError}</span>}
-        </fieldset>}
-      </div>
-      {source === 'gps' && <span style={{ fontSize: '0.74rem', color: '#475569' }}>GPS coordinates selected. Add the nearest street address below. Your browser may ask you to allow location access.</span>}
-      {source === 'map' && <span style={{ fontSize: '0.74rem', color: '#475569' }}>Map point selected. Add its street address or a nearby landmark below.</span>}
-      {showInstruction && <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</span>}
-    </section>
-  )
+  return <section className="request-location-map" aria-label="Choose rescue request location on Google map" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+    <InteractiveFloodMap compact center={[coordinates[1], coordinates[0]]} controlsSlot={controls} onMapClick={point => { if (!disabled) onChooseCoordinates(point) }} records={[{ id: 'selected-incident', label: 'Selected rescue location', coordinates }]} draggableRecordIds={disabled ? [] : ['selected-incident']} onRecordDragEnd={(_id, point) => { if (!disabled) onChooseCoordinates(point) }}/>
+    <span style={{ fontSize: '0.74rem', color: '#475569' }}>{source === 'gps' ? 'GPS location selected. Check its accuracy and adjust the pin if needed.' : source === 'map' ? 'Pinned location selected. Drag the pin or enter coordinates below to refine it.' : 'Demonstration location selected. You can choose a point on the map or enter coordinates.'}</span>
+    {showConfirmation && <div className="request-location-confirmation">
+      <p role="status">{locationConfirmed ? 'Rescue location confirmed.' : 'Review the pin, then confirm this rescue location.'}</p>
+      <button type="button" onClick={onConfirmLocation} disabled={disabled}>Use this rescue location</button>
+    </div>}
+    {showInstruction && <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</span>}
+  </section>
 }

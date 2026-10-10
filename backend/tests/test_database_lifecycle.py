@@ -1,7 +1,8 @@
 from typing import Any
 
-import app.main as main_module
 import pytest
+
+import app.main as main_module
 from app.db import mongodb
 
 

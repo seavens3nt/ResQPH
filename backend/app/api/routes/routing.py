@@ -43,12 +43,12 @@ async def evaluate_route(
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     adapter: Annotated[RoutingAdapter, Depends(get_routing_adapter)],
 ) -> RouteEvaluateResponse:
-    if actor.role not in {"rescuer", "coordinator"}:
+    if actor.role != "rescuer":
         raise ServiceError(
             status.HTTP_403_FORBIDDEN,
             "forbidden",
-            "This simulated role cannot evaluate routes.",
-            [{"field": "X-Demo-Role", "reason": "expected rescuer or coordinator"}],
+            "Only station accounts may evaluate operational routes.",
+            [{"field": "role", "reason": "expected rescuer"}],
         )
     check_rate_limit(
         request,

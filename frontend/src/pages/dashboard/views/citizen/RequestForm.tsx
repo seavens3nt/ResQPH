@@ -63,17 +63,21 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   const formRef = useRef<HTMLFormElement>(null)
 
   // Form field state (kept across validation failures — "preserve safe input")
-  const [address, setAddress] = useState(draft?.address ?? 'Sanitized demonstration address, Sampaloc, Manila')
+  const [address, setAddress] = useState(draft?.address ?? '')
+  const [landmark, setLandmark] = useState(draft?.landmark ?? '')
   const [lngStr, setLngStr] = useState(draft?.lngStr ?? String(DEMO_LNG))
   const [latStr, setLatStr] = useState(draft?.latStr ?? String(DEMO_LAT))
   const [locationSource, setLocationSource] = useState<'gps' | 'demo' | 'map'>(draft?.locationSource ?? 'demo')
+  const [locationConfirmed, setLocationConfirmed] = useState(draft?.locationConfirmed ?? false)
   const [isLocating, setIsLocating] = useState(false)
   const [gpsError, setGpsError] = useState('')
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [headcountStr, setHeadcountStr] = useState(draft?.headcountStr ?? '1')
   const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityTag[]>(draft?.vulnerabilities ?? [])
   const [medicalNeeds, setMedicalNeeds] = useState(draft?.medicalNeeds ?? false)
   const [medicalDetails, setMedicalDetails] = useState(draft?.medicalDetails ?? '')
   const [situationSummary, setSituationSummary] = useState(draft?.situationSummary ?? '')
+  const [reportedSeverity, setReportedSeverity] = useState<'low' | 'moderate' | 'high' | 'critical'>(draft?.reportedSeverity ?? 'moderate')
 
   // UI state
   const [fieldErrors, setFieldErrors] = useState<FieldError>({})
@@ -83,14 +87,14 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   const [floodLevel, setFloodLevel] = useState<FloodLevel>(draft?.floodLevel ?? initialFloodLevel)
 
   useEffect(() => {
-    const dirty = address !== 'Sanitized demonstration address, Sampaloc, Manila' ||
+    const dirty = address !== '' || landmark !== '' || locationConfirmed ||
       lngStr !== String(DEMO_LNG) || latStr !== String(DEMO_LAT) || locationSource !== 'demo' ||
       headcountStr !== '1' || vulnerabilities.length > 0 || medicalNeeds || medicalDetails !== '' ||
-      situationSummary !== '' || floodLevel !== initialFloodLevel
-    saveDraft?.(dirty ? { address, lngStr, latStr, locationSource, headcountStr, vulnerabilities,
-      medicalNeeds, medicalDetails, situationSummary, floodLevel } : null)
-  }, [address, lngStr, latStr, locationSource, headcountStr, vulnerabilities, medicalNeeds,
-    medicalDetails, situationSummary, floodLevel, initialFloodLevel, saveDraft])
+      situationSummary !== '' || floodLevel !== initialFloodLevel || reportedSeverity !== 'moderate' || locationConfirmed
+    saveDraft?.(dirty ? { address, landmark, lngStr, latStr, locationSource, locationConfirmed, headcountStr, vulnerabilities,
+      medicalNeeds, medicalDetails, situationSummary, floodLevel, reportedSeverity } : null)
+  }, [address, landmark, lngStr, latStr, locationSource, headcountStr, vulnerabilities, medicalNeeds,
+    medicalDetails, situationSummary, floodLevel, reportedSeverity, initialFloodLevel, locationConfirmed, saveDraft])
 
   useEffect(() => {
     if (Object.keys(fieldErrors).length) {
@@ -110,10 +114,12 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   function chooseLocationSource(source: 'gps' | 'demo') {
     setGpsError('')
     if (source === 'demo') {
-      setAddress('Sanitized demonstration address, Sampaloc, Manila')
+      setAddress('')
+      setGpsAccuracy(null)
       setLngStr(String(DEMO_LNG))
       setLatStr(String(DEMO_LAT))
       setLocationSource('demo')
+      setLocationConfirmed(false)
       return
     }
 
@@ -124,15 +130,21 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
 
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setAddress('')
+        ({ coords }) => {
+          setAddress('')
         setLngStr(String(coords.longitude))
         setLatStr(String(coords.latitude))
         setLocationSource('gps')
+          setLocationConfirmed(false)
+          setGpsAccuracy(Number.isFinite(coords.accuracy) ? coords.accuracy : null)
         setIsLocating(false)
       },
-      () => {
-        setGpsError('Could not get your GPS location. Allow location access or choose another location source.')
+      (error) => {
+        setGpsError(error.code === 1
+          ? 'Location permission was denied. Choose a point on the map or enter coordinates instead.'
+          : error.code === 3
+            ? 'Location lookup timed out. Choose a point on the map or enter coordinates instead.'
+            : 'Your location is unavailable. Choose a point on the map or enter coordinates instead.')
         setIsLocating(false)
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
@@ -144,7 +156,15 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setLatStr(String(coordinates[1]))
     setAddress('')
     setLocationSource('map')
+    setLocationConfirmed(false)
     setGpsError('')
+    setGpsAccuracy(null)
+  }
+
+  function editCoordinate(axis: 0 | 1, rawValue: string) {
+    const next = axis === 0 ? [rawValue, latStr] : [lngStr, rawValue]
+    setLngStr(next[0]); setLatStr(next[1]); setAddress(''); setLocationSource('map'); setLocationConfirmed(false)
+    setGpsAccuracy(null)
   }
 
   // ---------------------------------------------------------------------------
@@ -165,13 +185,19 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setSubmitError(null)
     setSubmitErrorCode(null)
 
+    if (!locationConfirmed) {
+      setFieldErrors({ 'location.point.coordinates': 'Confirm the selected rescue location before continuing.' })
+      return
+    }
+
     const lng = lngStr.trim() ? Number(lngStr) : NaN
     const lat = latStr.trim() ? Number(latStr) : NaN
     const headcount = headcountStr.trim() ? Number(headcountStr) : NaN
 
     const raw = {
       location: {
-        address,
+        address: address.trim() || 'Pinned location',
+        landmark: landmark || undefined,
         point: {
           type: 'Point' as const,
           coordinates: [lng, lat] as [number, number],
@@ -183,6 +209,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       medical_details: medicalDetails || undefined,
       // Flood depth is collected once in SOS triage and carried into the API request.
       reported_flood_level: floodLevel,
+      reported_severity: reportedSeverity,
       situation_summary: situationSummary || undefined,
     }
 
@@ -272,7 +299,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         <ul>{[...new Set(Object.values(fieldErrors))].map(message => <li key={message}>{message}</li>)}</ul>
         <p>Your details are still here. Correct the highlighted fields, then try again.</p>
       </div>}
-      {review && <RequestReview coordinates={[Number(lngStr),Number(latStr)]} source={locationSource} address={address} headcount={headcountStr} floodLevel={floodLevel} situation={situationSummary} accessibility={vulnerabilities.join(', ')} medical={medicalNeeds ? medicalDetails || 'Medical assistance requested' : ''}/>}
+      {review && <RequestReview coordinates={[Number(lngStr),Number(latStr)]} source={locationSource} address={address} landmark={landmark} headcount={headcountStr} floodLevel={floodLevel} severity={reportedSeverity} situation={situationSummary} accessibility={vulnerabilities.join(', ')} medical={medicalNeeds ? medicalDetails || 'Medical assistance requested' : ''}/>}
       <fieldset className="request-edit-fields" disabled={isPending || review} style={{border: 0, padding: 0, display: review ? 'none' : 'contents'}}>
 
       <div className="request-essentials" style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
@@ -326,21 +353,21 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           gpsError={gpsError}
           onChooseSource={chooseLocationSource}
           onChooseCoordinates={chooseMapCoordinates}
+          locationConfirmed={locationConfirmed}
+          onConfirmLocation={() => { setFieldErrors({}); setLocationConfirmed(true) }}
         />
         <label
           htmlFor={`${uid}-address`}
           style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
         >
-          Location — street address
-          <span aria-hidden="true" style={{ color: '#dc2626' }}> *</span>
+          Optional address or location description
         </label>
         <input
           id={`${uid}-address`}
           type="text"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder={locationSource === 'gps' || locationSource === 'map' ? 'Enter street name, barangay, or landmark' : 'Street name, barangay, landmark'}
-          aria-required="true"
+          placeholder="Optional street, barangay, or location note"
           aria-describedby={fieldErrors['location.address'] ? `${uid}-address-err` : undefined}
           aria-invalid={!!fieldErrors['location.address']}
           disabled={isPending}
@@ -351,6 +378,16 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             fontSize: '0.88rem',
           }}
         />
+        <p className="workspace-caption">Pinned location coordinates: {Number(lngStr).toFixed(6)}, {Number(latStr).toFixed(6)}. Longitude, then latitude.</p>
+        <div className="request-coordinate-fields" aria-label="Edit pin coordinates">
+          <label htmlFor={`${uid}-longitude`}>Longitude
+            <input id={`${uid}-longitude`} type="number" step="any" value={lngStr} disabled={isPending} onChange={event => editCoordinate(0, event.target.value)} />
+          </label>
+          <label htmlFor={`${uid}-latitude`}>Latitude
+            <input id={`${uid}-latitude`} type="number" step="any" value={latStr} disabled={isPending} onChange={event => editCoordinate(1, event.target.value)} />
+          </label>
+        </div>
+        {gpsAccuracy !== null && <p role="status" className="workspace-caption">Reported GPS accuracy: approximately {Math.round(gpsAccuracy)} m. Confirm the pin location before continuing.</p>}
         {fieldErrors['location.address'] && (
           <span
             id={`${uid}-address-err`}
@@ -360,12 +397,21 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             {fieldErrors['location.address']}
           </span>
         )}
+        <label htmlFor={`${uid}-landmark`} style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>Nearby landmark (optional)
+          <input id={`${uid}-landmark`} type="text" value={landmark} maxLength={200} onChange={event => setLandmark(event.target.value)} placeholder="Nearest school, corner, or visible landmark" disabled={isPending}/>
+        </label>
       </div>
       {modalLayout && <p className="workspace-caption">Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</p>}
 
       {fieldErrors['location.point.coordinates'] && <p id={`${uid}-coords-err`} role="alert" tabIndex={-1} aria-invalid="true" style={{color:'#dc2626'}}>{fieldErrors['location.point.coordinates']} Choose a location inside the pilot area using the map or demonstration location.</p>}
       </div>
       <div className="request-assistance-fields" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+      <label className="request-flood-field">Reported severity
+        <select value={reportedSeverity} onChange={event => setReportedSeverity(event.target.value as typeof reportedSeverity)}>
+          {['low', 'moderate', 'high', 'critical'].map(value => <option key={value} value={value}>{value[0].toUpperCase() + value.slice(1)}</option>)}
+        </select>
+        <span className="workspace-caption">Your assessment of urgency; separate from reported flood level and road passability.</span>
+      </label>
       {requireReview && <label className="request-flood-field">Reported flood level<select value={floodLevel} onChange={e => setFloodLevel(e.target.value as FloodLevel)}>{['none','low','moderate','high','unknown'].map(v => <option key={v}>{v}</option>)}</select></label>}
 
       {/* ── Headcount ───────────────────────────────────────────────── */}

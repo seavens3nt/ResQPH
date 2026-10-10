@@ -12,6 +12,7 @@ class Mission(BaseModel):
     id: str
     request_id: str
     team_id: str
+    station_id: str | None = None
     status: MissionStatus = "assigned"
     version: int = Field(ge=1)
     assigned_at: datetime

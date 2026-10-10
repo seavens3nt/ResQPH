@@ -1,22 +1,21 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, Header, Query, Request, status
 
 from app.api.dependencies.demo_role import get_demo_actor
 from app.core.config import settings
 from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
 from app.repositories.assignments import AssignmentRepository
+from app.repositories.dispatch_jobs import DispatchJobRepository
 from app.repositories.rescue_requests import RescueRequestRepository
-from app.repositories.rescuers import RescuerRepository
-from app.schemas.common import DemoActor, ErrorEnvelope
+from app.schemas.common import DemoActor, ErrorEnvelope, ServiceError
 from app.schemas.rescue_requests import (
     RescueRequestCancel,
     RescueRequestCreate,
     RescueRequestListResponse,
     RescueRequestResponse,
 )
-from app.services.assignments import AssignmentService
 from app.services.rescue_requests import RescueRequestService
 
 router = APIRouter(prefix="/rescue-requests", tags=["rescue requests"])
@@ -33,15 +32,7 @@ def get_rescue_request_service() -> RescueRequestService:
     database = get_database()
     requests = RescueRequestRepository(database)
     assignments = AssignmentRepository(database)
-    return RescueRequestService(
-        requests,
-        assignments,
-        AssignmentService(
-            requests,
-            RescuerRepository(database),
-            assignments,
-        ),
-    )
+    return RescueRequestService(requests, assignments, DispatchJobRepository(database))
 
 
 @router.post(
@@ -55,14 +46,17 @@ async def create_rescue_request(
     request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[RescueRequestService, Depends(get_rescue_request_service)],
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key", min_length=16, max_length=128)] = None,
 ) -> RescueRequestResponse:
+    if actor.account_id and not idempotency_key:
+        raise ServiceError(422, "idempotency_key_required", "A submission idempotency key is required.", [{"field": "Idempotency-Key", "reason": "missing or blank header"}])
     check_rate_limit(
         request,
         actor_id=actor.user_id,
         action="report-submission",
         limit=settings.report_rate_limit_per_minute,
     )
-    return await service.create_request(payload, actor)
+    return await service.create_request(payload, actor, idempotency_key)
 
 
 @router.get(
@@ -106,7 +100,14 @@ async def get_rescue_request(
 async def cancel_rescue_request(
     request_id: str,
     payload: RescueRequestCancel,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[RescueRequestService, Depends(get_rescue_request_service)],
 ) -> RescueRequestResponse:
+    check_rate_limit(
+        request,
+        actor_id=actor.user_id,
+        action="request-cancel",
+        limit=settings.simulation_control_rate_limit_per_minute,
+    )
     return await service.cancel_request(request_id, payload, actor)

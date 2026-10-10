@@ -1,18 +1,18 @@
 import { z } from 'zod'
-import roadEdgeFixtureJson from '../../../../data/samples/ubelt-v1-preview.geojson?raw'
+import roadEdgeFixtureJson from '../../../../data/samples/ubelt-station-network.geojson?raw'
 import floodScenarioFixtureJson from '../../../../data/samples/ubelt-v1-flood-join.geojson?raw'
 import studyAreaFixtureJson from '../../../../data/samples/study-area.geojson?raw'
 
 /**
  * U-Belt Pilot Bounding Box (EPSG:4326 / WGS 84)
  * Approved boundary from data/samples/study-area.geojson:
- * [minLng, minLat, maxLng, maxLat] = [120.982, 14.596, 121.004, 14.6175]
+ * [minLng, minLat, maxLng, maxLat] = [120.982, 14.596, 121.004, 14.621]
  */
 export const UBELT_BOUNDS = {
   minLng: 120.982,
   minLat: 14.596,
   maxLng: 121.004,
-  maxLat: 14.6175,
+  maxLat: 14.621,
 } as const
 
 export const NON_LIVE_DATA_DISCLAIMER =
@@ -33,24 +33,24 @@ export function isWithinUBeltBounds(lng: number, lat: number): boolean {
 }
 
 /**
- * Converts a GeoJSON [longitude, latitude] coordinate to Leaflet [latitude, longitude] format.
+ * Converts GeoJSON [longitude, latitude] into the [latitude, longitude] order used by map paths.
  */
-export function geojsonToLeafletLatLng(coord: [number, number]): [number, number] {
+export function geojsonToMapLatLng(coord: [number, number]): [number, number] {
   return [coord[1], coord[0]]
 }
 
 /**
- * Converts an array of GeoJSON [longitude, latitude] coordinates to Leaflet [latitude, longitude] pairs.
+ * Converts GeoJSON line coordinates into map path order.
  */
-export function geojsonLineToLeaflet(line: [number, number][]): [number, number][] {
-  return line.map(geojsonToLeafletLatLng)
+export function geojsonLineToMapCoordinates(line: [number, number][]): [number, number][] {
+  return line.map(geojsonToMapLatLng)
 }
 
 /**
- * Converts a GeoJSON polygon exterior ring ([longitude, latitude][]) to Leaflet [latitude, longitude] pairs.
+ * Converts a GeoJSON polygon exterior ring into map path order.
  */
-export function geojsonPolygonToLeaflet(ring: [number, number][]): [number, number][] {
-  return ring.map(geojsonToLeafletLatLng)
+export function geojsonPolygonToMapCoordinates(ring: [number, number][]): [number, number][] {
+  return ring.map(geojsonToMapLatLng)
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ export interface JoinedMapEdge {
   observedAt: string
   reason?: string
   geojsonCoordinates: [number, number][]
-  leafletCoordinates: [number, number][]
+  mapCoordinates: [number, number][]
 }
 
 export interface MapFloodFeature {
@@ -189,7 +189,7 @@ export interface MapFloodFeature {
   passability: string
   sourceType: string
   reason?: string
-  leafletCoordinates: any
+  mapCoordinates: any
 }
 
 export interface MapLayerDataset {
@@ -203,7 +203,7 @@ export interface MapLayerDataset {
     name: string
     approvedOn: string
     bounds: typeof UBELT_BOUNDS
-    leafletPolygon: [number, number][]
+    mapPolygon: [number, number][]
   }
   edges: JoinedMapEdge[]
   floodFeatures: MapFloodFeature[]
@@ -220,6 +220,23 @@ export interface MapLayerDataset {
 export const LOCKED_ROAD_EDGE_FIXTURE: unknown = JSON.parse(roadEdgeFixtureJson)
 export const LOCKED_FLOOD_SCENARIO_FIXTURE: unknown = JSON.parse(floodScenarioFixtureJson)
 export const LOCKED_STUDY_AREA_FIXTURE: unknown = JSON.parse(studyAreaFixtureJson)
+
+/** Test a longitude/latitude point against the exterior ring in the accepted study fixture. */
+export function isInsideStudyAreaPolygon(longitude: number, latitude: number): boolean {
+  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return false
+  const feature = parseStudyAreaFixture(LOCKED_STUDY_AREA_FIXTURE).features[0]
+  const ring = feature?.geometry.coordinates[0] as [number, number][] | undefined
+  if (!ring?.length) return false
+  let inside = false
+  for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+    const [x1, y1] = ring[previous]
+    const [x2, y2] = ring[index]
+    const cross = (latitude - y1) * (x2 - x1) - (longitude - x1) * (y2 - y1)
+    if (Math.abs(cross) <= 1e-10 && longitude >= Math.min(x1, x2) && longitude <= Math.max(x1, x2) && latitude >= Math.min(y1, y2) && latitude <= Math.max(y1, y2)) return true
+    if ((y1 > latitude) !== (y2 > latitude) && longitude < ((x2 - x1) * (latitude - y1)) / (y2 - y1) + x1) inside = !inside
+  }
+  return inside
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Parser and Adapter Functions
@@ -309,7 +326,7 @@ function collectCoordinatePairs(value: unknown): { positions: [number, number][]
 
 function mapNestedCoordinates(value: unknown): unknown {
   if (Array.isArray(value) && value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
-    return geojsonToLeafletLatLng([value[0], value[1]])
+    return geojsonToMapLatLng([value[0], value[1]])
   }
   return Array.isArray(value) ? value.map(mapNestedCoordinates) : value
 }
@@ -327,7 +344,7 @@ export function parseStudyAreaFixture(raw: unknown): StudyAreaCollection {
 
 /**
  * Join road network edges with flood scenario attributes by `edge_id`.
- * Translates GeoJSON coordinates [lng, lat] into Leaflet-ready [lat, lng].
+ * Keeps GeoJSON longitude/latitude order for the Google Maps adapter.
  */
 export function buildMapLayerDataset(
   roadFixtureInput: unknown = LOCKED_ROAD_EDGE_FIXTURE,
@@ -347,8 +364,8 @@ export function buildMapLayerDataset(
       `Fixture contract mismatch: flood scenario study_area_id ${flood.scenario.study_area_id} does not match ${studyAreaFeature.properties.study_area_id}.`,
     )
   }
-  const leafletStudyAreaPolygon = studyAreaFeature
-    ? geojsonPolygonToLeaflet(studyAreaFeature.geometry.coordinates[0] as [number, number][])
+  const mapStudyAreaPolygon = studyAreaFeature
+    ? geojsonPolygonToMapCoordinates(studyAreaFeature.geometry.coordinates[0] as [number, number][])
     : []
 
   // Create flood attribute lookup table by edge_id
@@ -362,7 +379,7 @@ export function buildMapLayerDataset(
       floodMap.set(f.properties.edge_id, f)
     }
 
-    const leafletCoords = mapNestedCoordinates(f.geometry.coordinates)
+    const mapCoords = mapNestedCoordinates(f.geometry.coordinates)
 
     parsedFloodFeatures.push({
       id: f.properties.edge_id || f.properties.scenario_id,
@@ -373,7 +390,7 @@ export function buildMapLayerDataset(
       passability: f.properties.passability,
       sourceType: f.properties.source_type,
       reason: f.properties.reason,
-      leafletCoordinates: leafletCoords,
+      mapCoordinates: mapCoords,
     })
   }
 
@@ -422,7 +439,7 @@ export function buildMapLayerDataset(
       observedAt: floodInfo?.properties.scenario_timestamp || road.properties.observed_at || 'not provided',
       reason: floodInfo?.properties.reason,
       geojsonCoordinates: road.geometry.coordinates as [number, number][],
-      leafletCoordinates: geojsonLineToLeaflet(road.geometry.coordinates as [number, number][]),
+      mapCoordinates: geojsonLineToMapCoordinates(road.geometry.coordinates as [number, number][]),
     }
   })
 
@@ -454,7 +471,7 @@ export function buildMapLayerDataset(
       name: studyAreaFeature?.properties.name || 'U-Belt pilot area, City of Manila',
       approvedOn: studyAreaFeature?.properties.approved_on || '2026-09-22',
       bounds: UBELT_BOUNDS,
-      leafletPolygon: leafletStudyAreaPolygon,
+      mapPolygon: mapStudyAreaPolygon,
     },
     edges: joinedEdges,
     floodFeatures: parsedFloodFeatures,

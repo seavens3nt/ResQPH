@@ -98,7 +98,7 @@ export function useMapLayers(options: UseMapLayersOptions = {}): UseMapLayersRes
             name: 'U-Belt pilot area, City of Manila',
             approvedOn: '2026-09-22',
             bounds: UBELT_BOUNDS,
-            leafletPolygon: [],
+            mapPolygon: [],
           },
           edges: [],
           floodFeatures: [],

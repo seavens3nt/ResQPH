@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-import { AuthProvider, useAuth } from './AuthContext'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { AxiosError } from 'axios'
+import { describe, expect, it, vi } from 'vitest'
+import { AuthProvider, readApiMessage, useAuth } from './AuthContext'
+import { apiClient } from '../../api/client'
 
 function LoginHarness() {
   const { login, user } = useAuth()
@@ -8,17 +10,22 @@ function LoginHarness() {
     <>
       <button
         type="button"
-        onClick={() => login({ email: 'rescuer-alpha@example.test', role: 'rescuer' })}
+        onClick={() => void login({ email: 'rescuer-alpha@example.test', password: 'unused-password' })}
       >
         Login rescuer
       </button>
-      <output aria-label="demo actor">{user?.demoActorId ?? ''}</output>
+      <output aria-label="station actor">{user?.teamId ?? ''}</output>
     </>
   )
 }
 
-describe('prototype auth actor mapping', () => {
-  it('maps a rescuer alpha demo login to the assigned team actor id', () => {
+describe('authenticated account state', () => {
+  it('uses station membership returned by the server instead of email text', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { user: {
+      id: 'account-1', email: 'rescuer-alpha@example.test', name: 'Station Rescuer', role: 'rescuer',
+      station_id: 'sampaloc-fire-station', station_name: 'Sampaloc Fire Station',
+      station_address: 'A.H. Lacson Ave. cor. J.F. Fajardo St.',
+    } } } as never)
     render(
       <AuthProvider>
         <LoginHarness />
@@ -27,6 +34,21 @@ describe('prototype auth actor mapping', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /login rescuer/i }))
 
-    expect(screen.getByLabelText('demo actor')).toHaveTextContent('team-alpha')
+    await waitFor(() => expect(screen.getByLabelText('station actor')).toHaveTextContent('team-sampaloc-fire-station'))
+    expect(post).toHaveBeenCalledWith('/auth/login', expect.objectContaining({ email: 'rescuer-alpha@example.test' }))
+    post.mockRestore()
+  })
+})
+
+describe('signup error classification', () => {
+  it('distinguishes connection errors from server validation errors', () => {
+    expect(readApiMessage(new AxiosError('Network Error', AxiosError.ERR_NETWORK))).toMatch(/configured address and.*origin is allowed/i)
+    expect(readApiMessage(new AxiosError('Request failed', undefined, undefined, undefined, {
+      status: 409,
+      statusText: 'Conflict',
+      headers: {},
+      config: {} as never,
+      data: { error: { message: 'That email is already registered.' } },
+    }))).toBe('That email is already registered.')
   })
 })

@@ -114,6 +114,12 @@ function renderWithProviders(
   }
 }
 
+function submitConfirmedRequest() {
+  const confirmation = screen.queryByRole('button', { name: /Use this rescue location/i })
+  if (confirmation) fireEvent.click(confirmation)
+  fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+}
+
 // ---------------------------------------------------------------------------
 // RequestForm unit tests
 // ---------------------------------------------------------------------------
@@ -151,13 +157,13 @@ describe('RequestForm', () => {
 
   it('renders all required form fields', () => {
     renderForm()
-    expect(screen.getByLabelText(/Location — street address/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Optional address or location description/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/People needing assistance/i)).toBeInTheDocument()
-    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Reported severity/i)).toBeInTheDocument()
     expect(screen.queryByText(/Adjust map coordinates/i)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/Longitude/i)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/Latitude/i)).not.toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: /Use current GPS/i })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Longitude/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Latitude/i)).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Use my location/i })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Describe the immediate conditions \(optional\)/i)).toBeInTheDocument()
@@ -165,18 +171,27 @@ describe('RequestForm', () => {
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument()
   })
 
-  it('switches between GPS and the supported demonstration location', () => {
+  it('switches between GPS and the supported demonstration location without inventing an address', () => {
     renderForm()
 
     expect(screen.getByRole('radio', { name: /Use demo location/i })).toBeChecked()
     fireEvent.click(screen.getByRole('radio', { name: /Use demo location/i }))
-    expect(screen.getByLabelText(/street address/i)).toHaveValue('Sanitized demonstration address, Sampaloc, Manila')
+    expect(screen.getByLabelText(/Optional address or location description/i)).toHaveValue('')
   })
 
   it('shows feedback when GPS is unavailable', () => {
     renderForm()
-    fireEvent.click(screen.getByRole('radio', { name: /Use current GPS/i }))
+    fireEvent.click(screen.getByRole('radio', { name: /Use my location/i }))
     expect(screen.getByRole('alert')).toHaveTextContent(/GPS is not available/i)
+  })
+
+  it.each([[1, /permission was denied/i], [3, /timed out/i]])('explains GPS error code %s and keeps map/coordinate selection available', (code, message) => {
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: Number(code) }) } })
+    renderForm()
+    fireEvent.click(screen.getByRole('radio', { name: /Use my location/i }))
+    expect(screen.getByText(message as RegExp)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Longitude/i)).toBeEnabled()
+    vi.unstubAllGlobals()
   })
 
   it('keeps optional responder and medical fields visible without disclosures', () => {
@@ -192,17 +207,33 @@ describe('RequestForm', () => {
 
   // ── Validation error — empty address ─────────────────────────────────────
 
-  it('shows field-linked validation error for an empty address', async () => {
+  it('accepts a confirmed coordinate pin with no street address', async () => {
     renderForm()
-    const addressInput = screen.getByLabelText(/Location — street address/i)
-    fireEvent.change(addressInput, { target: { value: '' } })
-    fireEvent.submit(screen.getByRole('form', { hidden: true }) ?? screen.getByLabelText(/Citizen rescue request form/i))
-
+    mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
+    submitConfirmedRequest()
     await waitFor(() => {
-      expect(screen.getAllByText(/at least 5 characters/i)).toHaveLength(2)
+      expect(mockCreate).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ location: expect.objectContaining({ address: 'Pinned location' }) }), expect.any(String))
     })
-    // Input should be aria-invalid
-    expect(addressInput).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('allows keyboard coordinate edits and includes confirmed longitude-first GeoJSON coordinates', async () => {
+    mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
+    renderForm()
+    fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: '120.9947' } })
+    fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: '14.6043' } })
+    submitConfirmedRequest()
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ location: expect.objectContaining({ point: { type: 'Point', coordinates: [120.9947, 14.6043] } }) }),
+      expect.any(String),
+    ))
+  })
+
+  it('requires explicit location confirmation before submission', () => {
+    renderForm()
+    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(screen.getAllByText(/Confirm the selected rescue location/i).length).toBeGreaterThan(0)
   })
 
   // ── Validation error — headcount zero ────────────────────────────────────
@@ -212,7 +243,7 @@ describe('RequestForm', () => {
     fireEvent.change(screen.getByLabelText(/People needing assistance/i), {
       target: { value: '0' },
     })
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getAllByText(/At least 1 person/i)).toHaveLength(2)
@@ -224,10 +255,10 @@ describe('RequestForm', () => {
   it('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
     renderForm()
     vi.stubGlobal('navigator',{geolocation:{getCurrentPosition:(success:(position:unknown)=>void)=>success({coords:{longitude:121.05,latitude:14.7}})}})
-    fireEvent.click(screen.getByRole('radio',{name:/Use current GPS/i}))
+    fireEvent.click(screen.getByRole('radio',{name:/Use my location/i}))
     vi.unstubAllGlobals()
-    fireEvent.change(screen.getByLabelText(/street address/i),{target:{value:'Synthetic outside-boundary address'}})
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    fireEvent.change(screen.getByLabelText(/Optional address or location description/i),{target:{value:'Synthetic outside-boundary address'}})
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(
@@ -241,7 +272,7 @@ describe('RequestForm', () => {
     // Default coords are 120.9946, 14.6042 — inside the boundary
     // Submit without changing coordinates
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
     await waitFor(() => {
       expect(screen.queryByText(/inside the U-Belt pilot area/i)).not.toBeInTheDocument()
     })
@@ -259,11 +290,11 @@ describe('RequestForm', () => {
       },
     })
     renderForm()
-    const addressInput = screen.getByLabelText(/Location — street address/i)
+    const addressInput = screen.getByLabelText(/Optional address or location description/i)
     fireEvent.change(addressInput, {
       target: { value: 'Block 5 Lot 21 Jhocson St., Sampaloc, Manila' },
     })
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByTestId('submit-error-banner')).toBeInTheDocument()
@@ -284,7 +315,7 @@ describe('RequestForm', () => {
       },
     })
     renderForm()
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByTestId('submit-error-banner')).toBeInTheDocument()
@@ -304,7 +335,7 @@ describe('RequestForm', () => {
       },
     })
     renderForm()
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByText(/simulated citizen role is not allowed/i)).toBeInTheDocument()
@@ -323,7 +354,7 @@ describe('RequestForm', () => {
       },
     })
     renderForm()
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByText(/conflict occurred on the server/i)).toBeInTheDocument()
@@ -338,7 +369,7 @@ describe('RequestForm', () => {
     mockCreate.mockImplementationOnce(() => new Promise((res) => { resolve = res }))
 
     renderForm()
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Submitting/i })).toBeInTheDocument()
@@ -355,7 +386,7 @@ describe('RequestForm', () => {
     renderWithProviders(
       <RequestForm initialFloodLevel="high" onSuccess={onSuccess} onCancel={onCancel} />,
     )
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledWith(
@@ -365,6 +396,7 @@ describe('RequestForm', () => {
     expect(mockCreate).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ reported_flood_level: 'high' }),
+      expect.any(String),
     )
   })
 
@@ -381,6 +413,7 @@ describe('RequestForm', () => {
   it('submits via Enter key on the submit button', async () => {
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
     renderForm()
+    fireEvent.click(screen.getByRole('button', { name: /Use this rescue location/i }))
     const submitBtn = screen.getByRole('button', { name: /Submit request/i })
     fireEvent.keyDown(submitBtn, { key: 'Enter', code: 'Enter' })
     fireEvent.click(submitBtn) // Enter triggers click on native button
@@ -694,7 +727,7 @@ describe('CitizenView — API-backed request flow', () => {
     expect(screen.getByRole('button', { name: /Overhead \/ Fast Current/i })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Chest-deep/i }))
     fireEvent.click(screen.getByRole('button', { name: /Continue to request details/i }))
-    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Reported severity/i)).toBeInTheDocument()
     expect(screen.getByText(/Add a location and number of people/i)).toBeInTheDocument()
     expect(
       screen.queryByText(/Academic prototype — do not use for a real emergency/i),
@@ -715,7 +748,7 @@ describe('CitizenView — API-backed request flow', () => {
       expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
     })
 
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByTestId('submission-success')).toBeInTheDocument()
@@ -741,7 +774,7 @@ describe('CitizenView — API-backed request flow', () => {
       expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
     })
 
-    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    submitConfirmedRequest()
 
     await waitFor(() => {
       expect(screen.getByText(/Authoritative status from the API/i)).toBeInTheDocument()

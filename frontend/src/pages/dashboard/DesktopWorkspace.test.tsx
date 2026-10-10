@@ -10,7 +10,7 @@ const previousAdapter = apiClient.defaults.adapter
 afterEach(() => {cleanup(); sessionStorage.clear(); apiClient.defaults.adapter = previousAdapter})
 
 describe('Desktop workspace shell without the old demo provider', () => {
-  it.each(['citizen','coordinator','rescuer'])('renders %s with independent role navigation', async role => {
+  it.each(['citizen','rescuer'])('renders %s with independent role navigation', async role => {
     sessionStorage.setItem('resqph.auth.user', JSON.stringify({name:'Synthetic Tester',email:`${role}@example.test`,role,teamId:role === 'rescuer' ? 'team-alpha' : undefined}))
     apiClient.defaults.adapter = async config => ({config,headers:{},status:200,statusText:'OK',data:config.url?.includes('rescue-requests') ? {items:[],total:0} : []})
     const client = new QueryClient({defaultOptions:{queries:{retry:false}}})

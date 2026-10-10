@@ -88,6 +88,7 @@ export interface CreateRescueRequestPayload {
   medical_needs: boolean
   medical_details?: string
   reported_flood_level: FloodLevel
+  reported_severity?: 'low' | 'moderate' | 'high' | 'critical'
   situation_summary?: string
 }
 
@@ -101,7 +102,9 @@ export interface RescueRequestRecord {
   medical_needs: boolean
   medical_details?: string
   reported_flood_level: FloodLevel
+  reported_severity?: 'low' | 'moderate' | 'high' | 'critical'
   situation_summary?: string
+  assignment_reason?: 'queued' | 'no_station_available' | 'no_reachable_station' | 'assigned'
   status: RequestStatus
   /** Optimistic-lock version; required for cancel */
   version: number
@@ -109,9 +112,10 @@ export interface RescueRequestRecord {
   created_at: string
   /** ISO 8601 UTC */
   updated_at: string
-  /** Present after coordinator assignment */
+  /** Present after automatic station assignment */
   assigned_team_id?: string
-  /** Present after coordinator assignment */
+  assigned_station_id?: string | null
+  /** Present after automatic station assignment */
   mission_id?: string
   status_history?: StatusHistoryEntry[]
 }

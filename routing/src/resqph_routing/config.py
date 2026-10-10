@@ -97,6 +97,7 @@ PROCESSED_NODES = PROCESSED_DIR / "ubelt-v1-nodes.geojson"
 
 # Promoted small fixtures (committed)
 SAMPLE_GRAPH_PREVIEW = SAMPLES_DIR / "ubelt-v1-preview.geojson"
+SAMPLE_STATION_NETWORK = SAMPLES_DIR / "ubelt-station-network.geojson"
 SAMPLE_FLOOD_FIXTURE = SAMPLES_DIR / "ubelt-v1-flood-join.geojson"
 
 

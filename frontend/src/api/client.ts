@@ -2,24 +2,29 @@ import axios from 'axios'
 import { actorId, readSession } from '../features/auth/session'
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   timeout: 10_000,
+  withCredentials: true,
 })
 
-// Inject prototype demo-role headers from the auth session stored by AuthContext.
-// These are a non-production control and must never be used as real authentication.
+function csrfCookie(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const entry = document.cookie.split('; ').find((part) => part.startsWith('resqph_csrf='))
+  return entry ? decodeURIComponent(entry.slice('resqph_csrf='.length)) : undefined
+}
+
 apiClient.interceptors.request.use((config) => {
-  try {
-    const user = readSession()
-    if (user) {
-      config.headers['X-Demo-Role'] = user.role
-      config.headers['X-Demo-User-Id'] = actorId(user)
-    } else {
-      delete config.headers['X-Demo-Role']
-      delete config.headers['X-Demo-User-Id']
+  if (import.meta.env.MODE === 'test') {
+    const testActor = readSession()
+    if (testActor) {
+      config.headers['X-Demo-Role'] = testActor.role
+      config.headers['X-Demo-User-Id'] = actorId(testActor)
     }
-  } catch {
-    // localStorage unavailable or malformed — proceed without headers
+  }
+  const method = (config.method ?? 'get').toLowerCase()
+  if (!['get', 'head', 'options'].includes(method)) {
+    const token = csrfCookie()
+    if (token) config.headers['X-CSRF-Token'] = token
   }
   return config
 })

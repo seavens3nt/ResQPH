@@ -47,7 +47,10 @@ class OfflineMissionRepository:
 
     async def update_status_if_current(
         self, mission_id: str, expected_version: int, prior_status: MissionStatus,
-        new_status: MissionStatus, recorded_at: datetime, session: Any = None,
+        new_status: MissionStatus, recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
+        session: Any = None,
     ) -> Mission | None:
         mission = self.missions.get(mission_id)
         if mission is None or mission.version != expected_version or mission.status != prior_status:
@@ -55,6 +58,10 @@ class OfflineMissionRepository:
         fields: dict[str, Any] = {"status": new_status, "version": mission.version + 1, "updated_at": recorded_at}
         if new_status == "completed":
             fields["completed_at"] = recorded_at
+        if tracking_state is not None:
+            fields["tracking_state"] = tracking_state
+        if team_position is not None:
+            fields["team_position"] = team_position
         updated = mission.model_copy(update=fields)
         self.missions[mission_id] = updated
         return updated

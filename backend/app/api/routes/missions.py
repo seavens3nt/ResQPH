@@ -15,7 +15,6 @@ from app.repositories.rescue_requests import RescueRequestRepository
 from app.schemas.missions import (
     DemoActor,
     ErrorEnvelope,
-    MissionCancel,
     MissionResponse,
     MissionStatusEventCreate,
     MissionTrackingControl,
@@ -34,21 +33,6 @@ def get_mission_service() -> MissionService:
         MissionStatusEventRepository(database),
         RescueRequestRepository(database),
     )
-
-
-@router.post("/{mission_id}/cancel", response_model=MissionResponse)
-async def cancel_mission(
-    mission_id: str,
-    payload: MissionCancel,
-    actor: Annotated[DemoActor, Depends(get_demo_actor)],
-    service: Annotated[MissionService, Depends(get_mission_service)],
-) -> MissionResponse | JSONResponse:
-    try:
-        return await service.cancel_mission(
-            mission_id, payload.expected_mission_version, payload.reason, actor
-        )
-    except MissionServiceError as exc:
-        return error_response(exc)
 
 
 @router.get("", response_model=list[MissionResponse])
@@ -90,10 +74,17 @@ async def get_mission(
 async def create_status_event(
     mission_id: str,
     payload: MissionStatusEventCreate,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[MissionService, Depends(get_mission_service)],
 ) -> MissionResponse | JSONResponse:
     try:
+        check_rate_limit(
+            request,
+            actor_id=actor.user_id,
+            action="mission-status-update",
+            limit=settings.simulation_control_rate_limit_per_minute,
+        )
         return await service.create_status_event(mission_id, payload, actor)
     except MissionServiceError as exc:
         return error_response(exc)

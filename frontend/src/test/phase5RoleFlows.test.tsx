@@ -12,7 +12,6 @@ import { updateMissionStatus, type MissionDetail } from '../api/missions'
 import { AuthProvider } from '../features/auth/AuthContext'
 import { MissionProvider } from '../features/missions/MissionContext'
 import { RequestForm } from '../pages/dashboard/views/citizen/RequestForm'
-import { CoordinatorAssignModal } from '../pages/dashboard/views/coordinator/CoordinatorAssignModal'
 import { RescuerMissionCard } from '../pages/dashboard/views/rescuer/RescuerMissionCard'
 
 const previousAdapter = apiClient.defaults.adapter
@@ -21,7 +20,7 @@ function response(config: Parameters<AxiosAdapter>[0], status: number, data: unk
   return { config, status, data, statusText, headers: {} } as AxiosResponse
 }
 
-function renderForRole(ui: React.ReactElement, role: 'citizen' | 'coordinator' | 'rescuer') {
+function renderForRole(ui: React.ReactElement, role: 'citizen' | 'rescuer') {
   sessionStorage.setItem('resqph.auth.user', JSON.stringify({ email: `${role}-demo`, role, teamId: 'team-alpha', name: 'Demo Actor' }))
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
@@ -34,8 +33,8 @@ function renderForRole(ui: React.ReactElement, role: 'citizen' | 'coordinator' |
 beforeEach(() => { sessionStorage.clear() })
 afterEach(() => { apiClient.defaults.adapter = previousAdapter })
 
-describe('Issue 71 all-role frontend contract regression', () => {
-  it('citizen submits through the API client, exposes pending state, and accepts the server record', async () => {
+describe('authenticated citizen and station frontend contract regression', () => {
+  it('citizen submits a confirmed pin without an address and accepts the server record', async () => {
     let resolveRequest!: (value: ReturnType<typeof response>) => void
     let requestConfig!: Parameters<AxiosAdapter>[0]
     const onSuccess = vi.fn()
@@ -45,6 +44,7 @@ describe('Issue 71 all-role frontend contract regression', () => {
     }) as AxiosAdapter
 
     renderForRole(<RequestForm onSuccess={onSuccess} onCancel={vi.fn()} />, 'citizen')
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
 
     expect(await screen.findByRole('button', { name: /Submitting/i })).toBeDisabled()
@@ -54,7 +54,7 @@ describe('Issue 71 all-role frontend contract regression', () => {
     expect(requestConfig.headers.get('X-Demo-Role')).toBe('citizen')
     expect(JSON.parse(String(requestConfig.data))).toMatchObject({
       headcount: 1,
-      location: { point: { type: 'Point', coordinates: [120.9946, 14.6042] } },
+      location: { address: 'Pinned location', point: { type: 'Point', coordinates: [120.9946, 14.6042] } },
     })
 
     const created = {
@@ -74,60 +74,40 @@ describe('Issue 71 all-role frontend contract regression', () => {
         response(config, 422, { error: { code: 'validation_error', message: 'Headcount must be positive.' } }, 'Unprocessable Entity'))
     })
     renderForRole(<RequestForm onSuccess={vi.fn()} onCancel={vi.fn()} />, 'citizen')
-    const address = screen.getByLabelText(/Location .* street address/i)
+    const address = screen.getByLabelText(/Optional address or location description/i)
     fireEvent.change(address, { target: { value: 'Synthetic block, Sampaloc, Manila' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Headcount must be positive.')
+    expect(await screen.findByText('Headcount must be positive.')).toBeInTheDocument()
     expect(address).toHaveValue('Synthetic block, Sampaloc, Manila')
   })
 
-  it('coordinator preserves the conflict envelope and sends contract assignment version', async () => {
-    const onSuccess = vi.fn()
-    const onClose = vi.fn()
-    let requestConfig!: Parameters<AxiosAdapter>[0]
-    apiClient.defaults.adapter = vi.fn(async (config) => {
-      requestConfig = config
-      throw new AxiosError('Conflict', 'ERR_BAD_REQUEST', config, undefined,
-        response(config, 409, { error: { code: 'assignment_conflict', message: 'Request was already assigned.' } }, 'Conflict'))
-    })
-    const request = {
-      id: 'request-issue71-conflict', status: 'pending' as const, version: 4,
-      location: { address: 'Synthetic U-Belt location', point: { type: 'Point' as const, coordinates: [120.9946, 14.6042] as [number, number] } },
-      headcount: 1, vulnerabilities: [], medical_needs: false, reported_flood_level: 'low',
-      situation_summary: 'Synthetic controlled case', submitted_at: '2026-10-05T00:00:00Z',
-    }
-    renderForRole(<CoordinatorAssignModal isOpen targetRequest={request} onClose={onClose} onSuccess={onSuccess} />, 'coordinator')
-    fireEvent.click(screen.getByRole('button', { name: /Confirm Dispatch Assignment/i }))
-
-    expect(await screen.findByText('Request was already assigned.')).toBeInTheDocument()
-    await waitFor(() => expect(requestConfig.url).toBe(`/rescue-requests/${request.id}/assignment`))
-    expect(requestConfig.method).toBe('post')
-    expect(JSON.parse(String(requestConfig.data))).toMatchObject({ expected_request_version: 4 })
-    expect(requestConfig.headers.get('X-Demo-Role')).toBe('coordinator')
-    expect(onSuccess).not.toHaveBeenCalled()
-    expect(onClose).not.toHaveBeenCalled()
-  })
-
   it.each([
-    ['blank address', /Location .* street address/i, '   '],
     ['zero people', /People needing assistance/i, '0'],
-    ['outside boundary', /Location .* street address/i, 'Synthetic outside-boundary address'],
   ])('citizen rejects %s locally without sending a request', async (_case, label, value) => {
     const transport = vi.fn()
     const onSuccess = vi.fn()
     apiClient.defaults.adapter = transport
     renderForRole(<RequestForm onSuccess={onSuccess} onCancel={vi.fn()} />, 'citizen')
-    if (_case==='outside boundary') {
-      vi.stubGlobal('navigator',{geolocation:{getCurrentPosition:(success:(position:unknown)=>void)=>success({coords:{longitude:121.5,latitude:14.6}})}})
-      fireEvent.click(screen.getByRole('radio',{name:/Use current GPS/i}))
-      vi.unstubAllGlobals()
-    }
     fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
     expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
     expect(transport).not.toHaveBeenCalled()
     expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it('rejects an outside-study-area pin without moving it or sending a request', () => {
+    const transport = vi.fn()
+    apiClient.defaults.adapter = transport
+    renderForRole(<RequestForm onSuccess={vi.fn()} onCancel={vi.fn()} />, 'citizen')
+    fireEvent.change(screen.getByLabelText('Longitude'), { target: { value: '121.5' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
+    fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
+    expect(screen.getAllByRole('alert').some(alert => alert.textContent?.includes('inside the pilot area'))).toBe(true)
+    expect(screen.getByLabelText('Longitude')).toHaveValue(121.5)
+    expect(transport).not.toHaveBeenCalled()
   })
 
   it('citizen retains input and does not signal success during service outage', async () => {
@@ -137,10 +117,11 @@ describe('Issue 71 all-role frontend contract regression', () => {
         response(config, 503, { error: { code: 'database_unavailable', message: 'Synthetic outage.' } }, 'Service Unavailable'))
     })
     renderForRole(<RequestForm onSuccess={onSuccess} onCancel={vi.fn()} />, 'citizen')
-    const address = screen.getByLabelText(/Location .* street address/i)
+    const address = screen.getByLabelText(/Optional address or location description/i)
     fireEvent.change(address, { target: { value: 'Synthetic retry location, Manila' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(/temporarily unavailable/i)
+    expect(await screen.findByText(/temporarily unavailable/i)).toBeInTheDocument()
     expect(address).toHaveValue('Synthetic retry location, Manila')
     expect(onSuccess).not.toHaveBeenCalled()
     await waitFor(() => expect(screen.getByRole('button', { name: /Submit request/i })).toBeEnabled())

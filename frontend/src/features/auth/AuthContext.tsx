@@ -1,119 +1,145 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { QueryClientContext } from '@tanstack/react-query'
-import { readSession, writeSession } from './session'
 import type { ReactNode } from 'react'
-import type { AuthUser, ProfileUpdate, UserRole } from './types'
+import { apiClient } from '../../api/client'
+import { readSession } from './session'
+import type { AuthUser, EmergencyContact, MedicalInfo, ProfileUpdate, UserRole } from './types'
 import { isUserRole } from './types'
+import { RESCUE_STATIONS } from '../map/stations'
 
-/*
- * Prototype-only client auth. This is NOT real authentication: it persists a
- * chosen profile to sessionStorage so the landing -> login -> dashboard flow can
- * be demonstrated without a backend identity service. No passwords are stored.
- * Phase 1 defers the real authentication decision (see docs/ROADMAP.md).
- */
+interface AuthApiUser {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  phone?: string | null
+  station_id?: string | null
+  station_name?: string | null
+  station_address?: string | null
+  emergency_contact?: EmergencyContact | null
+  medical_info?: MedicalInfo | null
+  avatar_url?: string | null
+  location_permission?: boolean
+}
 
 interface AuthContextValue {
   user: AuthUser | null
-  login: (input: { email: string; role: UserRole; name?: string; teamId?: string }) => void
-  signup: (input: ProfileUpdate & { role: UserRole; locationPermission?: boolean }) => void
-  updateProfile: (input: ProfileUpdate) => void
-  logout: () => void
+  loading: boolean
+  login: (input: { email: string; password: string; stationId?: string }) => Promise<void>
+  signup: (input: ProfileUpdate & { password: string; locationPermission?: boolean }) => Promise<void>
+  updateProfile: (input: ProfileUpdate) => Promise<void>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function nameFromEmail(email: string): string {
-  const handle = email.split('@')[0] ?? 'Responder'
-  return handle
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ') || 'Responder'
+function mapAccount(account: AuthApiUser): AuthUser {
+  if (!isUserRole(account.role) || !account.id || !account.email) throw new Error('The account response was invalid.')
+  return {
+    id: account.id,
+    email: account.email,
+    role: account.role,
+    name: account.name,
+    teamId: account.station_id ? RESCUE_STATIONS.find((station) => station.station_id === account.station_id)?.team_id : undefined,
+    stationId: account.station_id ?? undefined,
+    stationName: account.station_name ?? undefined,
+    stationAddress: account.station_address ?? undefined,
+    phone: account.phone ?? undefined,
+    emergencyContact: account.emergency_contact ?? undefined,
+    medicalInfo: account.medical_info ?? undefined,
+    avatarUrl: account.avatar_url ?? undefined,
+    locationPermission: account.location_permission ?? false,
+  }
 }
 
-function demoActorIdFor(email: string): string {
-  const normalized = email.trim().toLowerCase()
-  const handle = normalized.split('@')[0] ?? normalized
-  if (handle.includes('alpha')) return 'team-alpha'
-  if (handle.includes('bravo')) return 'team-bravo'
-  if (handle.includes('charlie')) return 'team-charlie'
-  return normalized
+function readApiMessage(error: unknown): string {
+  if (isAxiosError(error)) {
+    if (!error.response) {
+      return 'Could not reach the ResQPH API. Check that it is running at the configured address and that this page origin is allowed, then try again.'
+    }
+    const body = error.response.data as {
+      error?: { message?: string; code?: string }
+      message?: string
+      detail?: string
+    } | undefined
+    return body?.error?.message ?? body?.message ?? body?.detail ?? `The server rejected the request (HTTP ${error.response.status}).`
+  }
+  return error instanceof Error ? error.message : 'The request could not be completed.'
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(readSession)
+  const [user, setUser] = useState<AuthUser | null>(() => readSession())
+  const [loading, setLoading] = useState(true)
   const queryClient = useContext(QueryClientContext)
-  const save = useCallback((next: AuthUser | null) => {
+
+  const accept = useCallback((next: AuthUser | null) => {
     if (next && !isUserRole(next.role)) next = null
-    writeSession(next)
+    // Actor-keyed queues must survive logout so a pending status event can be
+    // reviewed by the same account later. A different account has a distinct
+    // cache key and cannot read or replay that event.
     queryClient?.clear()
     setUser(next)
   }, [queryClient])
 
-  const login = useCallback<AuthContextValue['login']>(({ email, role, name, teamId }) => {
-    const normalizedEmail = email.trim().toLowerCase()
-    const mappedActorId = demoActorIdFor(normalizedEmail)
-    const resolvedTeamId = role === 'rescuer' ? teamId ?? mappedActorId : undefined
-    save({
-      email: normalizedEmail,
-      role,
-      teamId: resolvedTeamId,
-      demoActorId: resolvedTeamId ?? normalizedEmail,
-      name: name?.trim() || nameFromEmail(email),
-    })
-  }, [save])
+  useEffect(() => {
+    let active = true
+    if (import.meta.env.MODE === 'test') {
+      setLoading(false)
+      return () => { active = false }
+    }
+    apiClient.get<{ user: AuthApiUser }>('/auth/session')
+      .then(({ data }) => { if (active) setUser(mapAccount(data.user)) })
+      .catch(() => { if (active) setUser(null) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [])
 
-  const signup = useCallback<AuthContextValue['signup']>(({
-    name,
-    email,
-    role,
-    phone,
-    avatarUrl,
-    emergencyContact,
-    medicalInfo,
-    locationPermission,
+  const login = useCallback<AuthContextValue['login']>(async ({ email, password, stationId }) => {
+    const { data } = await apiClient.post<{ user: AuthApiUser }>('/auth/login', {
+      email: email.trim().toLowerCase(), password, ...(stationId ? { station_id: stationId } : {}),
+    })
+    accept(mapAccount(data.user))
+  }, [accept])
+
+  const signup = useCallback<AuthContextValue['signup']>(async ({
+    name, email, password, phone, emergencyContact, locationPermission,
   }) => {
-    save({
-      name: name.trim() || nameFromEmail(email),
-      email: email.trim().toLowerCase(),
-      role,
-      demoActorId: role === 'rescuer' ? demoActorIdFor(email) : email.trim().toLowerCase(),
-      teamId: role === 'rescuer' ? demoActorIdFor(email) : undefined,
-      phone: phone?.trim() || undefined,
-      avatarUrl: avatarUrl || undefined,
-      emergencyContact: emergencyContact ?? undefined,
-      medicalInfo: medicalInfo ?? undefined,
-      locationPermission: locationPermission ?? false,
+    const { data } = await apiClient.post<AuthApiUser>('/auth/register', {
+      name: name.trim(), email: email.trim().toLowerCase(), password,
+      phone: phone?.trim() || null,
+      emergency_contact: emergencyContact ?? null,
+      location_permission: locationPermission ?? false,
     })
-  }, [save])
+    accept(mapAccount(data))
+  }, [accept])
 
-  const updateProfile = useCallback<AuthContextValue['updateProfile']>((input) => {
-    save(user
-        ? {
-            ...user,
-            ...input,
-            name: input.name.trim() || user.name,
-            email: user.email,
-            demoActorId: user.role === 'rescuer' ? user.teamId ?? demoActorIdFor(user.email) : user.email,
-          }
-        : user,
-    )
-  }, [save, user])
+  const updateProfile = useCallback<AuthContextValue['updateProfile']>(async (input) => {
+    const { data } = await apiClient.patch<AuthApiUser>('/auth/profile', {
+      name: input.name.trim(), phone: input.phone?.trim() || null,
+      emergency_contact: input.emergencyContact ?? null,
+      medical_info: input.medicalInfo ?? null,
+      avatar_url: input.avatarUrl ?? null,
+    })
+    accept(mapAccount(data))
+  }, [accept])
 
-  const logout = useCallback(() => save(null), [save])
+  const logout = useCallback<AuthContextValue['logout']>(async () => {
+    await apiClient.post('/auth/logout')
+    accept(null)
+  }, [accept])
 
-  const value = useMemo(
-    () => ({ user, login, signup, updateProfile, logout }),
-    [user, login, signup, updateProfile, logout],
-  )
-
+  const value = useMemo(() => ({ user, loading, login, signup, updateProfile, logout }), [user, loading, login, signup, updateProfile, logout])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider')
+  if (!ctx && import.meta.env.MODE === 'test') {
+    return { user: readSession(), loading: false, login: async () => undefined, signup: async () => undefined, updateProfile: async () => undefined, logout: async () => undefined }
   }
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider')
   return ctx
 }
+
+export { readApiMessage }

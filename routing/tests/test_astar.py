@@ -7,6 +7,7 @@ import json
 import pathlib
 
 import pytest
+
 from resqph_routing.astar import (
     NoRouteResult,
     RouteResult,

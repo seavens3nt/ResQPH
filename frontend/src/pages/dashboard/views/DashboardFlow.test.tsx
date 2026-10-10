@@ -6,7 +6,6 @@ import { AuthProvider } from '../../../features/auth/AuthContext'
 import { MissionProvider } from '../../../features/missions/MissionContext'
 import { CitizenView } from './CitizenView'
 import { RescuerView } from './RescuerView'
-import { CoordinatorView } from './CoordinatorView'
 import { DashboardPage } from '../DashboardPage'
 
 function renderWithProviders(ui: React.ReactElement, initialRole: 'citizen' | 'rescuer' | 'coordinator' = 'citizen') {
@@ -91,7 +90,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     expect(screen.queryByRole('button', { name: 'Satellite View' })).not.toBeInTheDocument()
 
     // Verify OpenStreetMap container element
-    expect(document.getElementById('openmap-hazard-map')).toBeInTheDocument()
+    expect(document.getElementById('google-rescue-map')).toBeInTheDocument()
 
     expect(screen.getByText(/No route has been calculated/i)).toBeInTheDocument()
     expect(screen.queryByText(/Safety Score/i)).not.toBeInTheDocument()
@@ -126,7 +125,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     fireEvent.click(screen.getByRole('button', { name: /Continue to request details/i }))
     expect(screen.getByRole('button', { name: /Submit request/i })).toBeInTheDocument()
     // Flood level pre-filled from triage — not shown again as an editable field
-    expect(screen.queryByLabelText(/Reported flood level/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Reported severity/i)).toBeInTheDocument()
   })
 
   it('does not present MissionContext mock state as a persisted citizen request', () => {
@@ -176,38 +175,6 @@ describe('Field Rescuer Mobile Dashboard Flows', () => {
     expect(screen.getAllByText(/All possible shortcuts are flooded/i).length).toBeGreaterThanOrEqual(1)
   })
 })
-describe('Dispatcher / Coordinator Dashboard Flows', () => {
-  it('renders incoming rescue inquiry queue and situation inspector', () => {
-    renderWithProviders(<CoordinatorView navSection="inquiries" />, 'coordinator')
-
-    expect(screen.getByText(/Citizen Rescue Inquiries/i)).toBeInTheDocument()
-    expect(screen.getByText(/Inquiry Detail Inspector/i)).toBeInTheDocument()
-  })
-
-  it('has restricted manual route override with legal liability notice', () => {
-    renderWithProviders(<CoordinatorView navSection="missions" />, 'coordinator')
-
-    // Click Manual Override
-    const overrideButtons = screen.getAllByRole('button', { name: /Manual Override/i })
-    expect(overrideButtons.length).toBeGreaterThan(0)
-    fireEvent.click(overrideButtons[0])
-
-    // Verify restricted liability modal appears
-    expect(screen.getByText(/LEGAL & SAFETY LIABILITY NOTICE/i)).toBeInTheDocument()
-    expect(screen.getByText(/Mandatory Dispatch Justification/i)).toBeInTheDocument()
-  })
-
-  it('shows simulated route delay message tool in missions tab', () => {
-    renderWithProviders(<CoordinatorView navSection="missions" />, 'coordinator')
-
-    expect(screen.getByText(/Simulated Route Delay/i)).toBeInTheDocument()
-    expect(screen.getByText(/Push Route Advisory to All Screens/i)).toBeInTheDocument()
-    // Quick preset buttons
-    expect(screen.getByText(/Loyola impassable/i)).toBeInTheDocument()
-  })
-})
-
-
 describe('Dashboard Prototype Controls', () => {
   it('does not offer a role switch inside a workspace', () => {
     renderWithProviders(<DashboardPage />, 'citizen')

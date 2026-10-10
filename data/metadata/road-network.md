@@ -133,4 +133,23 @@ Full graph and full joined edges are regenerable via the build script and are gi
 
 ## Sampaloc simulation coverage note (2026-10-07)
 
-The study-area validation boundary was expanded locally to include the supplied simulated Sampaloc station points. The committed `ubelt-v1-preview.geojson` road fixture remains a 30-edge reviewed preview subset whose coordinate extent is approximately longitude `120.9931743` to `121.0036428`, latitude `14.5976244` to `14.6167606`. Several supplied station points snap hundreds of metres to this preview graph; the feature uses an explicit configurable snap limit and exposes snap metadata. A future accepted full-graph extraction should regenerate the road fixture for the expanded rectangle before claiming complete Sampaloc road coverage.
+The study-area validation boundary was expanded locally to include the supplied simulated Sampaloc station points. The committed `ubelt-v1-preview.geojson` remains a 30-edge reviewed preview subset. It is retained for historical pipeline checks and is no longer the runtime station-route fixture. See the 2026-10-10 expanded snapshot below.
+
+## Expanded station-network snapshot (2026-10-10)
+
+To verify the five catalog headquarters under the configured 900 m snap limit,
+the bounded network was regenerated from the approved study-area polygon using
+the existing OSMnx drive extraction pipeline. The extraction completed on
+2026-10-10; it produced 1,050 nodes and 2,535 directed edges. After removing
+two edges whose full geometries exceeded the approved rectangle, the committed
+`data/samples/ubelt-station-network.geojson` contains 2,533 edges. The source
+graph had zero self loops and one weakly connected component. Geometry is
+exported in EPSG:4326, `[longitude, latitude]`; routing distances use EPSG:32651.
+
+All five headquarters snapped within 27 m, and all five produced a route to a
+controlled incident at `[120.9946, 14.6042]`. Computed route distances ranged
+from 552 m to 2,065 m. This confirms graph coverage and routing connectivity
+for that fixture and incident, not road safety or real-time accessibility.
+The existing 10-record flood join remains a controlled sample; this expanded
+OSM snapshot does not add live or complete flood information. Attribute maps
+and demonstrations with `© OpenStreetMap contributors` under the ODbL.

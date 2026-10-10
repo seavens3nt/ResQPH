@@ -6,10 +6,8 @@
  *   - Mission and route loading/failure states (handled by parent)
  *   - Valid status-transition action button
  */
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useCallback, useEffect, useId, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import type { MissionDetail, MissionStatusHistoryItem } from '../../../../api/missions'
 import { controlMissionTracking, getMissionTracking, nextValidStatus } from '../../../../api/missions'
@@ -20,6 +18,9 @@ import { WorkspaceProgress } from '../../../../features/workspace/WorkspaceUI'
 import { MISSION_STAGES } from '../../../../features/workspace/missionStages'
 import { RecordId } from '../../../../features/workspace/Records'
 import './RescuerMissionCard.css'
+import { useAuth } from '../../../../features/auth/AuthContext'
+import { InteractiveFloodMap } from '../../../../features/map/InteractiveFloodMap'
+import { retryAfterDelay } from '../../../../api/retryAfter'
 
 interface RescuerMissionCardProps {
   mission: MissionDetail
@@ -46,20 +47,31 @@ export function RescuerMissionCard({
   const req = mission.request_summary
 
   const NEXT_LABEL: Partial<Record<string, string>> = {
-    'en-route': 'TAP EN ROUTE',
+    'en-route': 'ACCEPT MISSION & START TRAVEL',
     arrived: 'TAP ARRIVED AT SCENE',
     completed: 'TAP RESCUE COMPLETED',
   }
 
   const syncState = isStale || isCached ? 'stale' : 'fresh'
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const trackingKey = ['mission-tracking', user?.id, mission.id] as const
   const [pageVisible, setPageVisible] = useState(() => document.visibilityState === 'visible')
   const [followRescuer, setFollowRescuer] = useState(true)
   const suspendFollow = useCallback(() => setFollowRescuer(false), [])
   const tracking = useQuery({
-    queryKey: ['mission-tracking', mission.id],
-    queryFn: () => getMissionTracking(mission.id),
-    enabled: !isCached && mission.status !== 'completed',
-    refetchInterval: pageVisible ? 3000 : false,
+    queryKey: trackingKey,
+    queryFn: async () => {
+      const received = await getMissionTracking(mission.id)
+      const cached = queryClient.getQueryData<Awaited<ReturnType<typeof getMissionTracking>>>(trackingKey)
+      return cached && Date.parse(received.timestamp) < Date.parse(cached.timestamp) ? cached : received
+    },
+    enabled: Boolean(user && !isCached && !['completed', 'cancelled'].includes(mission.status)),
+    refetchInterval: query => !pageVisible ? false : query.state.error
+      ? retryAfterDelay(query.state.error, Math.min(30_000, 3_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
+      : 3_000,
+    refetchIntervalInBackground: false,
+    retry: false,
   })
   const trackingControl = useMutation({
     mutationFn: (action: 'start' | 'pause' | 'resume' | 'reset') => controlMissionTracking(mission.id, action),
@@ -107,6 +119,7 @@ export function RescuerMissionCard({
             </span>
           )}
           <span>Flood level: {req.reported_flood_level}</span>
+          <span>Reported severity: {req.reported_severity ?? 'moderate'}</span>
         </div>
       ) : (
         <p className="proto-notice" role="status">
@@ -118,28 +131,22 @@ export function RescuerMissionCard({
 
       {/* Non-production prototype notice */}
       <p className="proto-notice" role="note" style={{ marginTop: 8 }}>
-        <strong>Prototype:</strong> Route data is fixture-based; status transitions use demo role
-        simulation. Not a production dispatch system.
+        <strong>Prototype:</strong> Route and movement use controlled simulation data. This account
+        workflow is not a production emergency-dispatch service.
       </p>
 
       {tracking.data && (
         <div className="mission-tracking-panel">
-          <div className="mission-tracking-panel__header">
-            <strong>Shared Simulated Tracking</strong>
-            <label>
-              <input
-                type="checkbox"
-                checked={followRescuer}
-                onChange={(event) => setFollowRescuer(event.target.checked)}
-              />
-              Follow rescuer
-            </label>
-          </div>
+          <div className="mission-tracking-panel__header"><strong>Shared Simulated Tracking</strong></div>
           <MissionTrackingMap
             route={tracking.data.route_geometry?.coordinates ?? []}
             position={tracking.data.position?.coordinates ?? null}
+            progress={tracking.data.progress_ratio}
             follow={followRescuer}
+            onFollowChange={setFollowRescuer}
             onUserPan={suspendFollow}
+            stationId={mission.station_id ?? undefined}
+            incident={req?.location.point?.coordinates}
           />
           <div className="mission-tracking-panel__metrics">
             <span>Status: <strong>{tracking.data.simulation_status}</strong></span>
@@ -148,10 +155,9 @@ export function RescuerMissionCard({
             <span>Updated: <strong>{new Date(tracking.data.timestamp).toLocaleTimeString()}</strong></span>
           </div>
           <div className="mission-tracking-panel__actions">
-            <Button size="sm" variant="outline" type="button" onClick={() => trackingControl.mutate('start')}>Start</Button>
-            <Button size="sm" variant="ghost" type="button" onClick={() => trackingControl.mutate('pause')}>Pause</Button>
-            <Button size="sm" variant="ghost" type="button" onClick={() => trackingControl.mutate('resume')}>Resume</Button>
-            <Button size="sm" variant="ghost" type="button" onClick={() => trackingControl.mutate('reset')}>Reset</Button>
+            {mission.status === 'assigned' && <span className="workspace-caption">Assigned means this station is reserved. Accepting the mission starts the shared simulation together with the status update.</span>}
+            {tracking.data.simulation_status === 'running' && <Button size="sm" variant="ghost" type="button" disabled={trackingControl.isPending} onClick={() => trackingControl.mutate('pause')}>Pause simulation</Button>}
+            {tracking.data.simulation_status === 'paused' && <Button size="sm" variant="ghost" type="button" disabled={trackingControl.isPending} onClick={() => trackingControl.mutate('resume')}>Resume simulation</Button>}
           </div>
         </div>
       )}
@@ -227,64 +233,27 @@ export function RescuerMissionCard({
 function MissionTrackingMap({
   route,
   position,
+  progress,
   follow,
+  onFollowChange,
   onUserPan,
+  stationId,
+  incident,
 }: {
   route: [number, number][]
   position: [number, number] | null
+  progress: number
   follow: boolean
+  onFollowChange: (following: boolean) => void
   onUserPan: () => void
+  stationId?: string
+  incident?: [number, number]
 }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<L.Map | null>(null)
-  const lineRef = useRef<L.Polyline | null>(null)
-  const markerRef = useRef<L.CircleMarker | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return
-    const map = L.map(containerRef.current, { zoomControl: true }).setView([14.6042, 120.9946], 15)
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map)
-    map.on('dragstart zoomstart', onUserPan)
-    mapRef.current = map
-    return () => {
-      map.remove()
-      mapRef.current = null
-      lineRef.current = null
-      markerRef.current = null
-    }
-  }, [onUserPan])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-    const latLngRoute = route.map(([lng, lat]) => [lat, lng] as L.LatLngTuple)
-    if (lineRef.current) lineRef.current.remove()
-    if (latLngRoute.length >= 2) {
-      lineRef.current = L.polyline(latLngRoute, { color: '#2563eb', weight: 5, opacity: 0.84 }).addTo(map)
-      map.fitBounds(lineRef.current.getBounds(), { padding: [20, 20] })
-    }
-  }, [route])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !position) return
-    const latLng: L.LatLngTuple = [position[1], position[0]]
-    if (!markerRef.current) {
-      markerRef.current = L.circleMarker(latLng, {
-        radius: 8,
-        color: '#ffffff',
-        weight: 3,
-        fillColor: '#dc2626',
-        fillOpacity: 1,
-      }).addTo(map)
-    } else {
-      markerRef.current.setLatLng(latLng)
-    }
-    if (follow) map.panTo(latLng, { animate: true, duration: 0.4 })
-  }, [follow, position])
-
-  return <div ref={containerRef} className="mission-tracking-map" aria-label="Simulated mission route and rescuer marker" />
+  const geoJsonRoute = route.filter(point => point.length === 2 && point.every(Number.isFinite))
+  const incidentRecords = incident ? [{ id: 'mission-incident', label: 'Incident location', coordinates: incident }] : []
+  return <div className="mission-tracking-map" aria-label="Simulated mission route and rescuer marker">
+    <InteractiveFloodMap compact showRouteStatus={false} center={geoJsonRoute[0] ? [geoJsonRoute[0][1], geoJsonRoute[0][0]] : undefined}
+      routeGeometry={geoJsonRoute} trackingPosition={position ? { type: 'Point', coordinates: position } : null} trackingProgress={progress} showRouteControl
+      followPosition={follow} onFollowChange={onFollowChange} onManualPan={onUserPan} assignedStationId={stationId} records={incidentRecords}/>
+  </div>
 }

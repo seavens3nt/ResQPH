@@ -1,8 +1,44 @@
 # ResQPH API contract
 
+## Citizen-to-station API amendment (authorized local candidate, 2026-10-10)
+
+This amendment describes the active implementation target and supersedes the
+historical simulated-role/manual-assignment contract below. Historical examples
+remain for evidence provenance and do not describe currently registered
+coordinator endpoints.
+
+- `POST /auth/register`: create a citizen account; successful registration
+  starts a server-backed session.
+- `POST /auth/login`: validate credentials; station accounts must also provide
+  their stable `station_id`, which must equal provisioned membership.
+- `GET /auth/session`, `POST /auth/logout`, and `PATCH /auth/profile` restore,
+  invalidate, and update the authenticated account. Mutations use the CSRF
+  cookie/header pair. Session cookie is HttpOnly and expires after the
+  configured TTL.
+- `POST /rescue-requests` accepts an authenticated citizen only and requires
+  `Idempotency-Key`. Key scope is that account. Same-key/same-payload returns
+  the stored request; conflicting payload reuse returns `409`.
+- Automatic dispatch writes one linked request, station reservation, mission,
+  route, and stable `station_id` in a Mongo transaction after route evaluation.
+  Pending requests expose `assignment_reason` and are retried by durable,
+  leased queue workers. The queue is severity-first, submission-time-second.
+- Citizens read/cancel only their own pending requests and read only missions
+  linked to their requests. Station accounts list missions assigned to the
+  station derived from their server account and can read/control only those
+  missions. `X-Demo-*` headers are ignored unless an isolated test explicitly
+  enables the test adapter.
+- Manual assignment, team recommendation, and team listing routes are not
+  registered in the active API.
+
+The dispatch worker retries due jobs in bounded batches with leases and capped
+exponential backoff. Mission completion/cancellation wakes pending jobs;
+startup reconciles pending requests after a restart. The rate limiter uses
+bounded in-memory buckets per backend process, so multiple workers do not
+share counters.
+
 ## Informational Google Weather (local amendment, 2026-10-10)
 
-`GET /api/v1/weather/ubelt` requires existing demo actor headers and returns
+`GET /api/v1/weather/ubelt` requires an authenticated session and returns
 `temperature`, `high`, `low` (Celsius), `condition`, `kind` (clear/cloud/rain),
 `feelsLike` (Celsius), `windSpeed` (km/h), `rainChance` (percent), `rainAmount`
 (millimeters), and `time` (provider timestamp with timezone). The four added
@@ -24,7 +60,7 @@ No-store, fixed U-Belt point, no persistence and no live flood-routing coupling.
 
 **Status:** Completed and verified Phase 1 contract baseline
 **Base path:** `/api/v1`
-**Last updated:** 2026-09-22
+**Last updated:** 2026-10-10 (historical sections below are preserved as baseline)
 
 ## Contract rules
 
@@ -159,7 +195,7 @@ Success: `201 Created` with the mission and updated request summary. Request tra
 
 Allowed role: `coordinator`.
 
-Returns deterministic simulated team candidates backed by the Sampaloc station catalog. Candidates are ranked by shortest valid road distance after road eligibility, directionality, controlled flood restrictions, and bounded snapping are applied. Unavailable, assigned, missing-position, stale-position, or unreachable teams are returned as exclusions rather than hidden.
+Returns deterministic simulated station-unit candidates backed by the shared Sampaloc station catalog. Candidates are ranked by shortest valid road distance after directed-edge eligibility, controlled flood exclusions, and bounded point-to-road snapping are applied. Equal distances use ascending stable `station_id`, then `team_id`; ETA is displayed but never selects a station. Unavailable, legacy/unmapped, missing-position, malformed-position, or unreachable teams are returned as exclusions rather than hidden. Each accepted candidate retains its route result, including original routing origin, whether it came from `current_location` or `base_location`, snapped endpoints, and snap offsets. The current simulated position is used when available; otherwise the stored headquarters point is the origin. Completion records the last simulated position, so a recently completed unit can begin the next route from that location. No current-position age threshold is applied, so the origin timestamp must be reviewed separately when assessing a live selection.
 
 This endpoint uses controlled fixtures only. It does not contact real stations.
 Manual coordinator assignment remains available through `POST /assignment`; the

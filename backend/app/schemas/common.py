@@ -13,6 +13,8 @@ DemoRole = Literal["citizen", "rescuer", "coordinator"]
 class DemoActor(BaseModel):
     user_id: str = Field(min_length=1, max_length=128)
     role: DemoRole
+    account_id: str | None = None
+    station_id: str | None = None
 
 
 class ErrorDetail(BaseModel):

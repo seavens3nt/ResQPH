@@ -1,43 +1,43 @@
 import { WorkspaceCard, WorkspaceFacts } from './WorkspaceUI'
-import { useRoute } from '../routing/useRoute'
-import { useEffect, useRef, useState } from 'react'
-import { CONTROLLED_ROUTE_REQUEST } from '../routing/routeScenarios'
 import { InteractiveFloodMap } from '../map/InteractiveFloodMap'
-import { RouteSummary } from '../routing/presentation/RouteSummary'
 import { formatDuration } from '../routing/presentation/formatDuration'
 import type { MissionDetail } from '../../api/missions'
+import { journeyRoute, useMissionJourney } from '../missions/useMissionJourney'
+import { RESCUE_STATIONS } from '../map/stations'
 
-export function MissionRoute({mission, offline = false}: {mission: MissionDetail; offline?: boolean}) {
-  // A changed mission or destination owns a fresh route; never display the previous result.
-  return <MissionRouteContent key={`${mission.id}:${mission.request_summary?.location.point?.coordinates.join(',') ?? 'missing'}`} mission={mission} offline={offline}/>
-}
-
-function MissionRouteContent({mission, offline}: {mission: MissionDetail; offline: boolean}) {
-  const route = useRoute()
-  const [includeMl, setIncludeMl] = useState(false)
-  const requestedOnEntry = useRef(false)
-  const point = mission.request_summary?.location.point
-  const requestRoute = route.requestRoute
-  useEffect(() => {
-    if (offline || !point || requestedOnEntry.current) return
-    requestedOnEntry.current = true
-    requestRoute({...CONTROLLED_ROUTE_REQUEST, destination: point, include_ml_penalty: false})
-  }, [offline, point, requestRoute])
+export function MissionRoute({ mission, offline = false, lastSyncedAt }: { mission: MissionDetail; offline?: boolean; lastSyncedAt?: string | null }) {
+  const [follow, setFollow] = useState(true)
+  const journey = useMissionJourney(offline ? null : mission.id)
+  const currentMission = journey.mission.data ?? mission
+  const route = journeyRoute(currentMission)
+  const routeResult = currentMission.latest_route_result as { status?: string; route_id?: string; distance_m?: number; estimated_time_s?: number; explanation?: string } | null | undefined
+  const hasRoute = routeResult?.status === 'route-found' && route.length > 1
+  const station = RESCUE_STATIONS.find(item => item.station_id === currentMission.station_id)
+  const first = route[0]
 
   return <WorkspaceCard className="mission-route">
     <div className="mission-route-controls">
-    <h3>Route to this mission</h3>
-    <WorkspaceFacts items={[{label:'From',value:'Controlled staging point'},{label:'Destination',value:mission.request_summary?.location.address ?? 'Unavailable'}]}/>
-    <p>One flood-aware route through the controlled U-Belt road graph. This is not door-to-door navigation or a guarantee of safety.</p>
-    <button className="workspace-primary" disabled={!point || offline || route.isPending} onClick={() => point && route.requestRoute({...CONTROLLED_ROUTE_REQUEST, destination: point, include_ml_penalty: includeMl})}>{route.isPending ? 'Calculating…' : route.routeState.status === 'error' ? 'Retry mission route' : route.routeState.status === 'idle' ? 'Calculate mission route' : 'Recalculate mission route'}</button>
-    {!point && <p role="alert">This mission has no destination coordinates. Ask the dispatcher to review its request location.</p>}
-    <details className="workspace-technical"><summary>Method and routing details</summary><p>Rule-based A* uses the curated road graph and flood penalties. No live tracking. Routes and map tiles are not cached offline.</p><WorkspaceFacts items={[{label:'Staging coordinates',value:CONTROLLED_ROUTE_REQUEST.origin.coordinates.join(', ')},{label:'Destination coordinates',value:point?.coordinates.join(', ') ?? 'Unavailable'}]}/><label><input type="checkbox" checked={includeMl} onChange={e => setIncludeMl(e.target.checked)} disabled={offline || route.isPending}/> Include optional model risk on the next calculation</label><p>The server applies this only when an approved model is ready; otherwise rule-based routing remains active.</p></details>
-    {offline ? <p role="status">Reconnect to calculate and view the mission route. Map tiles are not cached.</p> : <>
-      {route.routeState.status === 'route-found' && <div className="workspace-route-result" role="status"><p><strong>Route found:</strong> {route.routeState.result.distance_m.toFixed(0)} m · Estimated {formatDuration(route.routeState.result.estimated_time_s)}</p><p>{route.routeState.result.fallback_used ? 'Rule-based fallback is active; model risk was not applied.' : 'Uses eligible roads and flood penalties in the controlled scenario.'}</p><details><summary>Route explanation and technical details</summary><RouteSummary status="route-found" result={route.routeState.result} /></details></div>}
-      {route.routeState.status === 'no-route' && <RouteSummary status="no-route" result={route.routeState.result} />}
-      {route.routeState.status === 'error' && <p role="alert">{route.routeState.message}</p>}
-    </>}
+      <h3>Assigned station route</h3>
+      <WorkspaceFacts items={[
+        { label: 'From', value: station?.name ?? currentMission.team_id },
+        { label: 'Destination', value: currentMission.request_summary?.location.address ?? 'Unavailable' },
+        { label: 'Mission', value: currentMission.status.replace('-', ' ') },
+        ...(hasRoute ? [{ label: 'Route distance', value: `${Math.round(routeResult.distance_m ?? 0)} m` }, { label: 'Estimated time', value: formatDuration(routeResult.estimated_time_s ?? 0) }] : []),
+      ]}/>
+      <p>The station assignment stores one shortest admissible route from its actual simulated response position. Road and flood inputs are controlled prototype data, not live safety guidance.</p>
+      {!hasRoute && <p role="status">No accepted route geometry is attached to this mission{offline ? ' in the cached record' : ''}.</p>}
+      {offline && <p role="status">Offline view · last mission sync {lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : 'unknown'} · tracking is paused until reconnection. Reconnect to refresh tracking; map tiles are not cached.</p>}
+      {currentMission.status === 'completed' && <p role="status">Mission completed. Tracking has stopped.</p>}
+      {currentMission.status === 'cancelled' && <p role="status">Mission cancelled. Tracking has stopped.</p>}
+      {journey.mission.isError && <p role="status">Mission refresh failed. Showing the last available mission record.</p>}
+      {journey.tracking.isError && <p role="status">Live tracking refresh failed. The last server position remains shown.</p>}
+      {!offline && journey.tracking.data && <p className="workspace-caption" aria-live="polite">{(journey.tracking.data.simulation_status ?? 'tracking unavailable').replaceAll('_', ' ')} · {Math.round(journey.tracking.data.remaining_distance_m)} m remaining · {formatDuration(journey.tracking.data.estimated_remaining_time_s)} simulated travel time · updated {new Date(journey.tracking.data.timestamp).toLocaleTimeString()}</p>}
+      {hasRoute && <details className="workspace-technical"><summary>Route method and coordinates</summary><p>{routeResult.explanation ?? 'Shortest admissible route through the controlled road graph.'}</p><WorkspaceFacts items={[{ label: 'Actual route origin', value: first ? `${first[1].toFixed(6)}, ${first[0].toFixed(6)}` : 'Unavailable' }, { label: 'Route ID', value: routeResult.route_id ?? 'Unavailable' }]}/></details>}
     </div>
-    {!offline && <InteractiveFloodMap showRouteStatus={false} activeStage={mission.status === 'cancelled' ? 'none' : mission.status} routeState={route.routeState} records={point ? [{id:mission.id,label:mission.request_summary?.location.address ?? 'Mission destination',coordinates:point.coordinates}] : []}/>}
+    {!offline && <InteractiveFloodMap showRouteStatus={false} center={first ? [first[1], first[0]] : undefined}
+      routeGeometry={route} trackingPosition={journey.tracking.data?.position ?? null} trackingProgress={journey.tracking.data?.progress_ratio} followPosition={follow} onFollowChange={setFollow} onManualPan={() => setFollow(false)} showRouteControl
+      assignedStationId={currentMission.station_id ?? undefined}
+      records={currentMission.request_summary?.location.point ? [{ id: currentMission.request_id, label: currentMission.request_summary.location.address, coordinates: currentMission.request_summary.location.point.coordinates }] : []}/>}
   </WorkspaceCard>
 }
+import { useState } from 'react'

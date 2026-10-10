@@ -106,12 +106,17 @@ class MissionService:
         elapsed = _elapsed_tracking_seconds(mission, now)
 
         if action == "start":
-            if status != "running":
-                tracking = {
-                    "status": "running",
-                    "started_at": serialize_utc(now),
-                    "elapsed_before_pause_s": 0.0,
-                }
+            if mission.status != "en-route":
+                raise MissionServiceError(409, "response_not_started", "Accept the assigned mission before starting travel.")
+            if status == "running":
+                return self._tracking_response(mission, now)
+            if status != "not_started":
+                raise MissionServiceError(409, "tracking_not_startable", "Resume a paused response instead of starting it again.")
+            tracking = {
+                "status": "running",
+                "started_at": serialize_utc(now),
+                "elapsed_before_pause_s": 0.0,
+            }
         elif action == "pause":
             if status == "running":
                 tracking = {
@@ -139,9 +144,16 @@ class MissionService:
                 [{"field": "action", "reason": "expected start, pause, resume, or reset"}],
             )
 
-        updated = await self._missions.update_tracking_state(mission.id, tracking, now)
+        updated = await self._missions.update_tracking_state(
+            mission.id, tracking, now, start_if_not_running=action == "start"
+        )
         if updated is None:
-            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            current = await self._missions.get_by_id(mission.id)
+            if current is None:
+                raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            if action == "start" and current.status == "en-route" and (current.tracking_state or {}).get("status") == "running":
+                return self._tracking_response(current, now)
+            raise MissionServiceError(409, "tracking_conflict", "Tracking changed; refresh before retrying this action.")
         return self._tracking_response(updated, now)
 
     async def create_status_event(
@@ -187,6 +199,33 @@ class MissionService:
             )
 
         recorded_at = utc_now()
+        terminal_tracking_state = None
+        terminal_team_position = None
+        if payload.new_status == "en-route":
+            # The assigned -> en-route transition acknowledges the dispatch and starts
+            # authoritative travel in the same transaction as mission/history updates.
+            terminal_tracking_state = {
+                "status": "running",
+                "started_at": serialize_utc(recorded_at),
+                "elapsed_before_pause_s": 0.0,
+            }
+        if payload.new_status == "arrived":
+            route = mission.latest_route_result or {}
+            terminal_tracking_state = {
+                **(mission.tracking_state or {}),
+                "status": "arrived",
+                "elapsed_before_pause_s": float(route.get("estimated_time_s") or _elapsed_tracking_seconds(mission, recorded_at)),
+                "paused_at": serialize_utc(recorded_at),
+            }
+        if payload.new_status in {"completed", "cancelled"}:
+            terminal_position = self._tracking_response(mission, recorded_at).position
+            terminal_team_position = terminal_position
+            terminal_tracking_state = {
+                **(mission.tracking_state or {}),
+                "status": payload.new_status,
+                "elapsed_before_pause_s": _elapsed_tracking_seconds(mission, recorded_at),
+                "paused_at": serialize_utc(recorded_at),
+            }
         event = MissionStatusEvent(
             event_id=payload.event_id,
             mission_id=mission.id,
@@ -219,6 +258,8 @@ class MissionService:
                 prior_status=mission.status,
                 new_status=payload.new_status,
                 recorded_at=recorded_at,
+                tracking_state=terminal_tracking_state,
+                team_position=terminal_team_position,
                 session=session,
             )
             if updated_mission is None:
@@ -307,11 +348,11 @@ class MissionService:
     ) -> Mission:
         mission = await self._get_visible_mission(mission_id, actor)
         if actor.role in {"rescuer", "coordinator"}:
-            if mission.status in {"cancelled", "completed"}:
+            if mission.status in {"arrived", "cancelled", "completed"}:
                 raise MissionServiceError(
                     409,
                     "tracking_terminal",
-                    "Tracking controls are unavailable after mission cancellation or completion.",
+                    "Tracking controls are unavailable after arrival, cancellation, or completion.",
                 )
             if actor.role == "rescuer" and not mission.is_assigned_to(actor.user_id):
                 raise MissionServiceError(
@@ -354,8 +395,21 @@ class MissionService:
         )
 
         async def persist(session: AsyncClientSession) -> Mission:
+            terminal_position = self._tracking_response(mission, now).position
             updated = await self._missions.update_status_if_current(
-                mission_id, expected_version, "assigned", "cancelled", now, session
+                mission_id=mission_id,
+                expected_version=expected_version,
+                prior_status="assigned",
+                new_status="cancelled",
+                recorded_at=now,
+                tracking_state={
+                    **(mission.tracking_state or {}),
+                    "status": "cancelled",
+                    "elapsed_before_pause_s": _elapsed_tracking_seconds(mission, now),
+                    "paused_at": serialize_utc(now),
+                },
+                team_position=terminal_position.model_dump(mode="python") if terminal_position else None,
+                session=session,
             )
             if updated is None:
                 raise MissionServiceError(

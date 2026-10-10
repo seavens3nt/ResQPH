@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from collections import defaultdict, deque
+from collections import OrderedDict, deque
 from collections.abc import Callable
 
 from fastapi import Request
@@ -11,7 +11,8 @@ from app.core.config import settings
 from app.schemas.common import ServiceError, error_response
 
 _WINDOW_SECONDS = 60.0
-_buckets: dict[str, deque[float]] = defaultdict(deque)
+_MAX_BUCKETS = 10_000
+_buckets: OrderedDict[str, deque[float]] = OrderedDict()
 
 
 def check_rate_limit(
@@ -30,13 +31,28 @@ def check_rate_limit(
 
 
 def _check_bucket(key: str, limit: int, now: float) -> None:
-    bucket = _buckets[key]
+    bucket = _buckets.get(key)
+    if bucket is None:
+        if len(_buckets) >= _MAX_BUCKETS:
+            _purge_expired(now)
+        if len(_buckets) >= _MAX_BUCKETS:
+            _buckets.popitem(last=False)
+        bucket = deque()
+        _buckets[key] = bucket
+    else:
+        _buckets.move_to_end(key)
     while bucket and now - bucket[0] >= _WINDOW_SECONDS:
         bucket.popleft()
     if len(bucket) >= limit:
         retry_after = max(1, int(_WINDOW_SECONDS - (now - bucket[0])) + 1)
         raise RateLimitExceeded(retry_after)
     bucket.append(now)
+
+
+def _purge_expired(now: float) -> None:
+    expired = [key for key, bucket in _buckets.items() if not bucket or now - bucket[-1] >= _WINDOW_SECONDS]
+    for key in expired:
+        _buckets.pop(key, None)
 
 
 class RateLimitExceeded(ServiceError):

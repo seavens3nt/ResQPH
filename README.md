@@ -6,10 +6,10 @@ COM243 | CCSFEN1L | Code Tayo Right-Neow
 
 ResQPH is an academic web application for coordinating rescue requests and
 missions during controlled or historical flood scenarios. Citizens submit
-requests, coordinators assign missions, and rescuers review assignments and
-update mission status.
+requests and the backend automatically assigns a station; station accounts
+review missions and update status.
 
-Current local scope (2026-10-07): Citizen, Dispatcher and Rescuer. Dispatcher uses the existing `coordinator` role in code and API headers. The Volunteer workflow, rescuer hotline and alternative-route UI are retired; one controlled flood-aware mission route remains. Old Volunteer sessions return to entry, hazard-report endpoints are unavailable, and existing stored records are preserved. See the [three-role decision](docs/decisions/2026-10-07-three-role-workflow.md). This local update does not change the historical verification or final-acceptance gates below.
+Current local candidate (2026-10-10): Citizen and provisioned station Rescuer accounts with persisted sessions, automatic assignment, Google Maps display, and shared mission tracking. The Dispatcher workflow is removed from active navigation and API routes; historical coordinator/team data and actor records remain preserved. The Volunteer workflow, rescuer hotline and alternative-route UI remain retired. See the [citizen-to-station implementation plan](docs/workflows/CITIZEN_STATION_WORKFLOW.md) and [new workflow decisions](docs/decisions/DECISION_LOG.md).
 
 The foundation, core request-to-mission workflow, mapping/geospatial pipeline,
 and **Team Phase 2 — Flood-Aware Routing** are verified. Matthew's early
@@ -50,9 +50,10 @@ Historically verified (the revised local candidate still requires final regressi
 - Limited offline support: production UI shell reload, one actor-scoped cached
   mission and one queued status update with safe replay and conflict review
 
-Still required for final acceptance:
-- Deliver and reverify the local three-role/modal/shared-style candidate, including fresh-request mission caching, status acknowledgement, identity, dispatcher data and mission-specific routing
-- Final end-to-end verification, production offline reload/replay and presentation evidence
+The local citizen-to-station candidate is not merged or fully accepted. Its
+remaining verification gates are recorded in the implementation plan and
+current status. Earlier phase evidence below is historical and is not a claim
+that the new workflow has passed.
 
 The current local UI uses Inter, shared full-width desktop page canvases, an outlined collapsing sidebar, dashboard rescue/review modals and request-status popups. Map roads/boundary remain enabled. See [visual rules](docs/ui/LOCAL_VISUAL_RULES.md) and [current status](docs/STATUS.md); these local changes have not been pushed or merged.
 
@@ -65,7 +66,7 @@ backend rejects it and uses the rule score.
 
 | Area | Baseline |
 |---|---|
-| Frontend | React, TypeScript, Vite, Leaflet |
+| Frontend | React, TypeScript, Vite, Google Maps JavaScript API |
 | Backend | Python 3.12, FastAPI, Pydantic, PyMongo |
 | Database | MongoDB 8 development replica set |
 | Routing/geospatial | NetworkX, OSMnx, GeoPandas, Shapely, PyProj, Rasterio |
@@ -156,6 +157,6 @@ of Manila. It uses controlled or historical flood inputs, sanitized rescue
 records, basic role simulation, and a manageable road-network extract.
 
 It does not provide live flood prediction, nationwide routing,
-government-system integration, production authentication, guaranteed road
-safety, or deployment for actual emergencies. Deterministic rules and human
-decisions remain authoritative.
+government-system integration, certified production authentication, guaranteed
+road safety, or deployment for actual emergencies. Deterministic rules and
+human decisions remain authoritative.

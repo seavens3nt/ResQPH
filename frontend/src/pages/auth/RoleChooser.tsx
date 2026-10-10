@@ -4,15 +4,13 @@ import { Icon, type IconName } from '../../components/art/Icon'
 const roleIcon: Record<UserRole, IconName> = {
   citizen: 'pin',
   rescuer: 'boat',
-  coordinator: 'shield',
 }
 
-const order: UserRole[] = ['citizen', 'rescuer', 'coordinator']
+const order: UserRole[] = ['citizen', 'rescuer']
 
 const roleDisplayNames: Record<UserRole, string> = {
   citizen: 'Citizen',
   rescuer: 'Rescuer',
-  coordinator: 'Dispatcher',
 }
 
 interface RoleChooserProps {

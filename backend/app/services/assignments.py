@@ -1,5 +1,9 @@
 from datetime import UTC, datetime
+from math import isfinite
 from uuid import uuid4
+
+from pymongo.asynchronous.client_session import AsyncClientSession
+from pymongo.errors import PyMongoError
 
 from app.integrations.routing import RoutingAdapter, RoutingIntegrationError
 from app.models.mission import Mission
@@ -19,8 +23,6 @@ from app.schemas.missions import MissionResponse
 from app.schemas.rescue_requests import RescueRequestResponse
 from app.schemas.routing import RouteRequest
 from app.services.stations import load_station_catalog, station_by_team_id
-from pymongo.asynchronous.client_session import AsyncClientSession
-from pymongo.errors import PyMongoError
 
 
 class AssignmentService:
@@ -35,6 +37,11 @@ class AssignmentService:
         self._rescuers = rescuers
         self._assignments = assignments
         self._routing = routing_adapter or RoutingAdapter()
+
+    async def pending_assignment_reason(self) -> str:
+        teams = await self._rescuers.list_all()
+        stations = [team for team in teams if team.station_id]
+        return "no_station_available" if not any(team.availability == "available" for team in stations) else "no_reachable_station"
 
     async def recommend_teams(
         self,
@@ -95,21 +102,25 @@ class AssignmentService:
                 "Automatic assignment is only available for pending unassigned requests.",
             )
 
-        candidates, _ = await self._rank_eligible_teams(request)
-        if not candidates:
-            return None
-
-        best = candidates[0]
-        coordinator = DemoActor(user_id="system-auto-assignment", role="coordinator")
-        return await self.assign_team(
-            request_id,
-            AssignmentCreate(
-                team_id=best.team_id,
-                expected_request_version=expected_request_version,
-            ),
-            coordinator,
-            precomputed_route=best.route,
-        )
+        for _attempt in range(3):
+            candidates, _ = await self._rank_eligible_teams(request)
+            if not candidates:
+                return None
+            best = candidates[0]
+            try:
+                return await self._commit_assignment(
+                    request_id,
+                    AssignmentCreate(
+                        team_id=best.team_id,
+                        expected_request_version=expected_request_version,
+                    ),
+                    precomputed_route=best.route,
+                    expected_team_version=best.team_version,
+                )
+            except ServiceError as exc:
+                if exc.code != "team_unavailable":
+                    raise
+        return None
 
     async def _rank_eligible_teams(
         self,
@@ -119,6 +130,16 @@ class AssignmentService:
         candidates: list[TeamRecommendationCandidate] = []
         exclusions: list[TeamRecommendationExclusion] = []
         for team in teams:
+            station = station_by_team_id(team.id)
+            if station is None or team.station_id != station["station_id"]:
+                exclusions.append(
+                    TeamRecommendationExclusion(
+                        team_id=team.id,
+                        team_name=team.team_name,
+                        reason="legacy_team_requires_explicit_station_mapping",
+                    )
+                )
+                continue
             if team.availability != "available":
                 exclusions.append(
                     TeamRecommendationExclusion(
@@ -130,15 +151,21 @@ class AssignmentService:
                 continue
             origin = _team_point(team)
             if origin is None:
+                location = team.current_location or team.base_location
                 exclusions.append(
                     TeamRecommendationExclusion(
                         team_id=team.id,
                         team_name=team.team_name,
-                        reason="missing_simulated_position",
+                        reason="malformed_simulated_position" if location else "missing_simulated_position",
                     )
                 )
                 continue
-            route = self._evaluate_team_route(origin, request.location.point.coordinates)
+            origin_source = "current_location" if team.current_location else "base_location"
+            route = self._with_origin_metadata(
+                self._evaluate_team_route(origin, request.location.point.coordinates),
+                origin,
+                origin_source,
+            )
             if route["status"] != "route-found":
                 exclusions.append(
                     TeamRecommendationExclusion(
@@ -149,7 +176,6 @@ class AssignmentService:
                     )
                 )
                 continue
-            station = station_by_team_id(team.id)
             candidates.append(
                 TeamRecommendationCandidate(
                     team_id=team.id,
@@ -158,10 +184,13 @@ class AssignmentService:
                     station_name=station["name"] if station else None,
                     station_address=team.station_address,
                     availability=team.availability,
+                    origin_source=origin_source,
+                    routing_origin=list(origin),
                     road_distance_m=route["distance_m"],
                     estimated_travel_time_s=route["estimated_time_s"],
                     route_id=route["route_id"],
                     route=route,
+                    team_version=team.version,
                     warnings=route.get("warnings", []),
                 )
             )
@@ -169,7 +198,7 @@ class AssignmentService:
         candidates.sort(
             key=lambda item: (
                 item.road_distance_m,
-                item.estimated_travel_time_s,
+                item.station_id or "",
                 item.team_id,
             )
         )
@@ -189,6 +218,38 @@ class AssignmentService:
                 "Only a simulated coordinator may assign rescue teams.",
                 [{"field": "X-Demo-Role", "reason": "expected coordinator"}],
             )
+
+        request = await self._requests.get_by_id(request_id)
+        team = await self._rescuers.get_by_id(payload.team_id)
+        if request is None:
+            raise ServiceError(404, "request_not_found", "Rescue request is unavailable.")
+        if team is None or team.availability != "available":
+            raise ServiceError(409, "team_unavailable", "The selected station is unavailable.")
+        origin = _team_point(team)
+        if origin is None:
+            raise ServiceError(409, "team_unreachable", "The selected station has no valid simulated position.")
+        origin_source = "current_location" if team.current_location else "base_location"
+        route = self._with_origin_metadata(
+            self._evaluate_team_route(origin, request.location.point.coordinates),
+            origin,
+            origin_source,
+        )
+        if route["status"] != "route-found":
+            raise ServiceError(409, "team_unreachable", "The selected station has no valid route to the incident.")
+        return await self._commit_assignment(
+            request_id,
+            payload,
+            precomputed_route=precomputed_route or route,
+            expected_team_version=team.version,
+        )
+
+    async def _commit_assignment(
+        self,
+        request_id: str,
+        payload: AssignmentCreate,
+        precomputed_route: dict | None = None,
+        expected_team_version: int | None = None,
+    ) -> AssignmentResponse:
 
         assigned_at = datetime.now(UTC)
         mission_id = f"mission-{uuid4().hex}"
@@ -229,25 +290,8 @@ class AssignmentService:
                     [{"field": "team_id", "reason": "missing or not available"}],
                 )
 
-            latest_route_result = precomputed_route
-            origin = _team_point(team)
-            if latest_route_result is None and origin is not None:
-                latest_route_result = self._evaluate_team_route(
-                    origin,
-                    request.location.point.coordinates,
-                )
-                if latest_route_result["status"] != "route-found":
-                    raise ServiceError(
-                        409,
-                        "team_unreachable",
-                        "The selected rescue team no longer has a valid route to the incident.",
-                        [
-                            {
-                                "field": "team_id",
-                                "reason": latest_route_result.get("reason", "no_route"),
-                            }
-                        ],
-                    )
+            if not precomputed_route or precomputed_route.get("status") != "route-found":
+                raise ServiceError(409, "route_not_available", "Assignment requires a precomputed reachable station route.")
 
             mission = Mission(
                 id=mission_id,
@@ -266,10 +310,12 @@ class AssignmentService:
                     "medical_needs": request.medical_needs,
                     "medical_details": request.medical_details,
                     "reported_flood_level": request.reported_flood_level,
+                    "reported_severity": request.reported_severity,
                     "situation_summary": request.situation_summary,
                     "fixture_notice": "Synthetic academic demonstration data.",
                 },
-                latest_route_result=latest_route_result,
+                latest_route_result=precomputed_route,
+                station_id=team.station_id,
                 data_source="synthetic",
             )
 
@@ -277,6 +323,7 @@ class AssignmentService:
                 request_id=request.id,
                 expected_version=payload.expected_request_version,
                 team_id=team.id,
+                station_id=team.station_id,
                 mission_id=mission.id,
                 assigned_at=assigned_at,
                 session=session,
@@ -294,6 +341,7 @@ class AssignmentService:
                 mission_id=mission.id,
                 assigned_at=assigned_at,
                 session=session,
+                expected_version=expected_team_version,
             )
             if reserved_team is None:
                 raise ServiceError(
@@ -356,6 +404,18 @@ class AssignmentService:
             ) from exc
         return route.model_dump(mode="json")
 
+    @staticmethod
+    def _with_origin_metadata(
+        route: dict,
+        origin: tuple[float, float],
+        source: str,
+    ) -> dict:
+        return {
+            **route,
+            "routing_origin": list(origin),
+            "origin_source": source,
+        }
+
 
 def _team_point(team: object) -> tuple[float, float] | None:
     location = getattr(team, "current_location", None) or getattr(team, "base_location", None)
@@ -365,7 +425,12 @@ def _team_point(team: object) -> tuple[float, float] | None:
     if (
         not isinstance(coordinates, list | tuple)
         or len(coordinates) != 2
-        or not all(isinstance(value, int | float) for value in coordinates)
+        or not all(type(value) in {int, float} for value in coordinates)
     ):
         return None
-    return (float(coordinates[0]), float(coordinates[1]))
+    longitude, latitude = float(coordinates[0]), float(coordinates[1])
+    if not (-180 <= longitude <= 180 and -90 <= latitude <= 90):
+        return None
+    if not isfinite(longitude) or not isfinite(latitude):
+        return None
+    return longitude, latitude

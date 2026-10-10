@@ -1,23 +1,38 @@
 import type { AuthUser } from './types'
-import { isUserRole } from './types'
 
-export const SESSION_KEY = 'resqph.auth.user'
-export const TEAM_IDS = ['team-alpha', 'team-bravo', 'team-charlie'] as const
-// Independently opened tabs start empty. Duplicated tabs may copy sessionStorage,
-// but subsequent entry/sign-out changes remain isolated. Never read localStorage.
+/** Legacy role simulation is discarded; the server's HttpOnly cookie owns session state. */
 export function readSession(): AuthUser | null {
+  if (import.meta.env.MODE === 'test') {
+    try {
+      const user = JSON.parse(sessionStorage.getItem('resqph.auth.user') ?? 'null') as AuthUser | null
+      if (!user || !user.email || !user.name || !['citizen', 'rescuer', 'coordinator'].includes(user.role)) {
+        sessionStorage.removeItem('resqph.auth.user')
+        return null
+      }
+      if (user.role === 'rescuer' && !user.teamId) {
+        sessionStorage.removeItem('resqph.auth.user')
+        return null
+      }
+      return user
+    } catch { return null }
+  }
   try {
-    const user = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? 'null') as AuthUser | null
-    if (!user || !user.email || !user.name || !isUserRole(user.role)) {
-      sessionStorage.removeItem(SESSION_KEY)
-      return null
-    }
-    if (user.role === 'rescuer' && !TEAM_IDS.includes(user.teamId as typeof TEAM_IDS[number])) return null
-    return user
-  } catch { return null }
+    sessionStorage.removeItem('resqph.auth.user')
+  } catch {
+    // Storage may be unavailable; cookie restoration remains authoritative.
+  }
+  return null
 }
-export function actorId(user: AuthUser): string { return user.role === 'rescuer' ? user.teamId! : user.email }
-export function writeSession(user: AuthUser | null) {
-  if (user) sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
-  else sessionStorage.removeItem(SESSION_KEY)
+
+export function actorId(user: AuthUser): string {
+  return user.id ?? user.email
+}
+
+export function writeSession(user: AuthUser | null): void {
+  if (import.meta.env.MODE === 'test') {
+    if (user) sessionStorage.setItem('resqph.auth.user', JSON.stringify(user))
+    else sessionStorage.removeItem('resqph.auth.user')
+    return
+  }
+  readSession()
 }

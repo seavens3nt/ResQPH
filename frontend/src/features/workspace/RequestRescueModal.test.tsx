@@ -10,7 +10,7 @@ vi.mock('../requests/hooks', () => ({
   useCreateRescueRequest: () => ({mutate,isPending:false}),
   useCancelRescueRequest: () => ({mutate:vi.fn(),isPending:false}),
 }))
-vi.mock('../../pages/dashboard/views/citizen/RequestLocationMap', () => ({RequestLocationMap: () => <div>Location map</div>}))
+vi.mock('../../pages/dashboard/views/citizen/RequestLocationMap', () => ({RequestLocationMap: ({onConfirmLocation}:{onConfirmLocation:()=>void}) => <div>Location map<button type="button" onClick={onConfirmLocation}>Use this rescue location</button></div>}))
 vi.mock('./useUbeltWeather', () => ({
   useUbeltWeather: () => ({isError:true,isFetching:false}),
   useUbeltHourlyWeather: () => ({isError:true,fetchStatus:'idle'}),
@@ -31,7 +31,7 @@ it('opens on the dashboard, traps focus, ignores backdrop clicks, and retains th
   const close = within(dialog).getByRole('button',{name:'Close dialog'})
   expect(close).toHaveFocus()
   expect(screen.getByLabelText('Current route')).toHaveTextContent('?view=overview')
-  fireEvent.change(screen.getByLabelText(/Location — street address/),{target:{value:'Synthetic retained address'}})
+  fireEvent.change(screen.getByLabelText(/Optional address or location description/),{target:{value:'Synthetic retained address'}})
   expect(screen.queryByRole('region',{name:'Unsubmitted request draft'})).not.toBeInTheDocument()
   fireEvent.click(dialog.parentElement!)
   expect(dialog).toBeInTheDocument()
@@ -45,7 +45,7 @@ it('opens on the dashboard, traps focus, ignores backdrop clicks, and retains th
   expect(mutate).not.toHaveBeenCalled()
   fireEvent.click(trigger)
   expect(screen.queryByRole('region',{name:'Unsubmitted request draft'})).not.toBeInTheDocument()
-  expect(screen.getByLabelText(/Location — street address/)).toHaveValue('Synthetic retained address')
+  expect(screen.getByLabelText(/Optional address or location description/)).toHaveValue('Synthetic retained address')
   fireEvent.click(screen.getByRole('button',{name:'Cancel'}))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(trigger).toHaveFocus()
@@ -80,12 +80,13 @@ it('validates and reviews without submission, supports editing, and uses the exi
   expect(screen.getByText('Check your request before continuing')).toBeVisible()
   expect(mutate).not.toHaveBeenCalled()
   fireEvent.change(screen.getByLabelText(/People needing assistance/),{target:{value:'2'}})
+  fireEvent.click(screen.getByRole('button',{name:'Use this rescue location'}))
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))
   expect(screen.getByRole('heading',{name:'Review rescue request'})).toHaveFocus()
   expect(mutate).not.toHaveBeenCalled()
-  expect(screen.getByLabelText('Reviewed street address')).toHaveValue('Sanitized demonstration address, Sampaloc, Manila')
-  expect(within(screen.getByRole('region',{name:'Request summary'})).getAllByRole('term')).toHaveLength(5)
-  expect(screen.queryByText('Coordinates')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Reviewed pinned location')).toHaveValue('Pinned location')
+  expect(within(screen.getByRole('region',{name:'Request summary'})).getAllByRole('term')).toHaveLength(7)
+  expect(screen.getByText(/Confirmed rescue pin/)).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Back'}))
   expect(screen.getByLabelText(/People needing assistance/)).toHaveValue(2)
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))
@@ -98,6 +99,7 @@ it('validates and reviews without submission, supports editing, and uses the exi
 it('shows the temporary success notice only after server confirmation, without opening tracking over it', () => {
   renderWorkspace()
   fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
+  fireEvent.click(screen.getByRole('button',{name:'Use this rescue location'}))
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))
   fireEvent.click(screen.getByRole('button',{name:'Submit Request'}))
   expect(screen.queryByText('Your request has successfully been submitted!')).not.toBeInTheDocument()

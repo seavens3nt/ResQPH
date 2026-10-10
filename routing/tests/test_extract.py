@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+
 from resqph_routing import config
 from resqph_routing.extract import (
     extract_osm_graph,

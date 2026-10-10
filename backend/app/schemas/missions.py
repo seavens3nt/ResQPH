@@ -93,6 +93,7 @@ class MissionResponse(BaseModel):
     id: str
     request_id: str
     team_id: str
+    station_id: str | None = None
     assigned_rescuer_id: str | None = None
     status: MissionStatus
     version: int
