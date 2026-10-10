@@ -6,9 +6,8 @@ import math
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
-
 from app.integrations.geospatial import STUDY_AREA_BOUNDS
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 RouteStatus = Literal["route-found", "no-route"]
 RoutingWarning = str
@@ -62,6 +61,7 @@ class RouteRequest(BaseModel):
     scenario_id: str = Field(min_length=1)
     algorithm: Literal["astar"] = "astar"
     include_ml_penalty: StrictBool = False
+    selection_mode: Literal["cost", "distance"] = "cost"
 
     @field_validator("scenario_id")
     @classmethod
@@ -105,6 +105,18 @@ class RouteFoundResponse(BaseModel):
     explanation: str = Field(min_length=1)
     scenario_timestamp: str = Field(min_length=1)
     model_version: str | None
+    selection_mode: Literal["cost", "distance"] = Field(
+        default="cost",
+        exclude_if=lambda value: value == "cost",
+    )
+    snapped_origin: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    snapped_destination: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("distance_m", "estimated_time_s", "total_cost", mode="before")
     @classmethod
@@ -139,6 +151,18 @@ class NoRouteResponse(BaseModel):
     reason: str = Field(min_length=1)
     warnings: list[RoutingWarning] = Field(min_length=1)
     scenario_timestamp: str = Field(min_length=1)
+    selection_mode: Literal["cost", "distance"] = Field(
+        default="cost",
+        exclude_if=lambda value: value == "cost",
+    )
+    snapped_origin: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    snapped_destination: dict[str, Any] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("warnings")
     @classmethod

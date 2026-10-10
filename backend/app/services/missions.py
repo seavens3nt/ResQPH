@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from itertools import pairwise
 from typing import ClassVar
 
 from pymongo.asynchronous.client_session import AsyncClientSession
@@ -10,7 +11,14 @@ from app.repositories.mission_status_events import (
     MissionStatusEventRepository,
 )
 from app.repositories.missions import MissionLifecycleConflictError, MissionRepository
-from app.schemas.missions import DemoActor, MissionResponse, MissionStatusEventCreate
+from app.repositories.rescue_requests import RescueRequestRepository
+from app.schemas.common import serialize_utc
+from app.schemas.missions import (
+    DemoActor,
+    MissionResponse,
+    MissionStatusEventCreate,
+    MissionTrackingResponse,
+)
 
 
 class MissionServiceError(Exception):
@@ -39,9 +47,11 @@ class MissionService:
         self,
         mission_repository: MissionRepository,
         event_repository: MissionStatusEventRepository,
+        request_repository: RescueRequestRepository | None = None,
     ) -> None:
         self._missions = mission_repository
         self._events = event_repository
+        self._requests = request_repository
 
     async def list_missions(
         self,
@@ -74,6 +84,65 @@ class MissionService:
     async def get_mission(self, mission_id: str, actor: DemoActor) -> MissionResponse:
         mission = await self._get_visible_mission(mission_id, actor)
         return await self._to_response(mission)
+
+    async def get_tracking(
+        self,
+        mission_id: str,
+        actor: DemoActor,
+    ) -> MissionTrackingResponse:
+        mission = await self._get_visible_mission(mission_id, actor)
+        return self._tracking_response(mission, utc_now())
+
+    async def control_tracking(
+        self,
+        mission_id: str,
+        action: str,
+        actor: DemoActor,
+    ) -> MissionTrackingResponse:
+        mission = await self._get_operable_tracking_mission(mission_id, actor)
+        now = utc_now()
+        tracking = dict(mission.tracking_state or {})
+        status = tracking.get("status", "not_started")
+        elapsed = _elapsed_tracking_seconds(mission, now)
+
+        if action == "start":
+            if status != "running":
+                tracking = {
+                    "status": "running",
+                    "started_at": serialize_utc(now),
+                    "elapsed_before_pause_s": 0.0,
+                }
+        elif action == "pause":
+            if status == "running":
+                tracking = {
+                    **tracking,
+                    "status": "paused",
+                    "paused_at": serialize_utc(now),
+                    "elapsed_before_pause_s": elapsed,
+                }
+        elif action == "resume":
+            if status == "paused":
+                tracking = {
+                    **tracking,
+                    "status": "running",
+                    "started_at": serialize_utc(now),
+                    "paused_at": None,
+                    "elapsed_before_pause_s": elapsed,
+                }
+        elif action == "reset":
+            tracking = {"status": "not_started", "elapsed_before_pause_s": 0.0}
+        else:
+            raise MissionServiceError(
+                422,
+                "invalid_tracking_control",
+                "Unsupported tracking control action.",
+                [{"field": "action", "reason": "expected start, pause, resume, or reset"}],
+            )
+
+        updated = await self._missions.update_tracking_state(mission.id, tracking, now)
+        if updated is None:
+            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+        return self._tracking_response(updated, now)
 
     async def create_status_event(
         self,
@@ -218,11 +287,43 @@ class MissionService:
         if actor.role == "coordinator":
             return mission
 
+        if actor.role == "citizen" and self._requests is not None:
+            request = await self._requests.get_by_id(mission.request_id)
+            if request is not None and request.citizen_id == actor.user_id:
+                return mission
+            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+
         raise MissionServiceError(
             403,
             "forbidden",
             "Simulated role is not allowed to retrieve missions.",
             [{"field": "X-Demo-Role", "reason": "expected rescuer or coordinator"}],
+        )
+
+    async def _get_operable_tracking_mission(
+        self,
+        mission_id: str,
+        actor: DemoActor,
+    ) -> Mission:
+        mission = await self._get_visible_mission(mission_id, actor)
+        if actor.role in {"rescuer", "coordinator"}:
+            if mission.status in {"cancelled", "completed"}:
+                raise MissionServiceError(
+                    409,
+                    "tracking_terminal",
+                    "Tracking controls are unavailable after mission cancellation or completion.",
+                )
+            if actor.role == "rescuer" and not mission.is_assigned_to(actor.user_id):
+                raise MissionServiceError(
+                    403,
+                    "forbidden",
+                    "Only the assigned simulated rescuer may control tracking.",
+                )
+            return mission
+        raise MissionServiceError(
+            403,
+            "forbidden",
+            "Simulated role is not allowed to control mission tracking.",
         )
 
     async def cancel_mission(
@@ -275,7 +376,6 @@ class MissionService:
                 409, "lifecycle_conflict", "Linked request or team changed; cancellation was not stored."
             ) from None
         return await self._to_response(updated)
-
     async def _get_operable_mission(
         self,
         mission_id: str,
@@ -344,6 +444,52 @@ class MissionService:
             }
         )
 
+    def _tracking_response(self, mission: Mission, now: datetime) -> MissionTrackingResponse:
+        route = mission.latest_route_result if isinstance(mission.latest_route_result, dict) else None
+        if not route or route.get("status") != "route-found":
+            return MissionTrackingResponse(
+                mission_id=mission.id,
+                request_id=mission.request_id,
+                team_id=mission.team_id,
+                simulation_status="unavailable",
+                position=None,
+                timestamp=serialize_utc(now) or "",
+                progress_ratio=0.0,
+                remaining_distance_m=0.0,
+                estimated_remaining_time_s=0.0,
+                total_distance_m=0.0,
+                total_travel_time_s=0.0,
+                warnings=["No accepted route is attached to this simulated mission."],
+            )
+        total_distance = float(route.get("distance_m") or 0.0)
+        total_time = float(route.get("estimated_time_s") or 0.0)
+        elapsed = _elapsed_tracking_seconds(mission, now)
+        progress = 1.0 if total_time <= 0 else max(0.0, min(1.0, elapsed / total_time))
+        geometry = route.get("geometry") if isinstance(route.get("geometry"), dict) else None
+        position = _interpolate_linestring(geometry, progress) if geometry else None
+        tracking = mission.tracking_state or {}
+        simulation_status = str(tracking.get("status", "not_started"))
+        if progress >= 1.0 and simulation_status == "running":
+            simulation_status = "arrived_at_destination"
+        if mission.status in {"cancelled", "completed"}:
+            simulation_status = mission.status
+        return MissionTrackingResponse(
+            mission_id=mission.id,
+            request_id=mission.request_id,
+            team_id=mission.team_id,
+            simulation_status=simulation_status,
+            position=position,
+            timestamp=serialize_utc(now) or "",
+            route_id=route.get("route_id"),
+            route_geometry=geometry,
+            progress_ratio=progress,
+            remaining_distance_m=round(total_distance * (1.0 - progress), 3),
+            estimated_remaining_time_s=round(total_time * (1.0 - progress), 3),
+            total_distance_m=total_distance,
+            total_travel_time_s=total_time,
+            warnings=route.get("warnings", []),
+        )
+
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
@@ -363,3 +509,64 @@ def bson_utc_millisecond(value: datetime) -> datetime:
         value = value.replace(tzinfo=UTC)
     normalized = value.astimezone(UTC)
     return normalized.replace(microsecond=(normalized.microsecond // 1000) * 1000)
+
+
+def _elapsed_tracking_seconds(mission: Mission, now: datetime) -> float:
+    tracking = mission.tracking_state or {}
+    elapsed_before = float(tracking.get("elapsed_before_pause_s") or 0.0)
+    if tracking.get("status") != "running":
+        return elapsed_before
+    started_at = _parse_utc(str(tracking.get("started_at") or ""))
+    if started_at is None:
+        return elapsed_before
+    return max(0.0, elapsed_before + (now - started_at).total_seconds())
+
+
+def _parse_utc(value: str) -> datetime | None:
+    if not value.endswith("Z"):
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _interpolate_linestring(geometry: dict, progress: float) -> dict:
+    coordinates = geometry.get("coordinates", [])
+    if not isinstance(coordinates, list) or not coordinates:
+        return {"type": "Point", "coordinates": [0.0, 0.0]}
+    if progress <= 0 or len(coordinates) == 1:
+        return {"type": "Point", "coordinates": coordinates[0]}
+    if progress >= 1:
+        return {"type": "Point", "coordinates": coordinates[-1]}
+    lengths: list[float] = []
+    total = 0.0
+    for start, end in pairwise(coordinates):
+        length = _meters_between(start, end)
+        lengths.append(length)
+        total += length
+    target = total * progress
+    traveled = 0.0
+    for index, length in enumerate(lengths):
+        if traveled + length >= target:
+            start = coordinates[index]
+            end = coordinates[index + 1]
+            ratio = 0.0 if length <= 0 else (target - traveled) / length
+            return {
+                "type": "Point",
+                "coordinates": [
+                    start[0] + (end[0] - start[0]) * ratio,
+                    start[1] + (end[1] - start[1]) * ratio,
+                ],
+            }
+        traveled += length
+    return {"type": "Point", "coordinates": coordinates[-1]}
+
+
+def _meters_between(left: list[float], right: list[float]) -> float:
+    import math
+
+    latitude = (left[1] + right[1]) / 2
+    dx = (right[0] - left[0]) * 111_320 * math.cos(math.radians(latitude))
+    dy = (right[1] - left[1]) * 110_540
+    return math.hypot(dx, dy)

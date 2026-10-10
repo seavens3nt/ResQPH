@@ -19,7 +19,7 @@ export const UBELT_BOUNDS = {
   west: 120.982,
   south: 14.596,
   east: 121.004,
-  north: 14.6175,
+  north: 14.621,
 } as const
 
 export function isInsideUBeltBoundary(lng: number, lat: number): boolean {
@@ -48,7 +48,7 @@ export const GeoPointSchema = z.object({
         message:
           'Location must be inside the U-Belt pilot area ' +
           '(controlled scenario boundary). ' +
-          'Longitude 120.982–121.004, Latitude 14.596–14.6175.',
+          'Longitude 120.982–121.004, Latitude 14.596–14.621.',
       },
     ),
 })

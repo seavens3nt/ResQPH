@@ -5,10 +5,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-
 from app.api.routes.missions import (
     get_mission_service,
     router,
@@ -18,6 +14,10 @@ from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import DuplicateMissionStatusEventError
 from app.services.missions import MissionService
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
+
 from tests.test_offline_sync_mongodb import validate_disposable_database_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

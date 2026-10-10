@@ -12,10 +12,9 @@ import json
 import math
 
 import geopandas as gpd
-from shapely.prepared import prep
-
 from resqph_routing import config
 from resqph_routing.flood_join import load_scenario
+from shapely.prepared import prep
 
 
 def test_preview_fixture_exists(committed_edges):
@@ -117,10 +116,10 @@ def test_scenario_fixture_is_deterministic():
 def test_committed_fixture_checksums():
     expected = {
         config.SAMPLE_GRAPH_PREVIEW: (
-            "da80118a7f327b4834bf2c3ad61a892ba833e7f23290a54863f511a810a4d96e"
+            "b9c0c52f6d49515a763a2e674b3284bc0f6bdbd865ec0f8c8e0ad1f249ebce59"
         ),
         config.SAMPLE_FLOOD_FIXTURE: (
-            "383263419aa8138cf3b5628f350ed88efcad01632c865235c7fcac20655a7dc7"
+            "1db1866b51fb474e018f59d79ffba71bae3fbbc4f07ab06d4c0aa006eb703df4"
         ),
     }
     for path, checksum in expected.items():

@@ -51,7 +51,7 @@ STUDY_AREA_BOUNDS = {
     "west": 120.982,
     "south": 14.596,
     "east": 121.004,
-    "north": 14.6175,
+    "north": 14.621,
 }
 FLOOD_LEVELS = {"none", "low", "moderate", "high", "severe"}
 PASSABILITY_VALUES = {"passable", "restricted", "impassable"}

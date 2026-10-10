@@ -119,6 +119,48 @@
   margin-top: 2px;
 }
 
+.assign-modal-body .recommendation-list {
+  display: grid;
+  gap: 8px;
+}
+
+.assign-modal-body .recommendation-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.assign-modal-body .recommendation-row.is-selected {
+  border-color: #dc2626;
+  background: #fff7ed;
+}
+
+.assign-modal-body .recommendation-row span {
+  display: grid;
+  gap: 3px;
+}
+
+.assign-modal-body .recommendation-row small {
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.assign-modal-body .recommendation-exclusions {
+  font-size: 0.76rem;
+  color: #475569;
+}
+
+.assign-modal-body .recommendation-exclusions ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
 .assign-modal-body .modal-footer {
   display: flex;
   align-items: center;

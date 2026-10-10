@@ -3,7 +3,6 @@
 import math
 
 import pytest
-
 from resqph_routing.costs import (
     ML_FALLBACK_WARNING,
     RoutingInputError,

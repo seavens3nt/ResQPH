@@ -3,11 +3,6 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-from pymongo.errors import PyMongoError
-
 from app.api.routes.rescue_requests import get_rescue_request_service, router
 from app.models.rescue_request import RequestStatus, RequestStatusHistory, RescueRequest
 from app.schemas.common import (
@@ -16,6 +11,10 @@ from app.schemas.common import (
     validation_exception_handler,
 )
 from app.services.rescue_requests import RescueRequestService
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
+from pymongo.errors import PyMongoError
 
 
 class InMemoryRequestRepository:

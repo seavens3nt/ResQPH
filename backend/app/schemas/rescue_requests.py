@@ -1,6 +1,9 @@
 from datetime import datetime
 from html import escape
 
+from app.core.study_area import STUDY_AREA_ID, point_is_inside_study_area
+from app.models.rescue_request import FloodLevel, RequestStatus, Vulnerability
+from app.schemas.common import serialize_utc
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -10,10 +13,6 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-
-from app.core.study_area import STUDY_AREA_ID, point_is_inside_study_area
-from app.models.rescue_request import FloodLevel, RequestStatus, Vulnerability
-from app.schemas.common import serialize_utc
 
 
 def sanitize_text(value: str | None) -> str | None:

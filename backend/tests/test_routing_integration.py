@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from app.integrations.geospatial import GeospatialFixtureConfig
 from app.integrations.routing import (
     ML_DISABLED_WARNING,
