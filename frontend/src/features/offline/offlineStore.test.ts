@@ -136,3 +136,16 @@ describe('offline persistence against current API records', () => {
     expect((recovery[0].record as { localId: string }).localId).toBe('broken')
   })
 })
+
+it('discards only the selected failed queue and retains its private recovery record', async () => {
+  const {enqueueEvent,discardEvent,readQueue} = await import('./offlineStore')
+  await resetOfflineDatabaseForTests()
+  const {actor_id:_owner,...entry} = event
+  await enqueueEvent('account-a',{...entry,syncState:'failed'})
+  await enqueueEvent('account-b',{...entry,localId:'other-event',body:{...entry.body,event_id:'other-event'}})
+  await discardEvent('account-a',entry.localId)
+  expect(await readQueue('account-a')).toBeNull()
+  expect((await readQueue('account-b'))?.localId).toBe('other-event')
+  expect((await readQuarantined('account-a'))[0].reason).toContain('server mission retained')
+  expect(await readQuarantined('account-b')).toEqual([])
+})

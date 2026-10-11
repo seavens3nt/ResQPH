@@ -113,7 +113,7 @@ export function SignupPage() {
     return (
       <div className="auth-mobile-page">
         <div className="auth-phone-shell">
-          <div className="auth-hero-banner"><BrandLogo className="auth-hero-logo-img"/></div>
+          <div className="auth-hero-banner"><BrandLogo theme="dark" className="auth-hero-logo-img"/></div>
           <div className="auth-location-screen">
             <p className="signup-step-count">Optional final step · Location access</p>
             <div className="auth-location-icon" aria-hidden="true">
@@ -162,7 +162,7 @@ export function SignupPage() {
 
         {/* Logo header */}
         <div className="auth-hero-banner">
-          <BrandLogo className="auth-hero-logo-img"/>
+          <BrandLogo theme="dark" className="auth-hero-logo-img"/>
         </div>
 
         {/* Progress */}

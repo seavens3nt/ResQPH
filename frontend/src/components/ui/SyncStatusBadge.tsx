@@ -89,7 +89,7 @@ export function SyncStatusBadge({
 
       {state === 'pending' && (
         <span className="sync-badge__note">
-          One transition queued — will sync on reconnect. It has not been accepted by the server.
+          One transition queued — will sync on reconnect. Server acceptance is not yet verified.
         </span>
       )}
 
@@ -101,7 +101,7 @@ export function SyncStatusBadge({
 
       {state === 'failed' && (
         <>
-          <span className="sync-badge__note">The queued transition was not accepted.</span>
+          <span className="sync-badge__note">The last send failed. Check server history to verify acceptance.</span>
           {failureReason && (
             <span className="sync-badge__reason">
               Failure reason: {failureReason}

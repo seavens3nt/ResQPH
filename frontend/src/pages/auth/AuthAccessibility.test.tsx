@@ -68,7 +68,7 @@ describe('Accessible prototype entry', () => {
     entry(<SignupPage/>)
     expect(screen.queryByText(/Public registration creates citizen accounts/)).not.toBeInTheDocument()
     expect(screen.queryByRole('link', {name:'Station / rescuer login'})).not.toBeInTheDocument()
-    expect(screen.getByAltText('ResQPH')).toHaveAttribute('src','/brand/resqph-wordmark.png')
+    expect(screen.getByRole('img',{name:'ResQPH'}).querySelector('image')).toHaveAttribute('href','/brand/landing-wordmark.webp')
     expect(screen.getByRole('link', {name:'Log in'})).toHaveAttribute('href','/login')
     const next = () => fireEvent.click(screen.getByRole('button', {name: 'Continue'}))
     fireEvent.change(screen.getByLabelText('First name'), {target: {value: 'Synthetic'}})

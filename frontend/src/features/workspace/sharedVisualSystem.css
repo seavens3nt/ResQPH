@@ -482,9 +482,9 @@
 
 .workspace-shell[data-role][data-view] :is(.home-live-weather-surface,.live-hourly-panel) { background:var(--neutral-inset); color:var(--neutral-ink); border-color:var(--neutral-line); }
 .workspace-shell[data-role][data-view] .workspace-topbar .citizen-role-pill { background:var(--neutral-surface); color:var(--neutral-ink); border:1px solid var(--neutral-line); max-width:160px; white-space:normal; overflow-wrap:anywhere; }
-.workspace-shell[data-role][data-view] .workspace-brand img.citizen-brand-lockup,
-.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand img.citizen-brand-lockup { filter:none; height:auto; object-fit:contain; border-radius:0; width:160px; max-width:100%; }
-.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand img.citizen-brand-lockup { width:44px; }
+.workspace-shell[data-role][data-view] .workspace-brand svg.citizen-brand-lockup,
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand svg.citizen-brand-lockup { filter:none; height:auto; object-fit:contain; border-radius:0; width:160px; max-width:100%; }
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand svg.citizen-brand-lockup { width:44px; }
 .workspace-shell[data-role][data-view] .account-form :is(input:not([type=file]),textarea,.account-photo),
 .workspace-shell[data-role][data-view] .account-actions button:not(.workspace-primary) { border-color:var(--neutral-line); }
 .account-avatar-art { color:var(--neutral-muted); background:var(--neutral-inset); border:1px solid var(--neutral-line); border-radius:50%; }
@@ -555,3 +555,42 @@
 .advisory-preparation h4 { margin:0 0 6px; }
 .advisory-preparation p { margin:0 0 8px; }
 .advisory-preparation ul { margin:0; padding-inline-start:20px; display:grid; gap:6px; }
+
+/* Landing-aligned shared dark levels; semantic colors remain unchanged. */
+[data-app-theme=dark] .workspace-shell[data-role][data-view][data-theme=dark] {
+ --home-page:#0b1324; --home-surface:#152139; --shared-surface:#152139; --shared-inset:#101b30;
+ --neutral-page:#0b1324; --neutral-surface:#152139; --neutral-inset:#101b30; --neutral-raised:#1d2b45; --neutral-hover:#263754;
+ --neutral-ink:#f1f5f9; --neutral-muted:#bac8dc; --neutral-line:#52647f;
+ --ink:#f1f5f9; --muted:#bac8dc; --line:#52647f; --home-selected:#263754;
+ background:var(--home-page);
+}
+[data-app-theme=dark] .auth-mobile-page {
+ --auth-page:#0b1324; --auth-card:#152139; --auth-inset:#101b30; --auth-text:#f1f5f9; --auth-muted:#bac8dc; --auth-border:#52647f;
+ --neutral-page:#0b1324; --neutral-surface:#152139; --neutral-inset:#101b30; --neutral-ink:#f1f5f9; --neutral-muted:#bac8dc; --neutral-line:#52647f; --auth-error:#fca5a5; color-scheme:dark;
+}
+[data-app-theme=light] .auth-mobile-page {
+ --neutral-page:#f8fafc; --neutral-surface:#fff; --neutral-inset:#f1f5f9; --neutral-ink:#0f172a; --neutral-muted:#475569; --neutral-line:#94a3b8;
+ --auth-text:#0f172a; --auth-error:#991b1b; color-scheme:light;
+}
+.workspace-shell[data-role][data-view] .mission-map-preview { --workspace-map-height:clamp(360px,46vh,440px); }
+.workspace-shell[data-role][data-view] .mission-map-preview :is(.map-shell,.google-map-canvas) { height:var(--workspace-map-height); min-height:var(--workspace-map-height); }
+.workspace-shell[data-role][data-view] .mission-map-preview .google-map-wrapper { min-height:var(--workspace-map-height); }
+@media(max-width:700px) { .workspace-shell[data-role][data-view] .mission-map-preview { --workspace-map-height:320px; } }
+
+[data-app-theme=dark] .workspace-shell[data-role][data-theme=dark] .workspace-table th { background:var(--neutral-raised); }
+[data-app-theme=dark] .workspace-shell[data-role][data-theme=dark] :is(.requests-selectable-row:hover td,.requests-reference-table tr.is-selected td,.workspace-table tr.is-selected) { background:var(--neutral-hover); }
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map { --workspace-map-height:clamp(360px,46vh,440px); height:var(--workspace-map-height); }
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map .google-map-wrapper { height:100%; min-height:100%; }
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map .google-map-canvas { height:100% !important; }
+@media(max-width:700px) { .workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map { --workspace-map-height:320px; } }
+
+/* Auth has its own approved dark appearance and never changes saved dashboard theme. */
+[data-app-theme] .auth-mobile-page,.auth-mobile-page {
+ --auth-page:#0b1324; --auth-card:#152139; --auth-inset:#101b30; --auth-text:#f1f5f9; --auth-muted:#bac8dc; --auth-border:#52647f;
+ --neutral-page:#0b1324; --neutral-surface:#152139; --neutral-inset:#101b30; --neutral-ink:#f1f5f9; --neutral-muted:#bac8dc; --neutral-line:#52647f;
+ --auth-error:#fca5a5; --auth-focus:#ff8d9a; color-scheme:dark;
+}
+.advisory-refresh { display:grid; gap:8px; padding:0 2px; font-size:.875rem; color:var(--muted); }
+.advisory-refresh p { margin:0; }
+.advisory-grid > .workspace-card { padding:20px; }

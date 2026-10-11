@@ -35,3 +35,11 @@ it('retains loaded records during refresh and a refresh failure', () => {
   expect(screen.getByRole('alert')).toHaveTextContent('Could not refresh')
   expect(screen.getByRole('button',{name:'Retry'})).toBeVisible()
 })
+
+it('shows sign-in recovery and stops manual refresh for an expired session while keeping own records stale',()=>{
+ render(<QueryState query={query({data:['own-record'],isError:true,error:{isAxiosError:true,response:{status:401,data:{error:{code:'authentication_required',message:'Sign in to continue.'}}}}})}>{records}</QueryState>)
+ expect(screen.getByText('own-record')).toBeVisible()
+ expect(screen.getByRole('alert')).toHaveTextContent('These records are stale')
+ expect(screen.getByRole('link',{name:'Sign in again to restore this account'})).toHaveAttribute('href','/login')
+ expect(screen.queryByRole('button',{name:'Retry'})).not.toBeInTheDocument()
+})

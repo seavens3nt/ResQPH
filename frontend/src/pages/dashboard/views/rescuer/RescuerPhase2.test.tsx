@@ -122,6 +122,8 @@ describe('Rescuer Phase 2 UI States', () => {
       expect(screen.getAllByText(/version conflict/i).length).toBeGreaterThan(0)
       const dismissBtn = screen.getByRole('button', { name: /Dismiss Failed Event/i })
       fireEvent.click(dismissBtn)
+    expect(screen.getByRole('dialog')).toHaveTextContent('does not delete or cancel')
+    fireEvent.click(screen.getByRole('button',{name:'Confirm discard local attempt'}))
       expect(onDismiss).toHaveBeenCalled()
     })
   })

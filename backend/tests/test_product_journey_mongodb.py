@@ -412,3 +412,118 @@ def test_cookie_auth_dispatch_ownership_tracking_and_pending_retry(api) -> None:
         assert retried["mission_id"]
     finally:
         pass
+
+
+def _recovery_mission(api):
+    client, database = api
+    _register_citizen(client, 'recovery-citizen@example.test')
+    citizen = _cookies(client)
+    response = client.post('/api/v1/rescue-requests', json=_request_body(), headers={**_csrf(client), 'Idempotency-Key': uuid4().hex})
+    assert response.status_code == 201
+    request = _wait_for_request(client, response.json()['id'])
+    assert request['status'] == 'assigned'
+    mission = database.missions.find_one({'id': request['mission_id']})
+    station = next(s for s in load_station_catalog()['stations'] if s['team_id'] == mission['team_id'])
+    _provision_station(database, station, 'recovery-station@example.test')
+    _login_station(client, 'recovery-station@example.test', station['station_id'])
+    return client, database, mission, citizen, station
+
+
+def _progress(client, mission, status):
+    response = client.post(f"/api/v1/missions/{mission['id']}/status-events", json={
+        'event_id':uuid4().hex, 'new_status':status, 'expected_mission_version':mission['version'],
+        'source':'online', 'client_recorded_at':datetime.now(UTC).isoformat(),
+    }, headers=_csrf(client))
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+@pytest.mark.parametrize('status', ['assigned', 'en-route', 'arrived'])
+def test_station_end_simulation_atomic_idempotent_and_citizen_visible(api, status):
+    client, database, mission, citizen, station = _recovery_mission(api)
+    for next_status in ['en-route', 'arrived'][:['assigned', 'en-route', 'arrived'].index(status)]:
+        mission = _progress(client, mission, next_status)
+    before = database.rescuers.find_one({'id':station['team_id']})
+    body = {'event_id':uuid4().hex,'expected_mission_version':mission['version'],'reason':'Disposable stuck simulation acceptance'}
+    url = f"/api/v1/missions/{mission['id']}/end-simulation"
+    result = client.post(url,json=body,headers=_csrf(client))
+    assert result.status_code == 200, result.text
+    assert result.json()['status'] == 'cancelled'
+    assert result.json()['tracking_state']['status'] == 'cancelled'
+    assert client.get(f"/api/v1/missions/{mission['id']}/tracking").json()['simulation_status'] == 'cancelled'
+    assert not client.get('/api/v1/missions?assigned_to=me&status=assigned,en-route,arrived').json()
+    assert client.post(url,json=body,headers=_csrf(client)).status_code == 200
+    assert client.post(url,json={**body,'expected_mission_version':99},headers=_csrf(client)).status_code == 409
+    after = database.rescuers.find_one({'id':station['team_id']})
+    assert after['version'] == before['version'] + 1
+    assert after['availability'] == 'available' and after['assigned_mission_id'] is None
+    assert database.mission_status_events.count_documents({'event_id':body['event_id']}) == 1
+    request = database.rescue_requests.find_one({'id':mission['request_id']})
+    assert request['status'] == 'cancelled' and request['cancellation_reason'] == body['reason']
+    _restore_cookies(client,citizen)
+    assert client.get(f"/api/v1/missions/{mission['id']}").json()['status'] == 'cancelled'
+    subsequent = client.post('/api/v1/rescue-requests',json=_request_body(),headers={**_csrf(client),'Idempotency-Key':uuid4().hex})
+    assert subsequent.status_code == 201
+    assert _wait_for_request(client,subsequent.json()['id'])['status'] == 'assigned'
+
+
+def test_end_simulation_authorization_stale_session_and_rollback(api, monkeypatch):
+    from pymongo.errors import OperationFailure
+
+    from app.repositories.mission_status_events import MissionStatusEventRepository
+    client, database, mission, citizen, station = _recovery_mission(api)
+    station_cookies = _cookies(client)
+    station_account = client.get('/api/v1/auth/session').json()['user']['id']
+    url = f"/api/v1/missions/{mission['id']}/end-simulation"
+    body = {'event_id':uuid4().hex,'expected_mission_version':mission['version'],'reason':'Rollback acceptance'}
+    _restore_cookies(client,citizen)
+    read = client.get('/api/v1/rescue-requests',headers={'X-Expected-Account-Id':station_account})
+    assert read.status_code == 409 and read.json()['error']['code']=='session_identity_changed'
+    assert 'items' not in read.json()
+    rejected = client.post(f"/api/v1/missions/{mission['id']}/status-events",json={'event_id':uuid4().hex,'new_status':'en-route','expected_mission_version':1},headers=_csrf(client))
+    assert rejected.status_code == 403 and rejected.json()['error']['code'] == 'forbidden'
+    assert 'signed-in account' in rejected.json()['error']['message']
+    assert client.post(url,json=body,headers=_csrf(client)).status_code == 403
+    switched = client.post(url,json=body,headers={**_csrf(client),'X-Expected-Account-Id':station_account})
+    assert switched.status_code == 409 and switched.json()['error']['code'] == 'session_identity_changed'
+    wrong = next(s for s in load_station_catalog()['stations'] if s != station)
+    _provision_station(database,wrong,'wrong-recovery@example.test')
+    _login_station(client,'wrong-recovery@example.test',wrong['station_id'])
+    assert client.post(url,json=body,headers=_csrf(client)).status_code == 403
+    _restore_cookies(client,station_cookies)
+    assert client.post(url,json={**body,'expected_mission_version':99},headers=_csrf(client)).status_code == 409
+    database.missions.update_one({'id':mission['id']},{'$set':{'data_source':'historical'}})
+    assert client.post(url,json=body,headers=_csrf(client)).status_code == 403
+    database.missions.update_one({'id':mission['id']},{'$set':{'data_source':'synthetic'}})
+    snapshots = {name:list(database[name].find({})) for name in ['missions','rescue_requests','rescuers','mission_status_events']}
+    async def fail_append(self, event, session=None):
+        raise OperationFailure('Injected acceptance rollback')
+    with monkeypatch.context() as patch:
+        patch.setattr(MissionStatusEventRepository,'append',fail_append)
+        assert client.post(url,json=body,headers=_csrf(client)).status_code == 503
+    for name, snapshot in snapshots.items():
+        assert list(database[name].find({})) == snapshot
+    assert client.post(url,json=body,headers=_csrf(client)).status_code == 200
+
+
+@pytest.mark.parametrize('start,next_status', [('assigned','en-route'),('en-route','arrived'),('arrived','completed')])
+def test_completion_end_simulation_race_has_one_terminal_winner(api, start, next_status):
+    client,database,mission,_,station = _recovery_mission(api)
+    for status in ['en-route','arrived'][:['assigned','en-route','arrived'].index(start)]:
+        mission = _progress(client,mission,status)
+    version = mission['version']
+    before = database.rescuers.find_one({'id':station['team_id']})['version']
+    end_body = {'event_id':uuid4().hex,'expected_mission_version':version,'reason':'Disposable terminal race'}
+    complete_body = {'event_id':uuid4().hex,'expected_mission_version':version,'new_status':next_status,'source':'online'}
+    headers = _csrf(client)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        end = pool.submit(client.post,f"/api/v1/missions/{mission['id']}/end-simulation",json=end_body,headers=headers)
+        complete = pool.submit(client.post,f"/api/v1/missions/{mission['id']}/status-events",json=complete_body,headers=headers)
+        results = [end.result(), complete.result()]
+    assert sorted(r.status_code for r in results) == [200,409]
+    final = database.missions.find_one({'id':mission['id']})
+    assert final['status'] in {next_status,'cancelled'} and final['version'] == version + 1
+    assert database.rescue_requests.find_one({'id':mission['request_id']})['status'] == final['status']
+    assert database.rescuers.find_one({'id':station['team_id']})['version'] == before + 1
+    if final['status'] == 'completed':
+        assert client.post(f"/api/v1/missions/{mission['id']}/end-simulation",json=end_body,headers=headers).status_code == 409

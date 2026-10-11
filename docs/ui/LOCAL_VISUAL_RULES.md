@@ -252,3 +252,21 @@ as shared tokens; Requests' more-specific theme rules read neutral raised/hover 
 Dark role badge reads neutral ink. Native shared sun/moon SVGs avoid Figma image scaling.
 Advisory has topbar h1 Advisory, section h2 Weather advisory, then useful card headings.
 Account subtext is removed without changes to permissions. Rendered acceptance pending.
+
+2026-10-12 superseding landing alignment: active LandingPage inline design is the
+brand/dark reference. Shared theme preference follows resqph-theme across landing,
+auth and dashboard. Dark page #0b1324, distinct navy surfaces/insets/raised levels;
+semantic colors remain. Shared SVG uses the landing WebP unchanged, clips ResQ
+for dark/light adaptation, and keeps blue P/red H unfiltered. Compact sidebar
+emblem is a separate theme-aware copy; approved favicons/references stay untouched.
+My Mission tracking/preview maps use 360–440px desktop and 320px narrow height.
+These supersede prior charcoal background and static full-logo preferences.
+Browser rendered acceptance is still pending.
+
+2026-10-12 auth regression repair supersedes shared-auth theme behavior above:
+login/register explicitly retain approved dark navy surfaces and dark logo rendering,
+regardless of OS or saved dashboard theme. Entering/leaving auth never changes that
+preference. Other placements remain theme-aware; approved favicon is unchanged.
+Advisory removes the separate Data status card; compact refresh action retains
+last-updated/stale/loading/offline/error/cooldown feedback below content. Natural
+card heights/shared padding/responsive columns remain. Rendered acceptance pending.

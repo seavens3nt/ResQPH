@@ -25,7 +25,7 @@ export function AuthLayout({
       <div className="auth-phone-shell">
         {/* Header with ResQPH logo */}
         <div className="auth-hero-banner">
-          <BrandLogo className="auth-hero-logo-img"/>
+          <BrandLogo theme="dark" className="auth-hero-logo-img"/>
         </div>
 
         {/* Form area */}

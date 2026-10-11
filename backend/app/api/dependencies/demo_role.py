@@ -32,6 +32,9 @@ async def get_demo_actor(
     if session is None:
         raise ServiceError(401, "authentication_required", "Sign in to continue.")
     actor, _account, session_document = session
+    expected_account = request.headers.get("X-Expected-Account-Id")
+    if expected_account and expected_account != _account["id"]:
+        raise ServiceError(409, "session_identity_changed", "The browser session changed accounts. Sign in again; use separate browser profiles for citizen and rescuer testing.")
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         csrf_cookie = request.cookies.get(settings.auth_csrf_cookie_name, "")
         csrf_header = request.headers.get("X-CSRF-Token", "")

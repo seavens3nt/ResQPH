@@ -23,7 +23,7 @@ vi.mock('./offlineStore', () => ({
 const api = vi.hoisted(() => ({ listMyMissions: vi.fn(), getMission: vi.fn(), updateMissionStatus: vi.fn() }))
 vi.mock('../../api/missions', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../api/missions')>()), ...api }))
 
-import { useOfflineMission } from './useOfflineMission'
+import { acceptedQueuedEvent, useOfflineMission } from './useOfflineMission'
 
 const mission: MissionDetail = {
   id: 'mission-1', request_id: 'request-1', team_id: 'rescuer-a', assigned_rescuer_id: 'rescuer-a',
@@ -117,7 +117,7 @@ describe('useOfflineMission', () => {
     const accepted = { ...mission, status: 'arrived' as const, version: 3, status_history: [{
       event_id: queued.localId, mission_id: mission.id, prior_status: 'en-route' as const,
       new_status: 'arrived' as const, actor_id: 'team-sampaloc-fire-station', actor_role: 'rescuer',
-      source: 'offline-sync' as const, server_recorded_at: '2026-10-04T00:06:00Z',
+      source: 'offline-sync' as const, client_recorded_at: queued.body.client_recorded_at, server_recorded_at: '2026-10-04T00:06:00Z',
     }] }
     api.getMission.mockResolvedValue(accepted)
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
@@ -159,7 +159,7 @@ describe('useOfflineMission', () => {
     const { result } = renderHook(() => useOfflineMission('rescuer-a', false))
     await waitFor(() => expect(result.current.entry?.syncState).toBe('failed'))
     expect(result.current.entry?.localId).toBe('event-forbidden')
-    expect(api.getMission).toHaveBeenCalledTimes(1) // initial authorized refresh only, no post-403 fetch
+    expect(api.getMission).toHaveBeenCalledTimes(2) // initial authorized refresh only, no post-403 fetch
   })
 
   it('keeps the current API mission visible and reports quota failure instead of claiming it was cached', async () => {
@@ -283,3 +283,11 @@ function makeEntry(): OfflineQueueEntry {
       client_recorded_at: '2026-10-04T00:05:00Z', source: 'offline-sync' },
     syncState: 'pending', enqueuedAt: '2026-10-04T00:05:00Z' }
 }
+
+it('requires full matching history evidence before reconciling an accepted queue', () => {
+  const queued = makeEntry()
+  const accepted: MissionDetail = {...mission,version:3,status_history:[{event_id:queued.localId,mission_id:mission.id,prior_status:'en-route',new_status:queued.body.new_status,actor_id:'rescuer-a',actor_role:'rescuer',source:queued.body.source,client_recorded_at:queued.body.client_recorded_at,server_recorded_at:mission.updated_at}]}
+  expect(acceptedQueuedEvent(accepted,queued,'rescuer-a')).toBe(true)
+  expect(acceptedQueuedEvent(accepted,queued,'other-account')).toBe(false)
+  expect(acceptedQueuedEvent(accepted,{...queued,body:{...queued.body,note:'changed'}},'rescuer-a')).toBe(false)
+})

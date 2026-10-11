@@ -4,6 +4,7 @@ import { getMission, getMissionTracking } from '../../api/missions'
 import type { MissionDetail, MissionTracking } from '../../api/missions'
 import { useAuth } from '../auth/AuthContext'
 import { retryAfterDelay } from '../../api/retryAfter'
+import { recordRefreshInterval, sessionReadBlocked } from '../../api/queryRecovery'
 
 const terminal = (status: string | undefined) => status === 'completed' || status === 'cancelled'
 export const isMissionTrackingActive = (status: string | undefined) =>
@@ -12,7 +13,7 @@ export const isMissionTrackingActive = (status: string | undefined) =>
 export function useMissionJourney(missionId: string | null | undefined) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const scope = user?.id ?? 'signed-out'
+  const scope = `${user?.id ?? user?.email ?? 'signed-out'}:${user?.stationId ?? ''}`
   const missionKey = ['mission-journey', scope, missionId] as const
   const mission = useQuery({
     queryKey: missionKey,
@@ -21,9 +22,10 @@ export function useMissionJourney(missionId: string | null | undefined) {
       const cached = queryClient.getQueryData<MissionDetail>(missionKey)
       return cached && received.version < cached.version ? cached : received
     },
-    enabled: Boolean(user && missionId),
-    refetchInterval: query => terminal(query.state.data?.status) ? false : 5_000,
-    refetchOnWindowFocus: true,
+    enabled: query => Boolean(user && missionId) && !sessionReadBlocked(query.state.error),
+    refetchInterval: query => terminal(query.state.data?.status) ? false : recordRefreshInterval(query.state.error,5_000),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect:false,
     retry: (failureCount, error) => failureCount < 2 && !isDefinitive(error),
   })
   const trackingKey = ['mission-tracking', scope, missionId] as const
@@ -35,12 +37,13 @@ export function useMissionJourney(missionId: string | null | undefined) {
       if (cached && Date.parse(received.timestamp) < Date.parse(cached.timestamp)) return cached
       return received
     },
-    enabled: Boolean(user && missionId && mission.data && !terminal(mission.data.status)),
-    refetchInterval: query => !isMissionTrackingActive(mission.data?.status) ? false : query.state.error
+    enabled: query => Boolean(user && missionId && mission.data && !terminal(mission.data.status)) && !sessionReadBlocked(mission.error) && !sessionReadBlocked(query.state.error),
+    refetchInterval: query => !isMissionTrackingActive(mission.data?.status) || sessionReadBlocked(query.state.error) ? false : query.state.error
       ? retryAfterDelay(query.state.error, Math.min(30_000, 3_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
       : 3_000,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect:false,
     retry: false,
   })
   const refreshTracking = tracking.refetch

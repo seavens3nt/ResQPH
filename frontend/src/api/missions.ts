@@ -141,6 +141,7 @@ export interface OfflineQueueEntry {
   body: StatusEventBody
   syncState: SyncState
   failureReason?: string
+  failureCode?: string
   enqueuedAt: string
 }
 
@@ -245,4 +246,9 @@ export async function controlMissionTracking(
   } catch (err) {
     return normalizeError(err)
   }
+}
+
+export async function endSimulatedMission(missionId: string, body: {event_id:string;expected_mission_version:number;reason:string}): Promise<MissionDetail> {
+  try { return (await apiClient.post<MissionDetail>(`/missions/${missionId}/end-simulation`, body)).data }
+  catch (error) { return normalizeError(error) }
 }

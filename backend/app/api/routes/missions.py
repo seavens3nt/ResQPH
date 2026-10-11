@@ -16,6 +16,7 @@ from app.schemas.missions import (
     DemoActor,
     ErrorEnvelope,
     MissionResponse,
+    MissionSimulationEnd,
     MissionStatusEventCreate,
     MissionTrackingControl,
     MissionTrackingResponse,
@@ -33,6 +34,22 @@ def get_mission_service() -> MissionService:
         MissionStatusEventRepository(database),
         RescueRequestRepository(database),
     )
+
+
+@router.post("/{mission_id}/end-simulation", response_model=MissionResponse)
+async def end_simulation(
+    mission_id: str,
+    payload: MissionSimulationEnd,
+    request: Request,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[MissionService, Depends(get_mission_service)],
+) -> MissionResponse | JSONResponse:
+    try:
+        check_rate_limit(request, actor_id=actor.user_id, action="end-simulation", limit=settings.simulation_control_rate_limit_per_minute)
+        return await service.end_simulation(mission_id, payload, actor)
+    except MissionServiceError as exc:
+        return error_response(exc)
+
 
 
 @router.get("", response_model=list[MissionResponse])

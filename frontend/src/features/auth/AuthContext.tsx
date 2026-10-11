@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { isAxiosError } from 'axios'
 import { QueryClientContext } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { apiClient } from '../../api/client'
+import { apiClient, setExpectedAccountId } from '../../api/client'
 import { readSession } from './session'
 import type { AuthUser, EmergencyContact, MedicalInfo, ProfileUpdate, UserRole } from './types'
 import { isUserRole } from './types'
@@ -79,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // reviewed by the same account later. A different account has a distinct
     // cache key and cannot read or replay that event.
     queryClient?.clear()
+    setExpectedAccountId(next?.id)
     setUser(next)
   }, [queryClient])
 
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return () => { active = false }
     }
     apiClient.get<{ user: AuthApiUser }>('/auth/session')
-      .then(({ data }) => { if (active) setUser(mapAccount(data.user)) })
+      .then(({ data }) => { if (active) {setExpectedAccountId(data.user.id); setUser(mapAccount(data.user))} })
       .catch(() => { if (active) setUser(null) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }

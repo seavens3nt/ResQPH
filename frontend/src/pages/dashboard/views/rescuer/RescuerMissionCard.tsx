@@ -137,12 +137,6 @@ export function RescuerMissionCard({
 
       {mission.status !== 'cancelled' && <WorkspaceProgress stages={MISSION_STAGES} current={mission.status} label="Mission progress"/>}
 
-      {/* Non-production prototype notice */}
-      <p className="proto-notice" role="note" style={{ marginTop: 8 }}>
-        <strong>Prototype:</strong> Route and movement use controlled simulation data. This account
-        workflow is not a production emergency-dispatch service.
-      </p>
-
       {showTracking && tracking.data && (
         <div className="mission-tracking-panel">
           <div className="mission-tracking-panel__header"><strong>Shared Simulated Tracking</strong></div>

@@ -36,7 +36,7 @@ describe('SyncStatusBadge', () => {
   it('keeps pending, syncing, failed, and acknowledged labels and messages distinct', () => {
     const { rerender } = render(<SyncStatusBadge state="pending" />)
     expect(screen.getByText('Pending Sync')).toBeInTheDocument()
-    expect(screen.getByText(/not been accepted by the server/i)).toBeInTheDocument()
+    expect(screen.getByText(/Server acceptance is not yet verified/i)).toBeInTheDocument()
 
     rerender(<SyncStatusBadge state="syncing" />)
     expect(screen.getByText('Syncing')).toBeInTheDocument()
@@ -44,7 +44,7 @@ describe('SyncStatusBadge', () => {
 
     rerender(<SyncStatusBadge state="failed" failureReason={fixture.pending_event.failureReason} />)
     expect(screen.getByText('Sync Failed')).toBeInTheDocument()
-    expect(screen.getByText(/queued transition was not accepted/i)).toBeInTheDocument()
+    expect(screen.getByText(/last send failed/i)).toBeInTheDocument()
     expect(screen.getByText(/Failure reason was not provided/i)).toBeInTheDocument()
 
     rerender(<SyncStatusBadge state="success" />)

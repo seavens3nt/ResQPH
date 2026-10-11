@@ -16,6 +16,7 @@ from app.schemas.common import serialize_utc
 from app.schemas.missions import (
     DemoActor,
     MissionResponse,
+    MissionSimulationEnd,
     MissionStatusEventCreate,
     MissionTrackingResponse,
 )
@@ -358,7 +359,7 @@ class MissionService:
                 raise MissionServiceError(
                     403,
                     "forbidden",
-                    "Only the assigned simulated rescuer may control tracking.",
+                    "Only the assigned station may control tracking.",
                 )
             return mission
         raise MissionServiceError(
@@ -408,7 +409,7 @@ class MissionService:
                     "elapsed_before_pause_s": _elapsed_tracking_seconds(mission, now),
                     "paused_at": serialize_utc(now),
                 },
-                team_position=terminal_position.model_dump(mode="python") if terminal_position else None,
+                team_position=terminal_position,
                 session=session,
             )
             if updated is None:
@@ -448,7 +449,7 @@ class MissionService:
             raise MissionServiceError(
                 403,
                 "forbidden",
-                "Only the assigned simulated rescuer may update this mission.",
+                "Only the assigned station may update this mission. Sign in with the matching station account.",
             )
 
         if actor.role == "coordinator" and new_status == "completed":
@@ -457,9 +458,68 @@ class MissionService:
         raise MissionServiceError(
             403,
             "forbidden",
-            "Simulated role is not allowed to update mission status.",
-            [{"field": "X-Demo-Role", "reason": "expected assigned rescuer"}],
+            "Your signed-in account cannot update mission status. Sign in as the assigned station using a separate browser profile for citizen testing.",
+            [{"field": "session.role", "reason": "expected assigned rescuer"}],
         )
+
+    async def end_simulation(
+        self, mission_id: str, payload: MissionSimulationEnd, actor: DemoActor
+    ) -> MissionResponse:
+        if actor.role != "rescuer" or not getattr(actor, "account_id", None) or not getattr(actor, "station_id", None):
+            raise MissionServiceError(403, "forbidden", "Sign in as the assigned station to end a simulated mission.")
+        mission = await self._get_operable_mission(mission_id, "cancelled", actor)
+        if mission.station_id != actor.station_id:
+            raise MissionServiceError(403, "forbidden", "Only the assigned station may end this simulation.")
+        if mission.data_source != "synthetic":
+            raise MissionServiceError(403, "simulation_only", "Only synthetic simulated missions may use this recovery action.")
+        audit_note = payload.reason
+
+        def validate_existing(event: MissionStatusEvent) -> None:
+            if not (event.mission_id == mission_id and event.new_status == "cancelled" and event.actor_id == actor.user_id and event.actor_role == "rescuer" and event.source == "online" and event.note == audit_note and event.recovery_account_id == actor.account_id and event.recovery_expected_version == payload.expected_mission_version):
+                raise MissionServiceError(409, "duplicate_event", "Recovery event ID was already used for different evidence.")
+
+        existing = await self._events.get_by_event_id(payload.event_id)
+        if existing:
+            validate_existing(existing)
+            return await self._to_response(mission)
+        if mission.status not in {"assigned", "en-route", "arrived"} or mission.version != payload.expected_mission_version:
+            raise MissionServiceError(409, "cancellation_conflict", "Mission changed or is terminal. Refresh before ending it; completed missions cannot be cancelled.")
+        now = utc_now()
+        position = self._tracking_response(mission, now).position
+        event = MissionStatusEvent(event_id=payload.event_id, mission_id=mission.id, prior_status=mission.status, new_status="cancelled", actor_id=actor.user_id, actor_role=actor.role, source="online", server_recorded_at=now, note=audit_note, recovery_account_id=actor.account_id, recovery_expected_version=payload.expected_mission_version)
+
+        async def persist(session: AsyncClientSession) -> Mission:
+            duplicate = await self._events.get_by_event_id(payload.event_id, session=session)
+            if duplicate:
+                validate_existing(duplicate)
+                current = await self._missions.get_by_id(mission_id)
+                if current is None:
+                    raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+                return current
+            updated = await self._missions.update_status_if_current(
+                mission_id=mission.id, expected_version=payload.expected_mission_version,
+                prior_status=mission.status, new_status="cancelled", recorded_at=now,
+                tracking_state={**(mission.tracking_state or {}), "status":"cancelled", "elapsed_before_pause_s":_elapsed_tracking_seconds(mission, now), "paused_at":serialize_utc(now)},
+                team_position=position, session=session,
+            )
+            if updated is None:
+                raise MissionServiceError(409, "mission_conflict", "Mission changed; recovery was not stored.")
+            await self._missions.record_cancellation_reason(mission.request_id, payload.reason, now, session)
+            await self._events.append(event, session=session)
+            return updated
+
+        try:
+            await self._events.ensure_indexes()
+            updated = await self._events.run_in_transaction(persist)
+        except MissionLifecycleConflictError:
+            raise MissionServiceError(409, "lifecycle_conflict", "Linked request or station changed; recovery was rolled back.") from None
+        except DuplicateMissionStatusEventError:
+            existing = await self._events.get_by_event_id(payload.event_id)
+            if existing is None:
+                raise MissionServiceError(409, "duplicate_event", "Recovery event ID is already used.") from None
+            validate_existing(existing)
+            return await self.get_mission(mission_id, actor)
+        return await self._to_response(updated)
 
     def _validate_idempotent_retry(
         self,

@@ -9,6 +9,395 @@ uncommitted and unpushed. No fetch/pull/commit/push/PR/merge/deployment was perf
 in this follow-up; `temporary-main` and `main` were not modified. Environment values,
 credential files, accounts, missions, station catalog and database are unchanged.
 
+## Dark auth, refresh isolation and fresh demo — 2026-10-12
+
+This is the latest checkpoint and supersedes earlier statements that auth follows
+shared light/dark preference or that no accounts/database were added. The existing
+dirty tree was preserved on `feature/citizen-ui-advisory-refinement`, HEAD
+`8ac45bf203617ff2b97632fe3ca044671689820e`. Local `main` remains `de0fc954` and
+`temporary-main` remains `8ac45bf`; no commit, push, PR, merge, fetch or remote
+mutation was performed in this checkpoint. No developer database records, legacy
+missions, environment values, station IDs or favicon files were changed.
+
+### Requirement status and changes
+
+| Requirement | Local implementation / evidence | Remaining acceptance |
+|---|---|---|
+| Inspect baseline and existing contracts | Existing cookie AuthService, account/station mapping, actor-owned Dexie queues, account query keys, provisioning utilities, config and previous report inspected | None for inspection |
+| Restore approved auth | Existing layout retained; explicit dark auth tokens and forced-dark auth BrandLogo independent of saved dashboard/OS preference | Rendered browser acceptance pending |
+| Simplify Advisory | Data status card removed; compact refresh region retains last-updated/stale/offline/error/loading/cooldown/429/provider feedback; content-sized cards and responsive columns retained | Rendered browser acceptance pending |
+| Diagnose refresh | Demonstrated cookie/expected-account mismatch on GET; repaired read identity guard and polling/recovery policies | Exact original browser request remains unverified |
+| Fresh database | New `resqph_demo_20261012` on existing local rs0 at localhost:27018; indexes and multi-document transaction verified | Original localhost:27017 replica-set mismatch remains a separate blocker for default startup |
+| Accounts | 5 citizens + 5 catalog-backed station accounts persisted with existing hashes/auth; 10 real API logins/role checks/session restoration/logout verified; wrong station denied | Separate-profile UI walkthrough pending |
+| Local documentation | Ignored, untracked `local-demo/README.md`, directory 0700/file 0600; table, startup, profile separation, cache recovery and walkthrough present | Credentials intentionally absent from this tracked report |
+| Fresh journey | 8 real Mongo cookie journey/recovery cases and 15 replay/rollback cases pass on guarded disposable databases | Browser visual/network acceptance pending |
+| Checks | Frontend 409 passed; backend/integration 226 passed, 31 opt-in skips; explicit modern Mongo suites pass | Six legacy opt-in fixture failures listed individually below |
+
+### Login regression
+
+The preceding change made auth consume the dashboard's shared persisted preference;
+a saved light preference therefore changed the formerly dark login. Auth now owns
+explicit dark CSS variables and color-scheme, and auth BrandLogo forces dark rendering.
+The existing navy auth design, forms, station selector, validation and accessibility
+remain. No entering/leaving auth operation writes the dashboard theme preference.
+Other logo placements retain theme behavior; favicon/index files have no diff.
+
+### Refresh diagnosis and evidence limits
+
+HttpOnly cookie selects the backend account. Client account IDs are assertions and
+cache keys; station IDs are verified membership. Axios already uses credentials;
+CSRF remains mutation-only. Ordinary auth mode never accepts demo headers as an actor.
+Same-profile tabs share the cookie, while a tab can retain its previous user in memory.
+The earlier expected-account guard covered mutations only: a read could execute
+under a replacement cookie and return the new account's records into the old tab's
+query key. This is a demonstrated isolation gap, not a proven explanation for every
+historical stale-record message.
+
+Real TestClient cookie requests to `GET /api/v1/missions?assigned_to=me` and
+`GET /api/v1/rescue-requests` with a disagreeing `X-Expected-Account-Id` now return
+HTTP 409, `error.code=session_identity_changed`, before reading authorized data.
+The timed disposable journey suite completed in 52.70 seconds; no browser HAR or
+historical request timing was available. Headers/cookies/tokens were not logged.
+Mutation CSRF/ownership/station checks are retained. Public registration remains
+citizen-only even when privileged role/station fields are submitted.
+
+Frontend sends the assertion on authenticated reads as well as writes (auth routes
+excluded). Request/detail/history/mission/tracking keys include account identity and
+station where applicable. Auth login/logout clears query cache; actor-owned pending
+Dexie events survive and cannot be replayed by another account. Legacy queue migration
+and reconciliation/discard rules from the preceding checkpoint remain intact.
+No existing browser storage or queued event was inspected, cleared or discarded.
+
+401/403/session-identity errors stop affected polling and provide sign-in recovery.
+429 respects Retry-After with bounded polling and disabled manual retry until its
+cooldown; reconnect/focus cannot create retry storms. Network transport, 5xx, 409,
+429 and client processing/schema errors have distinct feedback. Cached records are
+explicitly stale and remain scoped to their owner. Advisory retains all necessary
+cached/error feedback without a separate Data status card. Focused tests cover these
+policies, saved-light/forced-dark branding and stale Advisory/record recovery.
+
+A second demonstrated environment issue: the configured developer URI requests rs0
+on localhost:27017, but that listener's MongoDB hello reports no replica-set name.
+That URI fails server selection. Existing rs0 at localhost:27018 is healthy. The
+normal developer server/DB was not reconfigured; demo uses explicit command overrides.
+CORS/response validation were inspected; no claim that either caused the original
+browser symptom is made. Browser tooling returned `No browser is available`.
+
+### Dedicated demo provisioning and real API verification
+
+Original configured database is `resqph` and remains untouched. New database is
+`resqph_demo_20261012`; existing local replica set is `rs0` on port 27018. No developer
+accounts or active records were copied. Fresh database has 10 accounts, 0 requests,
+0 missions and 5 available stations. Required indexes were initialized by existing
+setup; the transaction probe commits two writes and removes its probe record.
+
+New provisioning command wraps existing citizen registration and station provisioning,
+including existing password hashing/policy. It refuses normal/default names, remote
+hosts, non-replica-set servers, tracked/unignored credential paths and unmanaged
+existing databases. A managed rerun preserves passwords and membership; it never drops
+or resets records. First run created 10/preserved 0; second created 0/preserved 10.
+Unit regressions cover target guards and preserving all ten existing accounts.
+
+Citizens: `citizen1@example.test` through `citizen5@example.test`.
+
+| Station | Canonical ID | New login |
+|---|---|---|
+| Sampaloc Fire Station | sampaloc-fire-station | sampaloc@example.test |
+| Central Sampaloc Fire and Rescue Volunteer Brigade | central-sampaloc-algeciras | algeciras@example.test |
+| Central Sampaloc Fire and Rescue Brigade Headquarters | central-sampaloc-lacson-hq | lacson@example.test |
+| Iverson Fire and Rescue Volunteer | iverson-fire-rescue | iverson@example.test |
+| David Fire and Rescue Volunteer Inc. Headquarters | david-fire-rescue-hq | david@example.test |
+
+All ten newly created logins passed real authentication API checks: correct role,
+matching station where applicable, restored authenticated session, read authorization,
+409 identity mismatch protection, logout and subsequent session 401. Each of five
+wrong station selections returned 403. Citizen mission access returned 403; station
+mission listing returned 200. Read-only checks left this reusable database empty of
+requests/missions. Different random passwords exist only in ignored local README;
+no credential values or hashes are in this report or verification output.
+
+Start from repository root:
+
+```sh
+MONGODB_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' MONGODB_DATABASE=resqph_demo_20261012 bash ./dev.sh
+```
+
+Login URL: http://localhost:5173/login . Keep the existing port-27018 replica-set
+container running. Use fresh separate browser profiles; inspect/reconcile existing
+ResQPH queues before any application-scoped cleanup. Clearing local storage never
+deletes server accounts. To switch back stop demo servers and run `bash ./dev.sh`
+without overrides; original port-27017 replica-set conflict still needs resolution.
+
+### Check commands and results
+
+From `frontend/`: `npm run lint`, `npm run test -- --run`, `npm run build`.
+409 tests pass in 60 files; lint passes with 5 existing warnings; production build
+passes with existing bundle-size warning. Node also reports its experimental storage
+warning during tests. No rendered/browser acceptance is inferred from these checks.
+
+From `backend/`:
+
+```sh
+.venv/bin/ruff check app tests
+.venv/bin/python -m pytest tests ../tests/integration
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' .venv/bin/python -m pytest tests/test_product_journey_mongodb.py
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' MONGODB_INTEGRATION_DATABASE=resqph_issue62_offline_refresh_20261012_b41a .venv/bin/python -m pytest tests/test_offline_sync_mongodb.py
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' MONGODB_INTEGRATION_DATABASE=resqph_issue73_backend_refresh_20261012_629f .venv/bin/python -m pytest tests/test_phase5_acceptance.py
+```
+
+Ruff passes. Standard plus integration: 226 passed/31 opt-in skipped, existing
+Starlette/httpx deprecation warning. Explicit current-cookie real Mongo: 8 passed.
+Explicit offline replay real Mongo: 15 passed. Fixtures create/drop only their guarded
+disposable databases, separately from the reusable demo. The fresh journey checks
+registration/login/logout/restore, ownership, station mismatch/demo impersonation,
+idempotent/concurrent request creation, automatic assignment, versioned tracking,
+completion/history/capacity release, no-capacity pending/retry/cancellation, races
+and transaction rollback. Offline cases cover lost-response replay, stale/conflicting
+IDs, denied actors and rollback. Network UI behavior is component-tested; actual
+browser network interruption is still pending.
+
+### Six legacy opt-in failures — individual classification
+
+Explicit legacy run: **6 failed, 1 passed**. They were not rewritten, skipped or made
+green by enabling retired APIs. These are obsolete fixture/contract failures, not
+proof of a current runtime regression. Their original assertions are currently
+unreachable; passing newer coverage does not make this old suite pass.
+
+| Failing case in test_phase5_acceptance.py | Actual failure / classification | Current equivalent evidence |
+|---|---|---|
+| test_phase5_invalid_inputs_and_roles_leave_database_unchanged | Missing cookie returns 401; fixture expects old demo-role 403. Obsolete authentication expectation | Cookie journey rejects forged roles/wrong stations/cross-account reads; validation/role unit tests |
+| test_phase5_real_mongodb_lifecycle_updates_request_mission_and_history | Retired manual assignment endpoint returns 404; fixture expects 201. Obsolete lifecycle setup | Current cookie automatic-assignment lifecycle, tracking/history/capacity assertions |
+| test_phase5_retry_conflict_stale_actor_and_transition_rejections_do_not_write | Same retired assignment setup returns 404. Obsolete setup | Current idempotent request conflict/race checks; real offline stale/version/invalid-transition/unauthorized no-write cases |
+| test_phase5_linked_lifecycle_conflict_rolls_back_all_records[request] | Retired assignment setup returns 404. Obsolete setup | Current cookie end-simulation transaction failure rollback plus offline history-failure rollback; exact old linked-request injected conflict remains unexecuted |
+| test_phase5_linked_lifecycle_conflict_rolls_back_all_records[team] | Retired assignment setup returns 404. Obsolete setup | Same modern transactional rollback evidence; exact old team-conflict injection remains unexecuted |
+| test_phase5_assignment_dependency_failure_returns_envelope_and_rolls_back | Fixture expects seeded team-alpha; record is absent under canonical station setup. Obsolete seed | Assignment unit failure handling/pending retry and modern lifecycle rollback covered; exact retired manual-assignment dependency injection remains unexecuted |
+
+Updating this retired suite requires migration to current cookie/catalog/automatic
+assignment fixtures and retaining its specific conflict injections. This checkpoint
+reports the remaining acceptance debt explicitly rather than weakening authorization.
+
+### Exact files changed in this checkpoint
+
+Backend: `app/api/dependencies/demo_role.py`, new
+`app/management/provision_demo_accounts.py`, `tests/test_auth.py`, new
+`tests/test_demo_provisioning.py`, `tests/test_product_journey_mongodb.py`.
+Frontend: `src/api/client.ts`, new `src/api/queryRecovery.ts` and its test,
+`src/components/brand/BrandLogo.tsx` and its test, `src/pages/auth/AuthLayout.tsx`,
+`src/pages/auth/SignupPage.tsx`, `src/features/requests/hooks.ts`,
+`src/features/missions/useMissionJourney.ts`, `src/features/offline/useOfflineMission.ts`,
+`src/features/workspace/Records.tsx` and its test, `CitizenAdvisory.tsx` and its test,
+`RescuerWorkspace.tsx`, `sharedVisualSystem.css`.
+Documentation: this report, `docs/STATUS.md`, `docs/ui/LOCAL_VISUAL_RULES.md`,
+skill `references/current-status.md`, `references/sync-history.md`.
+Local-only: `local-demo/README.md` (ignored/untracked, 0600; preserved older credentials).
+Other dirty files belong to the preceding checkpoint and were preserved.
+
+## Landing theme and mission recovery — 2026-10-12
+
+This checkpoint supersedes the earlier branding/theme and baseline notes below.
+Initial tree was clean on `temporary-main`. `git ls-remote origin` confirmed
+`temporary-main` at `8ac45bf203617ff2b97632fe3ca044671689820e`; the requested
+`feature/citizen-ui-advisory-refinement` branch already pointed to the same revision.
+Switched to that existing branch without pulling, fetching, merging or resetting.
+No commit, push, PR, deployment or remote branch mutation. Local `main` remains
+`de0fc954e903979e62822de6dce344ff155335c3`; `temporary-main` remains `8ac45bf`.
+
+### Findings recorded before behavior changes
+
+- Active LandingPage owns inline CSS, dark background `#0b1324`, an embedded WebP
+  wordmark and SVG clipping that recolors ResQ separately from PH. LandingPage.css
+  is not the authority for that design. BrandLogo still used the prior white PNG.
+- Landing persisted `resqph-theme`; dashboard started with independent false/light
+  state and auth followed OS preference independently. This caused route disagreement.
+- HttpOnly session resolves the account through AuthService; rescuer actor user_id
+  is the catalog team ID, while account ID is the local queue/cache key. Station
+  membership is stored on the account and cannot be selected by a demo header in
+  ordinary mode. CSRF is required for session-authorized mutations.
+- The reported wording was emitted only by the final role-rejection branch of
+  `_get_operable_mission`. A wrong assigned station reaches a different rejection.
+  A same-profile citizen login replaces the shared cookie while another tab can
+  retain rescuer state. Queues also preserve prior errors after reconnect. The
+  old panel wrongly asserted nonacceptance without checking matching history.
+- Existing coordinator cancellation only covered assigned missions. Repository
+  lifecycle updates already transactionally update mission/request/team/history;
+  recovery must reuse that transaction rather than expose coordinator authority.
+- Active tracking map: 240px outer container, 210px wrapper/canvas (canvas used
+  `!important`). The secondary mission preview had 210px Google canvas / 230px
+  shell constraints. Both required scoped overrides, not a global map increase.
+
+### Sync diagnosis and repair evidence
+
+A real cookie-authenticated disposable test reproduces the role rejection by
+submitting a station status transition under a citizen session: HTTP 403,
+`forbidden`. It also reproduces cross-account cookie switching with an expected
+station account header: HTTP 409 `session_identity_changed`. The backend now
+rejects that disagreement before the mutation and instructs separate browser
+profiles. The header asserts the existing authenticated account; it never chooses
+an actor or grants permissions. Mission schemas now reuse the shared session actor
+model, including authenticated account and station metadata. CORS permits this
+assertion header. Original
+role/assignment checks and CSRF remain enforced; no demo-header workaround.
+
+**Limit:** the user's actual browser queue/cookies could not be inspected because
+browser connection returned `No browser is available`. The demonstrated code path
+and session mismatch are verified; the exact historical reported event's origin
+or acceptance is not claimed. No developer mission or browser storage was changed.
+
+Recovery retains the original event ID, actor ownership, payload and expected
+version. Matching history must prove mission, station actor, role, transition,
+source, client timestamp and sanitized note before reconciliation. Current failed
+attempts show attempted status/version, server status/version when retrievable,
+uncertain acceptance versus absent event evidence, and retained failure details.
+Refresh server state checks again. Authentication/CSRF/session mismatch retries
+are explicit; permanent authorization/stale-transition failures are not auto-retried.
+Sign-in links guide recovery. Discard requires confirmation: only that local queue
+entry is removed, never the server mission. Online history is checked first;
+accepted evidence reconciles instead of discarding, conflicting evidence blocks
+it. Offline confirmation explicitly states acceptance is unknown. A private
+account-scoped recovery record is kept transactionally; other accounts are untouched.
+Fresh mission state unlocks the next valid lifecycle control after resolution.
+
+### Narrow simulated ending policy and API
+
+`POST /api/v1/missions/{id}/end-simulation` accepts `event_id`,
+`expected_mission_version`, and a required sanitized `reason` (3–500 characters;
+post-sanitization bound enforced). Only a cookie-authenticated rescuer account at
+that exact assigned station may use it, and only `data_source=synthetic` missions
+in assigned/en-route/arrived state. Demo actors, citizens, wrong stations and
+non-synthetic missions are rejected. Ordinary citizen pending-only cancellation
+is unchanged; coordinator cancellation is not exposed to stations.
+
+The existing transaction changes mission and linked request to cancelled, retains
+immutable status history and the reason, stops tracking, and releases the linked
+station once. Audit event stores station actor, authenticated recovery account,
+original recovery version, event ID and reason. Same ID/account/version/reason
+replays return current mission; changed evidence conflicts. Stale or terminal
+state conflicts. Completed missions are never overwritten. Existing pending jobs
+may retry when capacity is released; no replacement of the cancelled request is
+created. Tracking controls cannot write into a terminal mission after a race.
+
+UI requires an explicit reason/confirmation and blocks ending while a local event
+is unresolved. Lost-response retries keep the same recovery payload/ID; explicit
+server rejections allow review of a new attempt after refresh. History remains
+available and citizen polling observes the cancelled outcome. Nothing was ended
+against developer records; only disposable test missions were used.
+
+### Visual changes
+
+Shared BrandLogo extracts the **unchanged** WebP bytes and SVG viewBox/clipping
+from the active landing page. Only ResQ changes dark/light color; PH is unfiltered.
+Compact navigation uses a separate unchanged copy of the approved emblem PNG;
+its filter separates white glyphs from the original red accents and source alpha.
+No approved favicon files or references changed (byte comparison against HEAD).
+The earlier selected PNG remains preserved in the repository.
+
+One shared synchronous theme hook reads the existing persisted preference and OS
+fallback, synchronizes consumers/storage events, and supplies landing/auth/dashboard.
+Dashboard dark base is `#0b1324`, surfaces `#152139`, insets `#101b30`, with separate
+raised/hover levels and readable shared text/border tokens. No decorative glows
+copied into workspaces; status/route/brand colors remain. Auth follows the same
+selection rather than a competing media-query state.
+
+My Mission tracking map and secondary preview now use desktop
+`clamp(360px,46vh,440px)` and 320px on narrow screens. Changes are scoped to the
+active mission view/preview; map instances, following and overlays are unchanged.
+The specified repetitive Prototype paragraph was removed; tracking labels, Help,
+notices, recovery messages and attribution remain.
+
+### Verification and limitations
+
+From `frontend/`: `npm run lint` passes (five existing warnings),
+`npm test -- --run` passes 404 tests / 59 files, `npm run build` passes with the
+existing >500KB chunk warning. Node also reports its existing localStorage
+experimental warning. `git diff --check` passes. Approved favicon/index files
+are byte-identical to baseline; extracted landing asset is byte-identical to the
+embedded source and sidebar emblem copy is byte-identical to favicon-48.
+
+From `backend/`, working Python environment:
+
+```sh
+.venv/bin/python -m ruff check app tests ../tests/integration
+.venv/bin/python -m pytest tests ../tests/integration
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' .venv/bin/python -m pytest tests/test_product_journey_mongodb.py
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' MONGODB_INTEGRATION_DATABASE='resqph_issue62_offline_recovery_20261012_c74a' .venv/bin/python -m pytest tests/test_offline_sync_mongodb.py
+```
+
+Ruff passes. Standard suite: **219 passed, 31 skipped**, one existing Starlette/httpx
+deprecation warning; skips are opt-in MongoDB cases. Product journey: **8 passed**,
+including current auth/dispatch/ordinary lifecycle, wrong citizen/station/session,
+all three active recovery states, duplicate/changing-evidence recovery, atomic
+rollback after injected history-write OperationFailure, terminal tracking, citizen
+visibility, next assignment, and races against acceptance/arrival/completion.
+Each race has one successful versioned transition and one 409, with one station
+version increment. Rollback compares complete mission/request/team/event snapshots.
+Offline MongoDB replay suite: **15 passed**, including concurrent/lost-response
+replay, changed actor/evidence, stale versions and history transaction rollback.
+Frontend covers account switches, accepted-event evidence, confirmed discard and
+private recovery record isolation, shared theme and branding source/filter behavior.
+
+A supplementary combined old acceptance run used an incorrect common database
+prefix (15 offline fixture setup errors); rerunning offline with its required
+Issue62 prefix passed all 15. Six legacy Phase5 opt-in cases fail because they
+expect retired manual assignment/coordinator/demo-header endpoints and team-alpha/
+bravo seed records; one Issue15 API case was skipped for its different database
+prefix. These are obsolete acceptance dependencies, not asserted passing evidence.
+They were left unchanged; the current cookie-authenticated workflow passed on
+fresh station-catalog databases. No retired authorization was enabled to make
+legacy tests pass. Initial implementation failures were repaired before final runs.
+
+Browser visual/lifecycle acceptance is **pending**, not replaced by mocks. Remaining
+manual walkthrough: separate citizen/rescuer profiles; landing/auth/dashboard theme
+navigation and refresh; both sidebar states/themes; larger tracking map with following;
+ordinary completion; failed-event refresh/reconcile/discard; a separate disposable
+mission ending and citizen terminal display; subsequent station assignment.
+
+Existing disposable MongoDB server on port 27018 was reused. Fixtures guard against
+existing databases and drop only their newly created `resqph_station_disposable_*`
+and explicit Issue62/73 test databases in finally blocks. Developer database,
+accounts, environment files, historical missions and containers were not reset.
+
+### Files changed in this continuation
+
+- `docs/testing/CITIZEN-UI-ADVISORY-2026-10-11.md`
+- `docs/STATUS.md`
+- `docs/ui/LOCAL_VISUAL_RULES.md`
+- `.agents/skills/resqph-project-context/references/current-status.md`
+- `.agents/skills/resqph-project-context/references/sync-history.md`
+- `frontend/public/brand/README.md`
+- `backend/app/api/dependencies/demo_role.py`
+- `backend/app/api/routes/missions.py`
+- `backend/app/main.py`
+- `backend/app/models/mission_status_event.py`
+- `backend/app/repositories/missions.py`
+- `backend/app/schemas/missions.py`
+- `backend/app/services/missions.py`
+- `backend/tests/test_product_journey_mongodb.py`
+- `frontend/src/App.tsx`
+- `frontend/src/api/client.ts`
+- `frontend/src/api/missions.ts`
+- `frontend/src/components/brand/BrandLogo.test.tsx`
+- `frontend/src/components/brand/BrandLogo.tsx`
+- `frontend/src/components/ui/SyncStatusBadge.test.tsx`
+- `frontend/src/components/ui/SyncStatusBadge.tsx`
+- `frontend/src/features/auth/AuthContext.tsx`
+- `frontend/src/features/offline/offlineStore.test.ts`
+- `frontend/src/features/offline/offlineStore.ts`
+- `frontend/src/features/offline/useOfflineMission.test.tsx`
+- `frontend/src/features/offline/useOfflineMission.ts`
+- `frontend/src/features/workspace/RescuerWorkspace.tsx`
+- `frontend/src/features/workspace/sharedVisualSystem.css`
+- `frontend/src/pages/LandingPage.tsx`
+- `frontend/src/pages/auth/AuthAccessibility.test.tsx`
+- `frontend/src/pages/dashboard/DashboardPage.tsx`
+- `frontend/src/pages/dashboard/views/rescuer/RescuerMissionCard.tsx`
+- `frontend/src/pages/dashboard/views/rescuer/RescuerOfflinePresentation.test.tsx`
+- `frontend/src/pages/dashboard/views/rescuer/RescuerOfflineQueue.tsx`
+- `frontend/src/pages/dashboard/views/rescuer/RescuerPhase2.test.tsx`
+- `frontend/public/brand/landing-wordmark.webp`
+- `frontend/public/brand/sidebar-emblem.png`
+- `frontend/src/features/theme/useTheme.ts`
+- `frontend/src/features/theme/useTheme.test.tsx`
+
 ## Selected logo and Practical Tips — latest acceptance, 2026-10-12
 
 This section supersedes the earlier logo-blocker/fallback entries below. The user

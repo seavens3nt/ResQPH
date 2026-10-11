@@ -1,4 +1,5 @@
 import { BrandLogo } from '../../components/brand/BrandLogo'
+import { useTheme } from '../../features/theme/useTheme'
 import { WorkspaceSectionHeading } from '../../features/workspace/WorkspaceUI'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -44,7 +45,7 @@ export function DashboardPage() {
   const {user} = useAuth()
   const [params, setParams] = useSearchParams()
   const [navCollapsed, setNavCollapsed] = useState(false)
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useTheme()
   if (!user) return null
   const items = navigation[user.role]
   const requestedSection = params.get('view')

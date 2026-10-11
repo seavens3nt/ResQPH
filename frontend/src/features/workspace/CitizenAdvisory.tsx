@@ -60,8 +60,8 @@ export function CitizenAdvisory() {
       </section>
     </WorkspaceCard>
     </div>
-    <WorkspaceCard className="advisory-data-status">
-      <h3>Data status</h3>
+    <section className="advisory-refresh" aria-label="Weather refresh">
+      {data && <p>Last updated: <time dateTime={data.time}>{new Date(data.time).toLocaleString('en-PH',{timeZone:'Asia/Manila'})} PHT</time>{stale ? ' · Stale cached measurements' : ''}</p>}
       {!data && weather.isPending && online && weather.fetchStatus !== 'paused' && <LoadingState layout="weather" label="Loading advisory weather…"/>}
       {(!online || weather.fetchStatus === 'paused') && <p role="status">Offline. Weather cannot be refreshed until you reconnect.</p>}
       {limited && <p role="alert">Weather requests are rate-limited. Wait before trying again.</p>}
@@ -71,6 +71,6 @@ export function CitizenAdvisory() {
         if (navigator.onLine && !weather.isFetching && Date.now() >= weatherRefreshAllowedAt(weather)) void weather.refetch()
       }}>{weather.isFetching ? 'Refreshing weather…' : 'Refresh weather'}</button>{wait > 0 && <span role="status">Refresh available in {wait}s.</span>}</div>
       <p className="weather-summary-attribution"><span className="google-weather-attribution" translate="no">Google Maps</span></p>
-    </WorkspaceCard>
+    </section>
   </div>
 }

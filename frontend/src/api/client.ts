@@ -6,6 +6,8 @@ export const apiClient = axios.create({
   timeout: 10_000,
   withCredentials: true,
 })
+let expectedAccountId: string | undefined
+export function setExpectedAccountId(id?: string): void { expectedAccountId = id }
 
 function csrfCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined
@@ -22,6 +24,7 @@ apiClient.interceptors.request.use((config) => {
     }
   }
   const method = (config.method ?? 'get').toLowerCase()
+  if (expectedAccountId && !config.url?.startsWith('/auth/')) config.headers['X-Expected-Account-Id'] = expectedAccountId
   if (!['get', 'head', 'options'].includes(method)) {
     const token = csrfCookie()
     if (token) config.headers['X-CSRF-Token'] = token

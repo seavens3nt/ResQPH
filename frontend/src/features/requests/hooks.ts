@@ -25,6 +25,7 @@ import type {
   RescueRequestRecord,
 } from './types'
 import { retryAfterDelay } from '../../api/retryAfter'
+import { recordRefreshInterval, sessionReadBlocked } from '../../api/queryRecovery'
 
 // ---------------------------------------------------------------------------
 // Query-key factory
@@ -44,7 +45,7 @@ export const rescueRequestKeys = {
 export function useMyRescueRequests(enabled = true) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const citizenId = user?.id ?? ''
+  const citizenId = user?.id ?? user?.email ?? ''
   const queryKey = rescueRequestKeys.list(citizenId)
   return useQuery({
     queryKey,
@@ -62,9 +63,12 @@ export function useMyRescueRequests(enabled = true) {
         }),
       }
     },
-    enabled: !!user && enabled,
+    enabled: query => !!user && enabled && !sessionReadBlocked(query.state.error),
     staleTime: 30_000,
-    refetchInterval: 10_000,
+    refetchInterval: query => recordRefreshInterval(query.state.error,10_000),
+    retry:false,
+    refetchOnWindowFocus:false,
+    refetchOnReconnect:false,
   })
 }
 
@@ -78,7 +82,7 @@ const TERMINAL_STATUSES = new Set(['completed', 'cancelled'])
 export function useRescueRequest(requestId: string | null) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const citizenId = user?.id ?? ''
+  const citizenId = user?.id ?? user?.email ?? ''
   const queryKey = rescueRequestKeys.detail(citizenId, requestId ?? '')
   return useQuery({
     queryKey,
@@ -88,11 +92,15 @@ export function useRescueRequest(requestId: string | null) {
       const cached = queryClient.getQueryData<RescueRequestRecord>(queryKey)
       return cached && cached.version > received.version ? cached : received
     },
-    enabled: !!user && !!requestId,
+    enabled: query => !!user && !!requestId && !sessionReadBlocked(query.state.error),
+    retry:false,
+    refetchOnWindowFocus:false,
+    refetchOnReconnect:false,
     // Poll every 10 s while the request is still in-flight
     refetchInterval: (query) => {
       const data = query.state.data as RescueRequestRecord | undefined
       if (data && TERMINAL_STATUSES.has(data.status)) return false
+      if (sessionReadBlocked(query.state.error)) return false
       if (query.state.error) return retryAfterDelay(query.state.error, Math.min(30_000, 5_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
       return 5_000
     },

@@ -55,7 +55,7 @@ class MissionRepository:
         *,
         start_if_not_running: bool = False,
     ) -> Mission | None:
-        query: dict[str, Any] = {"id": mission_id}
+        query: dict[str, Any] = {"id": mission_id, "status": {"$in": ["assigned", "en-route"]}}
         if start_if_not_running:
             query.update({"status": "en-route", "tracking_state.status": {"$ne": "running"}})
         document = await self._collection.find_one_and_update(

@@ -1,5 +1,29 @@
 # Context Sync History
 
+## 2026-10-12 — Dark auth, read isolation and dedicated demo
+
+Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:
+explicit dark login/register preserves dashboard preference; compact Advisory refresh;
+cookie-account assertions now protect reads and polling stops for expired/switched
+sessions. New isolated `resqph_demo_20261012` on existing localhost:27018 rs0 contains
+5 citizen and 5 canonical station accounts; all ten real API login/session/logout
+checks pass, rerun preserves them. Developer DB untouched. Frontend 409 tests/lint/build;
+backend/integration 226 passed, 31 opt-in skips; 8 current-cookie and 15 offline Mongo
+cases pass. Six legacy opt-in failures remain individually documented. Browser
+unavailable; original browser symptom and rendered acceptance pending. Ignored local
+README contains credentials/startup. No commit/push/PR; see refinement report.
+
+
+## 2026-10-12 — Landing theme and station simulation recovery
+
+Shared landing-brand extraction/theme preference replaces independent dashboard
+state. Cookie-account assertion prevents stale-tab writes. Local queued attempts
+require evidence review/confirmed discard; station-authorized synthetic mission
+ending reuses versioned lifecycle transactions and retains history/account audit.
+404 frontend / 219 standard backend checks; 8 current-cookie MongoDB and 15 offline
+MongoDB acceptance cases pass. Legacy retired-flow tests remain incompatible;
+browser pending. Feature baseline 8ac45bf; no remote actions or developer mutations.
+
 ## 2026-10-12 — Selected wordmark and compact Advisory tips
 
 User explicitly selected the transparent PNG; shared full-logo source now uses its

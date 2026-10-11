@@ -79,7 +79,7 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "HEAD", "POST", "PATCH", "OPTIONS"],
-    allow_headers=["Content-Type", "X-CSRF-Token", "Idempotency-Key", "X-Request-Id"],
+    allow_headers=["Content-Type", "X-CSRF-Token", "X-Expected-Account-Id", "Idempotency-Key", "X-Request-Id"],
     max_age=600,
 )
 

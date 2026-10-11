@@ -6,14 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from app.models.mission import MissionStatus
 from app.models.mission_status_event import DemoRole, EventSource
-from app.schemas.common import DemoRole as ActiveDemoRole
+from app.schemas.common import DemoActor as SessionActor
 
 WritableMissionStatus = Literal["assigned", "en-route", "arrived", "completed"]
-
-
-class DemoActor(BaseModel):
-    user_id: str
-    role: ActiveDemoRole
+DemoActor = SessionActor
 
 
 class ErrorDetail(BaseModel):
@@ -68,6 +64,24 @@ class MissionCancel(BaseModel):
         if len(value) < 3:
             raise ValueError("reason must contain at least 3 non-blank characters")
         return value
+
+
+class MissionSimulationEnd(MissionCancel):
+    event_id: str = Field(min_length=1, max_length=128)
+
+    @field_validator("reason")
+    @classmethod
+    def bounded_sanitized_reason(cls, value: str) -> str:
+        if len(value) > 500:
+            raise ValueError("sanitized reason must be at most 500 characters")
+        return value
+
+    @field_validator("event_id")
+    @classmethod
+    def nonblank_event_id(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("event_id must not be blank")
+        return value.strip()
 
 
 class MissionStatusEventResponse(BaseModel):

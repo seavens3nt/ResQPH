@@ -141,3 +141,11 @@ def test_station_login_checks_server_membership_and_demo_header_rejection(auth_c
     forged = client.get("/api/v1/missions", headers={"X-Demo-Role": "rescuer", "X-Demo-User-Id": "team-charlie"})
     assert forged.status_code == 401
     assert forged.json()["error"]["code"] == "authentication_required"
+
+def test_public_registration_cannot_grant_station_membership(auth_client) -> None:
+    client, database = auth_client
+    result = client.post('/api/v1/auth/register',json={'name':'Synthetic citizen','email':'privilege-check@example.test','password':'Synthetic-Password-55','role':'rescuer','station_id':load_station_catalog()['stations'][0]['station_id']})
+    assert result.status_code == 201
+    assert result.json()['role']=='citizen' and result.json().get('station_id') is None
+    account=database.collections['accounts'].items[0]
+    assert account['role']=='citizen' and account['station_id'] is None

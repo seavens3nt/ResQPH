@@ -1,5 +1,27 @@
 # ResQPH project status
 
+Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:
+explicit dark login/register preserves dashboard preference; compact Advisory refresh;
+cookie-account assertions now protect reads and polling stops for expired/switched
+sessions. New isolated `resqph_demo_20261012` on existing localhost:27018 rs0 contains
+5 citizen and 5 canonical station accounts; all ten real API login/session/logout
+checks pass, rerun preserves them. Developer DB untouched. Frontend 409 tests/lint/build;
+backend/integration 226 passed, 31 opt-in skips; 8 current-cookie and 15 offline Mongo
+cases pass. Six legacy opt-in failures remain individually documented. Browser
+unavailable; original browser symptom and rendered acceptance pending. Ignored local
+README contains credentials/startup. No commit/push/PR; see refinement report.
+
+
+Latest 2026-10-12 landing-theme/mission recovery continuation: local feature branch
+at baseline `8ac45bf`; shared landing wordmark and persisted theme, dark base
+`#0b1324`, explicit queue reconciliation/discard and assigned-station synthetic
+mission ending implemented. 404 frontend tests; standard backend 219 passed / 31
+opt-in skips; 8 real cookie-authenticated MongoDB journey/recovery cases and 15
+real offline replay cases pass. Browser unavailable; legacy opt-in Phase5 tests
+still require retired coordinator/demo/team fixtures. See the existing refinement
+report for evidence and limitations. Uncommitted/unpushed; developer DB unchanged.
+
+
 Latest local correction (2026-10-12): the user explicitly selected the transparent
 2170×725 white ResQ / blue P / red H PNG. Shared BrandLogo now uses that unchanged
 asset for auth and expanded full-logo placements; compact branding and approved

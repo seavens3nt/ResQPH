@@ -130,7 +130,8 @@ describe('rescuer offline presentation', () => {
     expect(screen.getByRole('status', { name: /Pending Sync/i })).toBeInTheDocument()
     expect(screen.getByText(fixture.pending_event.body.event_id)).toBeInTheDocument()
     expect(screen.getByText(String(fixture.pending_event.body.expected_mission_version))).toBeInTheDocument()
-    expect(screen.getAllByText(/not been accepted by the server/i)).toHaveLength(2)
+    expect(screen.getByText(/^Acceptance is not yet verified/i)).toBeInTheDocument()
+    expect(screen.getByText(/Server acceptance is not yet verified/i)).toBeInTheDocument()
     const retry = screen.getByRole('button', { name: /Retry Sync Now/i })
     expect(retry).toBeDisabled()
     expect(retry).toHaveAccessibleDescription(/Reconnect before retrying/i)
@@ -176,6 +177,8 @@ describe('rescuer offline presentation', () => {
     discard.focus()
     expect(document.activeElement).toBe(discard)
     fireEvent.click(discard)
+    expect(screen.getByRole('dialog')).toHaveTextContent('does not delete or cancel')
+    fireEvent.click(screen.getByRole('button',{name:'Confirm discard local attempt'}))
     expect(onDismissFailed).toHaveBeenCalledOnce()
   })
 

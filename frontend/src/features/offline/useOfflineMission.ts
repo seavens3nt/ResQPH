@@ -5,6 +5,7 @@ import { acknowledgeEvent, clearMission, discardEvent, enqueueEvent, readMission
 
 interface OfflineMissionState {
   actorId: string | null
+  authenticationRequired:boolean
   mission: MissionDetail | null
   lastSyncedAt: string | null
   entry: OfflineQueueEntry | null
@@ -16,10 +17,18 @@ interface OfflineMissionState {
   loading: boolean
 }
 const emptyState: OfflineMissionState = {
-  actorId: null, mission: null, lastSyncedAt: null, entry: null,
+  actorId: null, authenticationRequired:false, mission: null, lastSyncedAt: null, entry: null,
   storageError: null, recoveryAvailable: false, networkError: null, currentServerMission: null, serverConfirmed: false, loading: true,
 }
 const message = (error: unknown) => error instanceof Error ? error.message : 'Offline storage is unavailable.'
+export function acceptedQueuedEvent(mission: MissionDetail, entry: OfflineQueueEntry, identity: string): boolean {
+  const event = mission.status_history.find(item => item.event_id === entry.localId)
+  return Boolean(event && event.mission_id === mission.id && event.actor_id === identity && event.actor_role === 'rescuer' &&
+    event.new_status === entry.body.new_status && event.source === entry.body.source &&
+    (event.note ?? null) === (entry.body.note ? entry.body.note.trim().replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#x27;') : null) &&
+    Date.parse(event.client_recorded_at ?? '') === Date.parse(entry.body.client_recorded_at) &&
+    mission.version > entry.body.expected_mission_version)
+}
 
 export function useOfflineMission(actorId: string | null, demoOffline: boolean, stationId?: string, teamId?: string) {
   const [state, setState] = useState(emptyState)
@@ -30,6 +39,8 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
   const session = useRef(0)
   const sessionActor = useRef<string | null>(null)
   const loadRevision = useRef(0)
+  const authenticationRequired = useRef(false)
+  const readAllowedAt = useRef(0)
   const pendingActorLoad = useRef<string | null>(null)
   const isOffline = demoOffline || !online
 
@@ -39,6 +50,8 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
     session.current += 1
     sessionActor.current = actorId
     autoSyncEvent.current = null
+    authenticationRequired.current = false
+    readAllowedAt.current = 0
     return () => { session.current += 1; sessionActor.current = null }
   }, [actorId])
 
@@ -69,11 +82,7 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
         if (serverMission) {
           const acceptedEvent = queued && serverMission.status_history.find((event) => event.event_id === queued.localId)
           if (queued && acceptedEvent) {
-            const provenAccepted = acceptedEvent.mission_id === serverMission.id &&
-              acceptedEvent.actor_id === (teamId ?? actorId) &&
-              acceptedEvent.new_status === queued.body.new_status &&
-              acceptedEvent.source === queued.body.source &&
-              serverMission.version > queued.body.expected_mission_version
+            const provenAccepted = acceptedQueuedEvent(serverMission, queued, teamId ?? actorId)
             if (provenAccepted) {
               try {
                 const record = await acknowledgeEvent(actorId, queued.localId, serverMission, stationId, teamId)
@@ -113,7 +122,13 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
         }
       }
     } catch (error) {
-      if (current()) setState((value) => ({ ...value, networkError: message(error), serverConfirmed: false }))
+      if (current()) {
+        if (error instanceof ApiError) {
+          authenticationRequired.current = error.httpStatus === 401 || error.httpStatus === 403 || error.code === 'session_identity_changed'
+          if (error.httpStatus === 429) readAllowedAt.current = Date.now() + (error.retryAfterSeconds ?? 60)*1000
+        }
+        setState((value) => ({ ...value, networkError: message(error), authenticationRequired:authenticationRequired.current, serverConfirmed: false }))
+      }
     } finally {
       if (current()) setState((value) => ({ ...value, loading: false }))
     }
@@ -130,7 +145,7 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
   useEffect(() => {
     if (!actorId || isOffline) return
     const refresh = () => {
-      if (document.visibilityState === 'visible' && !state.loading && !busy) void load()
+      if (!authenticationRequired.current && Date.now() >= readAllowedAt.current && document.visibilityState === 'visible' && !state.loading && !busy) void load()
     }
     const timer = window.setInterval(refresh, 5_000)
     window.addEventListener('focus', refresh)
@@ -169,11 +184,11 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
         if (!current()) return
         const permanent = error instanceof ApiError && error.httpStatus >= 400 && error.httpStatus < 500
         let latest: MissionDetail | null = null
-        if (error instanceof ApiError && error.isConflict) {
+        if (error instanceof ApiError) {
           try { latest = await getMission(syncing.missionId) } catch { /* No fabricated current state. */ }
           if (!current()) return
         }
-        const retained = { ...syncing, syncState: permanent ? 'failed' as const : 'pending' as const, failureReason: message(error) }
+        const retained = { ...syncing, syncState: permanent ? 'failed' as const : 'pending' as const, failureReason: message(error), ...(error instanceof ApiError ? {failureCode:error.code} : {}) }
         let storageError: string | null = null
         try { await updateQueue(actorId, retained) } catch (error) { storageError = message(error) }
         if (current()) setState((value) => ({ ...value, entry: retained, currentServerMission: latest, storageError, serverConfirmed: false }))
@@ -228,25 +243,42 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
     } finally { inFlight.current = false; setBusy(false) }
   }, [actorId, state.actorId, state.entry, state.loading, state.mission])
 
-  const retry = useCallback(() => { if (state.entry?.syncState === 'pending') void synchronize() }, [state.entry, synchronize])
+  const retry = useCallback(async () => {
+    if (state.entry?.syncState === 'pending') {void synchronize(); return}
+    if (!actorId || sessionActor.current !== actorId || state.actorId !== actorId || !state.entry || inFlight.current || !['authentication_required','csrf_validation_failed','session_identity_changed'].includes(state.entry.failureCode ?? '') || isOffline) return
+    const token = session.current
+    const retained = {...state.entry, syncState:'pending' as const}
+    try { await updateQueue(actorId, retained) }
+    catch (error) {if (session.current === token) setState(value => ({...value,storageError:message(error)}));return}
+    if (session.current !== token) return
+    setState(value => ({...value,entry:retained}))
+    autoSyncEvent.current = null
+  }, [actorId, isOffline, state.actorId, state.entry, synchronize])
   const discard = useCallback(async () => {
     if (!actorId || sessionActor.current !== actorId || state.actorId !== actorId || state.entry?.syncState !== 'failed' || inFlight.current) return
     const token = session.current
     inFlight.current = true
     setBusy(true)
     try {
-      const latest = state.currentServerMission
+      const latest = isOffline ? null : await getMission(state.entry.missionId)
+      if (session.current !== token) return
+      if (latest && acceptedQueuedEvent(latest, state.entry, teamId ?? actorId)) {
+        const record = await acknowledgeEvent(actorId, state.entry.localId, latest, stationId, teamId)
+        if (session.current === token) setState(value => ({...value,mission:record.mission,lastSyncedAt:record.last_synced_at,entry:null,currentServerMission:null,serverConfirmed:true}))
+        return
+      }
+      if (latest?.status_history.some(event => event.event_id === state.entry?.localId)) throw new Error('This event ID exists with different evidence. Keep the recovery record and review before discarding.')
       // Store reviewed authoritative state before unlocking new actions.
-      const record = latest ? await writeMission(actorId, latest) : null
-      if (!latest) await clearMission(actorId)
+      const record = latest ? await writeMission(actorId, latest, stationId, teamId) : null
+      if (session.current !== token) return
       await discardEvent(actorId, state.entry.localId)
-      if (session.current === token) setState((value) => ({ ...value, mission: latest,
-        lastSyncedAt: record?.last_synced_at ?? null,
-        entry: null, currentServerMission: null, storageError: null, serverConfirmed: Boolean(latest) }))
+      if (session.current === token) setState((value) => ({ ...value, mission: latest ?? value.mission,
+        lastSyncedAt: record?.last_synced_at ?? value.lastSyncedAt,
+        entry: null, currentServerMission: null, storageError: null, recoveryAvailable: true, serverConfirmed: Boolean(latest) }))
     } catch (error) {
       if (session.current === token) setState((value) => ({ ...value, storageError: message(error) }))
     } finally { inFlight.current = false; setBusy(false) }
-  }, [actorId, state.actorId, state.currentServerMission, state.entry])
+  }, [actorId, isOffline, stationId, teamId, state.actorId, state.entry])
 
   const downloadRecovery = useCallback(async () => {
     if (!actorId || sessionActor.current !== actorId) return
@@ -272,6 +304,6 @@ export function useOfflineMission(actorId: string | null, demoOffline: boolean, 
     isOffline, isDemoOffline: demoOffline && online,
     isCached: ready && Boolean(state.lastSyncedAt), downloadRecovery,
     isStale: isOffline || !ready || !state.serverConfirmed || Boolean(ready && state.entry),
-    busy, advance, retry, discard, reload: load,
+    busy, advance, retry, discard, authenticationRequired:ready && state.authenticationRequired, reload: () => {if (Date.now() < readAllowedAt.current) return Promise.resolve();authenticationRequired.current=false;return load()},
   }
 }

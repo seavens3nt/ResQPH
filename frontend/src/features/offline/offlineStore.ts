@@ -106,7 +106,7 @@ export function validateCacheRecord(value: unknown, actorId: string, stationId?:
 export function validateQueueEntry(value: unknown, actorId: string): value is OfflineQueueEntry & OfflineActorRecord {
   if (!value || typeof value !== 'object') return false
   const entry = value as Partial<OfflineQueueEntry & OfflineActorRecord>
-  const entryKeys = ['actor_id', 'localId', 'missionId', 'body', 'syncState', 'failureReason', 'enqueuedAt']
+  const entryKeys = ['actor_id', 'localId', 'missionId', 'body', 'syncState', 'failureReason', 'failureCode', 'enqueuedAt']
   const bodyKeys = ['event_id', 'new_status', 'expected_mission_version', 'client_recorded_at', 'source', 'note']
   return Object.keys(value).every((key) => entryKeys.includes(key)) &&
     Boolean(entry.body && Object.keys(entry.body).every((key) => bodyKeys.includes(key))) &&
@@ -115,6 +115,7 @@ export function validateQueueEntry(value: unknown, actorId: string): value is Of
     typeof entry.body?.expected_mission_version === 'number' && Number.isInteger(entry.body.expected_mission_version) && entry.body.expected_mission_version > 0 &&
     (entry.body.note === undefined || typeof entry.body.note === 'string') &&
     (entry.failureReason === undefined || typeof entry.failureReason === 'string') &&
+    (entry.failureCode === undefined || typeof entry.failureCode === 'string') &&
     entry.body.source === 'offline-sync' && Number.isFinite(Date.parse(entry.body.client_recorded_at)) &&
     ['en-route', 'arrived', 'completed'].includes(String(entry.body.new_status)) &&
     ['pending', 'syncing', 'failed'].includes(String(entry.syncState)) &&
@@ -291,11 +292,12 @@ async function quarantine(actorId: string, kind: 'mission' | 'queue', reason: st
 
 export async function discardEvent(actorId: string, eventId: string): Promise<void> {
   requireIndexedDb()
-  await database.transaction('rw', database.queues, async () => {
+  await database.transaction('rw', database.queues, database.quarantined, async () => {
     const queued = await database.queues.get(actorId)
     if (!queued || queued.localId !== eventId || queued.syncState !== 'failed') {
       throw new Error('Only the failed event currently under review can be discarded.')
     }
+    await database.quarantined.put({id:`discard:${actorId}:${eventId}`,actor_id:actorId,kind:'queue',reason:'Explicitly discarded local attempt; server mission retained.',created_at:new Date().toISOString(),record:structuredClone(queued)})
     await database.queues.delete(actorId)
   })
 }
