@@ -1,5 +1,14 @@
 # ResQPH project status
 
+2026-10-12 weather repair on local `temporary-main`: configured server key
+reaches Google, but current/daily/hourly calls return provider HTTP 429.
+Current conditions identifies a daily quota of 100 requests. Sanitized quota and
+access-denied errors, per-endpoint failure cooldown, cross-origin Retry-After
+exposure and Home/Advisory feedback implemented. Live weather remains blocked
+until the Google Cloud quota resets or the project administrator changes it.
+No keys, billing settings, database records or remote branches changed.
+See backend README troubleshooting; no automated tests run for this repair.
+
 Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
 account-switch recovery blocks old transports/mutations, hides the old workspace and
 requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale

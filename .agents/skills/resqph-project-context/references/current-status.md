@@ -84,3 +84,14 @@ visual acceptance remains pending; see the existing local testing report.
 - Remaining final-quality checks: dev-only undici audit warning, existing lint/bundle warnings, whole-role final regression and submission package.
 - Unknown: exact course deadline, weekly capacity and any hosting/submission requirement. No deployment is approved by the phase opening.
 - Authority: docs/phases/TEAM-PHASE-05.md and docs/STATUS.md.
+# Weather failure repair — 2026-10-12
+
+Local temporary-main weather diagnostics: configured backend key receives Google
+HTTP 429 on current/daily/hourly endpoints; current conditions identifies a
+100-request daily quota. API quota errors now retain 429/Retry-After with a
+per-endpoint process-local cooldown; access-denied errors distinguish configuration
+from generic transport/schema failure. Home/Advisory show fixed sanitized copy.
+Ruff and frontend production build pass; automated tests not run for this repair.
+Live weather remains blocked by provider quota reset/administrator action.
+Keys, billing settings and database records preserved; changes remain local.
+See backend README troubleshooting.

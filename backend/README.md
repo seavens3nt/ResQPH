@@ -56,3 +56,30 @@ From `backend/` after completing setup:
 ```
 
 The API uses `/api/v1`. Commit `.env.example`, but never commit the resulting `.env` file or private rescue information.
+
+## Google Weather troubleshooting
+
+`GOOGLE_WEATHER_API_KEY` belongs in the backend environment only. Restart the
+backend after changing it. Do not put this key in the frontend or credential README.
+
+If Home or Advisory reports a Google Weather quota error, open the key's Google
+Cloud project, select **APIs & Services → Weather API → Quotas & System Limits**,
+and review the current-conditions, daily-forecast and hourly-forecast quotas and
+usage. Wait for exhausted quota to reset, or deliberately adjust the relevant
+quota with the project's billing owner. Increasing quota can increase charges.
+See [Google's Weather usage and billing guide](https://developers.google.com/maps/documentation/weather/usage-and-billing).
+
+On 2026-10-12, direct provider diagnostics returned HTTP 429 for all three
+endpoints. Current conditions specifically reported `CurrentConditionsQueriesPerDay`,
+limit **100**. This is a provider quota failure, not a missing environment key;
+no Google Cloud settings or key values were changed during the repair.
+
+The API now returns sanitized `429 weather_quota_exceeded` with `Retry-After`.
+A per-endpoint, process-local cooldown prevents repeated upstream calls after
+a quota failure: one hour when Google identifies a daily limit, otherwise one
+minute (or a longer numeric provider `Retry-After`, bounded at one day).
+The cooldown does not indicate when Google's quota resets. It holds no weather
+values, is not shared between server processes and is cleared by server restart.
+Google access-denied responses instead return `503 weather_configuration_error`.
+Check API enablement, server-key restrictions and billing for that error.
+No automatic frontend weather refresh or routing use is introduced.

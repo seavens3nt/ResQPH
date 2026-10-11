@@ -1,4 +1,5 @@
 import { Icon } from '../../components/art/Icon'
+import { weatherErrorMessage } from '../../api/weather'
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { LoadingState } from '../../components/ui/LoadingState'
@@ -64,8 +65,8 @@ export function CitizenAdvisory() {
       {data && <p>Last updated: <time dateTime={data.time}>{new Date(data.time).toLocaleString('en-PH',{timeZone:'Asia/Manila'})} PHT</time>{stale ? ' · Stale cached measurements' : ''}</p>}
       {!data && weather.isPending && online && weather.fetchStatus !== 'paused' && <LoadingState layout="weather" label="Loading advisory weather…"/>}
       {(!online || weather.fetchStatus === 'paused') && <p role="status">Offline. Weather cannot be refreshed until you reconnect.</p>}
-      {limited && <p role="alert">Weather requests are rate-limited. Wait before trying again.</p>}
-      {weather.isError && !limited && <p role="alert">Weather unavailable. {data ? 'Keeping the last received conditions.' : 'No weather-based suggestions are available.'}</p>}
+      {limited && <p role="alert">{weatherErrorMessage(weather.error)}</p>}
+      {weather.isError && !limited && <p role="alert">{weatherErrorMessage(weather.error)} {data ? 'Keeping the last received conditions.' : 'No weather-based suggestions are available.'}</p>}
       {missingRain && <p role="status">Precipitation measurements are missing. No rain amount or clear-weather conclusion is inferred.</p>}
       <div className="workspace-actions"><button type="button" disabled={!online || weather.isFetching || wait > 0} onClick={() => {
         if (navigator.onLine && !weather.isFetching && Date.now() >= weatherRefreshAllowedAt(weather)) void weather.refetch()
