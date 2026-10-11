@@ -333,3 +333,4 @@
 .request-pin-adjustment { display: flex; flex-wrap: wrap; gap: 6px; }
 .request-pin-adjustment p { flex-basis: 100%; font-size: .75rem; }
 .request-pin-adjustment button { min-height: 44px; padding: 8px 12px; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; color: #334155; }
+.flood-map-container .map-recenter { display:inline-flex; align-items:center; justify-content:center; width:44px; min-height:44px; padding:10px; }

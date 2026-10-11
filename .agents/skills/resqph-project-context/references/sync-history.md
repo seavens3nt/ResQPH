@@ -1,5 +1,14 @@
 # Context Sync History
 
+## 2026-10-11 — Local citizen UI and weather Advisory
+
+Audited frontend callers, existing weather adapter/cache behavior, pending-only
+cancellation and project polygon. Updated local visual rules and status for the
+user-authorized auth background/road toggle changes. Shared cached weather now
+survives page changes; no backend provider/cache rewrite. No changes to dispatch,
+auth rules, station IDs, mission transitions, offline identity or database records.
+Local branch only; browser visual acceptance pending and no delivery authorized.
+
 ## 2026-10-11 — Navigation/request presentation checkpoint
 
 Audited frontend diff against `a143a18`; status and verification now distinguish

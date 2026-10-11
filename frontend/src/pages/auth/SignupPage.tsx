@@ -6,7 +6,6 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { validEmail, validPhone, validPassword } from '../../features/auth/validation'
 import { readApiMessage } from '../../features/auth/AuthContext'
 import './auth.css'
-import { AuthModeTabs } from './AuthLayout'
 
 type Step = 'name' | 'phone' | 'email' | 'password' | 'emergency' | 'location'
 
@@ -133,6 +132,7 @@ export function SignupPage() {
             <button className="auth-text-btn muted" style={{ marginTop: 14 }} onClick={() => finishSignup(false)}>
               Not Now
             </button>
+            <p className="auth-signup-switch">Already have an account? <Link to="/login" className="auth-text-btn highlight">Log in</Link></p>
           </div>
         </div>
       </div>
@@ -175,7 +175,6 @@ export function SignupPage() {
 
         {/* Form area */}
         <div className="auth-body-container">
-          <AuthModeTabs/>
           <p className="auth-station-guidance">Public registration creates citizen accounts. Station accounts are provided by the project administrator. <Link to="/login?role=rescuer">Station / rescuer login</Link></p>
           {/* Back + step count */}
           <div className="signup-step-nav">
@@ -377,12 +376,9 @@ export function SignupPage() {
               {step === 'emergency' ? (ecName.trim() ? 'Continue' : 'Skip') : 'Continue'}
             </button>
 
-            {step === 'name' && (
-              <p className="auth-signup-switch" style={{ textAlign: 'center', marginTop: 8 }}>
-                Already have an account?{' '}
-                <Link to="/login" className="auth-text-btn highlight">Sign in</Link>
-              </p>
-            )}
+            <p className="auth-signup-switch" style={{ textAlign: 'center', marginTop: 8 }}>
+              Already have an account? <Link to="/login" className="auth-text-btn highlight">Log in</Link>
+            </p>
           </form>
         </div>
       </div>

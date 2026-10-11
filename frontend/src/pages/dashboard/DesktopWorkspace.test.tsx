@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { AuthProvider } from '../../features/auth/AuthContext'
@@ -73,4 +73,30 @@ describe('Desktop workspace shell without the old demo provider', () => {
     expect(screen.queryByRole('button', {name:/hotline|alternative route/i})).not.toBeInTheDocument()
     client.clear()
   })
+})
+
+function HistoryControls() {
+  const navigate=useNavigate()
+  return <><button onClick={()=>navigate(-1)}>Browser back</button><button onClick={()=>navigate(1)}>Browser forward</button></>
+}
+it.each(['help','advisory'])('opens %s directly, reloads on that page, and supports history navigation', async section => {
+  sessionStorage.setItem('resqph.auth.user',JSON.stringify({name:'Synthetic Tester',email:'citizen@example.test',role:'citizen'}))
+  apiClient.defaults.adapter=async config=>({config,headers:{},status:200,statusText:'OK',data: config.url?.includes('/weather/') ? {temperature:28,high:30,low:25,kind:'cloud',condition:'Cloudy',time:new Date().toISOString()} : {items:[],total:0}})
+  const client=new QueryClient({defaultOptions:{queries:{retry:false}}})
+  const ui=()=> <MemoryRouter initialEntries={['/dashboard?view='+section]}><QueryClientProvider client={client}><AuthProvider><DashboardPage/><HistoryControls/></AuthProvider></QueryClientProvider></MemoryRouter>
+  let view=render(ui())
+  const name=section==='help' ? 'Help & Limitations' : 'Advisory'
+  expect(await screen.findByRole('heading',{name,level:1})).toBeInTheDocument()
+  expect(screen.queryByText('Status Cards')).not.toBeInTheDocument()
+  view.unmount();view=render(ui())
+  expect(await screen.findByRole('heading',{name,level:1})).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:section==='help' ? 'Help & limitations' : 'Advisory'}))
+  expect(screen.getByRole('button',{name:section==='help' ? 'Help & limitations' : 'Advisory'})).toHaveAttribute('aria-current','page')
+  fireEvent.click(screen.getByRole('button',{name:'Home'}))
+  expect(screen.getByText('Status Cards')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:'Browser back'}))
+  expect(screen.getByRole('heading',{name,level:1})).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:'Browser forward'}))
+  expect(screen.getByText('Status Cards')).toBeInTheDocument()
+  view.unmount();client.clear()
 })

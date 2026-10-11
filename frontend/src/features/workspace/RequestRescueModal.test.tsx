@@ -12,6 +12,7 @@ vi.mock('../requests/hooks', () => ({
 }))
 vi.mock('../../pages/dashboard/views/citizen/RequestLocationMap', () => ({RequestLocationMap: ({onConfirmLocation}:{onConfirmLocation:()=>void}) => <div>Location map<button type="button" onClick={onConfirmLocation}>Use this rescue location</button></div>}))
 vi.mock('./useUbeltWeather', () => ({
+  useWeatherClock: () => Date.now(),
   useUbeltWeather: () => ({isError:true,isFetching:false}),
   useUbeltHourlyWeather: () => ({isError:true,fetchStatus:'idle'}),
 }))

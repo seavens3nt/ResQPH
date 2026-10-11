@@ -8,7 +8,7 @@ const weatherSchema=z.object({temperature:z.number().finite(),high:z.number().fi
 export async function getUbeltWeather(signal?:AbortSignal) {
   const response=await apiClient.get('/weather/ubelt',{signal})
   const data=weatherSchema.parse(response.data)
-  return {...data,temperature:Math.round(data.temperature),high:Math.round(data.high),low:Math.round(data.low)}
+  return {...data,temperatureC:data.temperature,temperature:Math.round(data.temperature),high:Math.round(data.high),low:Math.round(data.low)}
 }
 
 const hourSchema=z.object({

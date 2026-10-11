@@ -4,7 +4,6 @@ import { LoadingState } from '../../components/ui/LoadingState'
 import { Icon } from '../../components/art/Icon'
 import { RouteOverlay } from '../routing/RouteOverlay'
 import type { RouteState } from '../routing/types'
-import { NON_LIVE_DATA_DISCLAIMER } from './mapData'
 import { useMapLayers, type UseMapLayersOptions } from './useMapLayers'
 import { stationMarkerData } from './stations'
 import { LOCKED_STUDY_AREA_FIXTURE, parseStudyAreaFixture } from './mapData'
@@ -208,7 +207,25 @@ export function InteractiveFloodMap({
   const trackingMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null)
   const trackingDisplayPositionRef = useRef<google.maps.LatLngLiteral | null>(null)
   const trackingDisplayProgressRef = useRef<number | null>(null)
-  const trackingPopupRef = useRef<google.maps.InfoWindow | null>(null)
+  const popupRef = useRef<google.maps.InfoWindow | null>(null)
+  const popupLayerRef = useRef<string | null>(null)
+  const markerClickListenersRef = useRef(new Map<string, google.maps.MapsEventListener>())
+  const recordsRef = useRef(records)
+  recordsRef.current = records
+  const dismissPopup = useCallback((layer?: string) => {
+    if (layer && popupLayerRef.current !== layer) return
+    popupRef.current?.close()
+    popupLayerRef.current = null
+  }, [])
+  const showPopup = useCallback((layer: string, content: HTMLElement, position?: google.maps.LatLng | null, anchor?: google.maps.marker.AdvancedMarkerElement) => {
+    const map = mapRef.current
+    const info = popupRef.current
+    if (!map || !info) return
+    info.close()
+    info.setOptions({ content, position: position ?? undefined })
+    popupLayerRef.current = layer
+    info.open({ map, ...(anchor ? { anchor } : {}) })
+  }, [])
   const lastRequestedCenterRef = useRef<[number, number] | undefined>(undefined)
   const dragListenerRef = useRef<google.maps.MapsEventListener | null>(null)
   const clickListenerRef = useRef<google.maps.MapsEventListener | null>(null)
@@ -264,6 +281,7 @@ export function InteractiveFloodMap({
     let removeInteractions = () => {}
     const markers = markersRef.current
     const markerCallbacks = markerCallbacksRef.current
+    const markerClicks = markerClickListenersRef.current
     const providerFailure = () => setMapError('Google rejected the browser key or Map ID. Check website/API restrictions and reload after changing frontend configuration.')
     providerFailureListeners.add(providerFailure)
     const node = containerRef.current
@@ -318,13 +336,14 @@ export function InteractiveFloodMap({
       )
       map.fitBounds(initialBounds, 20)
       markerClassRef.current = AdvancedMarkerElement
-      trackingPopupRef.current = new google.maps.InfoWindow()
+      popupRef.current = new google.maps.InfoWindow()
       dragListenerRef.current = map.addListener('dragstart', () => {
         setFollow(false)
         followChangeRef.current?.(false)
         manualPanRef.current?.()
       })
       clickListenerRef.current = map.addListener('click', (event: google.maps.MapMouseEvent) => {
+        dismissPopup()
         if (event.latLng) mapClickRef.current?.([event.latLng.lng(), event.latLng.lat()])
       })
       setMapReady(true)
@@ -341,6 +360,10 @@ export function InteractiveFloodMap({
       markers.clear()
       markerCallbacks.forEach(listener => listener.remove())
       markerCallbacks.clear()
+      markerClicks.forEach(listener => listener.remove())
+      markerClicks.clear()
+      dismissPopup()
+      popupRef.current = null
       overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
       overlaysRef.current = []
       routeLineRef.current?.setMap(null)
@@ -362,7 +385,6 @@ export function InteractiveFloodMap({
     if (!mapReady || !mapRef.current || !markerClassRef.current) return
     const map = mapRef.current
     const AdvancedMarkerElement = markerClassRef.current
-    const info = new google.maps.InfoWindow()
     const desired = new Set<string>()
     stationMarkerData(operationContext?.stationId ?? assignedStationId).forEach(({ station, position, assigned }, index) => {
       const key = `station:${station.station_id}`
@@ -370,10 +392,7 @@ export function InteractiveFloodMap({
       let marker = markersRef.current.get(key)
       if (!marker) {
         marker = new AdvancedMarkerElement({ map, position, title: station.name, content: markerContent(station.name, stationColors[index], '⌂') })
-        marker.addListener('click', () => {
-          info.setContent(textPopup(station.name, [station.address, assignedStationIdRef.current === station.station_id ? 'Assigned to this mission' : 'Headquarters']))
-          info.open({ map, anchor: marker })
-        })
+        markerClickListenersRef.current.set(key, marker.addListener('click', () => showPopup(key, textPopup(station.name, [station.address, assignedStationIdRef.current === station.station_id ? 'Assigned to this mission' : 'Headquarters']), undefined, marker)))
         markersRef.current.set(key, marker)
       }
       marker.position = position
@@ -391,10 +410,7 @@ export function InteractiveFloodMap({
       let marker = markersRef.current.get(key)
       if (!marker) {
         marker = new AdvancedMarkerElement({ map, position: { lat: latitude, lng: longitude }, title: record.label, content: markerContent(record.label, '#ef334f', '●') })
-        marker.addListener('click', () => {
-          info.setContent(textPopup(record.label, [record.id]))
-          info.open({ map, anchor: marker })
-        })
+        markerClickListenersRef.current.set(key, marker.addListener('click', () => showPopup(key, textPopup(recordsRef.current?.find(item => item.id === record.id)?.label ?? record.label, []), undefined, marker)))
         markersRef.current.set(key, marker)
       }
       marker.gmpDraggable = draggableIdsRef.current.includes(record.id)
@@ -415,55 +431,64 @@ export function InteractiveFloodMap({
     for (const [key, marker] of markersRef.current) {
       if (key.startsWith('tracking:')) continue
       if (!desired.has(key)) {
+        dismissPopup(key)
+        markerCallbacksRef.current.get(key)?.remove()
+        markerCallbacksRef.current.delete(key)
+        markerClickListenersRef.current.get(key)?.remove()
+        markerClickListenersRef.current.delete(key)
         marker.map = null
         markersRef.current.delete(key)
       }
     }
-    return () => info.close()
-  }, [mapReady, assignedStationId, operationContext?.stationId, records, draggableRecordIds])
+  }, [mapReady, assignedStationId, operationContext?.stationId, records, draggableRecordIds, dismissPopup, showPopup])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
     overlaysRef.current = []
     const map = mapRef.current
+    const listeners: google.maps.MapsEventListener[] = []
     if (dataset?.studyArea.mapPolygon.length) {
       const boundary = new google.maps.Polygon({ map, paths: asGooglePath(dataset.studyArea.mapPolygon), strokeColor: '#3b82f6', strokeOpacity: 0.9, strokeWeight: 2, fillColor: '#3b82f6', fillOpacity: 0.04, clickable: true })
-      boundary.addListener('click', (event: google.maps.MapMouseEvent) => {
-        new google.maps.InfoWindow({ content: textPopup(dataset.studyArea.name, ['Approved WGS 84 pilot boundary', `Approved: ${dataset.studyArea.approvedOn}`]), position: event.latLng }).open(map)
-      })
+      listeners.push(boundary.addListener('click', (event: google.maps.MapMouseEvent) => {
+        showPopup('boundary', textPopup(dataset.studyArea.name, ['Project-defined U-Belt pilot boundary']), event.latLng)
+      }))
       overlaysRef.current.push(boundary)
     }
-    if (dataset && layerStatus !== 'error') {
+    if (floodVisible && dataset && layerStatus !== 'error') {
       for (const edge of dataset.edges) {
         const color = edge.passability === 'impassable' ? '#dc2626' : edge.passability === 'restricted' ? '#f59e0b' : '#22c55e'
         const line = new google.maps.Polyline({ map, path: asGooglePath(edge.mapCoordinates), strokeColor: color, strokeOpacity: 0.9, strokeWeight: edge.passability === 'impassable' ? 6 : 4, clickable: true })
-        line.addListener('click', (event: google.maps.MapMouseEvent) => {
+        listeners.push(line.addListener('click', (event: google.maps.MapMouseEvent) => {
           const depth = edge.floodDepthCm ? ` · ${edge.floodDepthCm} cm` : ''
-          new google.maps.InfoWindow({ content: textPopup(`${edge.edgeId} (${edge.roadClass})`, [`${edge.lengthM} m · ${edge.passability.toUpperCase()}`, `Flood: ${edge.floodLevel}${depth}`, `Source: ${edge.sourceType} · ${edge.observedAt}`]), position: event.latLng }).open(map)
-        })
+          showPopup('conditions', textPopup(`${edge.edgeId} (${edge.roadClass})`, [`${edge.lengthM} m · ${edge.passability.toUpperCase()}`, `Flood: ${edge.floodLevel}${depth}`, `Source: ${edge.sourceType} · ${edge.observedAt}`]), event.latLng)
+        }))
         overlaysRef.current.push(line)
       }
-      if (floodVisible) for (const flood of dataset.floodFeatures) {
+      for (const flood of dataset.floodFeatures) {
         if (flood.geometryType !== 'Polygon' || !Array.isArray(flood.mapCoordinates)) continue
         const critical = flood.passability === 'impassable' || flood.floodLevel === 'severe'
         const polygon = new google.maps.Polygon({ map, paths: flood.mapCoordinates, strokeColor: critical ? '#dc2626' : '#f59e0b', strokeWeight: 2, fillColor: critical ? '#ef4444' : '#f59e0b', fillOpacity: critical ? 0.42 : 0.3, clickable: true })
-        polygon.addListener('click', (event: google.maps.MapMouseEvent) => {
-          new google.maps.InfoWindow({ content: textPopup(critical ? 'Controlled severe flood zone' : 'Controlled flood ponding', [`${flood.floodLevel} · ${flood.floodDepthCm ? `${flood.floodDepthCm} cm depth` : 'Controlled depth'}`, `Passability: ${flood.passability}`]), position: event.latLng }).open(map)
-        })
+        listeners.push(polygon.addListener('click', (event: google.maps.MapMouseEvent) => {
+          showPopup('conditions', textPopup(critical ? 'Controlled severe flood zone' : 'Controlled flood ponding', [`${flood.floodLevel} · ${flood.floodDepthCm ? `${flood.floodDepthCm} cm depth` : 'Controlled depth'}`, `Passability: ${flood.passability}`]), event.latLng)
+        }))
         overlaysRef.current.push(polygon)
       }
     }
     return () => {
+      listeners.forEach(listener => listener.remove())
+      dismissPopup('conditions')
+      dismissPopup('boundary')
       overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
       overlaysRef.current = []
     }
-  }, [mapReady, dataset, layerStatus, floodVisible])
+  }, [mapReady, dataset, layerStatus, floodVisible, dismissPopup, showPopup])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     const map = mapRef.current
     const lines: google.maps.Polyline[] = []
+    const listeners: google.maps.MapsEventListener[] = []
     if (routePoints.length >= 2) {
       const [completedPath, remainingPath] = splitPathAtRatio(routePoints, trackingProgress ?? 0)
       if (completedPath.length >= 2) {
@@ -472,15 +497,15 @@ export function InteractiveFloodMap({
       }
       if (remainingPath.length >= 2) {
         routeLineRef.current = new google.maps.Polyline({ map, path: remainingPath, strokeColor: '#22c55e', strokeOpacity: 0.98, strokeWeight: 7, clickable: true })
-        routeLineRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
+        listeners.push(routeLineRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
         const routeId = routeResult?.route_id ?? 'Accepted mission route'
-        new google.maps.InfoWindow({ content: textPopup('Controlled-scenario route', [routeId, routeResult ? `${Math.round(routeResult.distance_m)} m` : 'Persisted station-to-incident geometry']), position: event.latLng }).open(map)
-        })
+        showPopup('route', textPopup('Mission route', [routeId, routeResult ? `${Math.round(routeResult.distance_m)} m` : 'Stored station-to-incident route']), event.latLng)
+        }))
         lines.push(routeLineRef.current)
       }
     }
-    return () => lines.forEach(line => line.setMap(null))
-  }, [mapReady, routePoints, routeResult, trackingProgress])
+    return () => { listeners.forEach(listener => listener.remove()); lines.forEach(line => line.setMap(null)); dismissPopup('route') }
+  }, [mapReady, routePoints, routeResult, trackingProgress, dismissPopup, showPopup])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !markerClassRef.current || !trackingPosition) return
@@ -589,17 +614,17 @@ export function InteractiveFloodMap({
   return <div className="flood-map-container" role="region" aria-label="Interactive Google Maps rescue map">
     {controlsSlot}
     {(!compact || (showRouteControl && trackingPosition)) && <div className="flood-map-controls">
-      {!compact && <div className="flood-map-legend-items">
+      {!compact && floodVisible && <div className="flood-map-legend-items">
         <span className="legend-tag legend-safe">● Passable ({metadata.stats.passableCount})</span>
         <span className="legend-tag legend-restricted">▲ Restricted ({metadata.stats.restrictedCount})</span>
         <span className="legend-tag legend-impassable">✕ Impassable ({metadata.stats.impassableCount})</span>
       </div>}
       <div className="flood-map-toggles">
-        {!compact && <button type="button" className={`map-toggle-btn ${floodVisible ? 'is-active' : ''}`} onClick={() => setFloodVisible(value => !value)}>Flood scenario: {floodVisible ? 'ON' : 'OFF'}</button>}
+        {!compact && <button type="button" className={`map-toggle-btn ${floodVisible ? 'is-active' : ''}`} aria-pressed={floodVisible} onClick={() => setFloodVisible(value => !value)}>Road conditions: {floodVisible ? 'On' : 'Off'}</button>}
         {trackingPosition && <button type="button" className={`map-toggle-btn ${follow ? 'is-active' : ''}`} onClick={toggleFollow}>{follow ? 'Following rescuer' : 'Follow rescuer'}</button>}
         {navigation && <button type="button" className="map-toggle-btn" aria-pressed={headingUp && vector} disabled={!vector} onClick={() => setHeadingUp(value => !value)}>{headingUp && vector ? 'Heading-up · use north-up' : 'North-up · use heading-up'}</button>}
         {showRouteControl && routePoints.length > 1 && <button type="button" className="map-toggle-btn" onClick={showFullRoute}>Show full route</button>}
-        <button type="button" className="map-toggle-btn" onClick={recenter}>Recenter</button>
+        <button type="button" className="map-toggle-btn map-recenter" aria-label="Recenter" title="Recenter map" onClick={recenter}><Icon name="target" size={20}/></button>
       </div>
     </div>}
     {!mapReady && !mapError && <div className="map-state-banner is-loading"><LoadingState layout="compact" label="Loading Google Maps…"/></div>}
@@ -615,7 +640,6 @@ export function InteractiveFloodMap({
       {journeySummary && <p>{journeySummary}</p>}
       {trackingPosition && (trackingFrozen || expired || offline) && <p role="status">Tracking paused. Showing the last available server position.</p>}
       {navigation && mapReady && !vector && <p role="status">North-up following. Heading and tilt require vector map support.</p>}
-      {!compact && <p>{NON_LIVE_DATA_DISCLAIMER}</p>}
     </div>
   </div>
 }

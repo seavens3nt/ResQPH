@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from './AuthLayout'
 import { RoleChooser } from './RoleChooser'
 import { Icon } from '../../components/art/Icon'
@@ -62,13 +62,7 @@ export function LoginPage() {
           </button>
           <p className="auth-signup-switch">
             Don't have an account?{' '}
-            <button
-              type="button"
-              className="auth-text-btn highlight"
-              onClick={() => navigate('/signup')}
-            >
-              Sign Up Now
-            </button>
+            <Link to="/signup" className="auth-text-btn highlight">Create an account</Link>
           </p>
         </div>
       }
@@ -99,6 +93,7 @@ export function LoginPage() {
             placeholder="citizen@example.test"
             aria-label="Email"
             autoComplete="email"
+            disabled={submitting}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -117,6 +112,7 @@ export function LoginPage() {
             placeholder="Enter your password"
             aria-label="Password"
             autoComplete="current-password"
+            disabled={submitting}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

@@ -5,6 +5,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 export type IconName =
+  | 'target'
   | 'alert'
   | 'pin'
   | 'volunteers'
@@ -53,6 +54,7 @@ export interface IconProps {
 }
 
 const paths: Record<IconName, ReactNode> = {
+  target: <><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></>,
   alert: (
     <>
       <path d="M12 3.5 22 20H2L12 3.5Z" />

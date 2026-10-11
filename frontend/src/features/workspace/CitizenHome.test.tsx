@@ -8,7 +8,7 @@ const state = vi.hoisted(()=>({
   hourly:{data:[{time:'2026-10-10T04:00:00Z',endTime:'2026-10-10T05:00:00Z',temperature:29,condition:'Light rain',kind:'rain',isDaytime:true,rainChance:40,rainAmount:0.3,windSpeed:5,humidity:80,pressure:1010}],isError:false,fetchStatus:'idle'},
 }))
 vi.mock('../requests/hooks',()=>({useMyRescueRequests:()=>state.query}))
-vi.mock('./useUbeltWeather',()=>({useUbeltWeather:()=>({data:{temperature:29,high:31,low:25,condition:'Rain',kind:'rain',time:'2026-10-10T04:00:00Z',windSpeed:5,windDirection:'SOUTHWEST',humidity:80},isError:false,isFetching:false,refetch:vi.fn()}),useUbeltHourlyWeather:()=>state.hourly}))
+vi.mock('./useUbeltWeather',()=>({useWeatherClock:()=>Date.now(),useUbeltWeather:()=>({data:{temperature:29,high:31,low:25,condition:'Rain',kind:'rain',time:'2026-10-10T04:00:00Z',windSpeed:5,windDirection:'SOUTHWEST',humidity:80},isError:false,isFetching:false,refetch:vi.fn()}),useUbeltHourlyWeather:()=>state.hourly}))
 function RouteEvidence() { return <output>{useLocation().search}</output> }
 afterEach(()=>{cleanup();state.query.isLoading=false;state.query.isError=false;state.hourly.isError=false})
 describe('Screenshot-based citizen Home',()=>{

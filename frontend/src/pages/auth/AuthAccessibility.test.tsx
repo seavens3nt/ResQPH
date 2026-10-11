@@ -33,13 +33,20 @@ function advanceToLocation() {
 describe('Accessible prototype entry', () => {
   it('offers citizen and rescuer roles with visible login labels', () => {
     entry(<LoginPage/>)
-    expect(screen.getByRole('navigation', {name:'Account access'})).toBeVisible()
-    expect(screen.getByRole('link', {name:'Create Account'})).toHaveAttribute('href','/signup')
+    expect(screen.queryByRole('navigation', {name:'Account access'})).not.toBeInTheDocument()
+    expect(screen.getByRole('link', {name:'Create an account'})).toHaveAttribute('href','/signup')
     expect(screen.getAllByRole('radio')).toHaveLength(2)
     expect(screen.queryByRole('radio', {name: 'Volunteer'})).not.toBeInTheDocument()
     const citizen = screen.getByRole('radio', {name: 'Citizen'})
     expect(citizen).toHaveAttribute('type', 'radio')
     expect(citizen).toBeChecked()
+    expect(citizen).toHaveClass('visually-hidden')
+    citizen.focus()
+    expect(citizen).toHaveFocus()
+    const rescuer = screen.getByRole('radio', {name:'Rescuer'})
+    fireEvent.click(rescuer)
+    expect(rescuer).toBeChecked()
+    expect(citizen).not.toBeChecked()
     fireEvent.change(screen.getByLabelText('Email'), {target: {value: 'citizen@example.test'}})
     expect(screen.getByText('Email', {selector: 'label'})).toBeVisible()
     expect(screen.getByText('Password', {selector: 'label'})).toBeVisible()
@@ -59,7 +66,7 @@ describe('Accessible prototype entry', () => {
 
   it('keeps signup fields labeled and names the optional final step after 5/5', () => {
     entry(<SignupPage/>)
-    expect(screen.getByRole('link', {name:'Login'})).toHaveAttribute('href','/login')
+    expect(screen.getByRole('link', {name:'Log in'})).toHaveAttribute('href','/login')
     const next = () => fireEvent.click(screen.getByRole('button', {name: 'Continue'}))
     fireEvent.change(screen.getByLabelText('First name'), {target: {value: 'Synthetic'}})
     fireEvent.change(screen.getByLabelText('Last name'), {target: {value: 'Tester'}})

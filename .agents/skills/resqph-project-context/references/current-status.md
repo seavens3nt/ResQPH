@@ -1,5 +1,12 @@
 # Current Status
 
+- 2026-10-11 local UI/advisory refinement: `feature/citizen-ui-advisory-refinement`
+  from accepted `origin/temporary-main` `4ffa717` (navigation PR #90 included).
+  Auth focus/role cleanup, road-condition display/popup fixes, neutral dark theme,
+  compact Home, URL-backed Help and shared-query Citizen Advisory. 390 frontend
+  tests, lint/build pass with existing warnings; browser unavailable. Task remains
+  uncommitted/unpushed for manual testing. See `docs/testing/CITIZEN-UI-ADVISORY-2026-10-11.md`.
+
 - 2026-10-11 navigation checkpoint: `feature/navigation-request-ux` starts at
   `a143a18` (`origin/temporary-main`). Existing Google map now supports simulated
   heading-up navigation and a locally drawn vehicle marker; citizen location

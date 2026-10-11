@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
 import './auth.css'
 
 interface AuthLayoutProps {
@@ -10,13 +9,6 @@ interface AuthLayoutProps {
   footer?: ReactNode
   iconBadge?: ReactNode
   hideHeader?: boolean
-}
-
-export function AuthModeTabs() {
-  return <nav className="auth-mode-tabs" aria-label="Account access">
-    <NavLink to="/login">Login</NavLink>
-    <NavLink to="/signup">Create Account</NavLink>
-  </nav>
 }
 
 export function AuthLayout({
@@ -42,7 +34,6 @@ export function AuthLayout({
 
         {/* Form area */}
         <div className="auth-body-container">
-          <AuthModeTabs/>
           {!hideHeader && title && (
             <div className="auth-title-block">
               <h1 className="auth-main-title">{title}</h1>

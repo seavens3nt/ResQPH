@@ -425,3 +425,43 @@
   .workspace-shell[data-role][data-view] .role-workspace .workspace-team-grid { grid-template-columns:minmax(0,1fr); }
   .workspace-shell[data-role][data-view] .role-workspace .workspace-table-panel { padding:10px; }
 }
+
+/* Fixed-size theme switch with equal icon slots and a thumb that fits its track. */
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle {
+  width:88px; height:44px; min-height:44px; padding:4px; gap:0; flex-shrink:0;
+  position:relative; background:var(--shared-inset); border-color:var(--line);
+}
+.workspace-shell[data-role][data-view] .citizen-theme-toggle::before {
+  left:4px; top:4px; width:36px; height:34px; border-radius:999px;
+  background:var(--home-selected); transform:translateX(0);
+}
+.workspace-shell[data-role][data-view] .citizen-theme-toggle[aria-pressed=true]::before { transform:translateX(42px); }
+.workspace-shell[data-role][data-view] .citizen-theme-toggle .figma-home-asset,
+.workspace-shell[data-role][data-view] .citizen-theme-toggle .figma-dispatcher-asset {
+  width:38px; height:32px; display:flex; align-items:center; justify-content:center; position:relative;
+}
+.workspace-shell[data-role][data-view] .citizen-theme-toggle img { width:20px !important; height:20px !important; object-fit:contain; position:static; }
+.workspace-shell[data-role][data-view][data-theme=dark] {
+  --home-page:#101113; --home-surface:#25272b; --shared-surface:#25272b; --shared-inset:#191b1f;
+  --ink:#f1f3f5; --muted:#bdc3cc; --line:#747c88; --home-selected:#454b54;
+  --text-primary:#f1f3f5; --text-secondary:#bdc3cc; color-scheme:dark;
+}
+.workspace-shell[data-role][data-theme=dark] .workspace-table th { background:#34383e; }
+.workspace-shell[data-role][data-theme=dark] :is(.requests-selectable-row:hover td,.requests-reference-table tr.is-selected td,.workspace-table tr.is-selected) { background:#3d434c; }
+.workspace-shell[data-role][data-view] .map-recenter { display:inline-flex; align-items:center; justify-content:center; width:44px; min-height:44px; padding:10px; }
+.workspace-shell[data-role][data-view] .citizen-information-page { color:var(--ink); }
+.citizen-information-page .workspace-card { display:flex; flex-direction:column; gap:14px; }
+.citizen-information-page ul { padding-inline-start:24px; }
+.citizen-information-page a { text-decoration:underline; }
+.citizen-information-page .workspace-actions { align-items:center; flex-wrap:wrap; }
+@media (min-width:701px) {
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home { --home-extra-height:0px; gap:24px; }
+  .workspace-shell[data-role=citizen][data-view=overview] .home-section-title { margin-bottom:16px; }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-rescue-card,.home-current-card) { height:auto; min-height:136px; }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-scenario-card,.home-hourly-card) { height:auto; min-height:0; padding:20px; }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-weather-grid { min-height:0; }
+}
+.workspace-shell[data-role][data-theme=dark] .home-live-weather-surface { background:var(--shared-inset); border-color:var(--line); }
+.workspace-shell[data-role][data-theme=dark] :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
+.workspace-shell[data-role][data-theme=dark] :focus-visible { outline-color:#a5bfff; }
+.workspace-shell[data-role][data-theme=dark] .live-hourly-panel { background:var(--shared-inset); border-color:var(--line); }

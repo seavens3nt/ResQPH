@@ -56,8 +56,9 @@ and rules, rather than copying the Home layout into every route.
   routes share the 559px mobile breakpoint.
 - Preserve each page's content, navigation, validation, API behavior, and
   accessibility. Do not copy demonstration rows over actual request data.
-- Login/signup retain their existing photographic background and dark surface;
-  apply shared typography, corner treatment, and restrained shadows there.
+- Login/signup use a clean solid background following the browser’s light/dark
+  preference, shared typography and one field-wrapper focus treatment. Native role
+  radios remain accessible but visually hidden; alternative auth links replace top tabs.
 
 Home and My Requests keep their screenshot-specific desktop compositions.
 Other pages share the visual language, not identical dimensions or content.
@@ -100,9 +101,11 @@ memory-only draft; review precedes the unchanged API submission. The modal uses
 two columns on desktop, one on small screens, and a scrollable body. The old
 request URL remains available for existing deep links, not new dashboard actions.
 
-The shared flood map keeps the road network and pilot boundary enabled whenever
-their data are available. Neither layer has a visibility toggle. Flood Hazard
-and Recenter retain their existing controls and behavior.
+The shared flood map retains the pilot boundary. Road conditions toggles every
+passable/restricted/impassable overlay and controlled flood shading together; this
+changes display only. Mission routes, headquarters and incident/responder pins stay
+visible. Recenter uses a target icon with its existing accessible name and behavior.
+One map information window replaces previous popups; general scope copy lives on Help.
 
 Figma frame `36:682` now supersedes the inline selected request details rule.
 Citizen request selections open the shared status popup over the current list;
@@ -222,3 +225,12 @@ tracking modals, unfinished-draft and cancellation feedback in their current
 approved places. Dispatcher assignment/team/history controls and Rescuer
 mission/route/offline controls remain role-specific; do not remove operational
 team information merely because it is hidden in Citizen tracking.
+
+2026-10-11 local citizen refinement: Home uses modest content-driven card heights
+and smaller gaps; no page scaling. Dashboard dark surfaces use neutral charcoal
+with separate inset/border tokens. The theme switch has fixed equal icon slots and
+a fitting thumb. Help & Limitations is a real URL-backed workspace page; Citizen
+Advisory reuses current weather, timestamps and practical deterministic suggestions.
+Home has no manual/automatic weather refresh. Advisory permits bounded manual
+refresh using the same cached query, never map/tracking timers. Browser visual
+acceptance remains pending; see CITIZEN-UI-ADVISORY-2026-10-11.md.

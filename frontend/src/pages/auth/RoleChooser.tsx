@@ -30,7 +30,7 @@ export function RoleChooser({ value, onChange }: RoleChooserProps) {
             key={role}
             className={`role-segmented__btn${selected ? ' is-selected' : ''}`}
           >
-            <input type="radio" name="login-role" value={role} checked={selected} onChange={() => onChange(role)} />
+            <input className="visually-hidden" type="radio" name="login-role" value={role} checked={selected} onChange={() => onChange(role)} />
             <Icon name={roleIcon[role]} size={14} />
             <span>{roleDisplayNames[role]}</span>
           </label>

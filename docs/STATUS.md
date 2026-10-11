@@ -2,6 +2,18 @@
 
 **Last updated:** 2026-10-11 (Asia/Manila)
 
+## Citizen UI and Advisory local refinement (2026-10-11)
+
+Current local branch `feature/citizen-ui-advisory-refinement` starts at latest
+`origin/temporary-main` `4ffa7171e15aff0342fb864fe4c920b6239d2566`, which includes
+navigation PR #90. Auth cleanup, complete road-condition visibility, single-popup
+map handling, neutral dark surfaces, compact Home, and separate Help/Advisory pages
+are implemented locally. Frontend: 390 tests pass, lint passes with six existing
+warnings, build passes with the existing chunk warning. Browser acceptance is
+pending because no connected browser is available. No commit/push/PR/deployment
+for this task; developer databases and environment values are unchanged.
+See [local refinement evidence and manual checklist](testing/CITIZEN-UI-ADVISORY-2026-10-11.md).
+
 ## Navigation and request UX checkpoint (2026-10-11)
 
 Current task branch: `feature/navigation-request-ux`, based on accepted
