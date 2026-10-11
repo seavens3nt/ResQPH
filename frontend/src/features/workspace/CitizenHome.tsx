@@ -29,7 +29,7 @@ export function CitizenHome({hasDraft,onView,onDiscard,onRequest}: {hasDraft:boo
     <section aria-labelledby="home-status-title">
       <h2 className="home-section-title" id="home-status-title"><FigmaHomeAsset name="star"/>Status Cards</h2>
       <div className="home-status-grid">
-        <WorkspaceCard className="home-rescue-card"><button aria-label="Request rescue" onClick={onRequest}><FigmaHomeAsset name="add"/><span><strong>{hasDraft ? 'Resume rescue request' : 'Request rescue'}</strong><small>Get help from you or someone nearby.</small></span></button></WorkspaceCard>
+        <WorkspaceCard className="home-rescue-card"><button aria-label="Request rescue" onClick={onRequest}><FigmaHomeAsset name="add"/><span><strong>{hasDraft ? 'Resume rescue request' : 'Request rescue'}</strong><small>Get help from you or someone nearby.</small></span><FigmaHomeAsset name="chevron"/></button></WorkspaceCard>
         <WorkspaceCard className="home-current-card"><h3>Current Request</h3><QueryState query={requests}>{()=> active ? <>
           <div className="home-current-top"><strong className="home-request-label">{requestLabel(active.id,activeIndex)}</strong><WorkspaceBadge status={active.status}>{active.status === 'pending' ? 'Pending assignment' : active.status.replace(/^./,s=>s.toUpperCase())}</WorkspaceBadge></div>
           <p><FigmaHomeAsset name="pin"/>{active.location.address}</p>

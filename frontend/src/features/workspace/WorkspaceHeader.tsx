@@ -15,7 +15,7 @@ export function WorkspaceHeader({title,role,name,profileTo,dark,onToggleTheme,ch
       <button className="citizen-theme-toggle" aria-label="Dark mode" aria-pressed={dark} onClick={onToggleTheme}>
         <span className="theme-icon-slot"><Icon name="sun" size={30}/></span><span className="theme-icon-slot"><Icon name="moon" size={30}/></span>
       </button>
-      <Link className="citizen-role-pill" to={profileTo} aria-label={`${role} workspace · ${name}`} title={`${name} · ${role}`}>{role}</Link>
+      <Link className="citizen-role-pill" to={profileTo} aria-label={`${role} workspace · ${name}`} title={`${name} · ${role}`}><Icon name="user" size={22}/><span>{role}</span><Icon name="chevron-right" size={18}/></Link>
     </div>
   </header>
 }
