@@ -86,7 +86,7 @@ it('validates and reviews without submission, supports editing, and uses the exi
   expect(mutate).not.toHaveBeenCalled()
   expect(screen.getByLabelText('Reviewed pinned location')).toHaveValue('Pinned location')
   expect(within(screen.getByRole('region',{name:'Request summary'})).getAllByRole('term')).toHaveLength(7)
-  expect(screen.getByText(/Confirmed rescue pin/)).toBeInTheDocument()
+  expect(screen.getByText(/Location confirmed/)).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Back'}))
   expect(screen.getByLabelText(/People needing assistance/)).toHaveValue(2)
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))

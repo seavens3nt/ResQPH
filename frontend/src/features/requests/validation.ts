@@ -42,9 +42,7 @@ export const GeoPointSchema = z.object({
       ([lng, lat]) => isInsideUBeltBoundary(lng, lat),
       {
         message:
-          'Location must be inside the U-Belt pilot area ' +
-          '(controlled scenario boundary). ' +
-          'Longitude 120.982–121.004, Latitude 14.596–14.621.',
+          'Choose a rescue location inside the U-Belt pilot area (controlled scenario boundary).',
       },
     ),
 })

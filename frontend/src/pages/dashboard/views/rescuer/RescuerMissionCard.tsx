@@ -31,6 +31,7 @@ interface RescuerMissionCardProps {
   onAdvanceStatus: () => void
   isCached?: boolean
   isQueueLocked?: boolean
+  showTracking?: boolean
 }
 
 export function RescuerMissionCard({
@@ -41,6 +42,7 @@ export function RescuerMissionCard({
   onAdvanceStatus,
   isCached = false,
   isQueueLocked = false,
+  showTracking = true,
 }: RescuerMissionCardProps) {
   const titleId = useId()
   const queueNoteId = useId()
@@ -67,8 +69,8 @@ export function RescuerMissionCard({
       const cached = queryClient.getQueryData<Awaited<ReturnType<typeof getMissionTracking>>>(trackingKey)
       return cached && Date.parse(received.timestamp) < Date.parse(cached.timestamp) ? cached : received
     },
-    enabled: Boolean(user && !isCached && !['completed', 'cancelled'].includes(mission.status)),
-    refetchInterval: query => !pageVisible || !isMissionTrackingActive(mission.status) ? false : query.state.error
+    enabled: Boolean(showTracking && user && !isCached && !['completed', 'cancelled'].includes(mission.status)),
+    refetchInterval: query => !showTracking || !pageVisible || !isMissionTrackingActive(mission.status) ? false : query.state.error
       ? retryAfterDelay(query.state.error, Math.min(30_000, 3_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
       : 3_000,
     refetchIntervalInBackground: false,
@@ -87,8 +89,8 @@ export function RescuerMissionCard({
   }, [])
 
   useEffect(() => {
-    if (mission.status === 'arrived' && !isCached) void refreshTracking()
-  }, [mission.status, isCached, refreshTracking])
+    if (showTracking && mission.status === 'arrived' && !isCached) void refreshTracking()
+  }, [mission.status, isCached, refreshTracking, showTracking])
 
   return (
     <article className="rescuer-mission-card" aria-labelledby={titleId}>
@@ -141,13 +143,16 @@ export function RescuerMissionCard({
         workflow is not a production emergency-dispatch service.
       </p>
 
-      {tracking.data && (
+      {showTracking && tracking.data && (
         <div className="mission-tracking-panel">
           <div className="mission-tracking-panel__header"><strong>Shared Simulated Tracking</strong></div>
           <MissionTrackingMap
             route={tracking.data.route_geometry?.coordinates ?? []}
             position={tracking.data.position?.coordinates ?? null}
             progress={tracking.data.progress_ratio}
+            frozen={tracking.isError || isCached}
+            timestamp={tracking.data.timestamp}
+            stopped={['arrived', 'completed', 'cancelled'].includes(mission.status)}
             follow={followRescuer}
             onFollowChange={setFollowRescuer}
             onUserPan={suspendFollow}
@@ -240,6 +245,9 @@ function MissionTrackingMap({
   route,
   position,
   progress,
+  frozen,
+  timestamp,
+  stopped,
   follow,
   onFollowChange,
   onUserPan,
@@ -249,6 +257,9 @@ function MissionTrackingMap({
   route: [number, number][]
   position: [number, number] | null
   progress: number
+  frozen: boolean
+  timestamp: string
+  stopped: boolean
   follow: boolean
   onFollowChange: (following: boolean) => void
   onUserPan: () => void
@@ -258,7 +269,7 @@ function MissionTrackingMap({
   const geoJsonRoute = route.filter(point => point.length === 2 && point.every(Number.isFinite))
   const incidentRecords = incident ? [{ id: 'mission-incident', label: 'Incident location', coordinates: incident }] : []
   return <div className="mission-tracking-map" aria-label="Simulated mission route and rescuer marker">
-    <InteractiveFloodMap compact showRouteStatus={false} center={geoJsonRoute[0] ? [geoJsonRoute[0][1], geoJsonRoute[0][0]] : undefined}
+    <InteractiveFloodMap trackingFrozen={frozen} trackingTimestamp={timestamp} trackingStopped={stopped} compact showRouteStatus={false} center={geoJsonRoute[0] ? [geoJsonRoute[0][1], geoJsonRoute[0][0]] : undefined}
       routeGeometry={geoJsonRoute} trackingPosition={position ? { type: 'Point', coordinates: position } : null} trackingProgress={progress} showRouteControl
       followPosition={follow} onFollowChange={onFollowChange} onManualPan={onUserPan} assignedStationId={stationId} records={incidentRecords}/>
   </div>

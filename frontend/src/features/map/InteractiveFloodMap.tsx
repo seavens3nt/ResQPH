@@ -1,5 +1,5 @@
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { LoadingState } from '../../components/ui/LoadingState'
 import { Icon } from '../../components/art/Icon'
 import { RouteOverlay } from '../routing/RouteOverlay'
@@ -9,6 +9,8 @@ import { useMapLayers, type UseMapLayersOptions } from './useMapLayers'
 import { stationMarkerData } from './stations'
 import { LOCKED_STUDY_AREA_FIXTURE, parseStudyAreaFixture } from './mapData'
 import './map.css'
+import vehicleAsset from './assets/response-vehicle.svg'
+import { positionAtPathRatio, routeHeading, smoothHeading } from './navigation'
 
 export interface MapProps extends UseMapLayersOptions {
   center?: [number, number]
@@ -26,6 +28,11 @@ export interface MapProps extends UseMapLayersOptions {
   routeGeometry?: [number, number][]
   trackingPosition?: { type: 'Point'; coordinates: [number, number] } | null
   trackingProgress?: number
+  navigation?: boolean
+  trackingFrozen?: boolean
+  trackingStopped?: boolean
+  trackingTimestamp?: string
+  journeySummary?: string
   followPosition?: boolean
   onManualPan?: () => void
   onFollowChange?: (following: boolean) => void
@@ -130,30 +137,6 @@ function asGoogleLiteral(position: unknown): google.maps.LatLngLiteral | null {
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null
 }
 
-function positionAtPathRatio(path: google.maps.LatLngLiteral[], ratio: number): google.maps.LatLngLiteral | null {
-  if (path.length < 2) return path[0] ?? null
-  const lengths = path.slice(1).map((point, index) => {
-    const previous = path[index]
-    const meanLatitude = (point.lat + previous.lat) / 2 * Math.PI / 180
-    return Math.hypot((point.lng - previous.lng) * Math.cos(meanLatitude), point.lat - previous.lat)
-  })
-  const total = lengths.reduce((sum, length) => sum + length, 0)
-  if (total === 0) return path[path.length - 1]
-  let remaining = Math.max(0, Math.min(1, ratio)) * total
-  for (let index = 0; index < lengths.length; index += 1) {
-    const length = lengths[index]
-    if (remaining <= length || index === lengths.length - 1) {
-      const fraction = length === 0 ? 1 : remaining / length
-      return {
-        lat: path[index].lat + (path[index + 1].lat - path[index].lat) * fraction,
-        lng: path[index].lng + (path[index + 1].lng - path[index].lng) * fraction,
-      }
-    }
-    remaining -= length
-  }
-  return path[path.length - 1]
-}
-
 function splitPathAtRatio(path: google.maps.LatLngLiteral[], ratio: number): [google.maps.LatLngLiteral[], google.maps.LatLngLiteral[]] {
   if (path.length < 2) return [[], path]
   const lengths = path.slice(1).map((point, index) => {
@@ -192,6 +175,11 @@ export function InteractiveFloodMap({
   trackingPosition,
   trackingProgress,
   followPosition = false,
+  navigation = false,
+  trackingFrozen = false,
+  trackingStopped = false,
+  trackingTimestamp,
+  journeySummary,
   onManualPan,
   onFollowChange,
   onMapClick,
@@ -241,7 +229,28 @@ export function InteractiveFloodMap({
   const [follow, setFollow] = useState(followPosition)
   const assignedStationIdRef = useRef(assignedStationId)
   assignedStationIdRef.current = operationContext?.stationId ?? assignedStationId
-  const uid = useId()
+  const [headingUp, setHeadingUp] = useState(navigation)
+  const [vector, setVector] = useState(false)
+  const [hidden, setHidden] = useState(document.hidden)
+  const [expired, setExpired] = useState(false)
+  const [offline, setOffline] = useState(!navigator.onLine)
+  const headingRef = useRef(0)
+  const vehicleRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const visibility = () => setHidden(document.hidden)
+    const connectivity = () => setOffline(!navigator.onLine)
+    window.addEventListener('online', connectivity)
+    window.addEventListener('offline', connectivity)
+    document.addEventListener('visibilitychange', visibility)
+    return () => { document.removeEventListener('visibilitychange', visibility); window.removeEventListener('online', connectivity); window.removeEventListener('offline', connectivity) }
+  }, [])
+  useEffect(() => {
+    if (!trackingTimestamp || trackingStopped) { setExpired(false); return }
+    const delay = Math.max(0, 15_000 - (Date.now() - Date.parse(trackingTimestamp)))
+    setExpired(delay === 0)
+    const timer = window.setTimeout(() => setExpired(true), delay)
+    return () => window.clearTimeout(timer)
+  }, [trackingTimestamp, trackingStopped])
   const { status: layerStatus, errorMessage, dataset, metadata } = useMapLayers({ roadFixture, floodFixture, studyAreaFixture, simulatedState })
   const effectiveRouteState = routeState ?? DEFAULT_ROUTE_STATE
   const routeResult = effectiveRouteState.status === 'route-found' ? effectiveRouteState.result : null
@@ -252,6 +261,9 @@ export function InteractiveFloodMap({
 
   useEffect(() => {
     let cancelled = false
+    let removeInteractions = () => {}
+    const markers = markersRef.current
+    const markerCallbacks = markerCallbacksRef.current
     const providerFailure = () => setMapError('Google rejected the browser key or Map ID. Check website/API restrictions and reload after changing frontend configuration.')
     providerFailureListeners.add(providerFailure)
     const node = containerRef.current
@@ -267,12 +279,38 @@ export function InteractiveFloodMap({
         minZoom: STUDY_AREA_MIN_ZOOM,
         restriction: { latLngBounds: studyBoundsLiteral, strictBounds: true },
         mapId,
+        renderingType: google.maps.RenderingType.VECTOR,
+        headingInteractionEnabled: navigation,
+        tiltInteractionEnabled: navigation,
         clickableIcons: false,
         fullscreenControl: false,
         streetViewControl: false,
         mapTypeControl: true,
       })
       mapRef.current = map
+      const renderingListener = map.addListener('renderingtype_changed', () => setVector(map.getRenderingType() === google.maps.RenderingType.VECTOR))
+      setVector(map.getRenderingType() === google.maps.RenderingType.VECTOR)
+      const orientationListener = map.addListener('heading_changed', () => {
+        if (vehicleRef.current) vehicleRef.current.style.transform = `rotate(${headingRef.current - (map.getHeading() ?? 0)}deg)`
+      })
+      const suspend = () => {
+        setFollow(false)
+        followChangeRef.current?.(false)
+        manualPanRef.current?.()
+      }
+      // DOM input identifies user intent; camera events also fire for our own moveCamera calls.
+      const keyboard = (event: KeyboardEvent) => {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '=', 'PageUp', 'PageDown', 'Enter', ' '].includes(event.key)) suspend()
+      }
+      node.addEventListener('pointerdown', suspend, true)
+      node.addEventListener('wheel', suspend, { passive: true, capture: true })
+      node.addEventListener('keydown', keyboard, true)
+      removeInteractions = () => {
+        renderingListener.remove(); orientationListener.remove()
+        node.removeEventListener('pointerdown', suspend, true)
+        node.removeEventListener('wheel', suspend, true)
+        node.removeEventListener('keydown', keyboard, true)
+      }
       lastRequestedCenterRef.current = center
       const initialBounds = new google.maps.LatLngBounds(
         { lat: studyBoundsLiteral.south, lng: studyBoundsLiteral.west },
@@ -295,17 +333,20 @@ export function InteractiveFloodMap({
     })
     return () => {
       cancelled = true
+      removeInteractions()
       dragListenerRef.current?.remove()
       clickListenerRef.current?.remove()
       providerFailureListeners.delete(providerFailure)
-      markersRef.current.forEach(marker => { marker.map = null })
-      markersRef.current.clear()
-      markerCallbacksRef.current.forEach(listener => listener.remove())
-      markerCallbacksRef.current.clear()
+      markers.forEach(marker => { marker.map = null })
+      markers.clear()
+      markerCallbacks.forEach(listener => listener.remove())
+      markerCallbacks.clear()
       overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
       overlaysRef.current = []
       routeLineRef.current?.setMap(null)
-      trackingMarkerRef.current && (trackingMarkerRef.current.map = null)
+      if (trackingMarkerRef.current) trackingMarkerRef.current.map = null
+      trackingMarkerRef.current = null
+      vehicleRef.current = null
       trackingDisplayPositionRef.current = null
       trackingDisplayProgressRef.current = null
       mapRef.current = null
@@ -413,11 +454,21 @@ export function InteractiveFloodMap({
         overlaysRef.current.push(polygon)
       }
     }
+    return () => {
+      overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
+      overlaysRef.current = []
+    }
+  }, [mapReady, dataset, layerStatus, floodVisible])
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+    const lines: google.maps.Polyline[] = []
     if (routePoints.length >= 2) {
       const [completedPath, remainingPath] = splitPathAtRatio(routePoints, trackingProgress ?? 0)
       if (completedPath.length >= 2) {
         const completedLine = new google.maps.Polyline({ map, path: completedPath, strokeColor: '#64748b', strokeOpacity: 0.7, strokeWeight: 5, clickable: false })
-        overlaysRef.current.push(completedLine)
+        lines.push(completedLine)
       }
       if (remainingPath.length >= 2) {
         routeLineRef.current = new google.maps.Polyline({ map, path: remainingPath, strokeColor: '#22c55e', strokeOpacity: 0.98, strokeWeight: 7, clickable: true })
@@ -425,14 +476,11 @@ export function InteractiveFloodMap({
         const routeId = routeResult?.route_id ?? 'Accepted mission route'
         new google.maps.InfoWindow({ content: textPopup('Controlled-scenario route', [routeId, routeResult ? `${Math.round(routeResult.distance_m)} m` : 'Persisted station-to-incident geometry']), position: event.latLng }).open(map)
         })
-        overlaysRef.current.push(routeLineRef.current)
+        lines.push(routeLineRef.current)
       }
     }
-    return () => {
-      overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
-      overlaysRef.current = []
-    }
-  }, [mapReady, dataset, layerStatus, floodVisible, routePoints, routeResult, trackingProgress])
+    return () => lines.forEach(line => line.setMap(null))
+  }, [mapReady, routePoints, routeResult, trackingProgress])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !markerClassRef.current || !trackingPosition) return
@@ -442,20 +490,36 @@ export function InteractiveFloodMap({
       : { lat: latitude, lng: longitude }
     const targetProgress = Number.isFinite(trackingProgress) ? Math.max(0, Math.min(1, trackingProgress!)) : null
     const startProgress = trackingDisplayProgressRef.current ?? targetProgress
+    const firstPosition = !trackingDisplayPositionRef.current
     const start = trackingDisplayPositionRef.current ?? target
     if (!trackingMarkerRef.current) {
-      const marker = new markerClassRef.current({ map: mapRef.current, position: start, title: 'Simulated rescuer position', content: markerContent('Simulated rescuer position', '#0891b2', '🚤'), zIndex: 200 })
+      const content = document.createElement('div')
+      content.className = 'resq-response-vehicle'
+      content.setAttribute('role', 'img')
+      content.setAttribute('aria-label', 'Simulated response vehicle')
+      const icon = document.createElement('img')
+      icon.src = vehicleAsset; icon.alt = ''; icon.draggable = false
+      icon.onerror = () => { icon.remove(); content.textContent = '▲' }
+      content.append(icon)
+      vehicleRef.current = content
+      const marker = new markerClassRef.current({ map: mapRef.current, position: start, title: 'Simulated rescuer position', content, anchorLeft: '-50%', anchorTop: '-50%', zIndex: 200 })
       trackingMarkerRef.current = marker
     } else {
       trackingMarkerRef.current.position = start
     }
     trackingMarkerRef.current.map = mapRef.current
     const marker = trackingMarkerRef.current
+    trackingDisplayPositionRef.current = start
+    trackingDisplayProgressRef.current = startProgress
     let frame: number | null = null
     const startedAt = performance.now()
-    const duration = 2_500
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    const duration = reduced || trackingStopped || firstPosition ? 0 : 2_500
+    let previousFrame = startedAt
+    const frozen = trackingFrozen || expired || hidden || offline
+    const map = mapRef.current
     const animate = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration)
+      const progress = duration === 0 ? 1 : Math.min(1, (now - startedAt) / duration)
       const eased = progress * (2 - progress)
       const interpolatedProgress = startProgress !== null && targetProgress !== null
         ? startProgress + (targetProgress - startProgress) * eased
@@ -466,15 +530,24 @@ export function InteractiveFloodMap({
             lat: start.lat + (target.lat - start.lat) * eased,
             lng: start.lng + (target.lng - start.lng) * eased,
           }
+      const desiredHeading = interpolatedProgress !== null ? routeHeading(routePoints, interpolatedProgress, headingRef.current) : headingRef.current
+      headingRef.current = smoothHeading(headingRef.current, desiredHeading, duration === 0 ? 1 : 1 - Math.exp(-(now - previousFrame) / 180))
+      previousFrame = now
       marker.position = position
+      if (follow) map.moveCamera({ ...(navigation && firstPosition ? { zoom: 17 } : {}), center: position, heading: navigation && headingUp && vector ? headingRef.current : 0, tilt: navigation && headingUp && vector && !reduced ? 40 : 0 })
+      if (vehicleRef.current) vehicleRef.current.style.transform = `rotate(${headingRef.current - (map.getHeading() ?? 0)}deg)`
       trackingDisplayPositionRef.current = position
       if (interpolatedProgress !== null) trackingDisplayProgressRef.current = interpolatedProgress
       if (progress < 1) frame = requestAnimationFrame(animate)
     }
-    frame = requestAnimationFrame(animate)
-    if (follow) mapRef.current.panTo(target)
+    if (!frozen) frame = requestAnimationFrame(animate)
+    else if (follow) map.moveCamera({ center: start, heading: navigation && headingUp && vector ? headingRef.current : 0, tilt: 0 })
     return () => { if (frame !== null) cancelAnimationFrame(frame) }
-  }, [mapReady, trackingPosition, trackingProgress, routePoints, follow])
+  }, [mapReady, trackingPosition, trackingProgress, routePoints, follow, navigation, headingUp, vector, trackingFrozen, trackingStopped, expired, hidden, offline])
+
+  useEffect(() => {
+    if (!headingUp || !vector) mapRef.current?.moveCamera({ heading: 0, tilt: 0 })
+  }, [headingUp, vector])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !center) return
@@ -487,33 +560,30 @@ export function InteractiveFloodMap({
     const map = mapRef.current
     if (!map) return
     if (trackingPosition) {
-      const [longitude, latitude] = trackingPosition.coordinates
-      map.panTo({ lat: latitude, lng: longitude })
+      setFollow(true)
+      onFollowChange?.(true)
+      map.moveCamera({ center: trackingDisplayPositionRef.current ?? { lat: trackingPosition.coordinates[1], lng: trackingPosition.coordinates[0] }, zoom: Math.max(map.getZoom() ?? 16, 17) })
     } else if (routePoints.length > 1) {
       const bounds = new google.maps.LatLngBounds()
       routePoints.forEach(point => bounds.extend(point))
       map.fitBounds(bounds, 48)
     } else map.setCenter(center ? { lat: center[0], lng: center[1] } : DEFAULT_MAP_CENTER)
-  }, [center, routePoints, trackingPosition])
+  }, [center, routePoints, trackingPosition, onFollowChange])
 
   const showFullRoute = useCallback(() => {
     const map = mapRef.current
     if (!map || routePoints.length < 2) return
+    setFollow(false)
+    onFollowChange?.(false)
+    map.moveCamera({ heading: 0, tilt: 0 })
     const bounds = new google.maps.LatLngBounds()
     routePoints.forEach(point => bounds.extend(point))
     map.fitBounds(bounds, 48)
-  }, [routePoints])
+  }, [routePoints, onFollowChange])
 
   const toggleFollow = () => {
-    setFollow(value => {
-      const next = !value
-      onFollowChange?.(next)
-      if (next && trackingPosition && mapRef.current) {
-        const [longitude, latitude] = trackingPosition.coordinates
-        mapRef.current.panTo({ lat: latitude, lng: longitude })
-      }
-      return next
-    })
+    if (!follow) recenter()
+    else { setFollow(false); onFollowChange?.(false) }
   }
 
   return <div className="flood-map-container" role="region" aria-label="Interactive Google Maps rescue map">
@@ -527,6 +597,7 @@ export function InteractiveFloodMap({
       <div className="flood-map-toggles">
         {!compact && <button type="button" className={`map-toggle-btn ${floodVisible ? 'is-active' : ''}`} onClick={() => setFloodVisible(value => !value)}>Flood scenario: {floodVisible ? 'ON' : 'OFF'}</button>}
         {trackingPosition && <button type="button" className={`map-toggle-btn ${follow ? 'is-active' : ''}`} onClick={toggleFollow}>{follow ? 'Following rescuer' : 'Follow rescuer'}</button>}
+        {navigation && <button type="button" className="map-toggle-btn" aria-pressed={headingUp && vector} disabled={!vector} onClick={() => setHeadingUp(value => !value)}>{headingUp && vector ? 'Heading-up · use north-up' : 'North-up · use heading-up'}</button>}
         {showRouteControl && routePoints.length > 1 && <button type="button" className="map-toggle-btn" onClick={showFullRoute}>Show full route</button>}
         <button type="button" className="map-toggle-btn" onClick={recenter}>Recenter</button>
       </div>
@@ -540,11 +611,11 @@ export function InteractiveFloodMap({
       <div ref={containerRef} className="google-map-canvas" id="google-rescue-map" style={{ width: '100%', height: 'var(--workspace-map-height, 460px)' }}/>
       <a className="map-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
     </div>
-    {!compact && <div id={`${uid}-map-table`} className="map-accessible-summary">
-      <p>{NON_LIVE_DATA_DISCLAIMER}</p>
-      <details><summary>Accessible road and controlled flood summary ({metadata.scenarioId}) — {metadata.studyAreaName}</summary>
-        {dataset?.edges.length ? <table className="map-text-alt-table"><thead><tr><th>Edge</th><th>Road</th><th>Length</th><th>Passability</th><th>Flood</th><th>Depth</th><th>Observed</th></tr></thead><tbody>{dataset.edges.map(edge => <tr key={edge.edgeId}><td>{edge.edgeId}</td><td>{edge.roadClass}</td><td>{edge.lengthM} m</td><td>{edge.passability}</td><td>{edge.floodLevel}</td><td>{edge.floodDepthCm === undefined ? '—' : `${edge.floodDepthCm} cm`}</td><td>{edge.observedAt}</td></tr>)}</tbody></table> : <p>No road records available to display.</p>}
-      </details>
-    </div>}
+    <div className="map-accessible-summary">
+      {journeySummary && <p>{journeySummary}</p>}
+      {trackingPosition && (trackingFrozen || expired || offline) && <p role="status">Tracking paused. Showing the last available server position.</p>}
+      {navigation && mapReady && !vector && <p role="status">North-up following. Heading and tilt require vector map support.</p>}
+      {!compact && <p>{NON_LIVE_DATA_DISCLAIMER}</p>}
+    </div>
   </div>
 }

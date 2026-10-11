@@ -316,40 +316,20 @@
   border-color: #ffffff;
 }
 
-/* Accessible Text Alternative Drawer */
-.map-text-alternative {
-  padding: 14px 18px;
-  background: #18181b;
-  border-top: 1px solid #27272a;
-}
-
-.map-text-alt-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.78rem;
-  margin-top: 8px;
-}
-
-.map-text-alt-table th,
-.map-text-alt-table td {
-  padding: 6px 10px;
-  border: 1px solid #27272a;
-  text-align: left;
-}
-
-.map-text-alt-table th {
-  background: #27272a;
-  color: #f4f4f5;
-  font-weight: 600;
-}
-
-.map-text-alt-table td {
-  color: #a1a1aa;
-}
-
 @keyframes pingAnimation {
   0% { transform: scale(1); opacity: 0.8; }
   100% { transform: scale(2.2); opacity: 0; }
 }
 .map-accessible-summary { padding: 8px 12px; color: var(--text-secondary); font-size: 0.75rem; }
-.map-accessible-summary summary { cursor: pointer; }
+
+/* Original shaded SVG; the inner vehicle rotates relative to the map camera. */
+.resq-response-vehicle { width: 38px; height: 50px; transform-origin: center; color: #0e7490; font-size: 36px; text-shadow: 0 2px 3px #fff; }
+.resq-response-vehicle img { display: block; width: 100%; height: 100%; }
+.request-location-map .request-confirm-location { background: #15803d; color: #fff; border: 2px solid #15803d; border-radius: 8px; padding: 12px 18px; min-height: 48px; font-weight: 700; cursor: pointer; }
+.request-location-map .request-confirm-location:hover:not(:disabled) { background: #166534; border-color: #166534; }
+.request-location-map .request-confirm-location:focus-visible,
+.request-pin-adjustment button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
+.request-location-map .request-confirm-location:disabled { background: #e2e8f0; color: #475569; border-color: #cbd5e1; cursor: not-allowed; }
+.request-pin-adjustment { display: flex; flex-wrap: wrap; gap: 6px; }
+.request-pin-adjustment p { flex-basis: 100%; font-size: .75rem; }
+.request-pin-adjustment button { min-height: 44px; padding: 8px 12px; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; color: #334155; }
