@@ -1,3 +1,4 @@
+import { LocationOptions } from '../map/LocationOptions'
 import { useState } from 'react'
 import { useMyRescueRequests, useRescueRequest } from '../requests/hooks'
 import { InteractiveFloodMap } from '../map/InteractiveFloodMap'
@@ -30,11 +31,7 @@ export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancel
       setCenter([position.coords.latitude,position.coords.longitude]);setSource('gps');setLocating(false)
     },()=>{setLocationError('Could not get your location. Use demo location or retry.');setLocating(false)}, {timeout:10000,enableHighAccuracy:false})
   }
-  const sourceControl = <fieldset className="citizen-map-source" disabled={locating}>
-    <legend>Location source</legend>
-    <label><input type="radio" name="citizen-map-source" checked={source==='gps'} onChange={()=>chooseSource('gps')}/>Use current location</label>
-    <label><input type="radio" name="citizen-map-source" checked={source==='demo'} onChange={()=>chooseSource('demo')}/>Use demo location</label>
-  </fieldset>
+  const sourceControl = <LocationOptions source={source} disabled={locating} onChooseSource={chooseSource} gpsLabel="Use current location"/>
   return <section className="citizen-map-page" aria-labelledby="citizen-map-title">
     <h2 id="citizen-map-title"><FigmaHomeAsset name="mapTitle"/>Map View</h2>
     <WorkspaceCard className="citizen-map-panel">

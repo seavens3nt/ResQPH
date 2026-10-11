@@ -1,5 +1,13 @@
 # Context Sync History
 
+## 2026-10-12 — Selected wordmark and compact Advisory tips
+
+User explicitly selected the transparent PNG; shared full-logo source now uses its
+unchanged copy. Approved favicons remain unchanged. Natural Advisory card sizing,
+measurement explanations and general preparation checklist preserve weather rules
+and cache/state behavior. 400 frontend tests, lint and build pass with existing
+warnings; browser unavailable. Local dirty work preserved, no remote actions.
+
 ## 2026-10-11 — Local citizen UI and weather Advisory
 
 Audited frontend callers, existing weather adapter/cache behavior, pending-only
@@ -182,3 +190,19 @@ not authorize runtime ML or change the prototype safety boundary.
   run, U-Belt-compatible ML artifact, limited offline synchronization, and exact deadline.
 
 This sync does not enable the external model or claim live/guaranteed-safe routing.
+
+- 2026-10-11: Audited presentation follow-up against clean local commit `e6623bc`.
+  Updated current-status, STATUS, visual rules and existing UI/advisory report for brand,
+  scoped neutral surfaces, structured Advisory, HQ icon and location options. Backend,
+  station catalog, weather rules, auth/session and mission contracts are unchanged.
+  Follow-up local/uncommitted; browser unavailable. Earlier baseline notes are historical.
+
+- 2026-10-11 focused correction: source-specific Home/weather/Requests/role dark CSS,
+  theme SVG sizing, Account copy and Advisory hierarchy corrected; transparent PNG
+  favicons verified. Shared brand source wired; supplied exact wordmark original-file
+  conversion blocked, failed generated edits excluded. 396 tests pass; browser pending.
+
+- 2026-10-12 continuation: preserved dirty branch; neutralized legacy dark-table rules,
+  checked shared logo source/compact variant, removed forced auth square ratio, and
+  documented favicon origin. 398 tests / 58 files, lint/build/diff pass. Original logo
+  file/exact transparent PNG still needed; browser unavailable. No remote actions.

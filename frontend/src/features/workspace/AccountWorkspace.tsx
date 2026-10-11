@@ -1,3 +1,4 @@
+import { Icon } from '../../components/art/Icon'
 import { useId, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { validPhone } from '../auth/validation'
@@ -23,7 +24,7 @@ export function AccountWorkspace() {
   const [avatar,setAvatar]=useState(user?.avatarUrl)
   const [message,setMessage]=useState(''),[invalid,setInvalid]=useState(false)
   return <section className="account-page" aria-labelledby="account-page-title">
-    <h2 id="account-page-title"><span className="account-heading-icon" aria-hidden="true"><img src="/figma-account/profile.svg" alt=""/></span>Profile &amp; Account</h2>
+    <h2 id="account-page-title"><span className="account-heading-icon" aria-hidden="true"><Icon name="user" size={32}/></span>Profile &amp; Account</h2>
     <WorkspaceCard className="account-profile"><form className="workspace-form account-form" onSubmit={e=>{
       e.preventDefault()
       const name=[firstName.trim(),lastName.trim()].filter(Boolean).join(' ')
@@ -35,12 +36,12 @@ export function AccountWorkspace() {
         .catch(()=>{setMessage('Could not save profile. Reconnect and try again.');setInvalid(true)})
     }}>
       <fieldset className="account-personal"><legend>Personal details</legend><div className="account-personal-layout">
-        <div className="account-avatar">{avatar?<img className="account-uploaded-avatar" src={avatar} alt="Profile preview"/>:<span className="account-avatar-art"><img src="/figma-account/avatar.svg" alt="Default profile avatar"/></span>}</div>
+        <div className="account-avatar">{avatar?<img className="account-uploaded-avatar" src={avatar} alt="Profile preview"/>:<span className="account-avatar-art"><Icon name="user" size={64}/></span>}</div>
         <div className="account-personal-inputs">
           <label><span className="account-sr-only">First name</span><input placeholder="First name" maxLength={100} value={firstName} onChange={e=>setFirstName(e.target.value)}/></label>
           <label><span className="account-sr-only">Last name</span><input placeholder="Last name" maxLength={100} value={lastName} onChange={e=>setLastName(e.target.value)}/></label>
           <label className="account-email"><span className="account-sr-only">Email identity</span><input placeholder="Email" value={user?.email} readOnly title="Email identity cannot be changed here"/></label>
-          <label className="account-photo" htmlFor={photoId}>Profile photo<span className="account-photo-icon" aria-hidden="true"><img src="/figma-account/photo-add.svg" alt=""/></span><input id={photoId} className="account-sr-only" aria-label="Profile photo (PNG/JPEG/WebP, up to 2 MB)" type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{
+          <label className="account-photo" htmlFor={photoId}>Profile photo<span className="account-photo-icon" aria-hidden="true"><Icon name="camera" size={15}/></span><input id={photoId} className="account-sr-only" aria-label="Profile photo (PNG/JPEG/WebP, up to 2 MB)" type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{
             const file=e.target.files?.[0];if(!file)return
             if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2*1024*1024){setMessage('Choose a supported image smaller than 2 MB.');setInvalid(true);return}
             const reader=new FileReader();reader.onload=()=>setAvatar(String(reader.result));reader.readAsDataURL(file)
@@ -62,6 +63,5 @@ export function AccountWorkspace() {
       <div className="workspace-actions account-actions"><button type="button" onClick={()=>{void logout().then(()=>navigate('/login',{replace:true})).catch(()=>{setMessage('Could not sign out. Reconnect and try again.');setInvalid(true)})}}>Sign out</button><button type="submit" className="workspace-primary">Save profile</button></div>
       {message&&<p className="account-feedback" role={invalid?'alert':'status'}>{message}</p>}
     </form></WorkspaceCard>
-    <p className="account-prototype-note">Tab-scoped prototype profile. Identity and rescue team cannot be changed here; sign out to enter a separate workspace. Use synthetic profile and medical details for this academic prototype.</p>
   </section>
 }

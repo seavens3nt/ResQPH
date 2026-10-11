@@ -1,3 +1,4 @@
+import { BrandLogo } from '../../components/brand/BrandLogo'
 import type { ReactNode } from 'react'
 import './auth.css'
 
@@ -24,12 +25,7 @@ export function AuthLayout({
       <div className="auth-phone-shell">
         {/* Header with ResQPH logo */}
         <div className="auth-hero-banner">
-          <img
-            src="/logo.png"
-            alt="ResQPH"
-            className="auth-hero-logo-img"
-          />
-          <p className="auth-hero-wordmark">ResQ<span className="auth-hero-wordmark__p">P</span><span className="auth-hero-wordmark__h">H</span></p>
+          <BrandLogo className="auth-hero-logo-img"/>
         </div>
 
         {/* Form area */}

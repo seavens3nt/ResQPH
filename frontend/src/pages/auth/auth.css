@@ -959,3 +959,10 @@
 .auth-mobile-page .signup-summary-header { color:var(--auth-text); }
 .auth-mobile-page .signup-summary-meta { color:var(--auth-muted); }
 .auth-mobile-page .badge-role { color:var(--auth-focus); }
+/* The same brand asset is centered at every form step. */
+.auth-mobile-page .auth-hero-banner { justify-content:center; }
+.auth-mobile-page .auth-hero-logo-img { width:240px; max-width:100%; height:auto; object-fit:contain; border-radius:0; }
+.auth-mobile-page { --auth-page:var(--neutral-page); --auth-card:var(--neutral-surface); --auth-inset:var(--neutral-inset); --auth-text:var(--neutral-ink); --auth-muted:var(--neutral-muted); --auth-border:var(--neutral-line); }
+@media (prefers-color-scheme:dark) {
+  .auth-mobile-page { --neutral-page:#101113; --neutral-surface:#25272b; --neutral-inset:#191b1f; --neutral-ink:#f1f3f5; --neutral-muted:#bdc3cc; --neutral-line:#747c88; }
+}

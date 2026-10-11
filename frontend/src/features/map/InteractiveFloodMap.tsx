@@ -119,7 +119,13 @@ function markerContent(label: string, color: string, symbol?: string): HTMLEleme
   root.className = 'resq-google-marker'
   root.style.setProperty('--marker-color', color)
   root.setAttribute('aria-label', label)
-  if (symbol) root.textContent = symbol
+  if (symbol === 'station') {
+    const icon = document.createElement('img')
+    icon.src = '/assets/rescue-station.svg'
+    icon.alt = ''
+    icon.setAttribute('aria-hidden', 'true')
+    root.append(icon)
+  } else if (symbol) root.textContent = symbol
   else root.innerHTML = '<span aria-hidden="true"></span>'
   return root
 }
@@ -391,14 +397,14 @@ export function InteractiveFloodMap({
       desired.add(key)
       let marker = markersRef.current.get(key)
       if (!marker) {
-        marker = new AdvancedMarkerElement({ map, position, title: station.name, content: markerContent(station.name, stationColors[index], '⌂') })
+        marker = new AdvancedMarkerElement({ map, position, title: station.name, content: markerContent(station.name, stationColors[index], 'station') })
         markerClickListenersRef.current.set(key, marker.addListener('click', () => showPopup(key, textPopup(station.name, [station.address, assignedStationIdRef.current === station.station_id ? 'Assigned to this mission' : 'Headquarters']), undefined, marker)))
         markersRef.current.set(key, marker)
       }
       marker.position = position
       marker.title = `${station.name} — ${assigned ? 'Assigned to this mission' : 'Headquarters'}`
       marker.zIndex = assigned ? 100 : 20
-      const content = markerContent(station.name, stationColors[index], '⌂')
+      const content = markerContent(station.name, stationColors[index], 'station')
       if (assigned) content.classList.add('is-assigned')
       marker.content = content
     })
@@ -612,7 +618,6 @@ export function InteractiveFloodMap({
   }
 
   return <div className="flood-map-container" role="region" aria-label="Interactive Google Maps rescue map">
-    {controlsSlot}
     {(!compact || (showRouteControl && trackingPosition)) && <div className="flood-map-controls">
       {!compact && floodVisible && <div className="flood-map-legend-items">
         <span className="legend-tag legend-safe">● Passable ({metadata.stats.passableCount})</span>
@@ -633,6 +638,7 @@ export function InteractiveFloodMap({
     {layerStatus === 'error' && <div className="map-state-banner is-error" role="alert"><Icon name="alert" size={16}/><span><strong>Map layer warning:</strong> {errorMessage || 'Fixture layers could not be loaded.'} Showing Google basemap and stations.</span></div>}
     {showRouteStatus && <RouteOverlay state={effectiveRouteState}/>}
     <div className="google-map-wrapper">
+      {controlsSlot}
       <div ref={containerRef} className="google-map-canvas" id="google-rescue-map" style={{ width: '100%', height: 'var(--workspace-map-height, 460px)' }}/>
       <a className="map-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
     </div>

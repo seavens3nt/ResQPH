@@ -47,9 +47,12 @@ it('shows cancelled request details inline and prevents another cancellation',()
 })
 it('keeps demo source and reports unavailable geolocation without changing submitted data',()=>{
   render(<CitizenMap selected={null} onSelect={()=>{}} onCancel={()=>{}}/>)
+  if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
   expect(screen.getByRole('radio',{name:'Use demo location'})).toBeChecked()
+  if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
   fireEvent.click(screen.getByRole('radio',{name:'Use current location'}))
   expect(screen.getAllByRole('alert').some(alert=>alert.textContent?.includes('Location access is unavailable'))).toBe(true)
+  if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
   expect(screen.getByRole('radio',{name:'Use demo location'})).toBeChecked()
 })
 it('locks cancellation while pending and presents failures inline',()=>{

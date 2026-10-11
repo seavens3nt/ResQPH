@@ -1,11 +1,20 @@
 # Current Status
 
-- 2026-10-11 local UI/advisory refinement: `feature/citizen-ui-advisory-refinement`
-  from accepted `origin/temporary-main` `4ffa717` (navigation PR #90 included).
-  Auth focus/role cleanup, road-condition display/popup fixes, neutral dark theme,
-  compact Home, URL-backed Help and shared-query Citizen Advisory. 390 frontend
-  tests, lint/build pass with existing warnings; browser unavailable. Task remains
-  uncommitted/unpushed for manual testing. See `docs/testing/CITIZEN-UI-ADVISORY-2026-10-11.md`.
+Latest local correction (2026-10-12): the user explicitly selected the transparent
+2170×725 white ResQ / blue P / red H PNG. Shared BrandLogo now uses that unchanged
+asset for auth and expanded full-logo placements; compact branding and approved
+favicons remain unchanged. Advisory cards size naturally, with measurement-based
+suggestion explanations and a separate preparation checklist. All 400 frontend tests
+across 58 files, lint and production build pass with existing warnings. Browser
+visual acceptance remains pending; see the existing local testing report.
+
+- 2026-10-11 local UI/advisory follow-up: `feature/citizen-ui-advisory-refinement`
+  now starts from prior UI commit `e6623bc`; original base `4ffa717`. Colored auth/
+  sidebar branding, local favicon, neutral weather/account tokens, compact Home,
+  structured Advisory, original fixed HQ building icon and shared collapsed location
+  options added. 396 frontend tests and lint/build pass with existing warnings.
+  Browser unavailable; follow-up uncommitted/unpushed for manual testing. See
+  `docs/testing/CITIZEN-UI-ADVISORY-2026-10-11.md`.
 
 - 2026-10-11 navigation checkpoint: `feature/navigation-request-ux` starts at
   `a143a18` (`origin/temporary-main`). Existing Google map now supports simulated

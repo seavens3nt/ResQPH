@@ -1,3 +1,4 @@
+import { BrandLogo } from '../../components/brand/BrandLogo'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -112,6 +113,7 @@ export function SignupPage() {
     return (
       <div className="auth-mobile-page">
         <div className="auth-phone-shell">
+          <div className="auth-hero-banner"><BrandLogo className="auth-hero-logo-img"/></div>
           <div className="auth-location-screen">
             <p className="signup-step-count">Optional final step · Location access</p>
             <div className="auth-location-icon" aria-hidden="true">
@@ -160,12 +162,7 @@ export function SignupPage() {
 
         {/* Logo header */}
         <div className="auth-hero-banner">
-          <img
-            src="/logo.png"
-            alt="ResQPH"
-            className="auth-hero-logo-img"
-          />
-          <p className="auth-hero-wordmark">ResQ<span className="auth-hero-wordmark__p">P</span><span className="auth-hero-wordmark__h">H</span></p>
+          <BrandLogo className="auth-hero-logo-img"/>
         </div>
 
         {/* Progress */}
@@ -175,7 +172,6 @@ export function SignupPage() {
 
         {/* Form area */}
         <div className="auth-body-container">
-          <p className="auth-station-guidance">Public registration creates citizen accounts. Station accounts are provided by the project administrator. <Link to="/login?role=rescuer">Station / rescuer login</Link></p>
           {/* Back + step count */}
           <div className="signup-step-nav">
             {currentNum > 1 ? (

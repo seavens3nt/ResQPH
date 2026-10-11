@@ -163,6 +163,7 @@ describe('RequestForm', () => {
     expect(screen.queryByText(/Adjust map coordinates/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Longitude/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Latitude/i)).not.toBeInTheDocument()
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     expect(screen.getByRole('radio', { name: /Use my location/i })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
@@ -174,13 +175,16 @@ describe('RequestForm', () => {
   it('switches between GPS and the supported demonstration location without inventing an address', () => {
     renderForm()
 
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     expect(screen.getByRole('radio', { name: /Use demo location/i })).toBeChecked()
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio', { name: /Use demo location/i }))
     expect(screen.getByLabelText(/Optional address or location description/i)).toHaveValue('')
   })
 
   it('shows feedback when GPS is unavailable', () => {
     renderForm()
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio', { name: /Use my location/i }))
     expect(screen.getByRole('alert')).toHaveTextContent(/GPS is not available/i)
   })
@@ -188,6 +192,7 @@ describe('RequestForm', () => {
   it.each([[1, /permission was denied/i], [3, /timed out/i]])('explains GPS error code %s and keeps map/coordinate selection available', (code, message) => {
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: Number(code) }) } })
     renderForm()
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio', { name: /Use my location/i }))
     expect(screen.getByText(message as RegExp)).toBeInTheDocument()
     expect(screen.getByRole('button', {name:'Move pin north'})).toBeEnabled()
@@ -249,6 +254,7 @@ describe('RequestForm', () => {
     renderForm()
     fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (success: (position: unknown) => void) => success({ coords: { longitude: 120.9948, latitude: 14.6043 } }) } })
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio', {name: 'Use my location'}))
     vi.unstubAllGlobals()
     fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
@@ -282,6 +288,7 @@ describe('RequestForm', () => {
   it('shows outside-boundary error when coordinates are outside U-Belt area', async () => {
     renderForm()
     vi.stubGlobal('navigator',{geolocation:{getCurrentPosition:(success:(position:unknown)=>void)=>success({coords:{longitude:121.05,latitude:14.7}})}})
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio',{name:/Use my location/i}))
     vi.unstubAllGlobals()
     fireEvent.change(screen.getByLabelText(/Optional address or location description/i),{target:{value:'Synthetic outside-boundary address'}})

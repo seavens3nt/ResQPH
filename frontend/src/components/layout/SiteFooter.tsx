@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ResqLogo } from '../brand/ResqLogo'
+import { BrandLogo } from '../brand/BrandLogo'
 import './SiteFooter.css'
 
 const links = ['Home', 'About', 'Features', 'Get Involved', 'FAQ']
@@ -9,8 +9,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer__inner">
         <Link to="/" className="site-footer__brand" aria-label="ResQPH home">
-          <ResqLogo size={26} />
-          <span>ResQPH</span>
+          <BrandLogo className="site-footer__logo-img"/>
         </Link>
 
         <nav className="site-footer__nav" aria-label="Footer">

@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { FigmaHomeAsset } from './FigmaHomeAsset'
-import { FigmaDispatcherAsset } from './FigmaDispatcherAsset'
+import { Icon } from '../../components/art/Icon'
 
 /** Shared chrome; callers own the role, destination and current page title. */
-export function WorkspaceHeader({title,role,name,profileTo,dark,onToggleTheme,children,dispatcherArtwork=false}: {
+export function WorkspaceHeader({title,role,name,profileTo,dark,onToggleTheme,children}: {
   title:string; role:string; name:string; profileTo:string;
   dark:boolean; onToggleTheme:()=>void; children?:ReactNode;
   dispatcherArtwork?:boolean;
@@ -14,7 +13,7 @@ export function WorkspaceHeader({title,role,name,profileTo,dark,onToggleTheme,ch
     <div>
       <span className="workspace-header-status"><span>{role} workspace</span>{children}</span>
       <button className="citizen-theme-toggle" aria-label="Dark mode" aria-pressed={dark} onClick={onToggleTheme}>
-        {dispatcherArtwork ? <><FigmaDispatcherAsset name="sun"/><FigmaDispatcherAsset name="moon"/></> : <><FigmaHomeAsset name="sun"/><FigmaHomeAsset name="moon"/></>}
+        <span className="theme-icon-slot"><Icon name="sun" size={30}/></span><span className="theme-icon-slot"><Icon name="moon" size={30}/></span>
       </button>
       <Link className="citizen-role-pill" to={profileTo} aria-label={`${role} workspace · ${name}`} title={`${name} · ${role}`}>{role}</Link>
     </div>

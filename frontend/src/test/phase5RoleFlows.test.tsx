@@ -103,6 +103,7 @@ describe('authenticated citizen and station frontend contract regression', () =>
     apiClient.defaults.adapter = transport
     renderForRole(<RequestForm onSuccess={vi.fn()} onCancel={vi.fn()} />, 'citizen')
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (success: (position: unknown) => void) => success({ coords: { longitude: 121.5, latitude: 14.6042 } }) } })
+    if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio', {name:'Use my location'}))
     vi.unstubAllGlobals()
     fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))

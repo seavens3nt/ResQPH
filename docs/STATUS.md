@@ -1,17 +1,25 @@
 # ResQPH project status
 
-**Last updated:** 2026-10-11 (Asia/Manila)
+Latest local correction (2026-10-12): the user explicitly selected the transparent
+2170×725 white ResQ / blue P / red H PNG. Shared BrandLogo now uses that unchanged
+asset for auth and expanded full-logo placements; compact branding and approved
+favicons remain unchanged. Advisory cards size naturally, with measurement-based
+suggestion explanations and a separate preparation checklist. All 400 frontend tests
+across 58 files, lint and production build pass with existing warnings. Browser
+visual acceptance remains pending; see the existing local testing report.
+
+**Last updated:** 2026-10-12 (Asia/Manila)
 
 ## Citizen UI and Advisory local refinement (2026-10-11)
 
-Current local branch `feature/citizen-ui-advisory-refinement` starts at latest
-`origin/temporary-main` `4ffa7171e15aff0342fb864fe4c920b6239d2566`, which includes
-navigation PR #90. Auth cleanup, complete road-condition visibility, single-popup
-map handling, neutral dark surfaces, compact Home, and separate Help/Advisory pages
-are implemented locally. Frontend: 390 tests pass, lint passes with six existing
-warnings, build passes with the existing chunk warning. Browser acceptance is
-pending because no connected browser is available. No commit/push/PR/deployment
-for this task; developer databases and environment values are unchanged.
+Current local branch `feature/citizen-ui-advisory-refinement`; follow-up baseline
+`e6623bc` contains the prior UI/advisory implementation (original base `4ffa717`).
+Follow-up adds centered existing colored branding/favicon, scoped neutral weather/
+Account tokens, slightly larger theme icons, tighter Home, structured Advisory,
+original fixed HQ building icons and shared collapsible location options. Frontend:
+396 tests pass, lint passes with six existing warnings, build passes with the existing
+chunk warning. Browser acceptance is pending: no connected browser is available.
+Follow-up remains uncommitted/unpushed; no PR/deployment or database/environment changes.
 See [local refinement evidence and manual checklist](testing/CITIZEN-UI-ADVISORY-2026-10-11.md).
 
 ## Navigation and request UX checkpoint (2026-10-11)

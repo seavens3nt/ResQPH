@@ -1,5 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { LocationOptions } from './LocationOptions'
+import { RESCUE_STATIONS } from './stations'
 import { InteractiveFloodMap } from './InteractiveFloodMap'
 
 const sdk = vi.hoisted(() => ({ maps: [] as FakeMap[], markers: [] as FakeMarker[], rendering: 'VECTOR', overlays: [] as Overlay[], infos: [] as Info[] }))
@@ -69,8 +71,25 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
 
 describe('navigation camera with the Google SDK contract mocked', () => {
+  it('opens and dismisses location options without recreating the map or placing a pin', async () => {
+    const pin = vi.fn(), choose = vi.fn()
+    await mount({onMapClick:pin, controlsSlot:<LocationOptions source="demo" disabled={false} onChooseSource={choose}/>})
+    const trigger = screen.getByRole('button',{name:'Location options'})
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole('radio',{name:'Use my location'}))
+    expect(choose).toHaveBeenCalledWith('gps')
+    fireEvent.keyDown(trigger,{key:'Escape'})
+    expect(trigger).toHaveFocus()
+    expect(sdk.maps).toHaveLength(1)
+    expect(pin).not.toHaveBeenCalled()
+  })
+
   it('uses the same interpolated position for camera and vehicle, leaving headquarters fixed', async () => {
     const view = await mount()
+    for (const station of RESCUE_STATIONS) {
+      const marker = sdk.markers.find(item => item.content.getAttribute('aria-label') === station.name)
+      expect(marker?.content.querySelector('img')).toHaveAttribute('src','/assets/rescue-station.svg')
+    }
     const headquarters = sdk.markers.filter(marker => marker !== vehicle()).map(marker => marker.position)
     view.rerender(<InteractiveFloodMap {...props} trackingProgress={0.5} />)
     act(() => vi.advanceTimersByTime(1200))

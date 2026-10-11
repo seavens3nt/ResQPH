@@ -2,8 +2,8 @@ import { cleanup,fireEvent,render,screen } from '@testing-library/react'
 import { afterEach,expect,it,vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { AccountWorkspace } from './AccountWorkspace'
-const {updateProfile,logout}=vi.hoisted(()=>({updateProfile:vi.fn().mockResolvedValue(undefined),logout:vi.fn().mockResolvedValue(undefined)}))
-vi.mock('../auth/AuthContext',()=>({useAuth:()=>({user:{name:'Synthetic Citizen',email:'synthetic@example.test',role:'citizen'},updateProfile,logout})}))
+const {updateProfile,logout,identity}=vi.hoisted(()=>({identity:{role:'citizen'},updateProfile:vi.fn().mockResolvedValue(undefined),logout:vi.fn().mockResolvedValue(undefined)}))
+vi.mock('../auth/AuthContext',()=>({useAuth:()=>({user:{name:'Synthetic Citizen',email:'synthetic@example.test',role:identity.role},updateProfile,logout})}))
 afterEach(()=>{cleanup();vi.clearAllMocks()})
 const preview=()=>render(<MemoryRouter><AccountWorkspace/></MemoryRouter>)
 it('keeps identity read-only and saves split names and address in the existing profile',async()=>{
@@ -30,4 +30,12 @@ it('retains phone validation and rejects unsupported photo files',()=>{
 it('keeps sign-out separate from profile submission',()=>{
   preview();fireEvent.click(screen.getByRole('button',{name:'Sign out'}))
   expect(logout).toHaveBeenCalledOnce();expect(updateProfile).not.toHaveBeenCalled()
+})
+
+it.each(['citizen','rescuer'])('removes the account subtext for %s while protecting identity',role=>{
+  identity.role=role
+  preview()
+  expect(screen.queryByText(/Tab-scoped prototype profile/)).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Email identity')).toHaveAttribute('readonly')
+  expect(screen.queryByRole('combobox',{name:/station/i})).not.toBeInTheDocument()
 })

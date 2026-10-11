@@ -43,3 +43,4 @@
 @media (max-width: 720px) {
   .site-footer__nav { margin: 0; order: 3; width: 100%; flex-wrap: wrap; gap: 16px; }
 }
+.site-footer__logo-img { width:140px; max-width:100%; height:auto; object-fit:contain; }

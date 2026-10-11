@@ -1,3 +1,4 @@
+import { BrandLogo } from '../../components/brand/BrandLogo'
 import { WorkspaceSectionHeading } from '../../features/workspace/WorkspaceUI'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -67,7 +68,7 @@ export function DashboardPage() {
           setNavCollapsed(value => !value)
         }
       }}>
-      <Link className="workspace-brand" to="/dashboard?view=overview" aria-label="ResQPH workspace home"><img className="citizen-brand-lockup" src={navCollapsed ? '/logo.png' : '/figma-home/0e8b2.png'} alt="ResQPH"/></Link>
+      <Link className="workspace-brand" to="/dashboard?view=overview" aria-label="ResQPH workspace home"><BrandLogo className="citizen-brand-lockup" compact={navCollapsed}/></Link>
       <nav aria-label={ROLE_LABELS[user.role] + ' navigation'}>{items.map(([key,label]) => {const citizenIcon = citizenNavIcons[key as keyof typeof citizenNavIcons];return <button key={key} aria-label={label} title={label} aria-current={section === key || (section === 'request' && key === 'inquiries') ? 'page' : undefined} onClick={() => go(key)}>{citizenIcon ? <FigmaHomeAsset name={citizenIcon} variant={section === 'map' ? 'map' : section === 'inquiries' ? 'requests' : 'home'}/> : <Icon name={navIcons[key]} size={20}/>}<span className="workspace-nav-label">{label}</span></button>})}</nav>
       <button aria-label="Help & limitations" title="Help & limitations" onClick={() => go('help')} aria-current={section === 'help' ? 'page' : undefined}><FigmaHomeAsset name="help"/><span className="workspace-nav-label">Help &amp; Limitations</span></button>
     </aside>

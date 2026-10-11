@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+<!-- Original ResQPH headquarters building with a rescue cross. -->
+<path d="M4 28V9h24v19M2 28h28M4 9l12-6 12 6" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+<path d="M9 28V18h14v10M9 21h14M9 24h14" stroke="white" stroke-width="2"/>
+<path d="M16 9v6m-3-3h6" stroke="white" stroke-width="2.5"/>
+</svg>

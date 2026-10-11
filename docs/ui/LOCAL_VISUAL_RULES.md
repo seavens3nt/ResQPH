@@ -234,3 +234,21 @@ Advisory reuses current weather, timestamps and practical deterministic suggesti
 Home has no manual/automatic weather refresh. Advisory permits bounded manual
 refresh using the same cached query, never map/tracking timers. Browser visual
 acceptance remains pending; see CITIZEN-UI-ADVISORY-2026-10-11.md.
+
+2026-10-11 follow-up: auth and dashboard use the existing blue/red colored brand
+asset without filters. Weather, Advisory, role badge and Account use shared neutral
+surface/foreground tokens in both themes; meaningful route/status/brand colors remain.
+Account decorative icons use the shared currentColor family. Home is modestly tighter,
+not scaled or clipped. Fixed headquarters use an original building/rescue-cross SVG.
+Location options are closed by default in an anchored nonmodal map panel, with visible
+source/GPS feedback and confirmation outside. Advisory separates current conditions,
+practical tips and data status; weather rules and bounded shared query remain unchanged.
+
+Latest branding correction: user-supplied white ResQ / blue P / red H wordmark is the
+reference; original-file conversion is pending. BrandLogo owns active placements; do
+not label its retained opaque fallback as matched. PNG favicons use the existing rescue
+emblem at 16/32/48 with verified alpha. Weather cards must scope --home-surface as well
+as shared tokens; Requests' more-specific theme rules read neutral raised/hover tokens.
+Dark role badge reads neutral ink. Native shared sun/moon SVGs avoid Figma image scaling.
+Advisory has topbar h1 Advisory, section h2 Weather advisory, then useful card headings.
+Account subtext is removed without changes to permissions. Rendered acceptance pending.

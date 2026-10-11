@@ -14,6 +14,8 @@ describe('Shared dashboard header',()=>{
     expect(screen.getByText('Browser online · Prototype')).toBeInTheDocument()
     const theme=screen.getByRole('button',{name:'Dark mode'})
     expect(theme).toHaveAttribute('aria-pressed','false')
+    expect(theme.querySelectorAll('svg')).toHaveLength(2)
+    expect(theme.querySelector('svg')).toHaveAttribute('width','30')
     fireEvent.click(theme)
     expect(toggle).toHaveBeenCalledOnce()
   })

@@ -36,11 +36,11 @@
 .workspace-shell[data-role] .home-live-weather-surface {
   display:flex; flex-direction:column; flex:1; min-width:0; box-sizing:border-box;
   padding:clamp(16px,calc(24 * var(--figma-unit)),24px);
-  background:#fafdff; border:1px solid #b4cddd; border-radius:24px;
+  background:var(--shared-inset); border:1px solid var(--line); border-radius:24px;
   box-shadow:0 2px 5px rgb(51 98 128 / 6%);
 }
 .workspace-shell[data-theme=dark] .home-live-weather-surface {
-  background:#20364b; border-color:#476780;
+  background:var(--shared-inset); border-color:var(--line);
 }
 .home-live-weather-surface .weather-summary-attribution { margin-bottom:0; }
 .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-scenario-card {

@@ -219,7 +219,7 @@
 .requests-selectable-row { cursor:pointer; }
 .requests-selectable-row:hover td { background:#d3e3ee; }
 .requests-selectable-row:focus-within { outline:2px solid #376d9c; outline-offset:-2px; }
-.workspace-shell[data-theme=dark] .requests-selectable-row:hover td { background:#355976; }
+.workspace-shell[data-theme=dark] .requests-selectable-row:hover td { background:var(--neutral-hover); }
 .workspace-shell[data-role] :is(.workspace-toolbar,.workspace-picker,.workspace-form) :is(input,select,textarea) { color:var(--ink); background:var(--shared-inset); border-color:var(--line); }
 .workspace-shell[data-role] .workspace-stats > button { background:var(--shared-surface); color:var(--ink); border:1px solid var(--line); border-radius:var(--resqph-card-radius); box-shadow:var(--surface-shadow); }
 .workspace-shell[data-role] .workspace-team-grid .workspace-record { background:var(--shared-inset); border:1px solid var(--line); }
@@ -310,11 +310,11 @@
 .workspace-shell[data-role] #citizen-request-form > div:last-child button { border-radius:999px !important; font-weight:550 !important; }
 .workspace-shell[data-role] #citizen-request-form > div:last-child button[type=submit]:not(:disabled) { background:var(--accent) !important; }
 .workspace-shell[data-role] #citizen-request-form fieldset > details { border-radius:var(--resqph-control-radius) !important; border-color:var(--line) !important; }
-.workspace-shell[data-role][data-theme=dark] .workspace-table th { background:#3d6889; color:var(--ink); }
-.workspace-shell[data-role][data-theme=dark] :is(.workspace-table,.requests-reference-table) tr.is-selected { background:#355976; color:#edf5ff; }
+.workspace-shell[data-role][data-theme=dark] .workspace-table th { background:var(--neutral-raised); color:var(--ink); }
+.workspace-shell[data-role][data-theme=dark] :is(.workspace-table,.requests-reference-table) tr.is-selected { background:var(--neutral-hover); color:var(--ink); }
 .workspace-shell[data-role][data-theme=dark] .requests-reference-table tr.is-selected button { color:#edf5ff; }
-.workspace-shell[data-role][data-theme=dark] .requests-reference-table tr.is-selected td { background:#355976; color:#edf5ff; }
-.workspace-shell[data-role][data-view][data-theme=dark] .workspace-topbar .citizen-role-pill { color:#052354; }
+.workspace-shell[data-role][data-theme=dark] .requests-reference-table tr.is-selected td { background:var(--neutral-hover); color:var(--ink); }
+.workspace-shell[data-role][data-view][data-theme=dark] .workspace-topbar .citizen-role-pill { color:var(--neutral-ink); background:var(--neutral-surface); }
 .workspace-shell[data-role][data-theme=dark] .workspace-progress li.is-current,
 .workspace-shell[data-role][data-theme=dark] .workspace-progress li.is-done,
 .workspace-shell[data-role][data-theme=dark] .workspace-progress li.is-reached { color:#ff90a5; }
@@ -428,19 +428,18 @@
 
 /* Fixed-size theme switch with equal icon slots and a thumb that fits its track. */
 .workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle {
-  width:88px; height:44px; min-height:44px; padding:4px; gap:0; flex-shrink:0;
+  width:100px; height:48px; min-height:48px; padding:4px; gap:0; flex-shrink:0;
   position:relative; background:var(--shared-inset); border-color:var(--line);
 }
 .workspace-shell[data-role][data-view] .citizen-theme-toggle::before {
-  left:4px; top:4px; width:36px; height:34px; border-radius:999px;
+  left:4px; top:4px; width:44px; height:38px; border-radius:999px;
   background:var(--home-selected); transform:translateX(0);
 }
-.workspace-shell[data-role][data-view] .citizen-theme-toggle[aria-pressed=true]::before { transform:translateX(42px); }
+.workspace-shell[data-role][data-view] .citizen-theme-toggle[aria-pressed=true]::before { transform:translateX(46px); }
 .workspace-shell[data-role][data-view] .citizen-theme-toggle .figma-home-asset,
-.workspace-shell[data-role][data-view] .citizen-theme-toggle .figma-dispatcher-asset {
-  width:38px; height:32px; display:flex; align-items:center; justify-content:center; position:relative;
+.workspace-shell[data-role][data-view] .citizen-theme-toggle .dispatcher-asset {
+  width:44px; height:38px; display:flex; align-items:center; justify-content:center; position:relative;
 }
-.workspace-shell[data-role][data-view] .citizen-theme-toggle img { width:20px !important; height:20px !important; object-fit:contain; position:static; }
 .workspace-shell[data-role][data-view][data-theme=dark] {
   --home-page:#101113; --home-surface:#25272b; --shared-surface:#25272b; --shared-inset:#191b1f;
   --ink:#f1f3f5; --muted:#bdc3cc; --line:#747c88; --home-selected:#454b54;
@@ -465,3 +464,94 @@
 .workspace-shell[data-role][data-theme=dark] :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
 .workspace-shell[data-role][data-theme=dark] :focus-visible { outline-color:#a5bfff; }
 .workspace-shell[data-role][data-theme=dark] .live-hourly-panel { background:var(--shared-inset); border-color:var(--line); }
+/* Semantic neutral surfaces: branding and operational colors stay independent. */
+:root {
+  --neutral-page:#f5f6f8; --neutral-surface:#e9ebef; --neutral-inset:#fff;
+  --neutral-ink:#25272b; --neutral-muted:#555c67; --neutral-line:#7b828c;
+}
+.workspace-shell[data-role][data-view][data-theme=dark] {
+  --neutral-page:#101113; --neutral-surface:#25272b; --neutral-inset:#191b1f;
+  --neutral-ink:#f1f3f5; --neutral-muted:#bdc3cc; --neutral-line:#747c88;
+}
+.workspace-shell[data-role][data-view] .account-page,
+.workspace-shell[data-role][data-view] :is(.home-scenario-card,.home-hourly-card,.citizen-information-page) {
+  --shared-surface:var(--neutral-surface); --shared-inset:var(--neutral-inset);
+  --ink:var(--neutral-ink); --muted:var(--neutral-muted); --line:var(--neutral-line);
+  color:var(--ink);
+}
+
+.workspace-shell[data-role][data-view] :is(.home-live-weather-surface,.live-hourly-panel) { background:var(--neutral-inset); color:var(--neutral-ink); border-color:var(--neutral-line); }
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-role-pill { background:var(--neutral-surface); color:var(--neutral-ink); border:1px solid var(--neutral-line); max-width:160px; white-space:normal; overflow-wrap:anywhere; }
+.workspace-shell[data-role][data-view] .workspace-brand img.citizen-brand-lockup,
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand img.citizen-brand-lockup { filter:none; height:auto; object-fit:contain; border-radius:0; width:160px; max-width:100%; }
+.workspace-shell[data-role][data-view][data-nav-collapsed=true] .workspace-brand img.citizen-brand-lockup { width:44px; }
+.workspace-shell[data-role][data-view] .account-form :is(input:not([type=file]),textarea,.account-photo),
+.workspace-shell[data-role][data-view] .account-actions button:not(.workspace-primary) { border-color:var(--neutral-line); }
+.account-avatar-art { color:var(--neutral-muted); background:var(--neutral-inset); border:1px solid var(--neutral-line); border-radius:50%; }
+.account-heading-icon,.account-photo-icon { color:var(--neutral-ink); }
+@media (min-width:701px) {
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home { gap:18px; }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-rescue-card,.home-current-card) { min-height:116px; padding:16px; }
+  .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-scenario-card,.home-hourly-card) { padding:14px; }
+  .workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card { padding:20px; }
+}
+.advisory-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:18px; }
+.advisory-grid > * { min-width:0; overflow-wrap:anywhere; }
+.advisory-advice-list { list-style:none; margin:0; padding:0 !important; display:grid; gap:12px; }
+.advisory-advice-list li { display:flex; align-items:flex-start; gap:12px; }
+.advisory-advice-list svg { flex-shrink:0; margin-top:3px; }
+.advisory-advice-list h4,.advisory-advice-list p { margin:0 0 6px; }
+.advisory-data-status { font-size:.875rem; color:var(--muted); }
+.citizen-information-page .advisory-temperature { color:var(--ink); font-size:2rem; font-weight:550; margin:0; }
+@media (max-width:700px) { .advisory-grid { grid-template-columns:minmax(0,1fr); } }
+.location-options { position:absolute; top:8px; left:8px; z-index:5; max-width:calc(100% - 16px); color:var(--ink,var(--neutral-ink)); }
+.location-options > button { min-height:44px; padding:8px 14px; background:var(--shared-inset,var(--neutral-inset)); color:inherit; border:1px solid var(--line,var(--neutral-line)); border-radius:12px; }
+.location-options-summary { display:block; width:fit-content; padding:3px 8px; background:var(--shared-inset,var(--neutral-inset)); border-radius:6px; font-size:.75rem; }
+.location-options-panel { position:absolute; top:100%; left:0; width:220px; max-width:calc(100vw - 64px); box-sizing:border-box; margin:4px 0 0; padding:12px; background:var(--shared-inset,var(--neutral-inset)); border:1px solid var(--line,var(--neutral-line)); border-radius:12px; }
+.location-options-panel legend { padding:0 4px; font-size:.8rem; }
+.location-options-panel label { display:flex; align-items:center; gap:8px; min-height:44px; font-size:.875rem; }
+.location-options-panel input { width:auto; }
+.resq-google-marker img { width:26px; height:26px; display:block; }
+.workspace-shell[data-role][data-view] .account-page { --home-surface:var(--neutral-surface); }
+.workspace-shell[data-role][data-view] .home-live-weather-surface { padding:16px; }
+.workspace-shell[data-role][data-view] .live-hourly-scroll,
+.workspace-shell[data-role][data-view] .live-hourly-list li { border-color:var(--neutral-line); }
+.google-map-wrapper { position:relative; }
+.location-options-panel[hidden] { display:none; }
+.location-options { width:min(236px,calc(100% - 16px)); }
+.location-options-panel { width:100%; max-width:100%; }
+/* Weather card tokens must include --home-surface: Figma's card rule reads it. */
+.workspace-shell[data-role][data-view] :is(.home-scenario-card,.home-hourly-card) {
+  --home-surface:var(--neutral-surface); --home-selected:var(--neutral-line);
+}
+.workspace-shell[data-role][data-view][data-theme=dark] {
+  --neutral-raised:#34383e; --neutral-hover:#3d434c;
+}
+.workspace-shell[data-role=citizen][data-view=inquiries][data-theme=dark] .screenshot-requests {
+  --requests-filter-surface:var(--neutral-raised); --requests-filter-ink:var(--neutral-ink);
+  --requests-filter-selected:var(--neutral-hover); --requests-filter-selected-ink:var(--neutral-ink);
+  --home-surface:var(--neutral-surface); --shared-surface:var(--neutral-surface);
+  --shared-inset:var(--neutral-inset); --home-selected:var(--neutral-hover);
+  --ink:var(--neutral-ink); --muted:var(--neutral-muted); --line:var(--neutral-line);
+}
+/* Native shared icons avoid the exported image's auto dimensions/scale constraints. */
+.workspace-shell[data-role][data-view] .citizen-theme-toggle .theme-icon-slot {
+  display:flex; align-items:center; justify-content:center; width:44px; height:38px; position:relative;
+}
+.workspace-shell[data-role][data-view] .citizen-theme-toggle .theme-icon-slot svg { width:30px; height:30px; }
+.workspace-shell[data-role][data-view] .citizen-theme-toggle { color:var(--neutral-ink); }
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-role-pill:hover { background:var(--neutral-inset); }
+.workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-weather-title { margin-top:18px; }
+.workspace-shell[data-role=citizen][data-view=overview] .home-section-title { margin-bottom:14px; }
+/* Compact only the Home decorations; text and action hit areas retain their sizes. */
+.workspace-shell[data-role=citizen][data-view=overview] .home-rescue-card .figma-home-asset--add { width:50px; height:48px; }
+.workspace-shell[data-role=citizen][data-view=overview] .home-rescue-card .figma-home-asset--add > img { transform:scale(.60); }
+.workspace-shell[data-role=citizen][data-view=overview] .home-section-title .figma-home-asset { width:30px; height:30px; }
+.workspace-shell[data-role=citizen][data-view=overview] .home-section-title .figma-home-asset > img { transform:scale(.625); }
+
+.citizen-information-page .advisory-grid > .workspace-card { height:auto; min-height:0; gap:10px; }
+.citizen-information-page .advisory-tip-reason { font-size:.8rem; margin-bottom:0; }
+.advisory-preparation { border-top:1px solid var(--line); padding-top:12px; }
+.advisory-preparation h4 { margin:0 0 6px; }
+.advisory-preparation p { margin:0 0 8px; }
+.advisory-preparation ul { margin:0; padding-inline-start:20px; display:grid; gap:6px; }
