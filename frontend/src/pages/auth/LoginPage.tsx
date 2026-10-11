@@ -11,7 +11,7 @@ import type { UserRole } from '../../features/auth/types'
 import './auth.css'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, recoveryMessage } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
@@ -67,6 +67,7 @@ export function LoginPage() {
         </div>
       }
     >
+      {recoveryMessage && <p role="alert">{recoveryMessage}</p>}
       <form className="auth-clean-form" onSubmit={handleSubmit} noValidate>
         {/* Segmented Portal Role Chooser */}
         <RoleChooser value={role} onChange={setRole} />

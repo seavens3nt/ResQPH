@@ -1,3 +1,4 @@
+import { useMissionJourney } from '../../../../features/missions/useMissionJourney'
 /**
  * RescuerMissionCard — Displays a single mission's summary with stale/cached state.
  *
@@ -6,11 +7,11 @@
  *   - Mission and route loading/failure states (handled by parent)
  *   - Valid status-transition action button
  */
-import { useCallback, useEffect, useId, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useId, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import type { MissionDetail, MissionStatusHistoryItem } from '../../../../api/missions'
-import { controlMissionTracking, getMissionTracking, nextValidStatus } from '../../../../api/missions'
+import { controlMissionTracking, nextValidStatus } from '../../../../api/missions'
 import { StatusBadge } from '../shared'
 import { Button } from '../../../../components/ui/Button'
 import { Icon } from '../../../../components/art/Icon'
@@ -18,10 +19,7 @@ import { WorkspaceProgress } from '../../../../features/workspace/WorkspaceUI'
 import { MISSION_STAGES } from '../../../../features/workspace/missionStages'
 import { RecordId } from '../../../../features/workspace/Records'
 import './RescuerMissionCard.css'
-import { useAuth } from '../../../../features/auth/AuthContext'
 import { InteractiveFloodMap } from '../../../../features/map/InteractiveFloodMap'
-import { retryAfterDelay } from '../../../../api/retryAfter'
-import { isMissionTrackingActive } from '../../../../features/missions/useMissionJourney'
 
 interface RescuerMissionCardProps {
   mission: MissionDetail
@@ -55,43 +53,14 @@ export function RescuerMissionCard({
     completed: 'TAP RESCUE COMPLETED',
   }
 
+  const [followRescuer,setFollowRescuer] = useState(true)
+  const suspendFollow = useCallback(()=>setFollowRescuer(false),[])
   const syncState = isStale || isCached ? 'stale' : 'fresh'
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const trackingKey = ['mission-tracking', user?.id, mission.id] as const
-  const [pageVisible, setPageVisible] = useState(() => document.visibilityState === 'visible')
-  const [followRescuer, setFollowRescuer] = useState(true)
-  const suspendFollow = useCallback(() => setFollowRescuer(false), [])
-  const tracking = useQuery({
-    queryKey: trackingKey,
-    queryFn: async () => {
-      const received = await getMissionTracking(mission.id)
-      const cached = queryClient.getQueryData<Awaited<ReturnType<typeof getMissionTracking>>>(trackingKey)
-      return cached && Date.parse(received.timestamp) < Date.parse(cached.timestamp) ? cached : received
-    },
-    enabled: Boolean(showTracking && user && !isCached && !['completed', 'cancelled'].includes(mission.status)),
-    refetchInterval: query => !showTracking || !pageVisible || !isMissionTrackingActive(mission.status) ? false : query.state.error
-      ? retryAfterDelay(query.state.error, Math.min(30_000, 3_000 * (2 ** Math.min(query.state.fetchFailureCount, 3))))
-      : 3_000,
-    refetchIntervalInBackground: false,
-    retry: false,
-  })
+  const { tracking } = useMissionJourney(showTracking && !isCached ? mission.id : null)
   const trackingControl = useMutation({
     mutationFn: (action: 'start' | 'pause' | 'resume' | 'reset') => controlMissionTracking(mission.id, action),
     onSuccess: () => void tracking.refetch(),
   })
-  const refreshTracking = tracking.refetch
-
-  useEffect(() => {
-    const onVisibility = () => setPageVisible(document.visibilityState === 'visible')
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [])
-
-  useEffect(() => {
-    if (showTracking && mission.status === 'arrived' && !isCached) void refreshTracking()
-  }, [mission.status, isCached, refreshTracking, showTracking])
-
   return (
     <article className="rescuer-mission-card" aria-labelledby={titleId}>
       {/* Header */}

@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Query, Request, status
 
 from app.api.dependencies.demo_role import get_demo_actor
+from app.api.routes.missions import get_mission_service
 from app.core.config import settings
 from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
@@ -32,7 +33,7 @@ def get_rescue_request_service() -> RescueRequestService:
     database = get_database()
     requests = RescueRequestRepository(database)
     assignments = AssignmentRepository(database)
-    return RescueRequestService(requests, assignments, DispatchJobRepository(database))
+    return RescueRequestService(requests, assignments, DispatchJobRepository(database), get_mission_service())
 
 
 @router.post(

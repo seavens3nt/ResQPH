@@ -368,6 +368,47 @@ class MissionService:
             "Simulated role is not allowed to control mission tracking.",
         )
 
+    async def cancel_citizen_request(
+        self, request_id: str, expected_version: int, reason: str, actor: DemoActor
+    ) -> None:
+        """Reuse the linked lifecycle transaction; request version protects the consent."""
+        if self._requests is None or actor.role != "citizen":
+            raise MissionServiceError(403, "forbidden", "Only the owning citizen may cancel this request.")
+        now = utc_now()
+
+        async def persist(session: AsyncClientSession) -> None:
+            request = await self._requests.get_by_id(request_id, session=session)
+            if request is None or request.citizen_id != actor.user_id:
+                raise MissionServiceError(404, "request_not_found", "Rescue request is unavailable.")
+            if (request.status == "cancelled" and request.cancellation_actor_id == actor.user_id
+                    and request.cancellation_expected_version == expected_version and request.cancellation_reason == reason):
+                return
+            if request.version != expected_version:
+                raise MissionServiceError(409, "stale_request_version", "The request changed. Refresh before cancelling; cancellation is unavailable once travel starts.")
+            mission = await self._missions.get_by_id(request.mission_id, session=session) if request.mission_id else None
+            if request.status != "assigned" or mission is None or mission.status != "assigned":
+                raise MissionServiceError(409, "cancellation_not_allowed", "Cancellation is only available before the rescuer starts.")
+            updated = await self._missions.update_status_if_current(
+                mission_id=mission.id, expected_version=mission.version,
+                prior_status="assigned", new_status="cancelled", recorded_at=now,
+                tracking_state={**(mission.tracking_state or {}), "status": "cancelled", "elapsed_before_pause_s": 0.0},
+                team_position=self._tracking_response(mission, now).position,
+                session=session, expected_request_version=expected_version,
+            )
+            if updated is None:
+                raise MissionServiceError(409, "cancellation_conflict", "The rescuer may have started. Refresh the current request state.")
+            await self._missions.record_cancellation_reason(request_id, reason, now, session, actor_id=actor.user_id, expected_version=expected_version)
+            await self._events.append(MissionStatusEvent(
+                event_id=f"citizen-cancel-{request_id}-{expected_version}", mission_id=mission.id,
+                prior_status="assigned", new_status="cancelled", actor_id=actor.user_id,
+                actor_role="citizen", source="online", server_recorded_at=now, note=reason,
+            ), session=session)
+
+        try:
+            await self._events.run_in_transaction(persist)
+        except MissionLifecycleConflictError:
+            raise MissionServiceError(409, "lifecycle_conflict", "Linked records changed; cancellation was not stored.") from None
+
     async def cancel_mission(
         self, mission_id: str, expected_version: int, reason: str, actor: DemoActor
     ) -> MissionResponse:

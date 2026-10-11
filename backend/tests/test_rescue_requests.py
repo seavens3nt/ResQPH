@@ -68,6 +68,8 @@ class InMemoryRequestRepository:
         expected_version: int,
         reason: str,
         cancelled_at: datetime,
+        actor_id: str | None = None,
+        actor_role: str | None = None,
         session: Any = None,
     ) -> RescueRequest | None:
         if self.fail:
@@ -85,6 +87,8 @@ class InMemoryRequestRepository:
                 "status": "cancelled",
                 "version": request.version + 1,
                 "cancellation_reason": reason,
+                "cancellation_actor_id": actor_id,
+                "cancellation_expected_version": expected_version,
                 "cancelled_at": cancelled_at,
                 "updated_at": cancelled_at,
                 "status_history": [
@@ -93,6 +97,8 @@ class InMemoryRequestRepository:
                         status="cancelled",
                         occurred_at=cancelled_at,
                         note=reason,
+                        actor_id=actor_id,
+                        actor_role=actor_role,
                     ),
                 ],
             }

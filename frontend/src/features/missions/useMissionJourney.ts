@@ -8,29 +8,32 @@ import { recordRefreshInterval, sessionReadBlocked } from '../../api/queryRecove
 
 const terminal = (status: string | undefined) => status === 'completed' || status === 'cancelled'
 export const isMissionTrackingActive = (status: string | undefined) =>
-  status !== 'arrived' && status !== 'completed' && status !== 'cancelled'
+  status === 'en-route'
 
 export function useMissionJourney(missionId: string | null | undefined) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const scope = `${user?.id ?? user?.email ?? 'signed-out'}:${user?.stationId ?? ''}`
   const missionKey = ['mission-journey', scope, missionId] as const
+  const trackingKey = ['mission-tracking', scope, missionId] as const
+  const trackingBlocked = () => sessionReadBlocked(queryClient.getQueryState(trackingKey)?.error)
   const mission = useQuery({
     queryKey: missionKey,
+    staleTime:4_000,
     queryFn: async () => {
       const received = await getMission(missionId!)
       const cached = queryClient.getQueryData<MissionDetail>(missionKey)
       return cached && received.version < cached.version ? cached : received
     },
-    enabled: query => Boolean(user && missionId) && !sessionReadBlocked(query.state.error),
-    refetchInterval: query => terminal(query.state.data?.status) ? false : recordRefreshInterval(query.state.error,5_000),
+    enabled: query => Boolean(user && missionId) && !sessionReadBlocked(query.state.error) && !trackingBlocked(),
+    refetchInterval: query => terminal(query.state.data?.status) || trackingBlocked() ? false : recordRefreshInterval(query.state.error,5_000),
     refetchOnWindowFocus: false,
     refetchOnReconnect:false,
     retry: (failureCount, error) => failureCount < 2 && !isDefinitive(error),
   })
-  const trackingKey = ['mission-tracking', scope, missionId] as const
   const tracking = useQuery({
     queryKey: trackingKey,
+    staleTime:2_500,
     queryFn: async () => {
       const received = await getMissionTracking(missionId!)
       const cached = queryClient.getQueryData<MissionTracking>(trackingKey)
@@ -48,8 +51,12 @@ export function useMissionJourney(missionId: string | null | undefined) {
   })
   const refreshTracking = tracking.refetch
   useEffect(() => {
-    if (mission.data?.status === 'arrived') void refreshTracking()
-  }, [mission.data?.status, refreshTracking])
+    if (mission.data?.status !== 'arrived' || tracking.data?.simulation_status === 'arrived' || sessionReadBlocked(mission.error) || sessionReadBlocked(tracking.error)) return
+    // One final frozen position is useful at arrival; respect any active 429 cooldown.
+    const delay = tracking.error ? Math.max(0,tracking.errorUpdatedAt + retryAfterDelay(tracking.error,15_000) - Date.now()) : 0
+    const timer = window.setTimeout(()=>void refreshTracking({cancelRefetch:false}),delay)
+    return ()=>window.clearTimeout(timer)
+  }, [mission.data?.status, mission.error, tracking.error, tracking.errorUpdatedAt, tracking.data?.simulation_status, refreshTracking])
   return { mission, tracking }
 }
 

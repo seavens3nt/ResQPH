@@ -504,8 +504,7 @@ export function InteractiveFloodMap({
       if (remainingPath.length >= 2) {
         routeLineRef.current = new google.maps.Polyline({ map, path: remainingPath, strokeColor: '#22c55e', strokeOpacity: 0.98, strokeWeight: 7, clickable: true })
         listeners.push(routeLineRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
-        const routeId = routeResult?.route_id ?? 'Accepted mission route'
-        showPopup('route', textPopup('Mission route', [routeId, routeResult ? `${Math.round(routeResult.distance_m)} m` : 'Stored station-to-incident route']), event.latLng)
+        showPopup('route', textPopup('Mission route', [routeResult ? `${Math.round(routeResult.distance_m)} m` : 'Stored station-to-incident route']), event.latLng)
         }))
         lines.push(routeLineRef.current)
       }

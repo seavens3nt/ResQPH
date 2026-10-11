@@ -24,7 +24,7 @@ export function MissionRoute({ mission, offline = false, lastSyncedAt }: { missi
         { label: 'Mission', value: currentMission.status.replace('-', ' ') },
         ...(hasRoute ? [{ label: 'Route distance', value: `${Math.round(routeResult.distance_m ?? 0)} m` }, { label: 'Estimated time', value: formatDuration(routeResult.estimated_time_s ?? 0) }] : []),
       ]}/>
-      <p>The station assignment stores one shortest admissible route from its actual simulated response position. Road and flood inputs are controlled prototype data, not live safety guidance.</p>
+      <p className="workspace-caption">Simulated navigation · controlled flood scenario</p>
       {!hasRoute && <p role="status">No accepted route geometry is attached to this mission{offline ? ' in the cached record' : ''}.</p>}
       {offline && <p role="status">Offline view · last mission sync {lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : 'unknown'} · tracking is paused until reconnection. Reconnect to refresh tracking; map tiles are not cached.</p>}
       {currentMission.status === 'completed' && <p role="status">Mission completed. Tracking has stopped.</p>}
@@ -32,7 +32,7 @@ export function MissionRoute({ mission, offline = false, lastSyncedAt }: { missi
       {journey.mission.isError && <p role="status">Mission refresh failed. Showing the last available mission record.</p>}
       {journey.tracking.isError && <p role="status">Live tracking refresh failed. The last server position remains shown.</p>}
       {!offline && journey.tracking.data && <p className="workspace-caption" aria-live="polite">{(journey.tracking.data.simulation_status ?? 'tracking unavailable').replaceAll('_', ' ')} · {Math.round(journey.tracking.data.remaining_distance_m)} m remaining · {formatDuration(journey.tracking.data.estimated_remaining_time_s)} simulated travel time · updated {new Date(journey.tracking.data.timestamp).toLocaleTimeString()}</p>}
-      {hasRoute && <details className="workspace-technical"><summary>Route method and coordinates</summary><p>{routeResult.explanation ?? 'Shortest admissible route through the controlled road graph.'}</p><WorkspaceFacts items={[{ label: 'Actual route origin', value: first ? `${first[1].toFixed(6)}, ${first[0].toFixed(6)}` : 'Unavailable' }, { label: 'Route ID', value: routeResult.route_id ?? 'Unavailable' }]}/></details>}
+
     </div>
     {!offline && <InteractiveFloodMap navigation trackingFrozen={offline || journey.tracking.isError || journey.mission.isError} trackingTimestamp={journey.tracking.data?.timestamp} trackingStopped={['arrived', 'completed', 'cancelled'].includes(currentMission.status)}
       journeySummary={`${station?.name ?? currentMission.team_id} · ${currentMission.request_summary?.location.address ?? 'Pinned location'} · ${currentMission.status}${journey.tracking.data ? ` · ${Math.round(journey.tracking.data.remaining_distance_m)} m remaining · ${formatDuration(journey.tracking.data.estimated_remaining_time_s)} simulated travel time` : ''}`}

@@ -41,8 +41,8 @@ class MissionRepository:
         cursor = self._collection.find(query).sort("assigned_at", -1)
         return [Mission.model_validate(document) async for document in cursor]
 
-    async def get_by_id(self, mission_id: str) -> Mission | None:
-        document = await self._collection.find_one({"id": mission_id})
+    async def get_by_id(self, mission_id: str, session: AsyncClientSession | None = None) -> Mission | None:
+        document = await self._collection.find_one({"id": mission_id}, session=session)
         if document is None:
             return None
         return Mission.model_validate(document)
@@ -82,6 +82,7 @@ class MissionRepository:
         tracking_state: dict[str, Any] | None = None,
         team_position: dict[str, Any] | None = None,
         session: AsyncClientSession | None = None,
+        expected_request_version: int | None = None,
     ) -> Mission | None:
         if session is None or not session.in_transaction:
             raise RuntimeError("Mission lifecycle updates require an active transaction.")
@@ -109,8 +110,11 @@ class MissionRepository:
         )
         if document is None:
             return None
+        request_filter: dict[str, Any] = {"id": document["request_id"], "mission_id": mission_id, "status": prior_status}
+        if expected_request_version is not None:
+            request_filter["version"] = expected_request_version
         request_result = await self._requests.update_one(
-            {"id": document["request_id"], "mission_id": mission_id, "status": prior_status},
+            request_filter,
             {
                 "$set": {"status": new_status, "updated_at": recorded_at},
                 "$inc": {"version": 1},
@@ -149,9 +153,15 @@ class MissionRepository:
     async def record_cancellation_reason(
         self, request_id: str, reason: str, recorded_at: datetime,
         session: AsyncClientSession,
+        actor_id: str | None = None,
+        expected_version: int | None = None,
     ) -> None:
+        values: dict[str, Any] = {"cancellation_reason": reason, "cancelled_at": recorded_at}
+        if actor_id is not None:
+            values.update({"cancellation_actor_id": actor_id, "cancellation_expected_version": expected_version, "status_history.$[cancelled].actor_id": actor_id, "status_history.$[cancelled].actor_role": "citizen", "status_history.$[cancelled].note": reason})
         await self._requests.update_one(
             {"id": request_id, "status": "cancelled"},
-            {"$set": {"cancellation_reason": reason, "cancelled_at": recorded_at}},
+            {"$set": values},
             session=session,
+            **({"array_filters": [{"cancelled.status": "cancelled"}]} if actor_id is not None else {}),
         )

@@ -11,7 +11,9 @@ requests enter automatic dispatch; one leased backend queue chooses an
 available reachable catalog station by reported severity then submission
 time. Request, mission, station reservation, and accepted route are stored
 atomically. Station capacity release and process recovery make eligible jobs
-due again. A citizen may cancel only while a request is still pending. No
+due again. A citizen may cancel their pending request or their assigned request before the
+station starts travel. Assigned cancellation uses the linked lifecycle transaction
+and releases capacity once; en-route/arrived/completed cannot be citizen-cancelled. No
 coordinator API or UI is active.
 
 The assigned station acknowledges the mission with the `assigned` to
@@ -64,7 +66,7 @@ Request: completed + Mission: completed
 | `pending` | `assigned` | Coordinator | One available team is assigned in the same consistency boundary as mission creation. |
 | `pending` | `cancelled` | Citizen or coordinator | No active mission exists; reason and timestamp are recorded. |
 | `assigned` | `en-route` | Assigned rescuer | Active mission and matching team exist. |
-| `assigned` | `cancelled` | Coordinator | Cancellation reason is recorded and team availability is restored consistently. |
+| `assigned` | `cancelled` | Owning citizen before travel (historically coordinator) | Cancellation reason is recorded and team availability is restored consistently. |
 | `en-route` | `arrived` | Assigned rescuer | The update is the next valid transition. |
 | `arrived` | `completed` | Assigned rescuer or coordinator | Completion details and timestamp are recorded. |
 
@@ -76,7 +78,7 @@ Request: completed + Mission: completed
 |---|---|---|
 | Created | `assigned` | Coordinator |
 | `assigned` | `en-route` | Assigned rescuer |
-| `assigned` | `cancelled` | Coordinator |
+| `assigned` | `cancelled` | Owning citizen before travel (historically coordinator) |
 | `en-route` | `arrived` | Assigned rescuer |
 | `arrived` | `completed` | Assigned rescuer or coordinator |
 
@@ -95,7 +97,7 @@ Every accepted transition appends an immutable history item containing event ID,
 
 ## Current citizen presentation
 
-Request rescue opens the existing form in a dashboard modal, without changing the route. Edit -> review -> final API submission remains one flow. Closing preserves the memory-only draft; reload/sign-out clears it. An unfinished-draft notice appears only after dismissing an edited unsent form. Direct discard and permitted request cancellation have no extra confirmation popup; server validation and version checks remain authoritative.
+Request rescue opens the existing form in a dashboard modal, without changing the route. Edit -> review -> final API submission remains one flow. Closing preserves the memory-only draft; reload/sign-out clears it. An unfinished-draft notice appears only after dismissing an edited unsent form. Direct draft discard has no extra confirmation popup; permitted request cancellation requires explicit confirmation, and server validation and version checks remain authoritative.
 
 Home/My Requests use a shared tracking popup with server-confirmed progress; Map retains its inline inspector. Citizen presentation hides internal team identifiers without removing assignment links from storage or rescuer/coordinator workflows. Success feedback appears only after API acceptance and expires after eight idle seconds, paused while hovered/focused.
 

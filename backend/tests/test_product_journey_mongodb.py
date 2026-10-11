@@ -227,11 +227,11 @@ def test_cookie_auth_dispatch_ownership_tracking_and_pending_retry(api) -> None:
         mission_id = accepted["mission_id"]
         forbidden_cancel = client.post(
             f"/api/v1/rescue-requests/{first.json()['id']}/cancel",
-            json={"reason": "Cancellation is pending-only", "version": accepted["version"]},
+            json={"reason": "Stale cancellation consent", "version": accepted["version"] + 1},
             headers=_csrf(client),
         )
         assert forbidden_cancel.status_code == 409
-        assert forbidden_cancel.json()["error"]["code"] == "request_not_pending"
+        assert forbidden_cancel.json()["error"]["code"] == "stale_request_version"
         assert database.missions.count_documents({"request_id": first.json()["id"]}) == 1
         mission = client.get(f"/api/v1/missions/{mission_id}")
         assert mission.status_code == 200

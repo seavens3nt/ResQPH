@@ -5,7 +5,7 @@ import { afterEach,beforeEach,expect,it,vi } from 'vitest'
 import { CitizenWorkspace } from './CitizenWorkspace'
 
 const state=vi.hoisted(()=>({status:'pending',refetch:vi.fn(),cancel:vi.fn()}))
-vi.mock('./CitizenMap',()=>({CitizenMap:({onSelect,onCancel,cancelError}: {onSelect:(id:string)=>void;onCancel:()=>void;cancelError?:string})=><><button onClick={()=>onSelect('stored-request-001')}>Select pending request</button><button onClick={onCancel}>Cancel map request</button>{cancelError && <p role="alert">{cancelError}</p>}</>}))
+vi.mock('./CitizenMap',()=>({CitizenMap:({onSelect,onCancel,cancelError}: {onSelect:(id:string)=>void;onCancel:()=>void;cancelError?:string})=><><button onClick={()=>onSelect('stored-request-001')}>Select pending request</button><button onClick={()=>onCancel()}>Cancel map request</button>{cancelError && <p role="alert">{cancelError}</p>}</>}))
 vi.mock('../requests/hooks',()=>({
   useMyRescueRequests:()=>({isLoading:false,isError:false,data:{items:[{id:'stored-request-001',status:state.status,version:3,location:{address:'Synthetic address'},headcount:2}],total:1},refetch:state.refetch}),
   useRescueRequest:()=>({isLoading:false,isError:false,isFetching:false,refetch:state.refetch,data:{id:'stored-request-001',status:state.status,version:3,location:{address:'Synthetic address'},headcount:2,reported_flood_level:'unknown',situation_summary:null,vulnerabilities:[],medical_needs:false}}),
@@ -36,17 +36,20 @@ it('opens selected status in a modal, keeps the list, refreshes, and restores fo
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(trigger).toHaveFocus()
 })
-it('cancels directly with the request version and no confirmation dialog',()=>{
+it('confirms cancellation using the captured request version',()=>{
   preview();fireEvent.click(screen.getByRole('button',{name:'View RQ-001'}))
   fireEvent.click(screen.getByRole('button',{name:'Cancel Request'}))
-  expect(screen.queryByRole('dialog',{name:'Cancel request confirmation'})).not.toBeInTheDocument()
+  expect(screen.getByRole('dialog',{name:'Cancel request confirmation'})).toBeVisible()
+  expect(state.cancel).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button',{name:'Yes, cancel request'}))
   expect(screen.getByRole('dialog',{name:'Request status'})).toBeVisible()
   expect(state.cancel).toHaveBeenCalledWith({requestId:'stored-request-001',payload:{reason:'Citizen cancelled via prototype UI',version:3}},expect.any(Object))
 })
-it('cancels directly from the map without opening another popup',()=>{
+it('confirms map cancellation before posting',()=>{
   preview('map');fireEvent.click(screen.getByRole('button',{name:'Select pending request'}))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Cancel map request'}))
+  fireEvent.click(screen.getByRole('button',{name:'Yes, cancel request'}))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(state.cancel).toHaveBeenCalledWith({requestId:'stored-request-001',payload:{reason:'Citizen cancelled via prototype UI',version:3}},expect.any(Object))
 })
@@ -54,6 +57,7 @@ it('closes tracking only after cancellation succeeds and shows a distinct dashbo
   state.cancel.mockImplementationOnce((_input,options)=>options.onSuccess())
   preview();fireEvent.click(screen.getByRole('button',{name:'View RQ-001'}))
   fireEvent.click(screen.getByRole('button',{name:'Cancel Request'}))
+  fireEvent.click(screen.getByRole('button',{name:'Yes, cancel request'}))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(screen.getByRole('status')).toHaveTextContent('Request cancelled')
   expect(screen.getByRole('status')).toHaveClass('request-cancelled-notice')
@@ -63,6 +67,7 @@ it('keeps tracking open and does not show a success notice when cancellation fai
   state.cancel.mockImplementationOnce((_input,options)=>options.onError(new Error('Offline')))
   preview();fireEvent.click(screen.getByRole('button',{name:'View RQ-001'}))
   fireEvent.click(screen.getByRole('button',{name:'Cancel Request'}))
+  fireEvent.click(screen.getByRole('button',{name:'Yes, cancel request'}))
   expect(screen.getByRole('dialog',{name:'Request status'})).toBeVisible()
   expect(screen.getByRole('alert')).toHaveTextContent('Cancellation failed')
   expect(screen.queryByText('Request cancelled')).not.toBeInTheDocument()
@@ -72,10 +77,11 @@ it('shows a map cancellation conflict inline and refreshes authoritative data',(
   preview('map');fireEvent.click(screen.getByRole('button',{name:'Select pending request'}))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Cancel map request'}))
+  fireEvent.click(screen.getByRole('button',{name:'Yes, cancel request'}))
   expect(screen.getByRole('alert')).toHaveTextContent('Conflict: the request state changed')
   expect(state.refetch).toHaveBeenCalledOnce()
 })
-it.each(['assigned','en-route','arrived','completed','cancelled'])('preserves %s without offering invalid cancellation',status=>{
+it.each(['en-route','arrived','completed','cancelled'])('preserves %s without offering invalid cancellation',status=>{
   state.status=status;preview();fireEvent.click(screen.getByRole('button',{name:'All'}));fireEvent.click(screen.getByRole('button',{name:'View RQ-001'}))
   const dialog=screen.getByRole('dialog',{name:'Request status'})
   expect(within(dialog).queryByRole('button',{name:'Cancel Request'})).not.toBeInTheDocument()
@@ -86,4 +92,11 @@ it.each(['assigned','en-route','arrived','completed','cancelled'])('preserves %s
     expect(dialog.querySelectorAll('.status-popup-progress .is-reached')).toHaveLength(index+1)
     expect(dialog.querySelector('.status-popup-track>span')).toHaveStyle({width:`${status==='completed'?100:(index+.5)/5*100}%`})
   }
+})
+
+it('offers cancellation while assigned before travel starts',()=>{
+  state.status='assigned';preview();fireEvent.click(screen.getByRole('button',{name:'View RQ-001'}))
+  fireEvent.click(screen.getByRole('button',{name:'Cancel Request'}))
+  expect(screen.getByRole('dialog',{name:'Cancel request confirmation'})).toBeVisible()
+  expect(state.cancel).not.toHaveBeenCalled()
 })

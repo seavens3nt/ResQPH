@@ -19,6 +19,7 @@ from app.schemas.rescue_requests import (
     RescueRequestListResponse,
     RescueRequestResponse,
 )
+from app.services.missions import MissionService, MissionServiceError
 
 _REQUEST_STATUSES: set[str] = {
     "pending",
@@ -36,10 +37,12 @@ class RescueRequestService:
         requests: RescueRequestRepository,
         assignments: AssignmentRepository,
         dispatch_jobs: DispatchJobRepository | None = None,
+        missions: MissionService | None = None,
     ) -> None:
         self._requests = requests
         self._assignments = assignments
         self._dispatch_jobs = dispatch_jobs
+        self._missions = missions
 
     async def create_request(
         self,
@@ -213,6 +216,19 @@ class RescueRequestService:
                 "Only the owning citizen or a coordinator may cancel a pending request.",
             )
 
+        # A lost response can replay the original consent without releasing capacity twice.
+        if (request.status == "cancelled" and request.cancellation_actor_id == actor.user_id
+                and request.cancellation_expected_version == payload.version and request.cancellation_reason == payload.reason):
+            return RescueRequestResponse.model_validate(request.model_dump())
+        if is_owner and request.status == "assigned" and self._missions is not None:
+            try:
+                await self._missions.cancel_citizen_request(request.id, payload.version, payload.reason, actor)
+                return await self.get_request(request.id, actor)
+            except MissionServiceError as exc:
+                raise ServiceError(exc.status_code, exc.code, exc.message, exc.details) from exc
+            except PyMongoError as exc:
+                raise database_unavailable() from exc
+
         if request.version != payload.version:
             raise ServiceError(
                 409,
@@ -229,7 +245,7 @@ class RescueRequestService:
             raise ServiceError(
                 409,
                 "request_not_pending",
-                "Only a pending unassigned rescue request may be cancelled by this operation.",
+                "Cancellation is available while pending or assigned before the rescuer starts.",
             )
 
         try:
@@ -238,6 +254,8 @@ class RescueRequestService:
                 expected_version=payload.version,
                 reason=payload.reason,
                 cancelled_at=utc_now(),
+                actor_id=actor.user_id,
+                actor_role=actor.role,
             )
         except PyMongoError as exc:
             raise database_unavailable() from exc

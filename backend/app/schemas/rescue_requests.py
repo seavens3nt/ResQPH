@@ -114,6 +114,8 @@ class RequestLocationResponse(BaseModel):
 
 
 class RequestStatusHistoryResponse(BaseModel):
+    actor_id: str | None = None
+    actor_role: str | None = None
     status: RequestStatus
     occurred_at: datetime
     note: str | None = None
@@ -145,6 +147,11 @@ class RescueRequestResponse(BaseModel):
     assigned_station_id: str | None = None
     mission_id: str | None = None
     status_history: list[RequestStatusHistoryResponse] = Field(default_factory=list)
+
+    @computed_field
+    @property
+    def can_cancel(self) -> bool:
+        return self.status in {"pending", "assigned"}
 
     @computed_field
     @property

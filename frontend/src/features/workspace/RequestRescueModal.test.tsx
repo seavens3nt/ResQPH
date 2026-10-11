@@ -109,3 +109,13 @@ it('shows the temporary success notice only after server confirmation, without o
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(screen.getByLabelText('Current route')).toHaveTextContent('?view=inquiries')
 })
+
+it('propagates the saved dark theme into the request dialog without changing preference',()=>{
+  localStorage.setItem('resqph-theme','dark')
+  renderWorkspace();fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
+  const dialog=screen.getByRole('dialog',{name:'Where is help needed?'})
+  expect(dialog.parentElement).toHaveAttribute('data-app-theme','dark')
+  expect(localStorage.getItem('resqph-theme')).toBe('dark')
+  expect(dialog.querySelector('.request-flood-field')).toBeInTheDocument()
+  localStorage.removeItem('resqph-theme')
+})
