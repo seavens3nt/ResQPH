@@ -1,5 +1,14 @@
 # Current Status
 
+- 2026-10-11 navigation checkpoint: `feature/navigation-request-ux` starts at
+  `a143a18` (`origin/temporary-main`). Existing Google map now supports simulated
+  heading-up navigation and a locally drawn vehicle marker; citizen location
+  confirmation validates the pin, with keyboard adjustments and no manual coordinate
+  fields. 376 frontend tests, lint and build pass (existing warnings retained).
+  No connected browser was available: actual camera/visual and separate-session
+  acceptance remain pending. See `docs/testing/NAVIGATION-REQUEST-UX-2026-10-11.md`.
+  Older branch and test-count statements below are historical snapshots.
+
 - Release preparation (2026-10-10): see `docs/testing/LOCAL-CANDIDATE-2026-10-10.md`.
   Frontend 340 passed; backend/integration 201 passed, 28 skipped; separate real-MongoDB
   journey 5 passed. Candidate is being packaged for draft review, not merged acceptance.

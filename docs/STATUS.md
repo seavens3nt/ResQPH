@@ -2,6 +2,20 @@
 
 **Last updated:** 2026-10-11 (Asia/Manila)
 
+## Navigation and request UX checkpoint (2026-10-11)
+
+Current task branch: `feature/navigation-request-ux`, based on accepted
+`origin/temporary-main` at `a143a18acea7fa6897cd7bce196dec912bf7dcdd`.
+Rescuer heading-up following, an original vehicle SVG, shared lifecycle controls
+on Routes, and validated citizen pin confirmation are implemented. Raw road
+tables and citizen coordinate inputs are removed. Frontend: 376 tests pass,
+lint passes with six pre-existing warnings, and production build passes with
+the existing chunk-size warning. Backend contracts and database are unchanged.
+Browser connection was unavailable: heading/tilt, appearance, and separate-session
+full-flow acceptance remain pending. This is a feature checkpoint, not final acceptance.
+See [navigation verification and teammate checklist](testing/NAVIGATION-REQUEST-UX-2026-10-11.md).
+The branch/status notes below describe preceding checkpoints.
+
 Latest candidate checks and remaining merge gates: [2026-10-10 evidence](testing/LOCAL-CANDIDATE-2026-10-10.md).
 The branch is being packaged for review; it is not final acceptance. Older verification counts below are historical.
 

@@ -1,5 +1,12 @@
 # Context Sync History
 
+## 2026-10-11 — Navigation/request presentation checkpoint
+
+Audited frontend diff against `a143a18`; status and verification now distinguish
+implemented/tested presentation from browser acceptance pending. No backend,
+station catalog, dispatch, polling cadence, offline persistence or database changes.
+Feature push authorized; no main/temporary-main push, PR or merge for this task.
+
 ## 2026-10-10 — Candidate packaging
 
 Current status links fresh candidate evidence. Account desktop sizing was consolidated,
