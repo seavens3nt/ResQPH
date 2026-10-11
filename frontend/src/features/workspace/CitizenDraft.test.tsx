@@ -30,7 +30,7 @@ describe('Citizen form hardening', () => {
     const input = document.querySelector<HTMLElement>('[aria-invalid="true"]')!
     await waitFor(() => expect(input).toHaveFocus())
     expect(input).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.getByLabelText('Longitude')).toHaveValue(181)
+    expect(screen.queryByLabelText('Longitude')).not.toBeInTheDocument()
     expect(screen.getByText('Check your request before continuing')).toBeVisible()
     expect(mutate).not.toHaveBeenCalled()
   })

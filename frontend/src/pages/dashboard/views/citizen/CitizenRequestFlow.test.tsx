@@ -161,8 +161,8 @@ describe('RequestForm', () => {
     expect(screen.getByLabelText(/People needing assistance/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Reported severity/i)).toBeInTheDocument()
     expect(screen.queryByText(/Adjust map coordinates/i)).not.toBeInTheDocument()
-    expect(screen.getByLabelText(/Longitude/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Latitude/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Longitude/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Latitude/i)).not.toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /Use my location/i })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Use saved account location/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Add details for responders \(optional\)/i)).toBeInTheDocument()
@@ -190,7 +190,7 @@ describe('RequestForm', () => {
     renderForm()
     fireEvent.click(screen.getByRole('radio', { name: /Use my location/i }))
     expect(screen.getByText(message as RegExp)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Longitude/i)).toBeEnabled()
+    expect(screen.getByRole('button', {name:'Move pin north'})).toBeEnabled()
     vi.unstubAllGlobals()
   })
 
@@ -216,17 +216,44 @@ describe('RequestForm', () => {
     })
   })
 
-  it('allows keyboard coordinate edits and includes confirmed longitude-first GeoJSON coordinates', async () => {
+  it('allows keyboard-operable pin adjustment and includes confirmed longitude-first GeoJSON coordinates', async () => {
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
     renderForm()
-    fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: '120.9947' } })
-    fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: '14.6043' } })
+    fireEvent.click(screen.getByRole('button', {name:'Move pin east'}))
+    fireEvent.click(screen.getByRole('button', {name:'Move pin north'}))
     submitConfirmedRequest()
     await waitFor(() => expect(mockCreate).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ location: expect.objectContaining({ point: { type: 'Point', coordinates: [120.9947, 14.6043] } }) }),
+      expect.objectContaining({ location: expect.objectContaining({ point: { type: 'Point', coordinates: [120.9946 + 0.000093, 14.6042 + 0.00009] } }) }),
       expect.any(String),
     ))
+  })
+
+  it('invalidates confirmation after pin adjustment and preserves unrelated validation errors', () => {
+    renderForm()
+    fireEvent.change(screen.getByLabelText(/People needing assistance/i), { target: { value: '0' } })
+    submitConfirmedRequest()
+    expect(screen.getAllByText(/At least 1 person/i)).toHaveLength(2)
+    const move = screen.getByRole('button', { name: 'Move pin north' })
+    move.focus()
+    expect(move).toHaveFocus()
+    fireEvent.click(move)
+    expect(screen.getByText('Drop a pin, then confirm your rescue location.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
+    expect(screen.getByText('Location confirmed.')).toBeInTheDocument()
+    expect(screen.getAllByText(/At least 1 person/i)).toHaveLength(2)
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+
+  it('requires confirmation again when GPS replaces a confirmed pin', () => {
+    renderForm()
+    fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (success: (position: unknown) => void) => success({ coords: { longitude: 120.9948, latitude: 14.6043 } }) } })
+    fireEvent.click(screen.getByRole('radio', {name: 'Use my location'}))
+    vi.unstubAllGlobals()
+    fireEvent.submit(screen.getByLabelText(/Citizen rescue request form/i))
+    expect(document.querySelector('[data-location-error]')).toHaveFocus()
+    expect(mockCreate).not.toHaveBeenCalled()
   })
 
   it('requires explicit location confirmation before submission', () => {

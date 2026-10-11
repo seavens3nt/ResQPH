@@ -28,7 +28,7 @@ import {
   type VulnerabilityTag,
 } from '../../../../features/requests/types'
 import {
-  CreateRequestSchema,
+  CreateRequestSchema, GeoPointSchema,
 } from '../../../../features/requests/validation'
 import { RequestLocationMap } from './RequestLocationMap'
 import { RequestReview } from './RequestReview'
@@ -98,7 +98,9 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
 
   useEffect(() => {
     if (Object.keys(fieldErrors).length) {
-      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      const error = formRef.current?.querySelector<HTMLElement>(fieldErrors['location.point.coordinates'] ? '[data-location-error]' : '[aria-invalid="true"]')
+      error?.focus()
+      error?.scrollIntoView?.({ block: 'nearest', behavior: 'auto' })
     }
   }, [fieldErrors])
 
@@ -124,7 +126,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     }
 
     if (!navigator.geolocation) {
-      setGpsError('GPS is not available in this browser. Choose your saved or demonstration location instead.')
+      setGpsError('GPS is not available in this browser. Choose a point on the map or use the pin adjustment buttons instead.')
       return
     }
 
@@ -141,10 +143,10 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       },
       (error) => {
         setGpsError(error.code === 1
-          ? 'Location permission was denied. Choose a point on the map or enter coordinates instead.'
+          ? 'Location permission was denied. Choose a point on the map or use the pin adjustment buttons instead.'
           : error.code === 3
-            ? 'Location lookup timed out. Choose a point on the map or enter coordinates instead.'
-            : 'Your location is unavailable. Choose a point on the map or enter coordinates instead.')
+            ? 'Location lookup timed out. Choose a point on the map or use the pin adjustment buttons instead.'
+            : 'Your location is unavailable. Choose a point on the map or use the pin adjustment buttons instead.')
         setIsLocating(false)
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
@@ -161,10 +163,15 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setGpsAccuracy(null)
   }
 
-  function editCoordinate(axis: 0 | 1, rawValue: string) {
-    const next = axis === 0 ? [rawValue, latStr] : [lngStr, rawValue]
-    setLngStr(next[0]); setLatStr(next[1]); setAddress(''); setLocationSource('map'); setLocationConfirmed(false)
-    setGpsAccuracy(null)
+  function confirmLocation() {
+    const valid = GeoPointSchema.safeParse({ type: 'Point', coordinates: [lngStr.trim() ? Number(lngStr) : NaN, latStr.trim() ? Number(latStr) : NaN] }).success
+    setLocationConfirmed(valid)
+    setFieldErrors(previous => {
+      const next = { ...previous }
+      if (valid) delete next['location.point.coordinates']
+      else next['location.point.coordinates'] = 'Choose a rescue location inside the U-Belt pilot area, then confirm the pin.'
+      return next
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -186,7 +193,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setSubmitErrorCode(null)
 
     if (!locationConfirmed) {
-      setFieldErrors({ 'location.point.coordinates': 'Confirm the selected rescue location before continuing.' })
+      setFieldErrors({ ...fieldErrors, 'location.point.coordinates': fieldErrors['location.point.coordinates'] ?? 'Confirm the selected rescue location before continuing.' })
       return
     }
 
@@ -221,11 +228,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         const path = issue.path.join('.')
         const key = path.startsWith('location.point.coordinates') ? 'location.point.coordinates' : path
         // Surface the outside-boundary error on the coordinates field
-        errs[key || 'general'] = path.endsWith('coordinates.0')
-          ? 'Enter a valid longitude between -180 and 180, then check the U-Belt location.'
-          : path.endsWith('coordinates.1')
-            ? 'Enter a valid latitude between -90 and 90, then check the U-Belt location.'
-            : issue.message
+        errs[key || 'general'] = key === 'location.point.coordinates' ? 'Choose a rescue location inside the U-Belt pilot area, then confirm the pin.' : issue.message
       }
       setFieldErrors(errs)
       return
@@ -354,7 +357,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           onChooseSource={chooseLocationSource}
           onChooseCoordinates={chooseMapCoordinates}
           locationConfirmed={locationConfirmed}
-          onConfirmLocation={() => { setFieldErrors({}); setLocationConfirmed(true) }}
+          onConfirmLocation={confirmLocation}
         />
         <label
           htmlFor={`${uid}-address`}
@@ -378,15 +381,6 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             fontSize: '0.88rem',
           }}
         />
-        <p className="workspace-caption">Pinned location coordinates: {Number(lngStr).toFixed(6)}, {Number(latStr).toFixed(6)}. Longitude, then latitude.</p>
-        <div className="request-coordinate-fields" aria-label="Edit pin coordinates">
-          <label htmlFor={`${uid}-longitude`}>Longitude
-            <input id={`${uid}-longitude`} type="number" step="any" value={lngStr} disabled={isPending} onChange={event => editCoordinate(0, event.target.value)} />
-          </label>
-          <label htmlFor={`${uid}-latitude`}>Latitude
-            <input id={`${uid}-latitude`} type="number" step="any" value={latStr} disabled={isPending} onChange={event => editCoordinate(1, event.target.value)} />
-          </label>
-        </div>
         {gpsAccuracy !== null && <p role="status" className="workspace-caption">Reported GPS accuracy: approximately {Math.round(gpsAccuracy)} m. Confirm the pin location before continuing.</p>}
         {fieldErrors['location.address'] && (
           <span
@@ -401,9 +395,9 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           <input id={`${uid}-landmark`} type="text" value={landmark} maxLength={200} onChange={event => setLandmark(event.target.value)} placeholder="Nearest school, corner, or visible landmark" disabled={isPending}/>
         </label>
       </div>
-      {modalLayout && <p className="workspace-caption">Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</p>}
+      {modalLayout && <p className="workspace-caption">Controlled U-Belt pilot map. Click the map to place the request marker; locations outside the pilot boundary cannot be submitted.</p>}
 
-      {fieldErrors['location.point.coordinates'] && <p id={`${uid}-coords-err`} role="alert" tabIndex={-1} aria-invalid="true" style={{color:'#dc2626'}}>{fieldErrors['location.point.coordinates']} Choose a location inside the pilot area using the map or demonstration location.</p>}
+      {fieldErrors['location.point.coordinates'] && <p data-location-error id={`${uid}-coords-err`} role="alert" tabIndex={-1} aria-invalid="true" style={{color:'#dc2626'}}>{fieldErrors['location.point.coordinates']} Choose a location inside the pilot area using the map or demonstration location.</p>}
       </div>
       <div className="request-assistance-fields" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
       <label className="request-flood-field">Reported severity

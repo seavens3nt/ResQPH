@@ -27,7 +27,7 @@ export function RequestReview({coordinates, source, address, landmark, headcount
     <div className="request-review-location request-location-fields">
       <div className="request-review-location-card">
         <RequestLocationMap coordinates={coordinates} source={source} showInstruction={false} showConfirmation={false} isLocating={false} disabled gpsError="" onChooseSource={() => {}} onChooseCoordinates={() => {}}/>
-        <p className="workspace-caption">Confirmed rescue pin · {coordinates[0].toFixed(6)}, {coordinates[1].toFixed(6)} (longitude, latitude)</p>
+        <p className="workspace-caption">Location confirmed.</p>
         <label htmlFor="review-request-address">Pinned location{address.trim() ? ' · optional address' : ''}</label>
         <input id="review-request-address" type="text" value={address.trim() || 'Pinned location'} readOnly aria-label="Reviewed pinned location"/>
       </div>
