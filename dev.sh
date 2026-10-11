@@ -98,10 +98,13 @@ ensure_backend_venv() {
     (cd "$ROOT_DIR/backend" && uv venv --python 3.12 .venv)
   elif command -v python3.12 >/dev/null 2>&1; then
     (cd "$ROOT_DIR/backend" && python3.12 -m venv .venv)
+  elif command -v python3.13 >/dev/null 2>&1; then
+    (cd "$ROOT_DIR/backend" && python3.13 -m venv .venv)
   elif command -v py >/dev/null 2>&1; then
+    (cd "$ROOT_DIR/backend" && py -3.13 -m venv .venv) || \
     (cd "$ROOT_DIR/backend" && py -3.12 -m venv .venv)
   else
-    echo "Python 3.12 or uv is required to create backend/.venv." >&2
+    echo "Python 3.12+ or uv is required to create backend/.venv." >&2
     exit 1
   fi
 }
