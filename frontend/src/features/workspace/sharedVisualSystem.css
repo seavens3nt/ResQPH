@@ -1331,3 +1331,578 @@
     min-width:130px;
   }
 }
+
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] {
+  --home-page:#0b1324;
+  --home-surface:#101b30;
+  --shared-surface:#101b30;
+  --shared-inset:#0f1a2e;
+  --ink:#f4f8ff;
+  --muted:#a9bbd4;
+  --line:#21395c;
+  --accent:#ef334f;
+  --home-selected:#1c3558;
+  --home-shadow:0 16px 38px rgba(0,0,0,.22);
+  background:
+    radial-gradient(circle at 82% 8%, rgba(38,71,111,.42), transparent 32%),
+    linear-gradient(180deg,#0b1324 0%,#07101f 100%);
+  color:#f4f8ff;
+  color-scheme:dark;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-nav {
+  background:linear-gradient(180deg,rgba(16,29,51,.88),rgba(10,21,39,.9));
+  border-color:#274263;
+  box-shadow:0 18px 44px rgba(0,0,0,.22);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-nav nav button,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-nav > button {
+  color:#f4f8ff;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-nav nav button[aria-current],
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-nav nav button[aria-current]:hover {
+  background:#1c3558;
+  color:#fff;
+  box-shadow:0 10px 22px rgba(0,0,0,.18);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar {
+  border-bottom-color:#274263;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar h1,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .home-section-title,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] :is(.home-scenario-card h3,.home-hourly-card h3,.home-no-request strong,.home-request-label,.weather-summary-temperature,.weather-summary-condition,.home-temperature p,.weather-summary-details,.home-weather-metric strong,.live-hourly-list strong) {
+  color:#f4f8ff;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] :is(.home-card-caption,.home-current-card h3,.home-no-request p,.home-current-card p,.weather-summary-range,.weather-summary-source,.live-hourly-panel-heading,.live-hourly-list time,.live-hourly-condition,.live-hourly-list span,.home-weather-metric > span) {
+  color:#a9bbd4;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar .citizen-theme-toggle,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar .citizen-role-pill {
+  background:#101b30;
+  border-color:#274263;
+  color:#f4f8ff;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar .citizen-theme-toggle::before {
+  background:#2688ff;
+  box-shadow:0 8px 18px rgba(38,136,255,.24);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .citizen-theme-toggle[aria-pressed=false] .theme-icon-slot:last-child,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .citizen-theme-toggle[aria-pressed=true] .theme-icon-slot:first-child {
+  color:#d5e5fa;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar .citizen-role-pill svg:last-child {
+  color:#a9bbd4;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .screenshot-home .workspace-card {
+  background:linear-gradient(180deg,#101d33 0%,#0d1a2f 100%);
+  border:1px solid #274263;
+  box-shadow:var(--home-shadow);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .screenshot-home .home-rescue-card {
+  background:
+    radial-gradient(120% 150% at 78% -40%, rgba(255,255,255,.1) 0 36%, transparent 37%),
+    radial-gradient(92% 130% at 82% 118%, rgba(30,0,10,.24) 0 31%, transparent 32%),
+    linear-gradient(180deg,#c9162d 0%,#8d0f22 100%);
+  border:1px solid #de263b;
+  box-shadow:0 18px 30px rgba(127,15,34,.22);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .home-current-card::after {
+  filter:brightness(0) saturate(100%) invert(49%) sepia(23%) saturate(848%) hue-rotate(175deg) brightness(94%) contrast(89%);
+  opacity:.62;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-main .home-no-request button {
+  background:#0b1a30;
+  border-color:#2688ff;
+  color:#39a0ff;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .home-live-weather-surface,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .live-hourly-panel {
+  background:transparent;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .home-weather-metric,
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .live-hourly-scroll {
+  background:#0d1a2f;
+  border:1px solid #274263;
+  box-shadow:0 10px 24px rgba(0,0,0,.14);
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .live-hourly-list li {
+  border-right-color:#274263;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .google-weather-attribution {
+  color:#f4f8ff;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .weather-summary-art circle {
+  fill:#315a8f;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .weather-summary-art ellipse {
+  fill:#5781bc;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .weather-summary-art path[fill="#f1f3f2"] {
+  fill:#77a1d7;
+}
+.workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .weather-summary-art path[stroke="#567eaa"] {
+  stroke:#3aa0ff;
+}
+
+/* Dark-mode color pass for secondary workspace tabs.
+   Keep overview/Home on its approved rules and leave auth/login untouched. */
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] {
+  --home-page:#0b1324;
+  --home-surface:#101b30;
+  --shared-surface:#101b30;
+  --shared-inset:#0f1a2e;
+  --neutral-page:#0b1324;
+  --neutral-surface:#101b30;
+  --neutral-inset:#0f1a2e;
+  --neutral-raised:#152744;
+  --neutral-hover:#1c3558;
+  --neutral-ink:#f4f8ff;
+  --neutral-muted:#a9bbd4;
+  --neutral-line:#274263;
+  --ink:#f4f8ff;
+  --muted:#a9bbd4;
+  --line:#274263;
+  --accent:#ef334f;
+  --home-selected:#1c3558;
+  --surface-shadow:0 16px 38px rgba(0,0,0,.22);
+  --resqph-card-shadow:0 16px 38px rgba(0,0,0,.22);
+  --resqph-inner-shadow:0 10px 24px rgba(0,0,0,.14);
+  background:
+    radial-gradient(circle at 82% 8%, rgba(38,71,111,.42), transparent 32%),
+    linear-gradient(180deg,#0b1324 0%,#07101f 100%);
+  color:#f4f8ff;
+  color-scheme:dark;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav {
+  background:linear-gradient(180deg,rgba(16,29,51,.88),rgba(10,21,39,.9));
+  border-color:#274263;
+  box-shadow:0 18px 44px rgba(0,0,0,.22);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav nav button,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav > button {
+  color:#f4f8ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav nav button[aria-current],
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav button[aria-current]:hover {
+  background:#1c3558;
+  color:#fff;
+  box-shadow:0 10px 22px rgba(0,0,0,.18);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar {
+  border-bottom-color:#274263;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar::after {
+  background:#274263;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-topbar h1,
+  .requests-page-title,
+  .citizen-map-page > h2,
+  .account-page > h2,
+  .workspace-section-heading,
+  .workspace-card h2,
+  .workspace-card h3,
+  .workspace-card h4,
+  .workspace-panel-heading h2,
+  .workspace-panel-heading h3,
+  .workspace-empty h3,
+  .requests-card-heading h3,
+  .citizen-map-summary h4,
+  .account-profile legend,
+  .workspace-table caption,
+  .workspace-table td,
+  .workspace-facts dd,
+  .workspace-queue-preview strong,
+  .record-id code
+) {
+  color:#f4f8ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-card p,
+  .workspace-subtitle,
+  .workspace-connection,
+  .workspace-empty,
+  .workspace-empty p,
+  .requests-card-heading > span,
+  .requests-empty-list,
+  .citizen-map-caption,
+  .citizen-map-empty,
+  .citizen-map-summary,
+  .citizen-map-summary dt,
+  .citizen-map-no-requests,
+  .workspace-facts dt,
+  .workspace-technical,
+  .workspace-queue-preview p,
+  .workspace-queue-preview time,
+  .workspace-timeline time,
+  .advisory-data-status,
+  .advisory-refresh
+) {
+  color:#a9bbd4;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-card,
+  .requests-list-card,
+  .citizen-map-panel,
+  .rescuer-mission-card,
+  .offline-queue-panel,
+  .workspace-inspector,
+  .account-profile fieldset
+) {
+  background:linear-gradient(180deg,#101d33 0%,#0d1a2f 100%);
+  border-color:#274263;
+  box-shadow:var(--surface-shadow);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .requests-inset-panel,
+  .requests-table-scroll,
+  .citizen-map-inset,
+  .citizen-map-empty,
+  .citizen-map-summary,
+  .advisory-refresh,
+  .request-tracker > section,
+  .workspace-table-wrap,
+  .workspace-team-grid .workspace-record,
+  .rescuer-mission-card__head,
+  .rescuer-mission-card__meta > span,
+  .workspace-route-result,
+  .home-live-weather-surface,
+  .live-hourly-panel,
+  .location-options-panel,
+  .location-options > button,
+  .location-options-summary
+) {
+  background:#0f1a2e;
+  border-color:#274263;
+  box-shadow:var(--resqph-inner-shadow);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  input,
+  select,
+  textarea,
+  .account-photo,
+  .citizen-map-details select,
+  .workspace-picker select,
+  .workspace-toolbar input,
+  .workspace-toolbar select,
+  .workspace-form input,
+  .workspace-form select,
+  .workspace-form textarea
+) {
+  background-color:#0f1a2e;
+  border-color:#274263;
+  color:#f4f8ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(input,textarea)::placeholder {
+  color:#a9bbd4;
+  opacity:1;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-topbar .citizen-theme-toggle,
+  .workspace-topbar .citizen-role-pill,
+  .workspace-main button:not(.workspace-primary,.btn--primary,.requests-new,.citizen-map-cancel,.map-toggle-btn),
+  .modal-body button:not(.workspace-primary,.btn--primary,.map-toggle-btn)
+) {
+  background:#101b30;
+  border-color:#274263;
+  color:#f4f8ff;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar .citizen-theme-toggle::before {
+  background:#2688ff;
+  box-shadow:0 8px 18px rgba(38,136,255,.24);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .citizen-theme-toggle[aria-pressed=false] .theme-icon-slot:last-child,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .citizen-theme-toggle[aria-pressed=true] .theme-icon-slot:first-child,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar .citizen-role-pill svg:last-child {
+  color:#a9bbd4;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-tabs button,
+  .requests-controls button,
+  .map-toggle-btn
+) {
+  background:#152744;
+  border-color:#274263;
+  color:#f4f8ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-tabs button[aria-pressed=true],
+  .requests-controls button[aria-pressed=true],
+  .map-toggle-btn.is-active
+) {
+  background:#1c3558;
+  border-color:#2688ff;
+  color:#d8ebff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-table th,
+  .requests-reference-table th,
+  .citizen-map-summary header
+) {
+  background:#152744;
+  color:#f4f8ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .workspace-table td,
+  .requests-reference-table td
+) {
+  background:#101b30;
+  border-color:#274263;
+  color:#d8e4f4;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(
+  .requests-selectable-row:hover td,
+  .requests-reference-table tr.is-selected td,
+  .workspace-table tr.is-selected,
+  .workspace-table tr.is-selected td
+) {
+  background:#1c3558;
+  color:#f4f8ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-badge,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .citizen-map-status {
+  background:#0b1a30;
+  border-color:#52647f;
+  color:#d8e4f4;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-badge.state-assigned,.workspace-badge.state-en-route) {
+  background:#102b50;
+  color:#8ec5ff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-badge.state-completed,.workspace-badge.state-verified) {
+  background:#0f362b;
+  color:#91e3bd;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-badge.state-cancelled,.workspace-badge.state-rejected,.citizen-map-status.state-cancelled) {
+  background:#3a1520;
+  border-color:#ef5b73;
+  color:#ff9aad;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-refresh {
+  background:#0f1a2e;
+  border:1px solid #274263;
+  color:#a9bbd4;
+  box-shadow:var(--resqph-inner-shadow);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-refresh [role=alert] {
+  background:#3a1520;
+  color:#ff9aad;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-refresh [role=status]:not(.loading-state) {
+  background:#102f29;
+  color:#9ee6c5;
+}
+
+/* Dashboard uses the same single-icon theme control as the landing page. */
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle,
+.workspace-shell[data-role=citizen][data-view=overview] .workspace-topbar .citizen-theme-toggle,
+.workspace-shell[data-role=citizen][data-view]:not([data-view=overview]) .workspace-topbar .citizen-theme-toggle {
+  width:40px;
+  height:40px;
+  min-width:40px;
+  min-height:40px;
+  padding:0;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  overflow:visible;
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  color:#475569;
+  box-shadow:0 1px 3px rgba(15,23,42,.04);
+  transition:background .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;
+}
+
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle::before,
+.workspace-shell[data-role=citizen][data-view=overview] .workspace-topbar .citizen-theme-toggle::before,
+.workspace-shell[data-role=citizen][data-view]:not([data-view=overview]) .workspace-topbar .citizen-theme-toggle::before {
+  display:none;
+}
+
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle:hover,
+.workspace-shell[data-role=citizen][data-view=overview] .workspace-topbar .citizen-theme-toggle:hover,
+.workspace-shell[data-role=citizen][data-view]:not([data-view=overview]) .workspace-topbar .citizen-theme-toggle:hover {
+  background:#f8fafc;
+  border-color:#cbd5e1;
+  color:#0f172a;
+  transform:translateY(-1px);
+}
+
+.workspace-shell[data-role][data-view] .workspace-topbar .citizen-theme-toggle > svg {
+  width:18px;
+  height:18px;
+  padding:0;
+  border-radius:0;
+  background:transparent;
+  color:currentColor;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view][data-theme=dark] .workspace-topbar .citizen-theme-toggle,
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar .citizen-theme-toggle,
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar .citizen-theme-toggle {
+  background:#152238;
+  border-color:#273956;
+  color:#f1f5f9;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view][data-theme=dark] .workspace-topbar .citizen-theme-toggle:hover,
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .workspace-topbar .citizen-theme-toggle:hover,
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar .citizen-theme-toggle:hover {
+  background:#1d3252;
+  border-color:#3b82f6;
+  color:#60a5fa;
+}
+
+/* Stronger dark hover contrast for non-Home tabs. */
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] {
+  --neutral-hover:#234a78;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav nav button:not([aria-current]):hover,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav > button:not([aria-current]):hover {
+  background:#1d3252;
+  color:#ffffff;
+  box-shadow:inset 0 0 0 1px #3b82f6;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-main button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.requests-new):not(.citizen-map-cancel):not(.map-toggle-btn):not(.citizen-theme-toggle):not(.requests-reference-table button):hover,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .modal-body button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn):hover,
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar .citizen-role-pill:hover {
+  background:#1d3252;
+  border-color:#3b82f6;
+  color:#dbeafe;
+  box-shadow:0 10px 24px rgba(0,0,0,.22), inset 0 0 0 1px rgba(96,165,250,.18);
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-tabs button,.requests-controls button,.map-toggle-btn):not([aria-pressed=true]):not(.is-active):hover {
+  background:#1d3252;
+  border-color:#3b82f6;
+  color:#dbeafe;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-tabs button[aria-pressed=true],.requests-controls button[aria-pressed=true],.map-toggle-btn.is-active):hover {
+  background:#28598d;
+  border-color:#60a5fa;
+  color:#ffffff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.requests-selectable-row:hover td,.workspace-table tbody tr:hover td) {
+  background:#234a78;
+  color:#ffffff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .requests-reference-table tbody tr:hover button {
+  color:#ffffff;
+}
+
+[data-app-theme=dark] .workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(input,select,textarea):hover {
+  border-color:#60a5fa;
+}
+
+/* Same hover treatment, keyed to the dashboard theme so it survives navigation from Home. */
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] {
+  --neutral-hover:#234a78;
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav nav button:not([aria-current]):hover,
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-nav > button:not([aria-current]):hover {
+  background:#1d3252;
+  color:#ffffff;
+  box-shadow:inset 0 0 0 1px #3b82f6;
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-main button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.requests-new):not(.citizen-map-cancel):not(.map-toggle-btn):not(.citizen-theme-toggle):not(.requests-reference-table button):hover,
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .modal-body button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn):hover,
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .workspace-topbar .citizen-role-pill:hover {
+  background:#1d3252;
+  border-color:#3b82f6;
+  color:#dbeafe;
+  box-shadow:0 10px 24px rgba(0,0,0,.22), inset 0 0 0 1px rgba(96,165,250,.18);
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-tabs button,.requests-controls button,.map-toggle-btn):not([aria-pressed=true]):not(.is-active):hover {
+  background:#1d3252;
+  border-color:#3b82f6;
+  color:#dbeafe;
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.workspace-tabs button[aria-pressed=true],.requests-controls button[aria-pressed=true],.map-toggle-btn.is-active):hover {
+  background:#28598d;
+  border-color:#60a5fa;
+  color:#ffffff;
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(.requests-selectable-row:hover td,.workspace-table tbody tr:hover td) {
+  background:#234a78;
+  color:#ffffff;
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] .requests-reference-table tbody tr:hover button {
+  color:#ffffff;
+}
+
+.workspace-shell[data-role][data-view]:not([data-view=overview])[data-theme=dark] :is(input,select,textarea):hover {
+  border-color:#60a5fa;
+}
+
+/* Match secondary-tab sidebar hover while still sitting on Home. */
+.workspace-shell[data-role][data-view=overview][data-theme=dark] .workspace-nav nav button:not([aria-current]):hover,
+.workspace-shell[data-role][data-view=overview][data-theme=dark] .workspace-nav > button:not([aria-current]):hover {
+  background:#1d3252;
+  color:#ffffff;
+  border-color:#3b82f6;
+  box-shadow:inset 0 0 0 1px #3b82f6;
+}
+
+.workspace-shell[data-role][data-view=overview][data-theme=dark] .workspace-nav nav button:not([aria-current]):hover .figma-home-asset,
+.workspace-shell[data-role][data-view=overview][data-theme=dark] .workspace-nav > button:not([aria-current]):hover .figma-home-asset {
+  filter:brightness(0) invert(1);
+}
+
+.workspace-shell[data-role=citizen][data-view] .workspace-topbar .citizen-role-pill,
+.workspace-shell[data-role=citizen][data-view] .workspace-topbar .citizen-role-pill span {
+  font-weight:800;
+}
+
+.workspace-shell[data-theme=dark] :is(.modal-card,.modal-header,.modal-body,.modal-footer) {
+  background:var(--shared-surface,#101b30);
+  border-color:var(--line,#274263);
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .modal-body :is(input:not([type=radio]):not([type=checkbox]),select,textarea),
+.workspace-shell[data-theme=dark] .modal-body button:not(.workspace-primary):not(.btn--primary):not(.status-popup-cancel):not([type=submit]) {
+  background:var(--shared-inset,#0f1a2e);
+  border-color:var(--line,#274263);
+  color:var(--ink,#f4f8ff);
+}

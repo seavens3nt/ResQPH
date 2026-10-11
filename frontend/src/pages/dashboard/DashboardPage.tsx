@@ -74,7 +74,7 @@ export function DashboardPage() {
       <button aria-label="Help & limitations" title="Help & limitations" onClick={() => go('help')} aria-current={section === 'help' ? 'page' : undefined}><FigmaHomeAsset name="help"/><span className="workspace-nav-label">Help &amp; Limitations</span></button>
     </aside>
     <main className="workspace-main">
-      <WorkspaceHeader title={section === 'help' ? 'Help & Limitations' : user.role === 'citizen' ? ['overview','inquiries'].includes(section) ? 'Home' : section === 'request' ? 'Request rescue' : items.find(([key])=>key===section)?.[1] ?? 'Home' : section === 'overview' ? 'My Mission' : items.find(([key])=>key===section)?.[1] ?? ROLE_LABELS[user.role]} role={ROLE_LABELS[user.role]} name={user.name} profileTo="/dashboard?view=account" dark={dark} onToggleTheme={()=>setDark(value=>!value)}><ConnectionStatus/></WorkspaceHeader>
+      <WorkspaceHeader title={section === 'help' ? 'Help & Limitations' : user.role === 'citizen' ? ['overview','inquiries'].includes(section) ? 'Home' : section === 'request' ? 'Request rescue' : items.find(([key])=>key===section)?.[1] ?? 'Home' : section === 'overview' ? 'My Mission' : items.find(([key])=>key===section)?.[1] ?? ROLE_LABELS[user.role]} role={ROLE_LABELS[user.role]} name={user.name} profileTo={user.role === 'citizen' ? null : '/dashboard?view=account'} dark={dark} onToggleTheme={()=>setDark(value=>!value)}><ConnectionStatus/></WorkspaceHeader>
       {section === 'help' ? <HelpLimitations/> : section === 'advisory' && user.role === 'citizen' ? <CitizenAdvisory/> : section === 'account' ? <AccountWorkspace/> :
         user.role === 'citizen' ? <CitizenWorkspace section={section}/> :
         <section className="role-workspace">

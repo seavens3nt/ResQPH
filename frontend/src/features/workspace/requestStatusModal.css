@@ -44,3 +44,57 @@
   .request-status-modal .modal-body .status-popup-actions button {font-size:15px;min-height:44px;padding:10px 16px;white-space:nowrap}
 }
 @media(prefers-reduced-motion:reduce) {.status-popup-track>span {transition:none}}
+
+.workspace-shell[data-theme=dark] .request-status-modal {
+  background:rgb(2 10 24 / 72%);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal>.modal-card {
+  background:var(--shared-surface,#101b30);
+  border-color:var(--line,#274263);
+  box-shadow:0 18px 44px rgba(0,0,0,.34);
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal>.modal-card>.modal-header,
+.workspace-shell[data-theme=dark] .request-status-modal>.modal-card>.modal-body {
+  background:transparent;
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .request-tracker>section.status-popup-summary {
+  background:var(--shared-inset,#0f1a2e);
+  border-color:var(--line,#274263);
+  box-shadow:0 10px 24px rgba(0,0,0,.24);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .status-popup-summary h4 {
+  background:#152744;
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .status-popup-summary dl>div {
+  background:none;
+  border-top:1px solid var(--line,#274263);
+  color:var(--muted,#a9bbd4);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .status-popup-summary dl>div:first-child {
+  border-top:0;
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .status-popup-summary dd {
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .modal-body .status-popup-actions button {
+  background:var(--shared-inset,#0f1a2e);
+  border-color:var(--line,#274263);
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-status-modal .modal-body .status-popup-actions .status-popup-cancel {
+  background:linear-gradient(to top,#ce5657,#c82624);
+  border-color:#890d1d;
+  color:white;
+}

@@ -173,3 +173,102 @@
   .workspace-editor #citizen-request-form > fieldset > .request-location-fields { grid-column:2; grid-row:2 / span 8; }
   .workspace-editor #citizen-request-form > fieldset > .request-assistance-fields { grid-column:1; grid-row:2; }
 }
+
+.workspace-shell[data-theme=dark] .request-rescue-modal {
+  background:rgb(2 10 24 / 72%);
+}
+
+.workspace-shell[data-theme=dark] .request-rescue-modal .modal-card,
+.workspace-shell[data-theme=dark] .request-rescue-modal .modal-header,
+.workspace-shell[data-theme=dark] .request-rescue-modal .modal-body {
+  background:var(--shared-surface,#101b30);
+  border-color:var(--line,#274263);
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-rescue-modal .modal-draft-note,
+.workspace-shell[data-theme=dark] .request-rescue-modal .workspace-caption,
+.workspace-shell[data-theme=dark] .request-form-modal :is(label,legend,summary),
+.workspace-shell[data-theme=dark] .request-form-modal :is(.request-responder-section,.request-conditions-section) h3 {
+  color:var(--ink,#f4f8ff) !important;
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal :is(input[type=text],input[type=number],select,textarea),
+.workspace-shell[data-theme=dark] .request-rescue-modal #citizen-request-form :is(input:not([type=radio]):not([type=checkbox]),select,textarea),
+.workspace-shell[data-theme=dark] .request-form-modal input[id$='-address'],
+.workspace-shell[data-theme=dark] .request-rescue-modal #citizen-request-form input[id$='-address'] {
+  background-color:var(--shared-inset,#0f1a2e) !important;
+  background-image:none !important;
+  border-color:var(--line,#274263) !important;
+  color:var(--ink,#f4f8ff) !important;
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal :is(input,textarea)::placeholder {
+  color:var(--muted,#a9bbd4) !important;
+  opacity:1;
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal .request-location-fields > div:first-child,
+.workspace-shell[data-theme=dark] .request-form-modal .request-location-fields section > div > fieldset,
+.workspace-shell[data-theme=dark] .request-form-modal .request-responder-panel {
+  background:var(--shared-inset,#0f1a2e) !important;
+  border-color:var(--line,#274263) !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.24) !important;
+  color:var(--ink,#f4f8ff) !important;
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal .request-responder-panel fieldset {
+  border-bottom-color:var(--line,#274263) !important;
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal .request-responder-panel legend,
+.workspace-shell[data-theme=dark] .request-form-modal .request-medical-details label {
+  color:var(--muted,#a9bbd4) !important;
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal .request-responder-panel fieldset label {
+  background:#152744 !important;
+  border-color:var(--line,#274263) !important;
+  color:var(--ink,#f4f8ff) !important;
+}
+
+.workspace-shell[data-theme=dark] .request-review-figma .request-location-fields section > div > fieldset,
+.workspace-shell[data-theme=dark] .request-review-figma .request-review-summary,
+.workspace-shell[data-theme=dark] .request-review-summary::before {
+  background:none !important;
+}
+
+.workspace-shell[data-theme=dark] .request-review-summary {
+  border:1px solid var(--line,#274263) !important;
+  border-radius:30px !important;
+  overflow:hidden;
+}
+
+.workspace-shell[data-theme=dark] .request-review-summary dl > div {
+  background:none;
+  border-top:1px solid var(--line,#274263);
+}
+
+.workspace-shell[data-theme=dark] .request-review-summary dl > div:first-child {
+  border-top:0;
+}
+
+.workspace-shell[data-theme=dark] .request-review-figma .request-review-summary h3 {
+  background:#152744;
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-review-summary :is(dt,dd) {
+  color:var(--muted,#a9bbd4);
+}
+
+.workspace-shell[data-theme=dark] .request-review-summary dd {
+  color:var(--ink,#f4f8ff);
+}
+
+.workspace-shell[data-theme=dark] .request-form-modal.is-reviewing .request-form-actions button:first-child,
+.workspace-shell[data-theme=dark] .request-form-modal .request-form-actions button:not([type=submit]) {
+  background:var(--shared-inset,#0f1a2e) !important;
+  border-color:var(--line,#274263) !important;
+  color:var(--ink,#f4f8ff) !important;
+}

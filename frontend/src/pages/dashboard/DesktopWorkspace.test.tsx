@@ -19,7 +19,12 @@ describe('Desktop workspace shell without the old demo provider', () => {
     expect(screen.getByRole('main').closest('.workspace-shell')).toHaveAttribute('data-role', role)
     const nav = screen.getByRole('navigation')
     expect(within(nav).getByRole('button', {name:'Account'})).toBeVisible()
-    expect(screen.getByRole('link', {name:new RegExp('workspace · Synthetic Tester')})).toHaveAttribute('href','/dashboard?view=account')
+    if (role === 'citizen') {
+      expect(screen.getByText('Citizen')).toBeInTheDocument()
+      expect(screen.queryByRole('link', {name:new RegExp('workspace · Synthetic Tester')})).not.toBeInTheDocument()
+    } else {
+      expect(screen.getByRole('link', {name:new RegExp('workspace · Synthetic Tester')})).toHaveAttribute('href','/dashboard?view=account')
+    }
     expect(screen.queryByRole('button', {name:'Sign Out'})).not.toBeInTheDocument()
     if (role !== 'citizen') {
       fireEvent.click(screen.getByRole('complementary'))
