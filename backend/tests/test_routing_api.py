@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
+
 from app.api.routes.routing import get_routing_adapter, router
 from app.integrations.routing import RoutingIntegrationError
 from app.schemas.common import (
@@ -13,9 +17,6 @@ from app.schemas.common import (
     validation_exception_handler,
 )
 from app.schemas.routing import RouteRequest
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROUTE_FOUND = json.loads(
@@ -113,11 +114,11 @@ def test_rescuer_can_receive_route_found_response(
     assert len(fake_adapter.calls) == 1
 
 
-def test_coordinator_can_receive_route_found_response(client: TestClient) -> None:
+def test_coordinator_cannot_evaluate_routes(client: TestClient) -> None:
     response = post_route(client, headers=coordinator_headers())
 
-    assert response.status_code == 200
-    assert response.json()["status"] == "route-found"
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "forbidden"
 
 
 def test_no_route_response_is_success_without_invented_geometry(
@@ -143,10 +144,11 @@ def test_disallowed_or_missing_role_uses_common_error_envelope(
 ) -> None:
     response = post_route(client, headers=headers)
 
-    assert response.status_code == 403
+    assert response.status_code == (401 if not headers else 403)
     body = response.json()
     assert body["error"]["code"] in {
         "forbidden",
+        "authentication_required",
         "demo_identity_required",
         "demo_role_required",
     }

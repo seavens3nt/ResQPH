@@ -25,8 +25,8 @@
     {
       "station_id": "central-sampaloc-lacson-hq",
       "team_id": "team-central-sampaloc-lacson-hq",
-      "name": "Central Sampaloc Fire and Rescue Brigade HQ",
-      "address": "156 A.H. Lacson Ave.",
+      "name": "Central Sampaloc Fire and Rescue Brigade Headquarters",
+      "address": "156 Lacson Ave.",
       "unit_type": "Rubber Boat",
       "member_count": 4,
       "has_medical_unit": true,
@@ -45,7 +45,7 @@
     {
       "station_id": "david-fire-rescue-hq",
       "team_id": "team-david-fire-rescue-hq",
-      "name": "David Fire and Rescue Volunteer Inc. HQ",
+      "name": "David Fire and Rescue Volunteer Inc. Headquarters",
       "address": "519 Vicente Cruz St.",
       "unit_type": "Rubber Boat",
       "member_count": 4,

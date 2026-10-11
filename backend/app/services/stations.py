@@ -23,3 +23,10 @@ def station_by_team_id(team_id: str) -> dict[str, Any] | None:
         if station["team_id"] == team_id:
             return station
     return None
+
+
+def station_by_id(station_id: str) -> dict[str, Any] | None:
+    for station in load_station_catalog()["stations"]:
+        if station["station_id"] == station_id:
+            return station
+    return None

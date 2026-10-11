@@ -1,4 +1,5 @@
 import { cleanup,fireEvent,render,screen,within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach,beforeEach,expect,it,vi } from 'vitest'
 import { CitizenWorkspace } from './CitizenWorkspace'
@@ -13,7 +14,10 @@ vi.mock('../requests/hooks',()=>({
 }))
 afterEach(cleanup)
 beforeEach(()=>{state.status='pending';vi.clearAllMocks()})
-function preview(section='inquiries') {render(<MemoryRouter initialEntries={[`/dashboard?view=${section}`]}><CitizenWorkspace section={section}/></MemoryRouter>)}
+function preview(section='inquiries') {
+  const client = new QueryClient({defaultOptions:{queries:{retry:false}}})
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[`/dashboard?view=${section}`]}><CitizenWorkspace section={section}/></MemoryRouter></QueryClientProvider>)
+}
 it('opens selected status in a modal, keeps the list, refreshes, and restores focus on Escape',()=>{
   preview()
   const trigger=screen.getByRole('button',{name:'View RQ-001'})
@@ -77,7 +81,7 @@ it.each(['assigned','en-route','arrived','completed','cancelled'])('preserves %s
   expect(within(dialog).queryByRole('button',{name:'Cancel Request'})).not.toBeInTheDocument()
   if(status==='cancelled') expect(within(dialog).getByRole('status')).toHaveTextContent('Request cancelled')
   else {
-    expect(dialog.querySelector('[aria-current="step"]')).toHaveTextContent(status==='assigned'?'Team assigned':status==='en-route'?'En route':status==='arrived'?'Arrived at location':'Completed')
+    expect(dialog.querySelector('[aria-current="step"]')).toHaveTextContent(status==='assigned'?'Station assigned':status==='en-route'?'En route':status==='arrived'?'Arrived at location':'Completed')
     const index=['pending','assigned','en-route','arrived','completed'].indexOf(status)
     expect(dialog.querySelectorAll('.status-popup-progress .is-reached')).toHaveLength(index+1)
     expect(dialog.querySelector('.status-popup-track>span')).toHaveStyle({width:`${status==='completed'?100:(index+.5)/5*100}%`})

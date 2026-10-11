@@ -163,7 +163,7 @@ describe('Rescuer Phase 2 UI States', () => {
       updated_at: '2026-09-23T11:05:00Z',
     }
 
-    it('renders mission card with TAP EN ROUTE button when status is assigned', () => {
+    it('renders mission card with an explicit accept and start action when status is assigned', () => {
       const onAdvance = vi.fn()
       renderMissionCard(
         <RescuerMissionCard
@@ -177,7 +177,7 @@ describe('Rescuer Phase 2 UI States', () => {
 
       expect(screen.getByText('MSN-303')).toBeInTheDocument()
       expect(screen.getByText(/Legarda St, Manila/i)).toBeInTheDocument()
-      const advanceBtn = screen.getByRole('button', { name: /TAP EN ROUTE/i })
+      const advanceBtn = screen.getByRole('button', { name: /ACCEPT MISSION & START TRAVEL/i })
       fireEvent.click(advanceBtn)
       expect(onAdvance).toHaveBeenCalled()
     })

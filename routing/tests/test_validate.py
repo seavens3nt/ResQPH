@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import geopandas as gpd
 import pytest
+from shapely.geometry import LineString, Polygon
+
 from resqph_routing import config
 from resqph_routing.flood_join import JoinReport
 from resqph_routing.validate import (
     REQUIRED_NON_NULL_COLUMNS,
     validate_edges,
 )
-from shapely.geometry import LineString, Polygon
 
 
 @pytest.fixture

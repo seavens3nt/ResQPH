@@ -30,8 +30,9 @@ export function AccountWorkspace() {
       if(!name||name.length>100||(phone.trim()&&!validPhone(phone))||(contactPhone.trim()&&!validPhone(contactPhone))){setMessage('Enter a name and valid Philippine mobile numbers, or leave phone fields blank.');setInvalid(true);return}
       const contactName=[contactFirst.trim(),contactLast.trim()].filter(Boolean).join(' ')
       if(contactName.length>100){setMessage('Emergency contact name must be 100 characters or fewer.');setInvalid(true);return}
-      updateProfile({name,email:user!.email,phone:phone.trim()||undefined,avatarUrl:avatar,emergencyContact:{name:contactName,phone:contactPhone.trim(),relationship:relationship.trim(),address:address.trim()},medicalInfo:{conditions:conditions.trim(),allergies:allergies.trim(),specialAssistance:assistance.trim()}})
-      setMessage('Profile saved in this tab.');setInvalid(false)
+      void updateProfile({name,email:user!.email,phone:phone.trim()||undefined,avatarUrl:avatar,emergencyContact:{name:contactName,phone:contactPhone.trim(),relationship:relationship.trim(),address:address.trim()},medicalInfo:{conditions:conditions.trim(),allergies:allergies.trim(),specialAssistance:assistance.trim()}})
+        .then(()=>{setMessage('Profile saved.');setInvalid(false)})
+        .catch(()=>{setMessage('Could not save profile. Reconnect and try again.');setInvalid(true)})
     }}>
       <fieldset className="account-personal"><legend>Personal details</legend><div className="account-personal-layout">
         <div className="account-avatar">{avatar?<img className="account-uploaded-avatar" src={avatar} alt="Profile preview"/>:<span className="account-avatar-art"><img src="/figma-account/avatar.svg" alt="Default profile avatar"/></span>}</div>
@@ -58,7 +59,7 @@ export function AccountWorkspace() {
         <label>Address<input placeholder="Street Address, City" maxLength={250} value={address} onChange={e=>setAddress(e.target.value)}/></label>
         <label>Contact number<input aria-label="Emergency contact phone" placeholder="+(63) 9XX XXX XXXX" type="tel" value={contactPhone} onChange={e=>setContactPhone(e.target.value)}/></label>
       </fieldset>
-      <div className="workspace-actions account-actions"><button type="button" onClick={()=>{logout();navigate('/login',{replace:true})}}>Sign out</button><button type="submit" className="workspace-primary">Save profile</button></div>
+      <div className="workspace-actions account-actions"><button type="button" onClick={()=>{void logout().then(()=>navigate('/login',{replace:true})).catch(()=>{setMessage('Could not sign out. Reconnect and try again.');setInvalid(true)})}}>Sign out</button><button type="submit" className="workspace-primary">Save profile</button></div>
       {message&&<p className="account-feedback" role={invalid?'alert':'status'}>{message}</p>}
     </form></WorkspaceCard>
     <p className="account-prototype-note">Tab-scoped prototype profile. Identity and rescue team cannot be changed here; sign out to enter a separate workspace. Use synthetic profile and medical details for this academic prototype.</p>

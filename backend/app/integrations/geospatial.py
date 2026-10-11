@@ -30,7 +30,7 @@ from app.schemas.geospatial import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ROAD_FIXTURE = (
-    REPOSITORY_ROOT / "data" / "samples" / "ubelt-v1-preview.geojson"
+    REPOSITORY_ROOT / "data" / "samples" / "ubelt-station-network.geojson"
 )
 DEFAULT_FLOOD_FIXTURE = (
     REPOSITORY_ROOT / "data" / "samples" / "ubelt-v1-flood-join.geojson"

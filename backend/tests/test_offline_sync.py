@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
+
 from app.api.routes.missions import (
     get_mission_service,
     router,
@@ -14,10 +18,6 @@ from app.models.mission import Mission, MissionStatus
 from app.models.mission_status_event import MissionStatusEvent
 from app.repositories.mission_status_events import DuplicateMissionStatusEventError
 from app.services.missions import MissionService
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.testclient import TestClient
-
 from tests.test_offline_sync_mongodb import validate_disposable_database_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -56,6 +56,8 @@ class InMemoryMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: Any = None,
     ) -> Mission | None:
         mission = self.missions.get(mission_id)
@@ -69,6 +71,10 @@ class InMemoryMissionRepository:
         }
         if new_status == "completed":
             update["completed_at"] = recorded_at
+        if tracking_state is not None:
+            update["tracking_state"] = tracking_state
+        if team_position is not None:
+            update["team_position"] = team_position
         self.missions[mission_id] = mission.model_copy(update=update)
         return self.missions[mission_id]
 

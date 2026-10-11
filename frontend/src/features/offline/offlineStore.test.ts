@@ -1,6 +1,7 @@
+import 'fake-indexeddb/auto'
 import { describe, expect, it } from 'vitest'
 import type { MissionDetail, OfflineQueueEntry } from '../../api/missions'
-import { recoverInterruptedEntry, validateCacheRecord, validateQueueEntry } from './offlineStore'
+import { acknowledgeEvent, readMission, readQuarantined, recoverInterruptedEntry, resetOfflineDatabaseForTests, validateCacheRecord, validateQueueEntry, writeMission } from './offlineStore'
 
 const mission: MissionDetail = {
   id: 'mission-offline-001', request_id: 'request-offline-001', team_id: 'rescuer-alpha',
@@ -37,8 +38,17 @@ describe('offline record validation', () => {
     const record = { schema_version: 1, actor_id: 'rescuer-alpha', last_synced_at: '2026-10-04T00:00:00Z', mission }
     expect(validateCacheRecord(record, 'rescuer-alpha')).toBe(true)
     expect(validateCacheRecord(record, 'rescuer-beta')).toBe(false)
-    expect(validateCacheRecord({ ...record, schema_version: 2 }, 'rescuer-alpha')).toBe(false)
+    expect(validateCacheRecord({ ...record, schema_version: 2 }, 'rescuer-alpha')).toBe(true)
     expect(validateCacheRecord({ ...record, mission: { ...mission, status: 'unknown' } }, 'rescuer-alpha')).toBe(false)
+  })
+
+  it('validates station missions against the authenticated account cache key and station team identity', () => {
+    const record = { schema_version: 2, actor_id: 'account-7', last_synced_at: mission.updated_at,
+      mission: { ...mission, station_id: 'station-7', tracking_state: { status: 'running' } } }
+    expect(validateCacheRecord(record, 'account-7', 'station-7', 'rescuer-alpha')).toBe(true)
+    expect(validateCacheRecord(record, 'other-account', 'station-7', 'rescuer-alpha')).toBe(false)
+    expect(validateCacheRecord(record, 'account-7', 'another-station', 'rescuer-alpha')).toBe(false)
+    expect(validateCacheRecord(record, 'account-7', 'station-7', 'another-team')).toBe(false)
   })
 
   it('rejects corrupt queue entries and recovers interrupted syncing without changing the event', () => {
@@ -60,5 +70,69 @@ describe('offline record validation', () => {
     const record = { schema_version: 1, actor_id: 'rescuer-alpha', last_synced_at: mission.updated_at, mission }
     expect(validateCacheRecord({ ...record, mission: { ...mission, status_history: [null] } }, 'rescuer-alpha')).toBe(false)
     expect(validateCacheRecord({ ...record, mission: { ...mission, assigned_rescuer_id: 'someone-else' } }, 'rescuer-alpha')).toBe(false)
+  })
+})
+
+describe('offline persistence against current API records', () => {
+  it('stores and restores account-keyed station mission fields with stable team identity', async () => {
+    await resetOfflineDatabaseForTests()
+    const apiMission: MissionDetail = {
+      ...mission,
+      station_id: 'sampaloc-fire-station',
+      tracking_state: { status: 'running', started_at: mission.updated_at },
+      request_summary: {
+        location: { address: 'Synthetic location', point: { type: 'Point', coordinates: [120.9946, 14.6042] } },
+        headcount: 2, vulnerabilities: [], medical_needs: false, reported_flood_level: 'unknown',
+        reported_severity: 'low', situation_summary: null,
+      },
+    }
+    const cached = await writeMission('account-7', apiMission, 'sampaloc-fire-station', 'rescuer-alpha')
+    const restored = await readMission('account-7', 'sampaloc-fire-station', 'rescuer-alpha')
+    expect(cached.schema_version).toBe(2)
+    expect(restored?.mission.station_id).toBe('sampaloc-fire-station')
+    expect(restored?.mission.team_id).toBe('rescuer-alpha')
+    expect(restored?.mission.tracking_state).toEqual(apiMission.tracking_state)
+    expect(restored?.mission.request_summary?.reported_severity).toBe('low')
+    await expect(readMission('other-account', 'sampaloc-fire-station', 'rescuer-alpha')).resolves.toBeNull()
+  })
+
+  it('acknowledges a queued event only when its exact event ID is in authoritative history', async () => {
+    await resetOfflineDatabaseForTests()
+    const queued: OfflineQueueEntry & { actor_id: string } = {
+      ...event, actor_id: 'account-7', localId: 'accepted-event',
+      body: { ...event.body, event_id: 'accepted-event', new_status: 'arrived' },
+    }
+    const { enqueueEvent, readQueue } = await import('./offlineStore')
+    await enqueueEvent('account-7', queued)
+    const accepted: MissionDetail = {
+      ...mission, status: 'arrived', version: 3, station_id: 'sampaloc-fire-station',
+      status_history: [{ event_id: queued.localId, mission_id: mission.id, prior_status: 'en-route',
+        new_status: 'arrived', actor_id: 'rescuer-alpha', actor_role: 'rescuer', source: 'offline-sync',
+        server_recorded_at: mission.updated_at }],
+    }
+    await acknowledgeEvent('account-7', queued.localId, accepted, 'sampaloc-fire-station', 'rescuer-alpha')
+    expect(await readQueue('account-7')).toBeNull()
+    expect((await readMission('account-7', 'sampaloc-fire-station', 'rescuer-alpha'))?.mission.version).toBe(3)
+  })
+
+  it('quarantines an incompatible queue without deleting its recovery record', async () => {
+    await resetOfflineDatabaseForTests()
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const opening = indexedDB.open('resqph-offline-v1')
+      opening.onsuccess = () => resolve(opening.result)
+      opening.onerror = () => reject(opening.error)
+    })
+    const transaction = database.transaction('queues', 'readwrite')
+    transaction.objectStore('queues').put({ actor_id: 'account-7', localId: 'broken', missionId: 'mission-1', body: null })
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
+    })
+    database.close()
+    await expect((await import('./offlineStore')).readQueue('account-7')).rejects.toThrow(/quarantined/)
+    const recovery = await readQuarantined('account-7')
+    expect(recovery).toHaveLength(1)
+    expect(recovery[0].kind).toBe('queue')
+    expect((recovery[0].record as { localId: string }).localId).toBe('broken')
   })
 })

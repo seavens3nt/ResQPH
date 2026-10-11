@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Any
 
-from app.models.mission import Mission, MissionStatus
 from pymongo import ReturnDocument
 from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
+
+from app.models.mission import Mission, MissionStatus
 
 
 class MissionLifecycleConflictError(Exception):
@@ -16,6 +17,7 @@ class MissionRepository:
         self._collection = database["missions"]
         self._requests = database["rescue_requests"]
         self._teams = database["rescuers"]
+        self._dispatch_jobs = database["dispatch_jobs"]
 
     async def list_for_rescuer(
         self,
@@ -50,9 +52,14 @@ class MissionRepository:
         mission_id: str,
         tracking_state: dict[str, Any],
         updated_at: datetime,
+        *,
+        start_if_not_running: bool = False,
     ) -> Mission | None:
+        query: dict[str, Any] = {"id": mission_id}
+        if start_if_not_running:
+            query.update({"status": "en-route", "tracking_state.status": {"$ne": "running"}})
         document = await self._collection.find_one_and_update(
-            {"id": mission_id},
+            query,
             {
                 "$set": {
                     "tracking_state": tracking_state,
@@ -72,6 +79,8 @@ class MissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: AsyncClientSession | None = None,
     ) -> Mission | None:
         if session is None or not session.in_transaction:
@@ -85,6 +94,8 @@ class MissionRepository:
         }
         if new_status == "completed":
             update["$set"]["completed_at"] = recorded_at
+        if tracking_state is not None:
+            update["$set"]["tracking_state"] = tracking_state
 
         document = await self._collection.find_one_and_update(
             {
@@ -114,6 +125,8 @@ class MissionRepository:
         }
         if new_status in {"completed", "cancelled"}:
             team_update["$set"].update({"assigned_request_id": None, "assigned_mission_id": None})
+            if team_position is not None:
+                team_update["$set"].update({"current_location": team_position, "position_updated_at": recorded_at})
         team_result = await self._teams.update_one(
             {
                 "id": document["team_id"],
@@ -125,6 +138,12 @@ class MissionRepository:
         )
         if request_result.modified_count != 1 or team_result.modified_count != 1:
             raise MissionLifecycleConflictError("Linked mission lifecycle records no longer match.")
+        if new_status in {"completed", "cancelled"}:
+            await self._dispatch_jobs.update_many(
+                {},
+                {"$set": {"next_attempt_at": recorded_at}},
+                session=session,
+            )
         return Mission.model_validate(document)
 
     async def record_cancellation_reason(

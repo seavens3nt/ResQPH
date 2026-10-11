@@ -204,7 +204,7 @@
 .workspace-shell[data-role][data-view] :is(.rescuer-mission-card,.workspace-inspector,.account-profile fieldset) { border-radius:var(--resqph-card-radius); }
 .workspace-shell[data-role][data-view] .workspace-card:not(.home-rescue-card) { box-shadow:var(--surface-shadow); }
 .workspace-shell[data-role][data-view] :is(.workspace-inspector,.requests-details-empty,.requests-inset-panel,.requests-table-scroll) { box-shadow:var(--resqph-inner-shadow); }
-.workspace-shell[data-role][data-view] .workspace-main button:where(:not(.home-rescue-card button,.home-current-card button,.requests-reference-table button,.citizen-theme-toggle,.map-toggle-btn,.leaflet-control button,.workspace-stats > button)) { border-radius:999px; }
+.workspace-shell[data-role][data-view] .workspace-main button:where(:not(.home-rescue-card button,.home-current-card button,.requests-reference-table button,.citizen-theme-toggle,.map-toggle-btn,.workspace-stats > button)) { border-radius:999px; }
 .workspace-shell[data-role] .workspace-tabs button { background:#80a7c5; color:#fff; border:1px solid #6e95b2; }
 .workspace-shell[data-role] .workspace-tabs button[aria-pressed=true] { background:#ffe6eb; color:#b41937; border-color:#ef8ba0; }
 .workspace-shell[data-role] .workspace-table-wrap { background:var(--shared-inset); border:1px solid var(--line); border-radius:var(--resqph-card-radius); }

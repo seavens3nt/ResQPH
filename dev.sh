@@ -235,7 +235,7 @@ select_mongodb_uri() {
   for uri in "${candidates[@]}"; do
     if mongodb_uri_is_ready "$uri" >/dev/null 2>&1; then
       export MONGODB_URI="$uri"
-      log "Using MongoDB URI: $uri"
+      log "Using configured MongoDB connection"
       return 0
     fi
   done
@@ -338,12 +338,12 @@ wait_for_mongodb
 select_mongodb_uri
 
 log "Starting backend on http://localhost:${BACKEND_PORT}"
-(cd "$ROOT_DIR/backend" && "$PYTHON_BIN" -m fastapi dev app/main.py --port "$BACKEND_PORT") &
+(cd "$ROOT_DIR/backend" && "$PYTHON_BIN" -m fastapi dev app/main.py --host 127.0.0.1 --port "$BACKEND_PORT") &
 BACKEND_PID=$!
 wait_for_backend
 
 log "Starting frontend on http://localhost:${FRONTEND_PORT}"
-(cd "$ROOT_DIR/frontend" && npm run dev -- --host 0.0.0.0 --port "$FRONTEND_PORT") &
+(cd "$ROOT_DIR/frontend" && npm run dev -- --host localhost --port "$FRONTEND_PORT" --strictPort) &
 FRONTEND_PID=$!
 
 log "Ready"

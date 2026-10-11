@@ -13,7 +13,7 @@ headers = {"X-Demo-Role": "citizen", "X-Demo-User-Id": "synthetic-citizen"}
 
 
 def test_weather_requires_actor():
-    assert client.get("/api/v1/weather/ubelt").status_code == 403
+    assert client.get("/api/v1/weather/ubelt").status_code == 401
 
 
 def test_weather_without_key_is_unavailable(monkeypatch):
@@ -66,7 +66,7 @@ def test_upstream_error_is_sanitized(monkeypatch):
 
 
 def test_hourly_requires_actor_and_configuration(monkeypatch):
-    assert client.get("/api/v1/weather/ubelt/hourly").status_code == 403
+    assert client.get("/api/v1/weather/ubelt/hourly").status_code == 401
     monkeypatch.setattr(weather.settings, "google_weather_api_key", SecretStr(""))
     assert client.get("/api/v1/weather/ubelt/hourly", headers=headers).json()["error"]["code"] == "weather_not_configured"
 

@@ -6,8 +6,9 @@ import math
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from app.integrations.geospatial import STUDY_AREA_BOUNDS
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
+
+from app.integrations.geospatial import STUDY_AREA_BOUNDS
 
 RouteStatus = Literal["route-found", "no-route"]
 RoutingWarning = str

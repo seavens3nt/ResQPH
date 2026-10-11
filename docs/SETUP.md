@@ -31,6 +31,14 @@ gh repo clone seavens3nt/ResQPH
 Set-Location ResQPH
 ```
 
+For the station-login feature branch, fetch and check out its upstream branch
+after it has been pushed:
+
+```sh
+git fetch origin
+git switch --track origin/feature/station-login-markers
+```
+
 ## Configure the frontend
 
 ```powershell
@@ -39,13 +47,37 @@ Copy-Item .env.example .env
 npm install
 ```
 
+Vite loads `frontend/.env` and `frontend/.env.local`; a same-name value in
+`.env.local` overrides `.env`. Mode-specific files such as `.env.development`
+and `.env.development.local` override the generic files, and environment
+variables supplied by the shell have highest priority. Avoid defining the
+same variable in multiple files unless the override is intentional. These files
+are ignored by Git. Restart Vite after changing them; rebuild the frontend after
+changing values used by a production bundle.
+
+`VITE_API_URL` may be blank to use the local default
+`http://localhost:8000/api/v1`. Fill `VITE_GOOGLE_MAPS_API_KEY` and
+`VITE_GOOGLE_MAPS_MAP_ID` in either ignored `frontend/.env` or
+`frontend/.env.local` when available. Restrict the browser key to the intended
+HTTP referrers and Maps JavaScript API; review quotas and billing alerts in
+Google Cloud Console. See the [citizen-to-station workflow guide](workflows/CITIZEN_STATION_WORKFLOW.md).
+Keep `GOOGLE_WEATHER_API_KEY` only in `backend/.env`; it is server-only and
+must not be copied into a Vite environment file.
+
 Start the frontend:
 
 ```powershell
 npm run dev
 ```
 
-The default frontend URL is `http://localhost:5173`.
+The supported local browser origin is `http://localhost:5173`. `dev.sh` binds
+the frontend to `localhost`, the backend to IPv4 loopback, and refuses to silently move Vite to
+another port. Do not open the advertised LAN address for this local setup: the
+API URL and CORS allowlist are intentionally configured for the same computer.
+For a deliberate LAN session, make the API reachable on a trusted interface,
+set `VITE_API_URL` to that computer's reachable address, and add the exact
+browser origin (scheme, host, and port) to backend `FRONTEND_ORIGINS`; restart
+both servers. Do not use `localhost` in an API URL from another device.
 
 ## Verify a real offline reload
 
@@ -84,6 +116,14 @@ The default endpoints are:
 - API: `http://localhost:8000`
 - Health check: `http://localhost:8000/api/v1/health`
 - Interactive API documentation: `http://localhost:8000/docs`
+
+For local HTTP development, use the example's `AUTH_COOKIE_SECURE=false`.
+HTTPS deployments must set `AUTH_COOKIE_SECURE=true` and configure
+`FRONTEND_ORIGINS` to the exact browser origin. Demo headers remain disabled in
+normal mode. Register citizen accounts from the UI. Provision each station
+account locally with the interactive commands documented in the workflow guide;
+passwords are entered at a hidden prompt and never belong in command arguments,
+environment files, or the repository.
 
 ## Start MongoDB
 

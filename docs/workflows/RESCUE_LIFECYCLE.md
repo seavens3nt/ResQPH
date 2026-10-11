@@ -1,8 +1,28 @@
 # Rescue request and mission lifecycle
 
-**Status:** Active lifecycle; historical Phase 1 baseline with local three-role UI amendment
+**Status:** Historical lifecycle baseline; see the current citizen-to-station implementation plan
 **Decision owner:** Ranee
 **Last updated:** 2026-10-09
+
+## Current local candidate amendment (2026-10-10)
+
+The active workflow has two account roles: Citizen and station Rescuer. Citizen
+requests enter automatic dispatch; one leased backend queue chooses an
+available reachable catalog station by reported severity then submission
+time. Request, mission, station reservation, and accepted route are stored
+atomically. Station capacity release and process recovery make eligible jobs
+due again. A citizen may cancel only while a request is still pending. No
+coordinator API or UI is active.
+
+The assigned station acknowledges the mission with the `assigned` to
+`en-route` transition. That transaction records the event and starts the
+backend-owned tracking simulation together. Rescuers may pause or resume an
+active simulation; a repeated start cannot reset its clock. Mission completion
+is an explicit status transition, not a side effect of route arrival. Completion updates request history and
+releases station availability atomically. Citizen owners and the assigned
+station read the same route, status history, and server tracking state. See
+[Citizen-to-station workflow](CITIZEN_STATION_WORKFLOW.md). Earlier sections
+below remain as historical process/acceptance context.
 
 ## Authoritative terms
 

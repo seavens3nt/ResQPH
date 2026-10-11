@@ -29,6 +29,7 @@ export class ApiError extends Error {
   readonly details: ApiErrorDetail[]
   readonly requestId: string | undefined
   readonly httpStatus: number
+  readonly retryAfterSeconds: number | undefined
 
   constructor(
     httpStatus: number,
@@ -36,6 +37,7 @@ export class ApiError extends Error {
     message: string,
     details: ApiErrorDetail[] = [],
     requestId?: string,
+    retryAfterSeconds?: number,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -43,6 +45,7 @@ export class ApiError extends Error {
     this.code = code
     this.details = details
     this.requestId = requestId
+    this.retryAfterSeconds = retryAfterSeconds
   }
 
   get isConflict(): boolean {
@@ -69,6 +72,7 @@ function normalizeError(err: unknown): never {
       envelope?.message ?? err.message,
       envelope?.details ?? [],
       envelope?.request_id,
+      Number(err.response.headers?.['retry-after']) || undefined,
     )
   }
   // Network timeout / no response — treat as 503

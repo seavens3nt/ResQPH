@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from app.integrations.geospatial import GeospatialFixtureConfig
 from app.integrations.routing import (
     ML_DISABLED_WARNING,
@@ -37,7 +38,7 @@ REAL_ROUTE_REQUEST = {
 
 REAL_NO_ROUTE_REQUEST = {
     **REAL_ROUTE_REQUEST,
-    "destination": {"type": "Point", "coordinates": [121.0036128, 14.6117538]},
+    "destination": {"type": "Point", "coordinates": [120.9821, 14.5961]},
 }
 
 

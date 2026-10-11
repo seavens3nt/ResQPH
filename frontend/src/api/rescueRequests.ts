@@ -19,17 +19,6 @@ import type {
 } from '../features/requests/types'
 
 // ---------------------------------------------------------------------------
-// Demo headers helper
-// ---------------------------------------------------------------------------
-
-function citizenHeaders(citizenId: string): Record<string, string> {
-  return {
-    'X-Demo-Role': 'citizen',
-    'X-Demo-User-Id': citizenId,
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Error normalisation
 // ---------------------------------------------------------------------------
 
@@ -73,13 +62,14 @@ export function extractApiError(error: unknown): { status: number; error: ApiErr
  * Throws on HTTP error so TanStack Query's error state is populated.
  */
 export async function createRescueRequest(
-  citizenId: string,
+  _citizenId: string,
   payload: CreateRescueRequestPayload,
+  idempotencyKey: string,
 ): Promise<RescueRequestRecord> {
   const response = await apiClient.post<RescueRequestRecord>(
     '/rescue-requests',
     payload,
-    { headers: citizenHeaders(citizenId) },
+    { headers: { 'Idempotency-Key': idempotencyKey } },
   )
   return response.data
 }
@@ -89,12 +79,11 @@ export async function createRescueRequest(
 // ---------------------------------------------------------------------------
 
 export async function getRescueRequest(
-  citizenId: string,
+  _citizenId: string,
   requestId: string,
 ): Promise<RescueRequestRecord> {
   const response = await apiClient.get<RescueRequestRecord>(
     `/rescue-requests/${requestId}`,
-    { headers: citizenHeaders(citizenId) },
   )
   return response.data
 }
@@ -104,13 +93,12 @@ export async function getRescueRequest(
 // ---------------------------------------------------------------------------
 
 export async function listMyRescueRequests(
-  citizenId: string,
+  _citizenId: string,
   params: { limit?: number; cursor?: string; status?: string } = {},
 ): Promise<RescueRequestListResponse> {
   const response = await apiClient.get<RescueRequestListResponse>(
     '/rescue-requests',
     {
-      headers: citizenHeaders(citizenId),
       params: {
         limit: params.limit ?? 20,
         ...(params.cursor ? { cursor: params.cursor } : {}),
@@ -130,14 +118,13 @@ export async function listMyRescueRequests(
  * optimistic-lock protection. Returns the updated record on success.
  */
 export async function cancelRescueRequest(
-  citizenId: string,
+  _citizenId: string,
   requestId: string,
   payload: CancelRequestPayload,
 ): Promise<RescueRequestRecord> {
   const response = await apiClient.post<RescueRequestRecord>(
     `/rescue-requests/${requestId}/cancel`,
     payload,
-    { headers: citizenHeaders(citizenId) },
   )
   return response.data
 }

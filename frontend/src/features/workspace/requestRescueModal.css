@@ -56,23 +56,6 @@
 @media (prefers-reduced-motion:reduce) {
   .request-rescue-modal,.request-rescue-modal .modal-card { animation:none; }
 }
-.request-location-map .leaflet-control-zoom {
-  border:1px solid #7da4c0 !important;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 2px 5px rgb(125 164 192 / 25%);
-}
-.request-location-map .leaflet-control-zoom a {
-  background:#fbfcfe;
-  color:#011e55;
-  width:36px;
-  height:36px;
-  line-height:36px;
-}
-.request-location-map .leaflet-control-zoom a:first-child { border-radius:17px 17px 0 0; border-bottom:1px solid #7da4c0; }
-.request-location-map .leaflet-control-zoom a:last-child { border-radius:0 0 17px 17px; }
-.request-location-map .leaflet-control-zoom a:focus-visible { outline-offset:-4px; }
-.request-location-map .leaflet-bottom.leaflet-left .leaflet-control { margin:0 0 14px 14px; }
 /* Keep existing bookmarked full-page forms usable with the same grouped fields. */
 .workspace-shell[data-role] .request-rescue-modal .modal-card { border-color:#7da4c0; border-radius:30px; background:var(--shared-surface,#e4ecf4); }
 .workspace-shell[data-role] .request-rescue-modal #citizen-request-form :is(input:not([type=radio]):not([type=checkbox]),select,textarea) { border-radius:30px !important; border-color:#4b5a77 !important; font-weight:400; color:#4b5a77; background-color:#fbfcfe; }

@@ -6,15 +6,15 @@
   .citizen-map-panel .citizen-map-layout { flex:1; }
   .citizen-map-layout .citizen-map-viewport { display:flex; flex-direction:column; }
   .workspace-shell .citizen-map-layout .citizen-map-viewport .flood-map-container { flex:1; display:flex; flex-direction:column; --workspace-map-height:100%; }
-  .citizen-map-layout .citizen-map-viewport .flood-map-leaflet-wrapper { flex:1; min-height:calc(494 * var(--figma-unit)); }
-  .citizen-map-layout .citizen-map-viewport .flood-map-leaflet-canvas { position:absolute; inset:0; }
+  .citizen-map-layout .citizen-map-viewport .google-map-wrapper { flex:1; min-height:calc(494 * var(--figma-unit)); }
+  .citizen-map-layout .citizen-map-viewport .google-map-canvas { position:absolute; inset:0; }
   .citizen-map-details .citizen-map-empty { flex:1; }
 }
 .citizen-map-caption { margin:0 0 0 calc(10 * var(--figma-unit)); color:var(--muted); font-size:calc(20 * var(--figma-unit)); line-height:calc(30 * var(--figma-unit)); }
 .workspace-shell .citizen-map-panel > h3 { margin:0 0 calc(27 * var(--figma-unit)) calc(10 * var(--figma-unit)); font-size:calc(40 * var(--figma-unit)); line-height:calc(48 * var(--figma-unit)); }
 .citizen-map-inset { padding:calc(32 * var(--figma-unit)) calc(43 * var(--figma-unit)) calc(23 * var(--figma-unit)); border:1px solid var(--line); border-radius:calc(30 * var(--figma-unit)); background:var(--shared-inset); box-shadow:var(--resqph-inner-shadow); }
 .workspace-shell .citizen-map-inset .flood-map-container { position:relative; --workspace-map-height:calc(317 * var(--figma-unit)); border-radius:calc(30 * var(--figma-unit)); box-shadow:var(--resqph-inner-shadow); }
-.citizen-map-inset .flood-map-leaflet-wrapper { min-height:0; }
+.citizen-map-inset .google-map-wrapper { min-height:0; }
 .workspace-shell .citizen-map-inset .flood-map-controls { position:absolute; top:calc(17 * var(--figma-unit)); right:calc(33 * var(--figma-unit)); z-index:500; padding:0; background:none; border:0; }
 .citizen-map-inset .flood-map-legend-items { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .citizen-map-inset .flood-map-toggles { gap:calc(26 * var(--figma-unit)); }

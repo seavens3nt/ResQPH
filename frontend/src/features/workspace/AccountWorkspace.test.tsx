@@ -2,11 +2,11 @@ import { cleanup,fireEvent,render,screen } from '@testing-library/react'
 import { afterEach,expect,it,vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { AccountWorkspace } from './AccountWorkspace'
-const {updateProfile,logout}=vi.hoisted(()=>({updateProfile:vi.fn(),logout:vi.fn()}))
+const {updateProfile,logout}=vi.hoisted(()=>({updateProfile:vi.fn().mockResolvedValue(undefined),logout:vi.fn().mockResolvedValue(undefined)}))
 vi.mock('../auth/AuthContext',()=>({useAuth:()=>({user:{name:'Synthetic Citizen',email:'synthetic@example.test',role:'citizen'},updateProfile,logout})}))
 afterEach(()=>{cleanup();vi.clearAllMocks()})
 const preview=()=>render(<MemoryRouter><AccountWorkspace/></MemoryRouter>)
-it('keeps identity read-only and saves split names and address in the existing profile',()=>{
+it('keeps identity read-only and saves split names and address in the existing profile',async()=>{
   preview()
   expect(screen.getByLabelText('Email identity')).toHaveAttribute('readonly')
   fireEvent.change(screen.getByLabelText('First name'),{target:{value:'Test'}})
@@ -16,7 +16,7 @@ it('keeps identity read-only and saves split names and address in the existing p
   fireEvent.change(screen.getByLabelText('Address'),{target:{value:'Synthetic address'}})
   fireEvent.click(screen.getByRole('button',{name:'Save profile'}))
   expect(updateProfile).toHaveBeenCalledWith(expect.objectContaining({name:'Test Citizen',email:'synthetic@example.test',emergencyContact:expect.objectContaining({name:'Demo Contact',address:'Synthetic address'})}))
-  expect(screen.getByRole('status')).toHaveTextContent('Profile saved in this tab.')
+  expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.')
 })
 it('retains phone validation and rejects unsupported photo files',()=>{
   preview()

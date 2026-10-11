@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from app.integrations.geospatial import (
     AUTHORITATIVE_CONTRACT_REVISION,
     BASELINE_CONTRACT_REVISION,
@@ -31,7 +32,7 @@ def test_authoritative_ubelt_fixtures_load_by_default() -> None:
     assert bundle.version_source == "edge_id_prefix"
     assert bundle.road_edges.schema_version is None
     assert bundle.flood_scenario.schema_version is None
-    assert len(bundle.road_edges.features) == 30
+    assert len(bundle.road_edges.features) == 2533
     assert len(bundle.flood_scenario.features) == 10
     assert Path(bundle.road_path) == DEFAULT_ROAD_FIXTURE
     assert Path(bundle.flood_path) == DEFAULT_FLOOD_FIXTURE
@@ -39,8 +40,8 @@ def test_authoritative_ubelt_fixtures_load_by_default() -> None:
     road = bundle.road_edges.features[0]
     flood = bundle.flood_scenario.features[0]
     assert road.properties.edge_id.startswith("ubelt-v1:")
-    assert isinstance(road.properties.flood_depth_cm, float)
     assert flood.properties.edge_id.startswith("ubelt-v1:")
+    assert flood.properties.flood_depth_cm == 120
     assert flood.properties.scenario_timestamp == "2026-10-01T00:00:00Z"
     assert bundle.flood_scenario.scenario.scenario_id == (
         "scenario-controlled-ubelt-001"

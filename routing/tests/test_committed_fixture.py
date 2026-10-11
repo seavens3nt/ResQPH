@@ -12,9 +12,10 @@ import json
 import math
 
 import geopandas as gpd
+from shapely.prepared import prep
+
 from resqph_routing import config
 from resqph_routing.flood_join import load_scenario
-from shapely.prepared import prep
 
 
 def test_preview_fixture_exists(committed_edges):

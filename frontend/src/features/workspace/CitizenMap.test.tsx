@@ -7,6 +7,7 @@ vi.mock('../requests/hooks',()=>({useRescueRequest:(id:string)=>({isLoading:fals
   {id:'stored-assigned',status:'assigned',headcount:1,location:{address:'Other synthetic address',point:null}},
   {id:'stored-cancelled',status:'cancelled',headcount:2,location:{address:'Cancelled synthetic address',point:null}},
 ]}})}))
+vi.mock('../missions/useMissionJourney',()=>({useMissionJourney:()=>({mission:{data:undefined,isError:false},tracking:{data:undefined,isError:false}}),journeyRoute:()=>[]}))
 vi.mock('../map/InteractiveFloodMap',()=>({InteractiveFloodMap:({records,controlsSlot}:any)=><div aria-label="Map records">{records.map((r:any)=><span key={r.id}>{r.label}</span>)}{controlsSlot}</div>}))
 afterEach(()=>{cleanup();vi.clearAllMocks()})
 it('preserves stored IDs for selection and existing refresh/cancel callbacks',()=>{
@@ -48,7 +49,7 @@ it('keeps demo source and reports unavailable geolocation without changing submi
   render(<CitizenMap selected={null} onSelect={()=>{}} onCancel={()=>{}}/>)
   expect(screen.getByRole('radio',{name:'Use demo location'})).toBeChecked()
   fireEvent.click(screen.getByRole('radio',{name:'Use current location'}))
-  expect(screen.getByRole('alert')).toHaveTextContent('Location access is unavailable')
+  expect(screen.getAllByRole('alert').some(alert=>alert.textContent?.includes('Location access is unavailable'))).toBe(true)
   expect(screen.getByRole('radio',{name:'Use demo location'})).toBeChecked()
 })
 it('locks cancellation while pending and presents failures inline',()=>{

@@ -4,7 +4,10 @@ import { InteractiveFloodMap } from '../map/InteractiveFloodMap'
 import { WorkspaceCard } from './WorkspaceUI'
 import { QueryState } from './Records'
 import { FigmaHomeAsset } from './FigmaHomeAsset'
+import { RESCUE_STATIONS, stationIdForTeamId } from '../map/stations'
 import { requestLabel } from './requestLabel'
+import { formatDuration } from '../routing/presentation/formatDuration'
+import { useMissionJourney, journeyRoute } from '../missions/useMissionJourney'
 import './citizenMap.css'
 
 export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancelError=null}: {selected:string|null;onSelect:(id:string)=>void;onCancel:()=>void;isCancelling?:boolean;cancelError?:string|null}) {
@@ -15,6 +18,9 @@ export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancel
   const [locating,setLocating] = useState(false)
   const [locationError,setLocationError] = useState('')
   const selectedRequest = detail.data ?? query.data?.items.find(r=>r.id===selected)
+  const journey = useMissionJourney(selectedRequest?.mission_id)
+  const mission = journey.mission.data
+  const route = journeyRoute(mission)
   function chooseSource(value:'demo'|'gps') {
     setLocationError('')
     if(value==='demo') {setSource(value);setCenter([14.6042,120.9946]);return}
@@ -34,7 +40,7 @@ export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancel
     <WorkspaceCard className="citizen-map-panel">
       <QueryState query={query} layout="map" label="Loading request locations…">{data=><div className="citizen-map-inset citizen-map-layout">
         <div className="citizen-map-viewport">
-        <InteractiveFloodMap activeStage="none" showRouteStatus={false} center={center} controlsSlot={sourceControl} records={data.items.filter(r=>r.location.point).map(r=>({id:r.id,label:`${r.location.address} · ${r.status}`,coordinates:r.location.point!.coordinates}))}/>
+        <InteractiveFloodMap activeStage="none" showRouteStatus={false} center={center} controlsSlot={sourceControl} assignedStationId={mission?.station_id ?? selectedRequest?.assigned_station_id ?? stationIdForTeamId(selectedRequest?.assigned_team_id)} routeGeometry={route} trackingPosition={journey.tracking.data?.position ?? null} followPosition records={data.items.filter(r=>r.location.point).map(r=>({id:r.id,label:`${r.location.address} · ${r.status}`,coordinates:r.location.point!.coordinates}))}/>
         {locating && <p role="status">Getting your location…</p>}
         {locationError && <p role="alert">{locationError}</p>}
         </div>
@@ -49,11 +55,22 @@ export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancel
           <header><h4 id="map-request-status-title">Request status</h4><span className={`citizen-map-status state-${request.status}`} role="status">{request.status.replace(/^./,s=>s.toUpperCase())}</span></header>
           <dl>{[
             ['People needing help',String(request.headcount)],
+            ['Reported severity',(request.reported_severity ?? 'moderate').replace(/^./,s=>s.toUpperCase())],
             ['Observed flood level',request.reported_flood_level.replace(/^./,s=>s.toUpperCase())],
             ['Situation summary',request.situation_summary || 'None reported'],
             ['Accessibility needs',request.vulnerabilities.join(', ') || 'None reported'],
             ['Medical needs',request.medical_needs ? request.medical_details || 'Medical assistance requested' : 'None reported'],
           ].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+          {request.status === 'pending' && <p className="citizen-map-assignment" role="status">Your request is queued for automatic station matching. No dispatcher action is required.</p>}
+          {mission && <div className="citizen-map-journey" aria-live="polite">
+            <h5>Station response</h5>
+            <p>Assigned station: {RESCUE_STATIONS.find(station => station.station_id === mission.station_id)?.name ?? mission.team_id}</p>
+            <p>Mission status: {mission.status.replace('-', ' ')}</p>
+            {mission.latest_route_result && typeof mission.latest_route_result.estimated_time_s === 'number' && <p>Route ETA: {formatDuration(mission.latest_route_result.estimated_time_s)}</p>}
+            {journey.tracking.data && <p>Simulated rescuer: {journey.tracking.data.simulation_status} · {formatDuration(journey.tracking.data.estimated_remaining_time_s)} remaining</p>}
+            {journey.tracking.isError && <p role="status">Latest tracking is unavailable. The last server position remains shown.</p>}
+          </div>}
+          {journey.mission.isError && <p role="status">Mission details are temporarily unavailable; request status remains available.</p>}
         </section>}</QueryState>}
         {selectedRequest?.status==='cancelled' && <p className="citizen-map-cancelled-update" role="status">Request cancelled</p>}
         {!data.items.length && <p className="citizen-map-no-requests">No rescue requests found.</p>}

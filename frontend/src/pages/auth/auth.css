@@ -897,6 +897,10 @@
 .auth-pill-input { font-size: 1rem; padding-inline-end: 32px; }
 .auth-clean-form > label { color: #e4e4e7; font-size: .875rem; }
 .auth-clean-form select { color: #f4f4f5; background: #27272a; padding: 10px; border: 1px solid #71717a; border-radius: 8px; }
+.auth-station-field { display: grid; gap: 8px; color: #e4e4e7; }
+.auth-station-field select { width: 100%; min-height: 44px; color: #f4f4f5; background: #27272a; padding: 10px 14px; border: 1px solid #71717a; border-radius: 12px; font: inherit; }
+.auth-station-field select:focus-visible { outline: 3px solid rgba(255,171,184,.45); outline-offset: 2px; border-color: #ffabb8; }
+.auth-station-address { margin: 0; color: #c4c8d0; font-size: .8rem; }
 
 /* MarineAtlas-style account card; ResQPH copy, validation and rescue imagery retained. */
 .auth-mobile-page { padding: 40px 24px; overflow: auto; }
