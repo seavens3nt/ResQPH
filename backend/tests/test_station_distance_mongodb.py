@@ -5,7 +5,6 @@ import os
 from datetime import UTC, datetime
 from uuid import uuid4
 
-import networkx as nx
 import pytest
 import pytest_asyncio
 from pymongo import AsyncMongoClient
@@ -71,6 +70,10 @@ async def create(requests, station=STATIONS[0], request_id=None):
 
 @pytest.mark.parametrize("station", STATIONS, ids=[s["station_id"] for s in STATIONS])
 async def test_five_equal_available_headquarters_comparisons(dispatch, station):
+    # NetworkX is the oracle for this opt-in acceptance test, not a dependency
+    # of default backend test collection. Missing it must still fail enabled runs.
+    import networkx as nx
+
     database, requests, service = dispatch
     request = await create(requests, station)
     candidates, exclusions = await service._rank_eligible_teams(request)
