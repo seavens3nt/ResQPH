@@ -39,7 +39,7 @@ describe('Google Maps rescue map', () => {
   it('keeps controlled layer status and route feedback visible while maps configuration is missing', async () => {
     render(<InteractiveFloodMap routeState={{ status: 'route-found', result: routeFound }} />)
     expect(await screen.findByRole('alert')).toHaveTextContent(/Google Maps unavailable/)
-    expect(screen.getByRole('button', { name: /Road conditions: On/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Road conditions:/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Controlled-scenario route displayed/i)).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(screen.queryByText(/Accessible road and controlled flood summary/)).not.toBeInTheDocument()

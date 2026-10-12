@@ -59,7 +59,7 @@ describe('Citizen / Volunteer Dashboard Flows', () => {
     renderWithProviders(<DashboardPage />, 'citizen')
     expect(screen.getByText(/Citizen workspace/i)).toBeInTheDocument()
     expect(screen.getByRole('button', {name: 'Request rescue'})).toBeInTheDocument()
-    expect(screen.getByRole('button', {name: 'My Requests'})).toBeInTheDocument()
+    expect(screen.getByRole('button', {name: 'Requests', exact: true})).toBeInTheDocument()
     expect(screen.queryByText('Maria Santos / RQ-0042')).not.toBeInTheDocument()
   })
 

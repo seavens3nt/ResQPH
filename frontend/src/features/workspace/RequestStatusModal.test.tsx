@@ -40,6 +40,7 @@ it('confirms cancellation using the captured request version',()=>{
   preview();fireEvent.click(screen.getByRole('button',{name:'View RQ-001'}))
   fireEvent.click(screen.getByRole('button',{name:'Cancel Request'}))
   expect(screen.getByRole('dialog',{name:'Cancel request confirmation'})).toBeVisible()
+  expect(screen.getByRole('dialog',{name:'Cancel request confirmation'}).closest('.request-status-modal')).toBeNull()
   expect(state.cancel).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button',{name:'Yes, cancel request'}))
   expect(screen.getByRole('dialog',{name:'Request status'})).toBeVisible()

@@ -321,6 +321,7 @@
   100% { transform: scale(2.2); opacity: 0; }
 }
 .map-accessible-summary { padding: 8px 12px; color: var(--text-secondary); font-size: 0.75rem; }
+.map-accessible-summary:empty { display:none; }
 
 /* Original shaded SVG; the inner vehicle rotates relative to the map camera. */
 .resq-response-vehicle { width: 38px; height: 50px; transform-origin: center; color: #0e7490; font-size: 36px; text-shadow: 0 2px 3px #fff; }

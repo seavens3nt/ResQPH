@@ -7,6 +7,7 @@
   --action-on-solid:#fff; --action-focus:#2688ff;
 }
 .workspace-shell[data-role][data-view] #citizen-request-form .request-form-actions > button {
+  display:inline-flex; align-items:center; justify-content:center; text-align:center;
   box-sizing:border-box; min-height:var(--action-height); height:auto;
   padding:10px 20px !important; line-height:22px;
   font-size:var(--action-font-size) !important; font-weight:var(--action-font-weight) !important;
@@ -75,19 +76,21 @@
 .workspace-shell button:disabled,.btn:disabled,.auth-btn-pill-submit:disabled {
   opacity:.55 !important; cursor:not-allowed !important;
 }
-/* All red actions share one color, including public-page links and the
-   rescue action card. Destructive meaning stays in labels/confirmation. */
-.lp-page :is(.lp-nav-btn--signup,.lp-cta-primary),
-.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card,
-.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card button {
+/* Ordinary red actions share one color. The Home rescue tile retains its
+   decorative card background rather than painting over it with a button fill. */
+.lp-page :is(.lp-nav-btn--signup,.lp-cta-primary) {
   background:var(--action-primary) !important;
   border-color:var(--action-primary) !important; color:var(--action-on-solid) !important;
 }
-.lp-page :is(.lp-nav-btn--signup,.lp-cta-primary):hover,
-.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card:has(button:hover:not(:disabled)),
-.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card button:hover:not(:disabled) {
+.lp-page :is(.lp-nav-btn--signup,.lp-cta-primary):hover {
   background:var(--action-primary-hover) !important;
   border-color:var(--action-primary-hover) !important;
+}
+.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card button {
+  background:transparent !important; color:var(--action-on-solid) !important;
+}
+.workspace-shell[data-role][data-view] .workspace-main .home-rescue-card:has(button:hover:not(:disabled)) {
+  filter:brightness(.95);
 }
 .lp-page :is(.lp-nav-btn--signup,.lp-cta-primary):focus-visible {
   outline:2px solid var(--action-focus); outline-offset:3px;

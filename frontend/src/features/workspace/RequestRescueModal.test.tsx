@@ -73,6 +73,17 @@ it('resumes the draft and discards it directly without extra confirmation', () =
   expect(screen.queryByRole('region',{name:'Unsubmitted request draft'})).not.toBeInTheDocument()
 })
 
+it('shows the unconfirmed-location error only in the focused validation summary', () => {
+  renderWorkspace()
+  fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
+  fireEvent.click(screen.getByRole('button',{name:'Review request'}))
+  expect(screen.getAllByText('Confirm the selected rescue location before continuing.')).toHaveLength(1)
+  expect(screen.getByText('Check your request before continuing').closest('[role="alert"]')).toHaveFocus()
+  expect(screen.getByText('Your details are still here. Correct the highlighted fields, then try again.')).toBeVisible()
+  expect(screen.queryByText(/Choose a location inside the pilot area using the map or demonstration location/)).not.toBeInTheDocument()
+  expect(mutate).not.toHaveBeenCalled()
+})
+
 it('validates and reviews without submission, supports editing, and uses the existing payload on final submit', () => {
   renderWorkspace()
   fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))

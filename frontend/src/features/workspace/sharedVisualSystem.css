@@ -1,5 +1,36 @@
 /* Home-derived visual rules shared by all role workspaces and account access.
    Keep page-specific composition, semantic status colors, and map layers intact. */
+/* Native scrolling remains unchanged; only the scrollbar appearance is shared. */
+:root, [data-app-theme=light], .workspace-shell[data-theme=light] {
+  --scrollbar-track:#e4ecf4;
+  --scrollbar-thumb:#7c9bb6;
+  --scrollbar-thumb-hover:#587d9e;
+}
+:root:has(#root > [data-app-theme=dark]), [data-app-theme=dark], .workspace-shell[data-theme=dark] {
+  --scrollbar-track:#101b30;
+  --scrollbar-thumb:#526b89;
+  --scrollbar-thumb-hover:#7794b4;
+}
+html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-role][data-view] * {
+  scrollbar-width:thin;
+  scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track);
+}
+/* Fallback for browsers that do not support standard scrollbar colors. */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar { width:12px; height:12px; }
+  ::-webkit-scrollbar-track { background:var(--scrollbar-track); border-radius:999px; }
+  ::-webkit-scrollbar-thumb {
+    background:var(--scrollbar-thumb); border:3px solid var(--scrollbar-track);
+    border-radius:999px; min-height:36px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background:var(--scrollbar-thumb-hover); }
+  ::-webkit-scrollbar-corner { background:var(--scrollbar-track); }
+}
+@media(forced-colors:active) {
+  html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-role][data-view] * {
+    scrollbar-width:auto; scrollbar-color:auto;
+  }
+}
 :root {
   --resqph-rounded-font:var(--font-body);
   --resqph-card-radius:clamp(12px,calc(18 * var(--nav-unit,1px)),27px);
@@ -577,10 +608,14 @@
 .location-options { position:absolute; top:10px; left:10px; z-index:5; max-width:calc(100% - 20px); color:var(--ink,var(--neutral-ink)); }
 .location-options > button { min-height:44px; padding:8px 14px; background:var(--shared-inset,var(--neutral-inset)); color:inherit; border:1px solid var(--line,var(--neutral-line)); border-radius:12px; }
 .location-options-summary { display:block; width:fit-content; padding:3px 8px; background:var(--shared-inset,var(--neutral-inset)); border-radius:6px; font-size:.75rem; }
-.location-options-panel { position:absolute; top:100%; left:0; width:220px; max-width:calc(100vw - 64px); box-sizing:border-box; margin:4px 0 0; padding:12px; background:var(--shared-inset,var(--neutral-inset)); border:1px solid var(--line,var(--neutral-line)); border-radius:12px; }
-.location-options-panel legend { padding:0 4px; font-size:.8rem; }
-.location-options-panel label { display:flex; align-items:center; gap:8px; min-height:44px; font-size:.875rem; }
-.location-options-panel input { width:auto; }
+.location-options-panel { position:absolute; top:calc(100% + 8px); left:0; width:220px; max-width:calc(100vw - 64px); min-width:0; box-sizing:border-box; margin:0; padding:8px; background:var(--shared-inset,var(--neutral-inset)); color:inherit; border:1px solid var(--line,var(--neutral-line)); border-radius:16px; box-shadow:0 6px 18px rgb(25 61 92 / 14%); }
+/* Keep the radio group's accessible name without a legend cutting through the menu edge. */
+.location-options-panel legend { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+.workspace-shell[data-role][data-view] .location-options-panel label { box-sizing:border-box; display:flex; flex-direction:row; align-items:center; gap:10px; min-height:44px; margin:0; padding:10px 12px; border-radius:10px; font-size:14px; line-height:20px; font-weight:500; color:inherit; cursor:pointer; }
+.workspace-shell[data-role][data-view] .location-options-panel label:has(input:checked) { background:color-mix(in srgb,var(--shared-inset,var(--neutral-inset)),#82abc9 24%); }
+.workspace-shell[data-role][data-view] .location-options-panel label:is(:hover,:focus-within) { background:color-mix(in srgb,var(--shared-inset,var(--neutral-inset)),#82abc9 18%); }
+.workspace-shell[data-role][data-view] .location-options-panel input[type=radio] { flex:0 0 16px; width:16px; height:16px; min-height:0; margin:0; padding:0; accent-color:#2688ff; }
+.location-options-panel:disabled label { cursor:default; opacity:.6; }
 .resq-google-marker img { width:26px; height:26px; display:block; }
 .workspace-shell[data-role][data-view] .account-page { --home-surface:var(--neutral-surface); }
 .workspace-shell[data-role][data-view] .home-live-weather-surface { padding:16px; }
@@ -1295,6 +1330,32 @@
   font-size:14px;
   line-height:1.4;
   font-weight:700;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-card.has-active-request::after {
+  display:none;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-top {
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:8px 16px; min-height:0; margin-top:4px;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-top .workspace-badge {
+  position:static; flex-shrink:0; padding:4px 12px; font-size:14px; line-height:20px;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-bottom {
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  gap:12px 16px; margin-top:12px;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-bottom p {
+  margin:0;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .workspace-main .home-current-bottom button {
+  display:inline-flex; align-items:center; justify-content:center; align-self:center;
+  min-height:44px; margin:0; padding:10px 18px !important; gap:8px;
+  font-size:14px; font-weight:550; line-height:22px; white-space:nowrap;
+}
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-bottom button img,
+.workspace-shell[data-role=citizen][data-view=overview] .home-current-bottom button svg {
+  width:18px; height:18px; flex-shrink:0;
 }
 .workspace-shell[data-role=citizen][data-view=overview] .home-no-request strong,
 .workspace-shell[data-role=citizen][data-view=overview] .home-request-label {

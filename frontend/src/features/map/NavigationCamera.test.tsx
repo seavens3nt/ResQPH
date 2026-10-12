@@ -15,6 +15,7 @@ class FakeMap {
   })
   fitBounds = vi.fn()
   setCenter = vi.fn()
+  setOptions = vi.fn()
   getHeading = () => this.heading
   getZoom = () => this.zoom
   getRenderingType = () => sdk.rendering
@@ -65,8 +66,9 @@ const vehicle = () => sdk.markers.find(marker => marker.title === 'Simulated res
 beforeEach(() => {
   vi.useFakeTimers(); sdk.maps = []; sdk.markers = []; sdk.overlays = []; sdk.infos = []; sdk.rendering = 'VECTOR'
   vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'synthetic-test-key'); vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'synthetic-map-id')
-  vi.stubGlobal('google', { maps: { RenderingType: { VECTOR: 'VECTOR' }, LatLngBounds: Bounds, InfoWindow: Info, Polyline: Overlay, Polygon: Overlay } })
+  vi.stubGlobal('google', { maps: { MapTypeControlStyle: { DROPDOWN_MENU: 2, HORIZONTAL_BAR: 1 }, ControlPosition: { TOP_RIGHT: 3 }, RenderingType: { VECTOR: 'VECTOR' }, LatLngBounds: Bounds, InfoWindow: Info, Polyline: Overlay, Polygon: Overlay } })
   vi.stubGlobal('matchMedia', () => ({ matches: false }))
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
 })
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
 
@@ -156,23 +158,17 @@ describe('navigation camera with the Google SDK contract mocked', () => {
     expect(vehicle().position).toEqual(before)
     expect(screen.getByText(/Tracking paused/)).toBeInTheDocument()
   })
-  it('hides every road condition class and flood shading while preserving route and operational markers', async () => {
+  it('always displays road condition classes alongside the route and operational markers', async () => {
     await mount({ records: [{id:'incident',label:'Incident',coordinates:route[2]}] })
     const roads = () => sdk.overlays.filter(layer => layer.options.map && [4,6].includes(layer.options.strokeWeight ?? 0))
     const routeLayer = sdk.overlays.find(layer => layer.options.strokeWeight === 7)!
     const initial = roads().length
     expect(initial).toBeGreaterThan(0)
     expect(new Set(roads().map(layer => layer.options.strokeColor))).toEqual(new Set(['#22c55e','#f59e0b','#dc2626']))
-    for (let i=0;i<3;i++) {
-      fireEvent.click(screen.getByRole('button', {name:'Road conditions: On'}))
-      expect(roads()).toHaveLength(0)
-      expect(sdk.overlays.filter(layer => layer.options.map && layer.options.paths && layer.options.strokeColor !== '#3b82f6')).toHaveLength(0)
-      expect(routeLayer.options.map).toBe(sdk.maps[0])
-      expect(sdk.markers.every(marker => marker.map === sdk.maps[0])).toBe(true)
-      expect(screen.queryByText(/Passable/)).not.toBeInTheDocument()
-      fireEvent.click(screen.getByRole('button', {name:'Road conditions: Off'}))
-      expect(roads()).toHaveLength(initial)
-    }
+    expect(screen.queryByRole('button', {name:/Road conditions:/})).not.toBeInTheDocument()
+    expect(routeLayer.options.map).toBe(sdk.maps[0])
+    expect(sdk.markers.every(marker => marker.map === sdk.maps[0])).toBe(true)
+    expect(screen.getByText(/Passable/)).toBeInTheDocument()
     expect(sdk.maps).toHaveLength(1)
     expect(screen.getByRole('button', {name:'Recenter'})).toHaveAttribute('title','Recenter map')
     expect(screen.getByRole('button', {name:'Recenter'})).not.toHaveTextContent('Recenter')
@@ -192,10 +188,9 @@ describe('navigation camera with the Google SDK contract mocked', () => {
     expect(sdk.infos[0].opened).toBe(false)
     expect(pin).toHaveBeenCalledWith([120.994,14.604])
     roads[0].listeners.get('click')?.({latLng:null})
-    fireEvent.click(screen.getByRole('button',{name:'Road conditions: On'}))
+    view.unmount()
     expect(sdk.infos[0].opened).toBe(false)
     expect(roads.every(road => road.listeners.size === 0)).toBe(true)
-    view.unmount()
     expect(sdk.markers.every(marker => marker.listeners.size === 0)).toBe(true)
     expect(sdk.maps[0].listeners.size).toBe(0)
   })

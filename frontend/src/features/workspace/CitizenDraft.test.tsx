@@ -27,9 +27,9 @@ describe('Citizen form hardening', () => {
     fireEvent.change(screen.getByLabelText(/Optional address or location description/),{target:{value:'Synthetic invalid map address'}})
     fireEvent.click(screen.getByRole('button',{name:'Use this rescue location'}))
     fireEvent.click(screen.getByRole('button', {name:'Review request'}))
-    const input = document.querySelector<HTMLElement>('[aria-invalid="true"]')!
-    await waitFor(() => expect(input).toHaveFocus())
-    expect(input).toHaveAttribute('aria-invalid', 'true')
+    const summary = screen.getByText('Check your request before continuing').closest('[role="alert"]')!
+    await waitFor(() => expect(summary).toHaveFocus())
+    expect(summary).toHaveTextContent('Choose a rescue location inside the U-Belt pilot area, then confirm the pin.')
     expect(screen.queryByLabelText('Longitude')).not.toBeInTheDocument()
     expect(screen.getByText('Check your request before continuing')).toBeVisible()
     expect(mutate).not.toHaveBeenCalled()

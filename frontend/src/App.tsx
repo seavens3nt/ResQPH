@@ -12,6 +12,7 @@ import './features/workspace/desktopDensity.css'
 import './features/workspace/dispatcherOverview.css'
 import './components/ui/actionTheme.css'
 import './components/ui/cardTheme.css'
+import './features/map/mapControlTheme.css'
 
 export default function App() {
   const [dark] = useTheme()

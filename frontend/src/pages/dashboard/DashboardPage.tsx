@@ -25,7 +25,7 @@ import '../../features/workspace/figmaWorkspace.css'
 import '../../features/workspace/rescuerDesign.css'
 
 const navigation: Record<UserRole, [string, string][]> = {
-  citizen: [['overview', 'Home'], ['inquiries', 'My Requests'], ['map', 'Map'], ['advisory', 'Advisory'], ['account', 'Account']],
+  citizen: [['overview', 'Home'], ['inquiries', 'Requests'], ['map', 'Map'], ['advisory', 'Advisory'], ['account', 'Account']],
   rescuer: [['overview', 'My Mission'], ['routes', 'Routes'], ['history', 'Mission History'], ['account', 'Account']],
 }
 const navIcons: Record<string, IconName> = {overview:'shield',inquiries:'report',map:'map-fold',routes:'route',account:'user',reports:'warning',missions:'boat',teams:'volunteers',history:'clock',advisory:'droplet'}

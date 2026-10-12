@@ -32,6 +32,7 @@ export interface MapProps extends UseMapLayersOptions {
   trackingStopped?: boolean
   trackingTimestamp?: string
   journeySummary?: string
+  showTrackingNotice?: boolean
   followPosition?: boolean
   onManualPan?: () => void
   onFollowChange?: (following: boolean) => void
@@ -194,6 +195,7 @@ export function InteractiveFloodMap({
   trackingStopped = false,
   trackingTimestamp,
   journeySummary,
+  showTrackingNotice = true,
   onManualPan,
   onFollowChange,
   onMapClick,
@@ -257,7 +259,6 @@ export function InteractiveFloodMap({
   const [mapError, setMapError] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [retry, setRetry] = useState(0)
-  const [floodVisible, setFloodVisible] = useState(true)
   const [follow, setFollow] = useState(followPosition)
   const assignedStationIdRef = useRef(assignedStationId)
   assignedStationIdRef.current = operationContext?.stationId ?? assignedStationId
@@ -406,7 +407,7 @@ export function InteractiveFloodMap({
     const updateControls = () => map.setOptions({
       mapTypeControlOptions: {
         position: google.maps.ControlPosition.TOP_RIGHT,
-        style: container.clientWidth < 440
+        style: container.clientWidth < 500
           ? google.maps.MapTypeControlStyle.DROPDOWN_MENU
           : google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
       },
@@ -491,7 +492,7 @@ export function InteractiveFloodMap({
       }))
       overlaysRef.current.push(boundary)
     }
-    if (floodVisible && dataset && layerStatus !== 'error') {
+    if (dataset && layerStatus !== 'error') {
       for (const edge of dataset.edges) {
         const color = edge.passability === 'impassable' ? '#dc2626' : edge.passability === 'restricted' ? '#f59e0b' : '#22c55e'
         const line = new google.maps.Polyline({ map, path: asGooglePath(edge.mapCoordinates), strokeColor: color, strokeOpacity: 0.9, strokeWeight: edge.passability === 'impassable' ? 6 : 4, clickable: true })
@@ -518,7 +519,7 @@ export function InteractiveFloodMap({
       overlaysRef.current.forEach(overlay => (overlay as google.maps.Polyline | google.maps.Polygon).setMap(null))
       overlaysRef.current = []
     }
-  }, [mapReady, dataset, layerStatus, floodVisible, dismissPopup, showPopup])
+  }, [mapReady, dataset, layerStatus, dismissPopup, showPopup])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
@@ -647,18 +648,14 @@ export function InteractiveFloodMap({
   }
 
   return <div className="flood-map-container" role="region" aria-label="Interactive Google Maps rescue map">
-    {(!compact || (showRouteControl && trackingPosition)) && <div className="flood-map-controls">
-      {!compact && floodVisible && <div className="flood-map-legend-items">
+    {(!compact || navigation) && <div className="flood-map-controls">
+      {!compact && <div className="flood-map-legend-items">
         <span className="legend-tag legend-safe">● Passable ({metadata.stats.passableCount})</span>
         <span className="legend-tag legend-restricted">▲ Restricted ({metadata.stats.restrictedCount})</span>
         <span className="legend-tag legend-impassable">✕ Impassable ({metadata.stats.impassableCount})</span>
       </div>}
       <div className="flood-map-toggles">
-        {!compact && <button type="button" className={`map-toggle-btn ${floodVisible ? 'is-active' : ''}`} aria-pressed={floodVisible} onClick={() => setFloodVisible(value => !value)}>Road conditions: {floodVisible ? 'On' : 'Off'}</button>}
-        {trackingPosition && <button type="button" className={`map-toggle-btn ${follow ? 'is-active' : ''}`} onClick={toggleFollow}>{follow ? 'Following rescuer' : 'Follow rescuer'}</button>}
         {navigation && <button type="button" className="map-toggle-btn" aria-pressed={headingUp && vector} disabled={!vector} onClick={() => setHeadingUp(value => !value)}>{headingUp && vector ? 'Heading-up · use north-up' : 'North-up · use heading-up'}</button>}
-        {showRouteControl && routePoints.length > 1 && <button type="button" className="map-toggle-btn" onClick={showFullRoute}>Show full route</button>}
-        <button type="button" className="map-toggle-btn map-recenter" aria-label="Recenter" title="Recenter map" onClick={recenter}><Icon name="target" size={20}/></button>
       </div>
     </div>}
     {!mapReady && !mapError && <div className="map-state-banner is-loading"><LoadingState layout="compact" label="Loading Google Maps…"/></div>}
@@ -667,13 +664,20 @@ export function InteractiveFloodMap({
     {layerStatus === 'error' && <div className="map-state-banner is-error" role="alert"><Icon name="alert" size={16}/><span><strong>Map layer warning:</strong> {errorMessage || 'Fixture layers could not be loaded.'} Showing Google basemap and stations.</span></div>}
     {showRouteStatus && <RouteOverlay state={effectiveRouteState}/>}
     <div className="google-map-wrapper">
-      {controlsSlot}
+      <div className="map-location-controls">
+        {controlsSlot}
+        <button type="button" className="map-toggle-btn map-recenter" aria-label="Recenter" title="Recenter map" onClick={recenter}><Icon name="target" size={20}/></button>
+      </div>
       <div ref={containerRef} className="google-map-canvas" id="google-rescue-map" style={{ width: '100%', height: 'var(--workspace-map-height, 460px)' }}/>
+      {(trackingPosition || (showRouteControl && routePoints.length > 1)) && <div className="map-journey-controls" role="group" aria-label="Rescuer tracking controls">
+        {trackingPosition && <button type="button" className={`map-toggle-btn ${follow ? 'is-active' : ''}`} aria-pressed={follow} onClick={toggleFollow}>{follow ? 'Following rescuer' : 'Follow rescuer'}</button>}
+        {showRouteControl && routePoints.length > 1 && <button type="button" className="map-toggle-btn" onClick={showFullRoute}>Show full route</button>}
+      </div>}
       <a className="map-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
     </div>
     <div className="map-accessible-summary">
       {journeySummary && <p>{journeySummary}</p>}
-      {trackingPosition && (trackingFrozen || expired || offline) && <p role="status">Tracking paused. Showing the last available server position.</p>}
+      {showTrackingNotice && trackingPosition && (trackingFrozen || expired || offline) && <p role="status">Tracking paused. Showing the last available server position.</p>}
       {navigation && mapReady && !vector && <p role="status">North-up following. Heading and tilt require vector map support.</p>}
     </div>
   </div>

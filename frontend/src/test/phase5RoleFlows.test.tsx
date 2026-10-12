@@ -108,7 +108,7 @@ describe('authenticated citizen and station frontend contract regression', () =>
     vi.unstubAllGlobals()
     fireEvent.click(screen.getByRole('button', { name: 'Use this rescue location' }))
     fireEvent.submit(screen.getByRole('form', { name: 'Citizen rescue request form' }))
-    expect(screen.getAllByRole('alert').some(alert => alert.textContent?.includes('inside the pilot area'))).toBe(true)
+    expect(screen.getAllByRole('alert').some(alert => /inside the (?:U-Belt )?pilot area/.test(alert.textContent ?? ''))).toBe(true)
     expect(screen.queryByLabelText('Longitude')).not.toBeInTheDocument()
     expect(transport).not.toHaveBeenCalled()
   })

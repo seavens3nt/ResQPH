@@ -302,7 +302,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
     >
       <RequestFormContent modal={modalLayout}>
-      {Object.keys(fieldErrors).length > 0 && <div className="request-error-summary" role="alert">
+      {Object.keys(fieldErrors).length > 0 && <div className="request-error-summary" role="alert" tabIndex={-1} data-location-error={fieldErrors['location.point.coordinates'] ? '' : undefined}>
         <strong>Check your request before continuing</strong>
         <ul>{[...new Set(Object.values(fieldErrors))].map(message => <li key={message}>{message}</li>)}</ul>
         <p>Your details are still here. Correct the highlighted fields, then try again.</p>
@@ -400,7 +400,6 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         </label>
       </div>
 
-      {fieldErrors['location.point.coordinates'] && <p data-location-error id={`${uid}-coords-err`} role="alert" tabIndex={-1} aria-invalid="true" style={{color:'#dc2626'}}>{fieldErrors['location.point.coordinates']} Choose a location inside the pilot area using the map or demonstration location.</p>}
       </div>
       <div className="request-assistance-fields" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
       <label className="request-flood-field">Reported severity
