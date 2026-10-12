@@ -10,6 +10,11 @@ The primary workflow is: citizen rescue request -> FastAPI validation -> MongoDB
 
 For current local Figma/modal/Inter/shared-width rules use `docs/ui/LOCAL_VISUAL_RULES.md`. Local working-tree implementation is not merged completion; `docs/STATUS.md` records the pending delivery and renewed fresh-request acceptance gate.
 
+For the main-based deployment candidate, configuration, free-plan limitations and
+unfulfilled hosted release gates, read `deployment/README.md`. Preserve recent UI
+and routing; do not confuse local tests, release eligibility or Atlas provisioning
+with a verified deployment. Automatic provider releases remain disabled.
+
 ## Delivery phases
 
 Work follows these delivery phases:

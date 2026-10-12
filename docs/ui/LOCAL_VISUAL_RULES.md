@@ -1,5 +1,15 @@
 # Local frontend visual baseline
 
+2026-10-13 local preview recovery: retain the UI from `temp-main-UI` alongside
+the backend/routing integration. Vite development serves a retiring worker at
+`/offline-shell.js` so a production offline shell previously opened on the same
+origin cannot retain an older build. Development startup asks existing ResQPH
+workers to update; the retiring worker clears only `resqph-ui-shell-*` caches,
+unregisters itself and reloads its controlled pages. Cookies and IndexedDB remain
+intact. Production builds retain the existing offline worker. The older browser
+screenshot's exact cause has not been reproduced; this closes the preview cache
+gap without changing dashboard layouts, styles, map controls or routing.
+
 2026-10-12 card consistency: `components/ui/cardTheme.css` owns final card
 appearance across role routes. Outer cards use a 20px radius, theme-blue surface,
 thin border and subtle shadow. Nested panels use a 16px radius and no shadow;

@@ -244,6 +244,16 @@ This sync does not enable the external model or claim live/guaranteed-safe routi
   checked shared logo source/compact variant, removed forced auth square ratio, and
   documented favicon origin. 398 tests / 58 files, lint/build/diff pass. Original logo
   file/exact transparent PNG still needed; browser unavailable. No remote actions.
+# 2026-10-13 — deployment candidate context
+
+Baseline main 5131e45, scoped deployment working-tree audit. Updated AGENTS,
+architecture, current status and STATUS for root-context providers, fail-closed
+hosted environment, readiness/dispatch visibility, added CI and exact-SHA guard.
+Preserved UI/routing contracts and historical notes. User selected free-only plans;
+Atlas staging-only access verified. Local evidence and remaining normal review,
+provider-connected CD, secrets, backup and hosted acceptance gates are recorded in
+deployment/README.md. No production deployment or completion inference.
+
 # 2026-10-13 — station distance selection
 
 Baseline c95c8c3, clean temporary-main at start. Synced fixed-headquarters dispatch,

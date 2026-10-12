@@ -36,7 +36,7 @@ from app.services.dispatch_worker import DispatchWorker
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+async def lifespan(application: FastAPI) -> AsyncIterator[None]:
     await connect_mongodb()
     stop_worker = asyncio.Event()
     worker_task: asyncio.Task | None = None
@@ -57,6 +57,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             ),
         )
         worker_task = asyncio.create_task(worker.run(stop_worker), name="automatic-dispatch")
+        application.state.dispatch_worker = worker
+        application.state.dispatch_task = worker_task
         yield
     finally:
         stop_worker.set()
@@ -83,6 +85,26 @@ app.add_middleware(
     expose_headers=["Retry-After"],
     max_age=600,
 )
+
+
+@app.middleware("http")
+async def protect_api_origin_and_cache(request, call_next):
+    is_api = request.url.path == settings.api_prefix or request.url.path.startswith(settings.api_prefix + "/")
+    unsafe = request.method not in {"GET", "HEAD", "OPTIONS"}
+    origin = request.headers.get("origin")
+    # Do not derive a trusted origin from client-controlled Host/X-Forwarded-*.
+    if is_api and unsafe and ((origin is not None and origin not in settings.cors_origins)
+                              or (settings.app_environment != "development" and origin is None)):
+        response = JSONResponse(status_code=403, content={"error": {
+            "code": "origin_not_allowed", "message": "This request origin is not allowed.", "details": [],
+        }})
+    else:
+        response = await call_next(request)
+    if is_api:
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["CDN-Cache-Control"] = "no-store"
+        response.headers["Vercel-CDN-Cache-Control"] = "no-store"
+    return response
 
 app.include_router(health.router, prefix=settings.api_prefix)
 app.include_router(auth.router, prefix=settings.api_prefix)

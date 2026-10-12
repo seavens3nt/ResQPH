@@ -30,7 +30,14 @@ async def test_failed_initial_ping_closes_client_and_does_not_publish_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake_client = FakeClient(RuntimeError("ping failed"))
-    monkeypatch.setattr(mongodb, "AsyncMongoClient", lambda _: fake_client)
+    def create_client(_uri, **options):
+        assert options == {
+            "serverSelectionTimeoutMS": mongodb.settings.database_timeout_ms,
+            "connectTimeoutMS": mongodb.settings.database_timeout_ms,
+            "socketTimeoutMS": mongodb.settings.database_timeout_ms,
+        }
+        return fake_client
+    monkeypatch.setattr(mongodb, "AsyncMongoClient", create_client)
     mongodb._client = None
 
     with pytest.raises(RuntimeError, match="ping failed"):

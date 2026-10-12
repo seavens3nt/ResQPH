@@ -2,6 +2,12 @@
 
 ## Directory map
 
+- `deployment/`: main-based free hosting templates, exact-SHA eligibility guard,
+  configuration tests and pending hosted acceptance/rollback runbook. Hosted API
+  uses `/api/v1` at the frontend origin, with an external rewrite to Render.
+- `.github/workflows/release-check.yml`: read-only current-main CI eligibility,
+  not provider deployment or proof of hosted staging acceptance.
+
 - `frontend/`: React/TypeScript/Vite role views, Leaflet map, API client, limited client caching, and frontend tests.
 - `backend/`: FastAPI, Pydantic validation, async PyMongo, lifecycle services, evidence-gated integration adapters, and backend tests.
 - `routing/`: bounded OSMnx/NetworkX graph preparation and deterministic flood-aware routing.

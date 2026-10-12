@@ -1,11 +1,16 @@
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    app_environment: Literal["development", "staging", "production"] = "development"
+    release_sha: str = "local"
+    database_timeout_ms: int = Field(default=5000, ge=100, le=30000)
+    readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=5)
     app_name: str = "ResQPH API"
     app_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
@@ -50,7 +55,36 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        hide_input_in_errors=True,
     )
+
+    @model_validator(mode="after")
+    def validate_hosted_settings(self) -> "Settings":
+        if self.app_environment == "development":
+            return self
+        if not self.auth_cookie_secure or self.auth_allow_demo_headers or self.ml_enabled:
+            raise ValueError("Hosted environments require secure cookies, demo headers disabled and ML disabled")
+        if self.auth_cookie_samesite not in {"lax", "strict"}:
+            raise ValueError("The same-origin API proxy requires SameSite lax or strict")
+        if not self.cors_origins:
+            raise ValueError("Hosted environments require exact HTTPS frontend origins")
+        for origin in self.cors_origins:
+            parsed = urlsplit(origin)
+            if (parsed.scheme != "https" or not parsed.hostname or parsed.hostname in {"localhost", "127.0.0.1"}
+                    or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment
+                    or "*" in origin):
+                raise ValueError("Hosted frontend origins must be exact HTTPS origins without paths")
+        uri = urlsplit(self.mongodb_uri)
+        if (uri.scheme != "mongodb+srv" or not uri.hostname or not uri.hostname.endswith(".mongodb.net")
+                or not uri.username or not uri.password or "directconnection" in uri.query.lower()
+                or "replicaset" in uri.query.lower()):
+            raise ValueError("Hosted environments require an authenticated Atlas SRV URI without local topology options")
+        expected_database = "resqph_production" if self.app_environment == "production" else "resqph_staging"
+        if self.mongodb_database != expected_database:
+            raise ValueError(f"Hosted database must be {expected_database}")
+        if self.api_prefix != "/api/v1":
+            raise ValueError("Hosted API prefix must match the frontend proxy at /api/v1")
+        return self
 
     @property
     def cors_origins(self) -> list[str]:

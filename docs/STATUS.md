@@ -1,5 +1,17 @@
 # ResQPH project status
 
+2026-10-13 deployment preparation, baseline main `5131e45` (PR #92):
+recent UI and routing retained on `setup/production-deployment`. Root-context
+Render/Vercel templates, hosted security validation, bounded readiness and expanded
+CI prepared. Owner approved free plans only; Atlas Free Singapore and staging-only
+database user verified. No local history migrated. Frontend 433 tests/build, backend
+252 checks, routing 150 checks, explicit disposable MongoDB 41 checks plus restart
+lease test pass. These are local results, not hosted acceptance. Provider-connected
+CD, normal PR review, secure service variables, Atlas transactions, backup restore
+and hosted UI/lifecycle verification remain pending. See [deployment checkpoint](../deployment/README.md).
+
+Earlier entries below are historical checkpoints, not current merge/deployment status.
+
 2026-10-13 local station-distance repair, baseline `c95c8c3` on temporary-main:
 controlled retained-position reproduction selects Iverson before and Sampaloc after
 headquarters-only dispatch. Distance routing now uses nearest physical segments,
