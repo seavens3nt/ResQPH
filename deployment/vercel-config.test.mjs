@@ -1,6 +1,38 @@
 import { spawnSync } from 'node:child_process'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { createRequire } from 'node:module'
+import { readFileSync } from 'node:fs'
+
+const frontendRequire = createRequire(new URL('../frontend/package.json', import.meta.url))
+const ts = frontendRequire('typescript')
+
+test('Git-ingestion config object contains only complete static literals', () => {
+  const source = ts.createSourceFile('vercel.mjs',
+    readFileSync(new URL('../vercel.mjs', import.meta.url), 'utf8'), ts.ScriptTarget.Latest, true)
+  const declaration = source.statements.filter(ts.isVariableStatement)
+    .filter(statement => statement.modifiers?.some(m => m.kind === ts.SyntaxKind.ExportKeyword))
+    .flatMap(statement => [...statement.declarationList.declarations])
+    .find(declaration => declaration.name.getText(source) === 'config')
+  function literal(node) {
+    if (ts.isObjectLiteralExpression(node)) return Object.fromEntries(node.properties.map(prop => {
+      assert.ok(ts.isPropertyAssignment(prop), 'No dynamic object spreads in static config')
+      return [prop.name.text, literal(prop.initializer)]
+    }))
+    if (ts.isArrayLiteralExpression(node)) return node.elements.map(literal)
+    if (ts.isStringLiteral(node) || ts.isNumericLiteral(node)) return node.text
+    if (node.kind === ts.SyntaxKind.TrueKeyword) return true
+    if (node.kind === ts.SyntaxKind.FalseKeyword) return false
+    if (node.kind === ts.SyntaxKind.NullKeyword) return null
+    assert.fail(`Dynamic expression in Git-ingestion config: ${node.getText(source)}`)
+  }
+  assert.ok(declaration, 'Exported config object exists')
+  const config = literal(declaration.initializer)
+  assert.deepEqual(config.git.deploymentEnabled, { '**': false, main: true })
+  assert.equal(config.ignoreCommand, 'node deployment/ignore-vercel-build.mjs')
+  // Dynamic routing is deliberately deferred intact to build-time evaluation.
+  assert.equal(Object.hasOwn(config, 'rewrites'), false)
+})
 
 const safe = {
   ...process.env,
@@ -30,6 +62,13 @@ test('Git settings are static and identical across deployment environments', () 
   const production = JSON.parse(result.stdout)
   assert.deepEqual(production.git, JSON.parse(evaluate().stdout).git)
   assert.equal(production.ignoreCommand, 'node deployment/ignore-vercel-build.mjs')
+})
+test('production proxy uses only its own validated backend, never staging', () => {
+  const result = evaluate({ RESQPH_DEPLOY_ENVIRONMENT: 'production', VERCEL_ENV: 'production',
+    RENDER_API_ORIGIN: 'https://resqph-api-production.onrender.com' })
+  assert.equal(result.status, 0, result.stderr)
+  assert.equal(JSON.parse(result.stdout).rewrites[0].destination,
+    'https://resqph-api-production.onrender.com/api/:path*')
 })
 for (const [environment, branch, target, status] of [
   ['staging', 'main', 'production', 1],

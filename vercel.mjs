@@ -24,10 +24,6 @@ export const config = {
   // Vercel evaluates Git properties statically before environment resolution.
   git: { deploymentEnabled: { '**': false, main: true } },
   ignoreCommand: 'node deployment/ignore-vercel-build.mjs',
-  rewrites: [
-    { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` },
-    { source: '/((?!api(?:/|$)|assets/|offline-shell\\.js$).*)', destination: '/index.html' },
-  ],
   headers: [
     { source: '/api/:path*', headers: [
       { key: 'Cache-Control', value: 'private, no-store' },
@@ -41,3 +37,12 @@ export const config = {
     ] },
   ],
 }
+
+// Git ingestion statically inspects the exported object before build-time env
+// variables exist. Keep the entire dynamic property out of that object: a
+// partially extracted rewrite has no destination and fails schema validation.
+// The build-time loader executes this assignment after the fail-closed guards.
+config.rewrites = [
+  { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` },
+  { source: '/((?!api(?:/|$)|assets/|offline-shell\\.js$).*)', destination: '/index.html' },
+]
