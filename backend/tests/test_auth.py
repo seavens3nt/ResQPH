@@ -113,6 +113,35 @@ def test_citizen_registration_login_restore_profile_and_logout(auth_client: tupl
     assert database["auth_sessions"].items == []
 
 
+def test_hosted_cookie_flags_csrf_restore_and_logout(auth_client, monkeypatch) -> None:
+    old_client, _database = auth_client
+    old_client.close()
+    monkeypatch.setattr(settings, "auth_cookie_secure", True)
+    monkeypatch.setattr(settings, "app_environment", "production")
+    monkeypatch.setattr(settings, "frontend_origins", "https://resqph.example.test")
+    client = TestClient(app, base_url="https://resqph.example.test")
+    origin = {"Origin": "https://resqph.example.test"}
+    response = client.post("/api/v1/auth/register", json={
+        "name": "Hosted Synthetic", "email": "hosted@example.test", "password": "Synthetic-Only-Password-55",
+    }, headers=origin)
+    assert response.status_code == 201, response.text
+    cookies = response.headers.get_list("set-cookie")
+    session = next(value for value in cookies if value.startswith("resqph_session="))
+    csrf = next(value for value in cookies if value.startswith("resqph_csrf="))
+    assert "HttpOnly" in session and "Secure" in session and "SameSite=lax" in session
+    assert "HttpOnly" not in csrf and "Secure" in csrf and "SameSite=lax" in csrf
+    assert "Domain=" not in session and "Domain=" not in csrf
+    assert client.get("/api/v1/auth/session").status_code == 200
+    assert client.patch("/api/v1/auth/profile", json={"name": "Updated"}, headers=origin).status_code == 403
+    headers = {**origin, "X-CSRF-Token": client.cookies.get("resqph_csrf")}
+    assert client.patch("/api/v1/auth/profile", json={"name": "Updated"}, headers=headers).status_code == 200
+    logout = client.post("/api/v1/auth/logout", headers=headers)
+    assert logout.status_code == 204
+    assert all("Secure" in value and "SameSite=lax" in value for value in logout.headers.get_list("set-cookie"))
+    assert client.get("/api/v1/auth/session").status_code == 401
+    client.close()
+
+
 def test_station_login_checks_server_membership_and_demo_header_rejection(auth_client: tuple[TestClient, MemoryDatabase]) -> None:
     client, database = auth_client
     station = load_station_catalog()["stations"][0]

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from datetime import UTC, datetime
 
 from app.repositories.dispatch_jobs import DispatchJobRepository
@@ -24,6 +25,12 @@ class DispatchWorker:
         self._assignments = assignments
         self._poll_interval_seconds = poll_interval_seconds
         self._batch_size = batch_size
+        self.last_success_at = time.monotonic()
+        self.consecutive_failures = 0
+
+    @property
+    def healthy(self) -> bool:
+        return self.consecutive_failures < 3 and time.monotonic() - self.last_success_at < 60
 
     async def run(self, stop: asyncio.Event) -> None:
         while not stop.is_set():
@@ -36,9 +43,12 @@ class DispatchWorker:
                         break
                     processed += 1
                     await self._process(job, now)
+                self.last_success_at = time.monotonic()
+                self.consecutive_failures = 0
             except asyncio.CancelledError:
                 raise
             except Exception:
+                self.consecutive_failures += 1
                 logger.exception("Dispatch batch failed; durable jobs will be retried")
             if processed == 0:
                 try:

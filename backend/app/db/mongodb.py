@@ -8,7 +8,12 @@ _client: AsyncMongoClient | None = None
 
 async def connect_mongodb() -> None:
     global _client
-    client = AsyncMongoClient(settings.mongodb_uri)
+    client = AsyncMongoClient(
+        settings.mongodb_uri,
+        serverSelectionTimeoutMS=settings.database_timeout_ms,
+        connectTimeoutMS=settings.database_timeout_ms,
+        socketTimeoutMS=settings.database_timeout_ms,
+    )
     try:
         await client.admin.command("ping")
     except Exception:

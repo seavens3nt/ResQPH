@@ -52,7 +52,7 @@ def test_weather_normalizes_google_data_and_keeps_secret_server_side(monkeypatch
     assert response.json()["rainAmount"] == 0.3
     assert response.json()["humidity"] == 80
     assert response.json()["windDirection"] == "SOUTHWEST"
-    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["cache-control"] == "private, no-store"
     assert "synthetic-test-key" not in response.text
 
 
@@ -102,7 +102,7 @@ def test_hourly_normalizes_forecast_with_nullable_measurements(monkeypatch, opti
     assert data["rainAmount"] == (0.3 if optional else None)
     assert data["humidity"] == (80 if optional else None)
     assert data["windSpeed"] is None
-    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["cache-control"] == "private, no-store"
     assert "synthetic-test-key" not in response.text
 
 

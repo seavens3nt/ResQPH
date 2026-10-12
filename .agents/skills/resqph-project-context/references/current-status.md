@@ -1,5 +1,17 @@
 # Current Status
 
+2026-10-13 main-based deployment candidate: baseline `5131e45` includes PR #92 UI
+and routing. `setup/production-deployment` retains them and prepares root-context
+hosting, Secure same-origin cookie proxy, fail-closed hosted configuration,
+bounded readiness and expanded CI. Free-only budget supersedes always-on hosting.
+Atlas Free Singapore and staging-only user are provisioned; no local records moved.
+Local frontend 433 tests/build, backend 252 tests, routing 150, MongoDB 41 plus
+one restart-lease test pass. Normal review, configured providers/CD, hosted Atlas
+transactions, backup restoration and full hosted acceptance are outstanding.
+See `deployment/README.md`; no deployment-verified claim is permitted.
+
+The following entries are historical evidence, not current remote delivery status.
+
 Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
 account-switch recovery blocks old transports/mutations, hides the old workspace and
 requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale

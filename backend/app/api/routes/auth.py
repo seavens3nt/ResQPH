@@ -31,8 +31,9 @@ def _set_session_cookies(response: Response, token: str, csrf: str) -> None:
 
 
 def _clear_session_cookies(response: Response) -> None:
-    response.delete_cookie(settings.auth_cookie_name, path=settings.api_prefix)
-    response.delete_cookie(settings.auth_csrf_cookie_name, path="/")
+    common = {"secure": settings.auth_cookie_secure, "samesite": settings.auth_cookie_samesite}
+    response.delete_cookie(settings.auth_cookie_name, path=settings.api_prefix, httponly=True, **common)
+    response.delete_cookie(settings.auth_csrf_cookie_name, path="/", **common)
 
 
 @router.post("/register", response_model=AccountResponse, status_code=201)

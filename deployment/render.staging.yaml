@@ -1,0 +1,35 @@
+# Separate synthetic-only free environment; shares workspace free-hour limits.
+services:
+  - type: web
+    name: resqph-api-staging
+    runtime: python
+    repo: https://github.com/seavens3nt/ResQPH
+    branch: main
+    region: singapore
+    plan: free
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: cd backend && python -m pip install -r requirements.txt
+    startCommand: cd backend && RELEASE_SHA="$RENDER_GIT_COMMIT" python -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT" --workers 1 --no-proxy-headers
+    healthCheckPath: /api/v1/ready
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.15
+      - key: APP_ENVIRONMENT
+        value: staging
+      - key: MONGODB_DATABASE
+        value: resqph_staging
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: AUTH_COOKIE_SECURE
+        value: "true"
+      - key: AUTH_COOKIE_SAMESITE
+        value: lax
+      - key: AUTH_ALLOW_DEMO_HEADERS
+        value: "false"
+      - key: ML_ENABLED
+        value: "false"
+      - key: GOOGLE_WEATHER_API_KEY
+        sync: false
