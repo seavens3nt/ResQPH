@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     auth_session_ttl_hours: int = Field(default=12, ge=1, le=168)
     auth_allow_demo_headers: bool = False
     route_snap_max_distance_m: float = 900.0
+    station_dispatch_snap_max_distance_m: float = Field(default=75.0, gt=0, le=900)
     simulation_speed_mps: float = 5.0
     report_rate_limit_per_minute: int = 5
     route_rate_limit_per_minute: int = 10

@@ -244,3 +244,13 @@ This sync does not enable the external model or claim live/guaranteed-safe routi
   checked shared logo source/compact variant, removed forced auth square ratio, and
   documented favicon origin. 398 tests / 58 files, lint/build/diff pass. Original logo
   file/exact transparent PNG still needed; browser unavailable. No remote actions.
+# 2026-10-13 — station distance selection
+
+Baseline c95c8c3, clean temporary-main at start. Synced fixed-headquarters dispatch,
+nearest-road directed partial distance, 75 m coverage guard and backend-only decision
+provenance with API/routing/workflow docs. Synthetic before/after and disposable
+MongoDB evidence are in docs/testing/STATION-DISTANCE-2026-10-13.md and JSON.
+No catalog/graph coordinate edits, frontend/auth/offline/lifecycle implementation
+changes, historical rewrites or Git remote actions. Original reported historical
+decision unresolved without provenance; six obsolete Phase 5 acceptance failures
+remain explicitly recorded. All changes local for review.

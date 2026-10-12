@@ -409,9 +409,9 @@ def test_recommendations_rank_available_teams_by_valid_road_distance(
     assert body["selection_mode"] == "distance"
     assert body["candidates"][0]["team_id"] == "team-sampaloc-fire-station"
     assert body["candidates"][0]["road_distance_m"] == 123.0
-    assert body["candidates"][0]["origin_source"] == "current_location"
+    assert body["candidates"][0]["origin_source"] == "base_location"
     assert body["candidates"][0]["routing_origin"] == [120.9931, 14.608]
-    assert body["candidates"][0]["route"]["origin_source"] == "current_location"
+    assert body["candidates"][0]["route"]["origin_source"] == "base_location"
     assert body["exclusions"][0]["reason"] == "team_unavailable"
 
 

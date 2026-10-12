@@ -72,7 +72,9 @@ The authoritative verification input is [`../../data/samples/routing-known-graph
 
 `selection_mode` defaults to `cost`, preserving the flood-aware route endpoint behavior. `distance` is used by simulated team recommendation when “closest” means shortest valid road distance; impassable/restricted eligibility is still applied before search, but flood-risk penalties are not treated as distance or ETA seconds.
 
-Route evaluation performs bounded point-to-road snapping against eligible controlled-road coverage. The default local snap limit is `ROUTE_SNAP_MAX_DISTANCE_M=900`. Responses may include original route geometry plus `snapped_origin` and `snapped_destination` metadata. Points beyond the snap limit return `no-route` rather than a fabricated straight line.
+Station distance mode projects onto the nearest physical road before scenario filtering, then attaches request-local directed partial edges. Coincident forward/reverse representations remain available; farther parallel roads are not substituted to manufacture reachability. Partial-edge lengths use the projected fraction of the recorded road length. Off-road snap offsets remain separate diagnostics and are never counted or drawn as verified roads. A* uses a zero, admissible heuristic and requires finite nonnegative road lengths; it never falls back to time/risk weights in distance mode. `STATION_DISPATCH_SNAP_MAX_DISTANCE_M=75` bounds this path (also capped by `ROUTE_SNAP_MAX_DISTANCE_M`). Missing coverage, blocked attachments, disconnected direction, or coincident projected endpoints return explicit `no-route`. No graph extent or station coordinates were changed.
+
+The standalone cost-mode endpoint retains its existing controlled node-based snapping behavior and `ROUTE_SNAP_MAX_DISTANCE_M=900` limit. Station recommendation, automatic assignment and stored initial mission routes use the corrected distance path. Responses retain stable original edge IDs and include snapped points, offset metres, selected edge endpoints and projected fractions. See the [2026-10-13 evidence report](../testing/STATION-DISTANCE-2026-10-13.md).
 
 ## Successful result
 

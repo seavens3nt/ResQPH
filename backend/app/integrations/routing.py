@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 from dataclasses import dataclass
 from itertools import pairwise
@@ -19,6 +20,11 @@ from resqph_routing import (
     collect_warnings,
     find_route,
     find_shortest_distance_route,
+)
+from resqph_routing.endpoints import (
+    attach_endpoints,
+    nearest_attachments,
+    physical_coverage_graph,
 )
 
 from app.core.config import settings
@@ -71,6 +77,10 @@ class SnapResult:
     snapped_coordinates: tuple[float, float]
     snapped_distance_m: float
     edge_id: str
+    fraction: float | None = None
+    from_node: str | None = None
+    to_node: str | None = None
+    max_distance_m: float | None = None
 
 
 class RoutingEngine(Protocol):
@@ -102,50 +112,34 @@ class DeterministicRoutingEngine:
         flood_payload = request.geospatial.flood_scenario.model_dump(mode="json")
 
         try:
+            _node_coordinates(road_payload)
             graph = build_graph_from_geojson(
                 road_payload,
                 flood_payload,
                 ml_results=None,
                 ml_accepted=False,
             )
-            origin_snaps = (
-                _snap_candidates(
-                    request.origin,
-                    graph,
-                    settings.route_snap_max_distance_m,
-                )
-                if request.selection_mode == "distance"
-                else [
-                    snap
-                    for snap in [
-                        _snap_to_graph(
-                            request.origin,
-                            graph,
-                            settings.route_snap_max_distance_m,
-                        )
-                    ]
-                    if snap is not None
-                ]
-            )
-            destination_snaps = (
-                _snap_candidates(
-                    request.destination,
-                    graph,
-                    settings.route_snap_max_distance_m,
-                )
-                if request.selection_mode == "distance"
-                else [
-                    snap
-                    for snap in [
-                        _snap_to_graph(
-                            request.destination,
-                            graph,
-                            settings.route_snap_max_distance_m,
-                        )
-                    ]
-                    if snap is not None
-                ]
-            )
+            if request.selection_mode == "distance":
+                # Attach to the nearest physical road BEFORE passability filtering.
+                # A blocked road is not permission to jump to a distant open road.
+                coverage = physical_coverage_graph(road_payload)
+                limit = min(settings.route_snap_max_distance_m, settings.station_dispatch_snap_max_distance_m)
+                origin_attachments = nearest_attachments(request.origin, coverage, limit)
+                destination_attachments = nearest_attachments(request.destination, coverage, limit)
+                graph = attach_endpoints(graph, origin_attachments, destination_attachments)
+                origin_snaps = [SnapResult("@origin", snap.point, snap.offset_m, snap.edge_id,
+                                          snap.fraction, coverage.get_edge(snap.edge_id).from_node,
+                                          coverage.get_edge(snap.edge_id).to_node, limit)
+                                for snap in origin_attachments]
+                destination_snaps = [SnapResult("@destination", snap.point, snap.offset_m, snap.edge_id,
+                                               snap.fraction, coverage.get_edge(snap.edge_id).from_node,
+                                               coverage.get_edge(snap.edge_id).to_node, limit)
+                                     for snap in destination_attachments]
+            else:
+                origin_snaps = [snap for snap in [_snap_to_graph(request.origin, graph, settings.route_snap_max_distance_m)]
+                                if snap is not None]
+                destination_snaps = [snap for snap in [_snap_to_graph(request.destination, graph, settings.route_snap_max_distance_m)]
+                                     if snap is not None]
             if not origin_snaps or not destination_snaps:
                 scenario = request.geospatial.flood_scenario.scenario
                 fixture_notice = (
@@ -170,12 +164,15 @@ class DeterministicRoutingEngine:
                         destination_snaps[0] if destination_snaps else None
                     ),
                 }
-            result, origin_snap, destination_snap = _best_snapped_route(
-                graph,
-                origin_snaps,
-                destination_snaps,
-                request.selection_mode,
-            )
+            if request.selection_mode == "distance":
+                origin_snap, destination_snap = origin_snaps[0], destination_snaps[0]
+                result = (RouteResult() if _meters_between(origin_snap.snapped_coordinates,
+                                                          destination_snap.snapped_coordinates) < 1e-6
+                          else find_shortest_distance_route(graph, "@origin", "@destination"))
+            else:
+                result, origin_snap, destination_snap = _best_snapped_route(
+                    graph, origin_snaps, destination_snaps, request.selection_mode,
+                )
             origin_node = origin_snap.node_id
             destination_node = destination_snap.node_id
         except (GraphValidationError, RoutingInputError, ValueError) as exc:
@@ -191,14 +188,16 @@ class DeterministicRoutingEngine:
             or "Synthetic academic scenario; not live flood evidence."
         )
 
-        if origin_node == destination_node:
+        if origin_node == destination_node or (isinstance(result, RouteResult) and result.total_cost == 0):
             return {
                 "fixture_notice": fixture_notice,
                 "status": "no-route",
-                "reason": "origin_and_destination_resolve_to_same_node",
+                "reason": ("origin_and_destination_project_to_same_point"
+                           if request.selection_mode == "distance"
+                           else "origin_and_destination_resolve_to_same_node"),
                 "warnings": _unique(
                     [
-                        "Origin and destination resolve to the same fixture node; no route geometry was produced.",
+                        "Origin and destination resolve to the same road point; no verified road travel was produced.",
                         CONTROLLED_SCENARIO_WARNING,
                         ML_DISABLED_WARNING,
                     ]
@@ -257,6 +256,9 @@ class DeterministicRoutingEngine:
                 request.selection_mode,
                 origin_node,
                 destination_node,
+                repr(request.origin),
+                repr(request.destination),
+                hashlib.sha256(repr((road_payload, flood_payload)).encode()).hexdigest(),
                 *result.edge_ids,
             ]
         )
@@ -271,7 +273,7 @@ class DeterministicRoutingEngine:
             "distance_m": distance_m,
             "estimated_time_s": estimated_time_s,
             "total_cost": total_cost,
-            "edge_ids": result.edge_ids,
+            "edge_ids": [edge_id.split("@")[0] for edge_id in result.edge_ids],
             "cost_breakdown": breakdown,
             "fallback_used": True,
             "warnings": _unique(
@@ -308,6 +310,7 @@ class RoutingAdapter:
     ) -> None:
         self._engine = engine or DeterministicRoutingEngine()
         self._fixture_config = fixture_config
+        self.fixture_revision: dict[str, str] = {}
 
     def evaluate(self, request: RouteRequest) -> RouteEvaluateResponse:
         try:
@@ -325,6 +328,15 @@ class RoutingAdapter:
                 ],
             ) from exc
 
+        self.fixture_revision = {
+            "contract_revision": geospatial.contract_revision,
+            "road_payload_sha256": hashlib.sha256(json.dumps(
+                geospatial.road_edges.model_dump(mode="json"), sort_keys=True,
+            ).encode()).hexdigest(),
+            "flood_payload_sha256": hashlib.sha256(json.dumps(
+                geospatial.flood_scenario.model_dump(mode="json"), sort_keys=True,
+            ).encode()).hexdigest(),
+        }
         loaded_scenario_id = geospatial.flood_scenario.scenario.scenario_id
         if loaded_scenario_id != request.scenario_id:
             raise RoutingIntegrationError(
@@ -511,44 +523,6 @@ def _snap_to_graph(
     return best
 
 
-def _snap_candidates(
-    point: tuple[float, float],
-    graph: RoutingGraph,
-    max_distance_m: float,
-) -> list[SnapResult]:
-    candidates: dict[tuple[str, str], SnapResult] = {}
-    for edge in graph.edge_index.values():
-        geometry = edge.geometry if isinstance(edge.geometry, dict) else None
-        positions = geometry.get("coordinates", []) if geometry else []
-        if len(positions) < 2:
-            continue
-        endpoints = [
-            (edge.from_node, tuple(positions[0][:2])),
-            (edge.to_node, tuple(positions[-1][:2])),
-        ]
-        for node_id, endpoint in endpoints:
-            distance = _meters_between(point, endpoint)
-            if distance > max_distance_m:
-                continue
-            key = (node_id, edge.edge_id)
-            candidate = SnapResult(
-                node_id=node_id,
-                snapped_coordinates=(float(endpoint[0]), float(endpoint[1])),
-                snapped_distance_m=distance,
-                edge_id=edge.edge_id,
-            )
-            previous = candidates.get(key)
-            if previous is None or candidate.snapped_distance_m < previous.snapped_distance_m:
-                candidates[key] = candidate
-    nearest_segment = _snap_to_graph(point, graph, max_distance_m)
-    if nearest_segment is not None:
-        candidates[(nearest_segment.node_id, nearest_segment.edge_id)] = nearest_segment
-    return sorted(
-        candidates.values(),
-        key=lambda item: (item.snapped_distance_m, item.edge_id, item.node_id),
-    )[:12]
-
-
 def _best_snapped_route(
     graph: RoutingGraph,
     origin_snaps: list[SnapResult],
@@ -620,7 +594,9 @@ def _snap_payload(snap: SnapResult | None) -> dict[str, Any] | None:
         "distance_m": round(snap.snapped_distance_m, 3),
         "edge_id": snap.edge_id,
         "node_id": snap.node_id,
-        "max_distance_m": settings.route_snap_max_distance_m,
+        "max_distance_m": snap.max_distance_m if snap.max_distance_m is not None else settings.route_snap_max_distance_m,
+        **({"fraction": snap.fraction, "from_node": snap.from_node, "to_node": snap.to_node}
+           if snap.fraction is not None else {}),
     }
 
 
