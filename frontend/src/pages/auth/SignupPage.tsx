@@ -1,12 +1,12 @@
+import { BrandLogo } from '../../components/brand/BrandLogo'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/art/Icon'
 import { useAuth } from '../../features/auth/AuthContext'
-import type { UserRole } from '../../features/auth/types'
 import { validEmail, validPhone, validPassword } from '../../features/auth/validation'
+import { readApiMessage } from '../../features/auth/AuthContext'
 import './auth.css'
-import { AuthModeTabs } from './AuthLayout'
 
 type Step = 'name' | 'phone' | 'email' | 'password' | 'emergency' | 'location'
 
@@ -36,6 +36,7 @@ export function SignupPage() {
   const [ecRelationship, setEcRelationship] = useState('')
   const [ecPhone, setEcPhone] = useState('')
   const [error, setError] = useState('')
+  const [locationNotice, setLocationNotice] = useState('')
 
   function next() { setStep(s => STEP_ORDER[STEP_ORDER.indexOf(s) + 1] ?? s) }
   function back() { setError(''); setStep(s => STEP_ORDER[STEP_ORDER.indexOf(s) - 1] ?? s) }
@@ -57,7 +58,7 @@ export function SignupPage() {
       next(); return
     }
     if (step === 'password') {
-      if (!validPassword(password)) { setError('Password must be at least 6 non-blank characters.'); return }
+      if (!validPassword(password)) { setError('Password must be at least 12 non-blank characters.'); return }
       if (password !== confirmPassword) { setError('Passwords do not match.'); return }
       next(); return
     }
@@ -68,29 +69,42 @@ export function SignupPage() {
     }
   }
 
-  function finishSignup(locationGranted: boolean) {
-    const role: UserRole = 'citizen'
-    signup({
-      name: `${firstName.trim()} ${lastName.trim()}`,
-      email: email.trim(),
-      role,
-      phone: phone.trim(),
-      emergencyContact: ecName.trim()
-        ? { name: ecName.trim(), relationship: ecRelationship.trim(), phone: ecPhone.trim() }
-        : undefined,
-      locationPermission: locationGranted,
-    })
-    navigate('/dashboard', { replace: true })
+  async function finishSignup(locationGranted: boolean) {
+    try {
+      await signup({
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        email: email.trim(),
+        password,
+        phone: phone.trim(),
+        emergencyContact: ecName.trim()
+          ? { name: ecName.trim(), relationship: ecRelationship.trim(), phone: ecPhone.trim() }
+          : undefined,
+        locationPermission: locationGranted,
+      })
+      navigate('/dashboard', { replace: true })
+    } catch (reason) {
+      setError(readApiMessage(reason))
+    }
   }
 
   function handleAllowLocation() {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         () => finishSignup(true),
-        () => finishSignup(false),
+        (locationError) => {
+          const message = locationError.code === 1
+            ? 'Location permission was denied. You can still choose a point on the map when making a request.'
+            : locationError.code === 3
+              ? 'Location lookup timed out. You can still choose a point on the map when making a request.'
+              : 'Your current location is unavailable. You can still choose a point on the map when making a request.'
+          setLocationNotice(message)
+          void finishSignup(false)
+        },
+        { enableHighAccuracy: false, maximumAge: 300_000, timeout: 8_000 },
       )
     } else {
-      finishSignup(false)
+      setLocationNotice('This browser does not provide location access. You can still choose a point on the map when making a request.')
+      void finishSignup(false)
     }
   }
 
@@ -99,6 +113,7 @@ export function SignupPage() {
     return (
       <div className="auth-mobile-page">
         <div className="auth-phone-shell">
+          <div className="auth-hero-banner"><BrandLogo theme="dark" className="auth-hero-logo-img"/></div>
           <div className="auth-location-screen">
             <p className="signup-step-count">Optional final step · Location access</p>
             <div className="auth-location-icon" aria-hidden="true">
@@ -111,12 +126,15 @@ export function SignupPage() {
             <p className="auth-location-body">
               Choose whether to use your browser location for a rescue request. You can skip this and choose a map point later. No background tracking.
             </p>
+            {error && <p className="auth-error-alert" role="alert">{error}</p>}
+            {locationNotice && <p className="auth-location-body" role="status">{locationNotice}</p>}
             <button className="auth-btn-pill-submit" onClick={handleAllowLocation}>
               Allow Location
             </button>
             <button className="auth-text-btn muted" style={{ marginTop: 14 }} onClick={() => finishSignup(false)}>
               Not Now
             </button>
+            <p className="auth-signup-switch">Already have an account? <Link to="/login" className="auth-text-btn highlight">Log in</Link></p>
           </div>
         </div>
       </div>
@@ -132,7 +150,7 @@ export function SignupPage() {
     name:      { title: "What's your name?",         subtitle: 'This is how rescuers will identify you.' },
     phone:     { title: 'Your mobile number',         subtitle: 'Used to reach you during an emergency.' },
     email:     { title: 'Your email address',         subtitle: 'Synthetic prototype identity only; no account recovery or alerts.' },
-    password:  { title: 'Create a password',          subtitle: 'At least 6 characters.' },
+    password:  { title: 'Create a password',          subtitle: 'At least 12 characters.' },
     emergency: { title: 'Emergency contact',          subtitle: 'Who should we call if you need help? You can skip this.' },
   }
 
@@ -144,12 +162,7 @@ export function SignupPage() {
 
         {/* Logo header */}
         <div className="auth-hero-banner">
-          <img
-            src="/logo.png"
-            alt="ResQPH"
-            className="auth-hero-logo-img"
-          />
-          <p className="auth-hero-wordmark">ResQ<span className="auth-hero-wordmark__p">P</span><span className="auth-hero-wordmark__h">H</span></p>
+          <BrandLogo theme="dark" className="auth-hero-logo-img"/>
         </div>
 
         {/* Progress */}
@@ -159,7 +172,6 @@ export function SignupPage() {
 
         {/* Form area */}
         <div className="auth-body-container">
-          <AuthModeTabs/>
           {/* Back + step count */}
           <div className="signup-step-nav">
             {currentNum > 1 ? (
@@ -360,12 +372,9 @@ export function SignupPage() {
               {step === 'emergency' ? (ecName.trim() ? 'Continue' : 'Skip') : 'Continue'}
             </button>
 
-            {step === 'name' && (
-              <p className="auth-signup-switch" style={{ textAlign: 'center', marginTop: 8 }}>
-                Already have an account?{' '}
-                <Link to="/login" className="auth-text-btn highlight">Sign in</Link>
-              </p>
-            )}
+            <p className="auth-signup-switch" style={{ textAlign: 'center', marginTop: 8 }}>
+              Already have an account? <Link to="/login" className="auth-text-btn highlight">Log in</Link>
+            </p>
           </form>
         </div>
       </div>

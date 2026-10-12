@@ -26,6 +26,11 @@ No stored weather or routing coupling; client loads on Home mount/reload only,
 no disk persistence, explicit unavailable/stale feedback and Google Maps attribution.
 Missing key returns 503 weather_not_configured; provider failures return a sanitized
 503 weather_unavailable. Runtime dependency httpx is required.
+Provider quota failures now return 429 weather_quota_exceeded and Retry-After;
+per-endpoint process-local failure cooldown prevents repeated calls (one hour
+for identified daily quotas, otherwise one minute, honoring longer bounded
+numeric Retry-After). No weather values are stored. Access denial returns
+503 weather_configuration_error. CORS exposes Retry-After to the frontend.
 GET /api/v1/weather/ubelt/hourly separately requests six Google forecast intervals;
 `HourlyWeather.tsx` renders real columns instead of `/figma-home/5d940.png`.
 Current weather adds humidity and windDirection. First-hour forecast rain is mm
@@ -51,6 +56,15 @@ load on mount/reload only, and retain explicit unavailable/stale states.
 - Documentation: parse JSON/GeoJSON fixtures, resolve local Markdown links, inspect terminology, and run `git diff --check`.
 
 ## Integration constraints
+
+- Available canonical station dispatch uses stored `base_location`, not a completed
+  simulation's `current_location`. Distance-mode routing attaches nearest physical
+  road segments before flood filtering and counts legal directed partial-edge
+  lengths; default station coverage bound is 75 m. Source edge IDs remain stable.
+  New missions persist backend-only `dispatch_provenance` with normalized evaluated
+  graph/scenario digests, candidates/exclusions and chosen origin/snap evidence.
+  Existing missions, station catalog coordinates, standalone cost-mode endpoint,
+  authentication and offline/lifecycle behavior are unchanged by this repair.
 
 - The core lifecycle must work while routing and ML adapters are unavailable.
 - PR #80 verifies mission status, linked request status/history, team availability,

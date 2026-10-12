@@ -3,8 +3,8 @@ import { Icon, type IconName } from '../../components/art/Icon'
 import { FigmaHomeAsset } from './FigmaHomeAsset'
 
 /** Same section hierarchy as Citizen Home, with each workspace's own label. */
-export function WorkspaceSectionHeading({children, icon}: {children: ReactNode; icon?: IconName}) {
-  return <h2 className="workspace-section-heading">{icon ? <Icon name={icon} size={26}/> : <FigmaHomeAsset name="star"/>}<span>{children}</span></h2>
+export function WorkspaceSectionHeading({children, icon, artwork}: {children: ReactNode; icon?: IconName; artwork?: ReactNode}) {
+  return <h2 className="workspace-section-heading">{artwork ?? (icon ? <Icon name={icon} size={26}/> : <FigmaHomeAsset name="star"/>)}<span>{children}</span></h2>
 }
 
 type CardProps = HTMLAttributes<HTMLElement> & {
@@ -36,15 +36,16 @@ export function WorkspaceFilters<T extends string>({ options, value, onChange, l
   </div>
 }
 
-export function WorkspaceStatCard({ count, label, icon, tone, onClick }: {
+export function WorkspaceStatCard({ count, label, icon, artwork, tone, onClick }: {
   count: number
   label: string
   icon: IconName
+  artwork?: ReactNode
   tone: 'pending' | 'teams' | 'active' | 'completed'
   onClick: () => void
 }) {
   return <button type="button" className={`stat-${tone}`} aria-label={`${count} ${label}`} onClick={onClick}>
-    <Icon name={icon} size={28}/><span><strong>{count}</strong><small>{label}</small></span>
+    {artwork ?? <Icon name={icon} size={28}/>}<span><strong>{count}</strong><small>{label}</small></span>
   </button>
 }
 

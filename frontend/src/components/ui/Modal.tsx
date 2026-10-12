@@ -1,3 +1,4 @@
+import { useTheme } from '../../features/theme/useTheme'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { Icon } from '../art/Icon'
 import './Modal.css'
@@ -27,6 +28,7 @@ export function Modal({
   headerNote,
   dismissOnBackdrop = true,
 }: ModalProps) {
+  const [dark] = useTheme()
   const card = useRef<HTMLDivElement>(null)
   const close = useRef(onClose)
   useEffect(() => { close.current = onClose }, [onClose])
@@ -70,7 +72,7 @@ export function Modal({
   if (!isOpen) return null
 
   return (
-    <div className={`modal-backdrop ${className}`} onClick={() => dismissOnBackdrop && onClose()} role="presentation">
+    <div data-app-theme={dark ? 'dark' : 'light'} className={`modal-backdrop ${className}`} onClick={() => dismissOnBackdrop && onClose()} role="presentation">
       <div
         ref={card}
         tabIndex={-1}

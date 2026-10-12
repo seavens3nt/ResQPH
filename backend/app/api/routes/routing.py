@@ -2,9 +2,11 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.api.dependencies.demo_role import get_demo_actor
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.integrations.routing import RoutingAdapter, RoutingIntegrationError
 from app.schemas.common import DemoActor, ErrorEnvelope, ServiceError
 from app.schemas.routing import RouteEvaluateResponse, RouteRequest
@@ -26,6 +28,7 @@ def get_routing_adapter() -> RoutingAdapter:
 @router.post(
     "/evaluate",
     response_model=RouteEvaluateResponse,
+    response_model_exclude_defaults=True,
     responses=ERROR_RESPONSES,
     summary="Evaluate a controlled flood-aware route",
     description=(
@@ -36,16 +39,23 @@ def get_routing_adapter() -> RoutingAdapter:
 )
 async def evaluate_route(
     payload: RouteRequest,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     adapter: Annotated[RoutingAdapter, Depends(get_routing_adapter)],
 ) -> RouteEvaluateResponse:
-    if actor.role not in {"rescuer", "coordinator"}:
+    if actor.role != "rescuer":
         raise ServiceError(
             status.HTTP_403_FORBIDDEN,
             "forbidden",
-            "This simulated role cannot evaluate routes.",
-            [{"field": "X-Demo-Role", "reason": "expected rescuer or coordinator"}],
+            "Only station accounts may evaluate operational routes.",
+            [{"field": "role", "reason": "expected rescuer"}],
         )
+    check_rate_limit(
+        request,
+        actor_id=actor.user_id,
+        action="route-evaluation",
+        limit=settings.route_rate_limit_per_minute,
+    )
 
     try:
         return adapter.evaluate(payload)

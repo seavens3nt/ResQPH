@@ -1,3 +1,4 @@
+import { useMissionJourney } from '../../../../features/missions/useMissionJourney'
 /**
  * RescuerMissionCard — Displays a single mission's summary with stale/cached state.
  *
@@ -6,10 +7,11 @@
  *   - Mission and route loading/failure states (handled by parent)
  *   - Valid status-transition action button
  */
-import { useId } from 'react'
+import { useCallback, useId, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import type { MissionDetail, MissionStatusHistoryItem } from '../../../../api/missions'
-import { nextValidStatus } from '../../../../api/missions'
+import { controlMissionTracking, nextValidStatus } from '../../../../api/missions'
 import { StatusBadge } from '../shared'
 import { Button } from '../../../../components/ui/Button'
 import { Icon } from '../../../../components/art/Icon'
@@ -17,6 +19,7 @@ import { WorkspaceProgress } from '../../../../features/workspace/WorkspaceUI'
 import { MISSION_STAGES } from '../../../../features/workspace/missionStages'
 import { RecordId } from '../../../../features/workspace/Records'
 import './RescuerMissionCard.css'
+import { InteractiveFloodMap } from '../../../../features/map/InteractiveFloodMap'
 
 interface RescuerMissionCardProps {
   mission: MissionDetail
@@ -26,6 +29,7 @@ interface RescuerMissionCardProps {
   onAdvanceStatus: () => void
   isCached?: boolean
   isQueueLocked?: boolean
+  showTracking?: boolean
 }
 
 export function RescuerMissionCard({
@@ -36,6 +40,7 @@ export function RescuerMissionCard({
   onAdvanceStatus,
   isCached = false,
   isQueueLocked = false,
+  showTracking = true,
 }: RescuerMissionCardProps) {
   const titleId = useId()
   const queueNoteId = useId()
@@ -43,13 +48,19 @@ export function RescuerMissionCard({
   const req = mission.request_summary
 
   const NEXT_LABEL: Partial<Record<string, string>> = {
-    'en-route': 'TAP EN ROUTE',
+    'en-route': 'ACCEPT MISSION & START TRAVEL',
     arrived: 'TAP ARRIVED AT SCENE',
     completed: 'TAP RESCUE COMPLETED',
   }
 
+  const [followRescuer,setFollowRescuer] = useState(true)
+  const suspendFollow = useCallback(()=>setFollowRescuer(false),[])
   const syncState = isStale || isCached ? 'stale' : 'fresh'
-
+  const { tracking } = useMissionJourney(showTracking && !isCached ? mission.id : null)
+  const trackingControl = useMutation({
+    mutationFn: (action: 'start' | 'pause' | 'resume' | 'reset') => controlMissionTracking(mission.id, action),
+    onSuccess: () => void tracking.refetch(),
+  })
   return (
     <article className="rescuer-mission-card" aria-labelledby={titleId}>
       {/* Header */}
@@ -85,6 +96,7 @@ export function RescuerMissionCard({
             </span>
           )}
           <span>Flood level: {req.reported_flood_level}</span>
+          <span>Reported severity: {req.reported_severity ?? 'moderate'}</span>
         </div>
       ) : (
         <p className="proto-notice" role="status">
@@ -94,11 +106,40 @@ export function RescuerMissionCard({
 
       {mission.status !== 'cancelled' && <WorkspaceProgress stages={MISSION_STAGES} current={mission.status} label="Mission progress"/>}
 
-      {/* Non-production prototype notice */}
-      <p className="proto-notice" role="note" style={{ marginTop: 8 }}>
-        <strong>Prototype:</strong> Route data is fixture-based; status transitions use demo role
-        simulation. Not a production dispatch system.
-      </p>
+      {showTracking && tracking.data && (
+        <div className="mission-tracking-panel">
+          <div className="mission-tracking-panel__header"><strong>Shared Simulated Tracking</strong></div>
+          <MissionTrackingMap
+            route={tracking.data.route_geometry?.coordinates ?? []}
+            position={tracking.data.position?.coordinates ?? null}
+            progress={tracking.data.progress_ratio}
+            frozen={tracking.isError || isCached}
+            timestamp={tracking.data.timestamp}
+            stopped={['arrived', 'completed', 'cancelled'].includes(mission.status)}
+            follow={followRescuer}
+            onFollowChange={setFollowRescuer}
+            onUserPan={suspendFollow}
+            stationId={mission.station_id ?? undefined}
+            incident={req?.location.point?.coordinates}
+          />
+          <div className="mission-tracking-panel__metrics">
+            <span>Status: <strong>{tracking.data.simulation_status}</strong></span>
+            <span>Remaining: <strong>{Math.round(tracking.data.remaining_distance_m)} m</strong></span>
+            <span>ETA: <strong>{Math.ceil(tracking.data.estimated_remaining_time_s / 60)} min</strong></span>
+            <span>Updated: <strong>{new Date(tracking.data.timestamp).toLocaleTimeString()}</strong></span>
+          </div>
+          <div className="mission-tracking-panel__actions">
+            {mission.status === 'assigned' && <span className="workspace-caption">Assigned means this station is reserved. Accepting the mission starts the shared simulation together with the status update.</span>}
+            {tracking.data.simulation_status === 'running' && <Button size="sm" variant="ghost" type="button" disabled={trackingControl.isPending} onClick={() => trackingControl.mutate('pause')}>Pause simulation</Button>}
+            {tracking.data.simulation_status === 'paused' && <Button size="sm" variant="ghost" type="button" disabled={trackingControl.isPending} onClick={() => trackingControl.mutate('resume')}>Resume simulation</Button>}
+          </div>
+        </div>
+      )}
+      {tracking.error && (
+        <p className="rescuer-mission-card__queue-note" role="status">
+          Mission tracking is unavailable or rate-limited. The marker will not animate beyond the last server update.
+        </p>
+      )}
 
       {/* Next valid transition action */}
       {next && mission.status !== 'completed' ? (
@@ -161,4 +202,38 @@ export function RescuerMissionCard({
       )}
     </article>
   )
+}
+
+function MissionTrackingMap({
+  route,
+  position,
+  progress,
+  frozen,
+  timestamp,
+  stopped,
+  follow,
+  onFollowChange,
+  onUserPan,
+  stationId,
+  incident,
+}: {
+  route: [number, number][]
+  position: [number, number] | null
+  progress: number
+  frozen: boolean
+  timestamp: string
+  stopped: boolean
+  follow: boolean
+  onFollowChange: (following: boolean) => void
+  onUserPan: () => void
+  stationId?: string
+  incident?: [number, number]
+}) {
+  const geoJsonRoute = route.filter(point => point.length === 2 && point.every(Number.isFinite))
+  const incidentRecords = incident ? [{ id: 'mission-incident', label: 'Incident location', coordinates: incident }] : []
+  return <div className="mission-tracking-map" aria-label="Simulated mission route and rescuer marker">
+    <InteractiveFloodMap trackingFrozen={frozen} trackingTimestamp={timestamp} trackingStopped={stopped} compact showRouteStatus={false} center={geoJsonRoute[0] ? [geoJsonRoute[0][1], geoJsonRoute[0][0]] : undefined}
+      routeGeometry={geoJsonRoute} trackingPosition={position ? { type: 'Point', coordinates: position } : null} trackingProgress={progress} showRouteControl
+      followPosition={follow} onFollowChange={onFollowChange} onManualPan={onUserPan} assignedStationId={stationId} records={incidentRecords}/>
+  </div>
 }

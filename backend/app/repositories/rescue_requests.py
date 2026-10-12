@@ -35,6 +35,12 @@ class RescueRequestRepository:
             name="ix_rescue_request_citizen_history",
         )
         await self._collection.create_index(
+            [("citizen_id", ASCENDING), ("idempotency_key", ASCENDING)],
+            name="uq_citizen_idempotency_key",
+            unique=True,
+            partialFilterExpression={"idempotency_key": {"$type": "string"}},
+        )
+        await self._collection.create_index(
             [("location.point", GEOSPHERE)],
             name="ix_rescue_request_location",
         )
@@ -62,6 +68,21 @@ class RescueRequestRepository:
         if document is None:
             return None
         return RescueRequest.model_validate(document)
+
+    async def get_by_idempotency_key(
+        self, citizen_id: str, idempotency_key: str
+    ) -> RescueRequest | None:
+        document = await self._collection.find_one({
+            "citizen_id": citizen_id,
+            "idempotency_key": idempotency_key,
+        })
+        return RescueRequest.model_validate(document) if document else None
+
+    async def set_assignment_reason(self, request_id: str, reason: str) -> None:
+        await self._collection.update_one(
+            {"id": request_id, "status": "pending", "mission_id": None},
+            {"$set": {"assignment_reason": reason}},
+        )
 
     async def list_visible(
         self,
@@ -112,6 +133,8 @@ class RescueRequestRepository:
         expected_version: int,
         reason: str,
         cancelled_at: datetime,
+        actor_id: str | None = None,
+        actor_role: str | None = None,
         session: AsyncClientSession | None = None,
     ) -> RescueRequest | None:
         document = await self._collection.find_one_and_update(
@@ -125,6 +148,8 @@ class RescueRequestRepository:
                 "$set": {
                     "status": "cancelled",
                     "cancellation_reason": reason,
+                    "cancellation_actor_id": actor_id,
+                    "cancellation_expected_version": expected_version,
                     "cancelled_at": cancelled_at,
                     "updated_at": cancelled_at,
                 },
@@ -134,6 +159,8 @@ class RescueRequestRepository:
                         "status": "cancelled",
                         "occurred_at": cancelled_at,
                         "note": reason,
+                        "actor_id": actor_id,
+                        "actor_role": actor_role,
                     }
                 },
             },
@@ -150,6 +177,7 @@ class RescueRequestRepository:
         request_id: str,
         expected_version: int,
         team_id: str,
+        station_id: str | None,
         mission_id: str,
         assigned_at: datetime,
         session: AsyncClientSession,
@@ -165,6 +193,8 @@ class RescueRequestRepository:
                 "$set": {
                     "status": "assigned",
                     "assigned_team_id": team_id,
+                    "assigned_station_id": station_id,
+                    "assignment_reason": "assigned",
                     "mission_id": mission_id,
                     "updated_at": assigned_at,
                 },

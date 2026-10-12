@@ -5,6 +5,9 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 export type IconName =
+  | 'sun'
+  | 'moon'
+  | 'target'
   | 'alert'
   | 'pin'
   | 'volunteers'
@@ -53,6 +56,9 @@ export interface IconProps {
 }
 
 const paths: Record<IconName, ReactNode> = {
+  sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></>,
+  moon: <path d="M20.5 14A8.5 8.5 0 0 1 10 3.5a8.5 8.5 0 1 0 10.5 10.5Z"/>,
+  target: <><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></>,
   alert: (
     <>
       <path d="M12 3.5 22 20H2L12 3.5Z" />

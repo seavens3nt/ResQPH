@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from itertools import pairwise
 from typing import ClassVar
 
 from pymongo.asynchronous.client_session import AsyncClientSession
@@ -10,7 +11,15 @@ from app.repositories.mission_status_events import (
     MissionStatusEventRepository,
 )
 from app.repositories.missions import MissionLifecycleConflictError, MissionRepository
-from app.schemas.missions import DemoActor, MissionResponse, MissionStatusEventCreate
+from app.repositories.rescue_requests import RescueRequestRepository
+from app.schemas.common import serialize_utc
+from app.schemas.missions import (
+    DemoActor,
+    MissionResponse,
+    MissionSimulationEnd,
+    MissionStatusEventCreate,
+    MissionTrackingResponse,
+)
 
 
 class MissionServiceError(Exception):
@@ -39,9 +48,11 @@ class MissionService:
         self,
         mission_repository: MissionRepository,
         event_repository: MissionStatusEventRepository,
+        request_repository: RescueRequestRepository | None = None,
     ) -> None:
         self._missions = mission_repository
         self._events = event_repository
+        self._requests = request_repository
 
     async def list_missions(
         self,
@@ -74,6 +85,77 @@ class MissionService:
     async def get_mission(self, mission_id: str, actor: DemoActor) -> MissionResponse:
         mission = await self._get_visible_mission(mission_id, actor)
         return await self._to_response(mission)
+
+    async def get_tracking(
+        self,
+        mission_id: str,
+        actor: DemoActor,
+    ) -> MissionTrackingResponse:
+        mission = await self._get_visible_mission(mission_id, actor)
+        return self._tracking_response(mission, utc_now())
+
+    async def control_tracking(
+        self,
+        mission_id: str,
+        action: str,
+        actor: DemoActor,
+    ) -> MissionTrackingResponse:
+        mission = await self._get_operable_tracking_mission(mission_id, actor)
+        now = utc_now()
+        tracking = dict(mission.tracking_state or {})
+        status = tracking.get("status", "not_started")
+        elapsed = _elapsed_tracking_seconds(mission, now)
+
+        if action == "start":
+            if mission.status != "en-route":
+                raise MissionServiceError(409, "response_not_started", "Accept the assigned mission before starting travel.")
+            if status == "running":
+                return self._tracking_response(mission, now)
+            if status != "not_started":
+                raise MissionServiceError(409, "tracking_not_startable", "Resume a paused response instead of starting it again.")
+            tracking = {
+                "status": "running",
+                "started_at": serialize_utc(now),
+                "elapsed_before_pause_s": 0.0,
+            }
+        elif action == "pause":
+            if status == "running":
+                tracking = {
+                    **tracking,
+                    "status": "paused",
+                    "paused_at": serialize_utc(now),
+                    "elapsed_before_pause_s": elapsed,
+                }
+        elif action == "resume":
+            if status == "paused":
+                tracking = {
+                    **tracking,
+                    "status": "running",
+                    "started_at": serialize_utc(now),
+                    "paused_at": None,
+                    "elapsed_before_pause_s": elapsed,
+                }
+        elif action == "reset":
+            tracking = {"status": "not_started", "elapsed_before_pause_s": 0.0}
+        else:
+            raise MissionServiceError(
+                422,
+                "invalid_tracking_control",
+                "Unsupported tracking control action.",
+                [{"field": "action", "reason": "expected start, pause, resume, or reset"}],
+            )
+
+        updated = await self._missions.update_tracking_state(
+            mission.id, tracking, now, start_if_not_running=action == "start"
+        )
+        if updated is None:
+            current = await self._missions.get_by_id(mission.id)
+            if current is None:
+                raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+            if action == "start" and current.status == "en-route" and (current.tracking_state or {}).get("status") == "running":
+                return self._tracking_response(current, now)
+            raise MissionServiceError(409, "tracking_conflict", "Tracking changed; refresh before retrying this action.")
+        return self._tracking_response(updated, now)
 
     async def create_status_event(
         self,
@@ -118,6 +200,33 @@ class MissionService:
             )
 
         recorded_at = utc_now()
+        terminal_tracking_state = None
+        terminal_team_position = None
+        if payload.new_status == "en-route":
+            # The assigned -> en-route transition acknowledges the dispatch and starts
+            # authoritative travel in the same transaction as mission/history updates.
+            terminal_tracking_state = {
+                "status": "running",
+                "started_at": serialize_utc(recorded_at),
+                "elapsed_before_pause_s": 0.0,
+            }
+        if payload.new_status == "arrived":
+            route = mission.latest_route_result or {}
+            terminal_tracking_state = {
+                **(mission.tracking_state or {}),
+                "status": "arrived",
+                "elapsed_before_pause_s": float(route.get("estimated_time_s") or _elapsed_tracking_seconds(mission, recorded_at)),
+                "paused_at": serialize_utc(recorded_at),
+            }
+        if payload.new_status in {"completed", "cancelled"}:
+            terminal_position = self._tracking_response(mission, recorded_at).position
+            terminal_team_position = terminal_position
+            terminal_tracking_state = {
+                **(mission.tracking_state or {}),
+                "status": payload.new_status,
+                "elapsed_before_pause_s": _elapsed_tracking_seconds(mission, recorded_at),
+                "paused_at": serialize_utc(recorded_at),
+            }
         event = MissionStatusEvent(
             event_id=payload.event_id,
             mission_id=mission.id,
@@ -150,6 +259,8 @@ class MissionService:
                 prior_status=mission.status,
                 new_status=payload.new_status,
                 recorded_at=recorded_at,
+                tracking_state=terminal_tracking_state,
+                team_position=terminal_team_position,
                 session=session,
             )
             if updated_mission is None:
@@ -218,12 +329,85 @@ class MissionService:
         if actor.role == "coordinator":
             return mission
 
+        if actor.role == "citizen" and self._requests is not None:
+            request = await self._requests.get_by_id(mission.request_id)
+            if request is not None and request.citizen_id == actor.user_id:
+                return mission
+            raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+
         raise MissionServiceError(
             403,
             "forbidden",
             "Simulated role is not allowed to retrieve missions.",
             [{"field": "X-Demo-Role", "reason": "expected rescuer or coordinator"}],
         )
+
+    async def _get_operable_tracking_mission(
+        self,
+        mission_id: str,
+        actor: DemoActor,
+    ) -> Mission:
+        mission = await self._get_visible_mission(mission_id, actor)
+        if actor.role in {"rescuer", "coordinator"}:
+            if mission.status in {"arrived", "cancelled", "completed"}:
+                raise MissionServiceError(
+                    409,
+                    "tracking_terminal",
+                    "Tracking controls are unavailable after arrival, cancellation, or completion.",
+                )
+            if actor.role == "rescuer" and not mission.is_assigned_to(actor.user_id):
+                raise MissionServiceError(
+                    403,
+                    "forbidden",
+                    "Only the assigned station may control tracking.",
+                )
+            return mission
+        raise MissionServiceError(
+            403,
+            "forbidden",
+            "Simulated role is not allowed to control mission tracking.",
+        )
+
+    async def cancel_citizen_request(
+        self, request_id: str, expected_version: int, reason: str, actor: DemoActor
+    ) -> None:
+        """Reuse the linked lifecycle transaction; request version protects the consent."""
+        if self._requests is None or actor.role != "citizen":
+            raise MissionServiceError(403, "forbidden", "Only the owning citizen may cancel this request.")
+        now = utc_now()
+
+        async def persist(session: AsyncClientSession) -> None:
+            request = await self._requests.get_by_id(request_id, session=session)
+            if request is None or request.citizen_id != actor.user_id:
+                raise MissionServiceError(404, "request_not_found", "Rescue request is unavailable.")
+            if (request.status == "cancelled" and request.cancellation_actor_id == actor.user_id
+                    and request.cancellation_expected_version == expected_version and request.cancellation_reason == reason):
+                return
+            if request.version != expected_version:
+                raise MissionServiceError(409, "stale_request_version", "The request changed. Refresh before cancelling; cancellation is unavailable once travel starts.")
+            mission = await self._missions.get_by_id(request.mission_id, session=session) if request.mission_id else None
+            if request.status != "assigned" or mission is None or mission.status != "assigned":
+                raise MissionServiceError(409, "cancellation_not_allowed", "Cancellation is only available before the rescuer starts.")
+            updated = await self._missions.update_status_if_current(
+                mission_id=mission.id, expected_version=mission.version,
+                prior_status="assigned", new_status="cancelled", recorded_at=now,
+                tracking_state={**(mission.tracking_state or {}), "status": "cancelled", "elapsed_before_pause_s": 0.0},
+                team_position=self._tracking_response(mission, now).position,
+                session=session, expected_request_version=expected_version,
+            )
+            if updated is None:
+                raise MissionServiceError(409, "cancellation_conflict", "The rescuer may have started. Refresh the current request state.")
+            await self._missions.record_cancellation_reason(request_id, reason, now, session, actor_id=actor.user_id, expected_version=expected_version)
+            await self._events.append(MissionStatusEvent(
+                event_id=f"citizen-cancel-{request_id}-{expected_version}", mission_id=mission.id,
+                prior_status="assigned", new_status="cancelled", actor_id=actor.user_id,
+                actor_role="citizen", source="online", server_recorded_at=now, note=reason,
+            ), session=session)
+
+        try:
+            await self._events.run_in_transaction(persist)
+        except MissionLifecycleConflictError:
+            raise MissionServiceError(409, "lifecycle_conflict", "Linked records changed; cancellation was not stored.") from None
 
     async def cancel_mission(
         self, mission_id: str, expected_version: int, reason: str, actor: DemoActor
@@ -253,8 +437,21 @@ class MissionService:
         )
 
         async def persist(session: AsyncClientSession) -> Mission:
+            terminal_position = self._tracking_response(mission, now).position
             updated = await self._missions.update_status_if_current(
-                mission_id, expected_version, "assigned", "cancelled", now, session
+                mission_id=mission_id,
+                expected_version=expected_version,
+                prior_status="assigned",
+                new_status="cancelled",
+                recorded_at=now,
+                tracking_state={
+                    **(mission.tracking_state or {}),
+                    "status": "cancelled",
+                    "elapsed_before_pause_s": _elapsed_tracking_seconds(mission, now),
+                    "paused_at": serialize_utc(now),
+                },
+                team_position=terminal_position,
+                session=session,
             )
             if updated is None:
                 raise MissionServiceError(
@@ -275,7 +472,6 @@ class MissionService:
                 409, "lifecycle_conflict", "Linked request or team changed; cancellation was not stored."
             ) from None
         return await self._to_response(updated)
-
     async def _get_operable_mission(
         self,
         mission_id: str,
@@ -294,7 +490,7 @@ class MissionService:
             raise MissionServiceError(
                 403,
                 "forbidden",
-                "Only the assigned simulated rescuer may update this mission.",
+                "Only the assigned station may update this mission. Sign in with the matching station account.",
             )
 
         if actor.role == "coordinator" and new_status == "completed":
@@ -303,9 +499,68 @@ class MissionService:
         raise MissionServiceError(
             403,
             "forbidden",
-            "Simulated role is not allowed to update mission status.",
-            [{"field": "X-Demo-Role", "reason": "expected assigned rescuer"}],
+            "Your signed-in account cannot update mission status. Sign in as the assigned station using a separate browser profile for citizen testing.",
+            [{"field": "session.role", "reason": "expected assigned rescuer"}],
         )
+
+    async def end_simulation(
+        self, mission_id: str, payload: MissionSimulationEnd, actor: DemoActor
+    ) -> MissionResponse:
+        if actor.role != "rescuer" or not getattr(actor, "account_id", None) or not getattr(actor, "station_id", None):
+            raise MissionServiceError(403, "forbidden", "Sign in as the assigned station to end a simulated mission.")
+        mission = await self._get_operable_mission(mission_id, "cancelled", actor)
+        if mission.station_id != actor.station_id:
+            raise MissionServiceError(403, "forbidden", "Only the assigned station may end this simulation.")
+        if mission.data_source != "synthetic":
+            raise MissionServiceError(403, "simulation_only", "Only synthetic simulated missions may use this recovery action.")
+        audit_note = payload.reason
+
+        def validate_existing(event: MissionStatusEvent) -> None:
+            if not (event.mission_id == mission_id and event.new_status == "cancelled" and event.actor_id == actor.user_id and event.actor_role == "rescuer" and event.source == "online" and event.note == audit_note and event.recovery_account_id == actor.account_id and event.recovery_expected_version == payload.expected_mission_version):
+                raise MissionServiceError(409, "duplicate_event", "Recovery event ID was already used for different evidence.")
+
+        existing = await self._events.get_by_event_id(payload.event_id)
+        if existing:
+            validate_existing(existing)
+            return await self._to_response(mission)
+        if mission.status not in {"assigned", "en-route", "arrived"} or mission.version != payload.expected_mission_version:
+            raise MissionServiceError(409, "cancellation_conflict", "Mission changed or is terminal. Refresh before ending it; completed missions cannot be cancelled.")
+        now = utc_now()
+        position = self._tracking_response(mission, now).position
+        event = MissionStatusEvent(event_id=payload.event_id, mission_id=mission.id, prior_status=mission.status, new_status="cancelled", actor_id=actor.user_id, actor_role=actor.role, source="online", server_recorded_at=now, note=audit_note, recovery_account_id=actor.account_id, recovery_expected_version=payload.expected_mission_version)
+
+        async def persist(session: AsyncClientSession) -> Mission:
+            duplicate = await self._events.get_by_event_id(payload.event_id, session=session)
+            if duplicate:
+                validate_existing(duplicate)
+                current = await self._missions.get_by_id(mission_id)
+                if current is None:
+                    raise MissionServiceError(404, "mission_not_found", "Mission is unavailable.")
+                return current
+            updated = await self._missions.update_status_if_current(
+                mission_id=mission.id, expected_version=payload.expected_mission_version,
+                prior_status=mission.status, new_status="cancelled", recorded_at=now,
+                tracking_state={**(mission.tracking_state or {}), "status":"cancelled", "elapsed_before_pause_s":_elapsed_tracking_seconds(mission, now), "paused_at":serialize_utc(now)},
+                team_position=position, session=session,
+            )
+            if updated is None:
+                raise MissionServiceError(409, "mission_conflict", "Mission changed; recovery was not stored.")
+            await self._missions.record_cancellation_reason(mission.request_id, payload.reason, now, session)
+            await self._events.append(event, session=session)
+            return updated
+
+        try:
+            await self._events.ensure_indexes()
+            updated = await self._events.run_in_transaction(persist)
+        except MissionLifecycleConflictError:
+            raise MissionServiceError(409, "lifecycle_conflict", "Linked request or station changed; recovery was rolled back.") from None
+        except DuplicateMissionStatusEventError:
+            existing = await self._events.get_by_event_id(payload.event_id)
+            if existing is None:
+                raise MissionServiceError(409, "duplicate_event", "Recovery event ID is already used.") from None
+            validate_existing(existing)
+            return await self.get_mission(mission_id, actor)
+        return await self._to_response(updated)
 
     def _validate_idempotent_retry(
         self,
@@ -344,6 +599,52 @@ class MissionService:
             }
         )
 
+    def _tracking_response(self, mission: Mission, now: datetime) -> MissionTrackingResponse:
+        route = mission.latest_route_result if isinstance(mission.latest_route_result, dict) else None
+        if not route or route.get("status") != "route-found":
+            return MissionTrackingResponse(
+                mission_id=mission.id,
+                request_id=mission.request_id,
+                team_id=mission.team_id,
+                simulation_status="unavailable",
+                position=None,
+                timestamp=serialize_utc(now) or "",
+                progress_ratio=0.0,
+                remaining_distance_m=0.0,
+                estimated_remaining_time_s=0.0,
+                total_distance_m=0.0,
+                total_travel_time_s=0.0,
+                warnings=["No accepted route is attached to this simulated mission."],
+            )
+        total_distance = float(route.get("distance_m") or 0.0)
+        total_time = float(route.get("estimated_time_s") or 0.0)
+        elapsed = _elapsed_tracking_seconds(mission, now)
+        progress = 1.0 if total_time <= 0 else max(0.0, min(1.0, elapsed / total_time))
+        geometry = route.get("geometry") if isinstance(route.get("geometry"), dict) else None
+        position = _interpolate_linestring(geometry, progress) if geometry else None
+        tracking = mission.tracking_state or {}
+        simulation_status = str(tracking.get("status", "not_started"))
+        if progress >= 1.0 and simulation_status == "running":
+            simulation_status = "arrived_at_destination"
+        if mission.status in {"cancelled", "completed"}:
+            simulation_status = mission.status
+        return MissionTrackingResponse(
+            mission_id=mission.id,
+            request_id=mission.request_id,
+            team_id=mission.team_id,
+            simulation_status=simulation_status,
+            position=position,
+            timestamp=serialize_utc(now) or "",
+            route_id=route.get("route_id"),
+            route_geometry=geometry,
+            progress_ratio=progress,
+            remaining_distance_m=round(total_distance * (1.0 - progress), 3),
+            estimated_remaining_time_s=round(total_time * (1.0 - progress), 3),
+            total_distance_m=total_distance,
+            total_travel_time_s=total_time,
+            warnings=route.get("warnings", []),
+        )
+
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
@@ -363,3 +664,64 @@ def bson_utc_millisecond(value: datetime) -> datetime:
         value = value.replace(tzinfo=UTC)
     normalized = value.astimezone(UTC)
     return normalized.replace(microsecond=(normalized.microsecond // 1000) * 1000)
+
+
+def _elapsed_tracking_seconds(mission: Mission, now: datetime) -> float:
+    tracking = mission.tracking_state or {}
+    elapsed_before = float(tracking.get("elapsed_before_pause_s") or 0.0)
+    if tracking.get("status") != "running":
+        return elapsed_before
+    started_at = _parse_utc(str(tracking.get("started_at") or ""))
+    if started_at is None:
+        return elapsed_before
+    return max(0.0, elapsed_before + (now - started_at).total_seconds())
+
+
+def _parse_utc(value: str) -> datetime | None:
+    if not value.endswith("Z"):
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _interpolate_linestring(geometry: dict, progress: float) -> dict:
+    coordinates = geometry.get("coordinates", [])
+    if not isinstance(coordinates, list) or not coordinates:
+        return {"type": "Point", "coordinates": [0.0, 0.0]}
+    if progress <= 0 or len(coordinates) == 1:
+        return {"type": "Point", "coordinates": coordinates[0]}
+    if progress >= 1:
+        return {"type": "Point", "coordinates": coordinates[-1]}
+    lengths: list[float] = []
+    total = 0.0
+    for start, end in pairwise(coordinates):
+        length = _meters_between(start, end)
+        lengths.append(length)
+        total += length
+    target = total * progress
+    traveled = 0.0
+    for index, length in enumerate(lengths):
+        if traveled + length >= target:
+            start = coordinates[index]
+            end = coordinates[index + 1]
+            ratio = 0.0 if length <= 0 else (target - traveled) / length
+            return {
+                "type": "Point",
+                "coordinates": [
+                    start[0] + (end[0] - start[0]) * ratio,
+                    start[1] + (end[1] - start[1]) * ratio,
+                ],
+            }
+        traveled += length
+    return {"type": "Point", "coordinates": coordinates[-1]}
+
+
+def _meters_between(left: list[float], right: list[float]) -> float:
+    import math
+
+    latitude = (left[1] + right[1]) / 2
+    dx = (right[0] - left[0]) * 111_320 * math.cos(math.radians(latitude))
+    dy = (right[1] - left[1]) * 110_540
+    return math.hypot(dx, dy)

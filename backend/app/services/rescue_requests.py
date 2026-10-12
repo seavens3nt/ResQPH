@@ -1,3 +1,5 @@
+import hashlib
+import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -5,7 +7,11 @@ from pymongo.errors import PyMongoError
 
 from app.models.rescue_request import RequestStatus, RequestStatusHistory, RescueRequest
 from app.repositories.assignments import AssignmentRepository
-from app.repositories.rescue_requests import RescueRequestRepository
+from app.repositories.dispatch_jobs import DispatchJobRepository
+from app.repositories.rescue_requests import (
+    DuplicateRescueRequestError,
+    RescueRequestRepository,
+)
 from app.schemas.common import DemoActor, ServiceError
 from app.schemas.rescue_requests import (
     RescueRequestCancel,
@@ -13,6 +19,7 @@ from app.schemas.rescue_requests import (
     RescueRequestListResponse,
     RescueRequestResponse,
 )
+from app.services.missions import MissionService, MissionServiceError
 
 _REQUEST_STATUSES: set[str] = {
     "pending",
@@ -29,16 +36,27 @@ class RescueRequestService:
         self,
         requests: RescueRequestRepository,
         assignments: AssignmentRepository,
+        dispatch_jobs: DispatchJobRepository | None = None,
+        missions: MissionService | None = None,
     ) -> None:
         self._requests = requests
         self._assignments = assignments
+        self._dispatch_jobs = dispatch_jobs
+        self._missions = missions
 
     async def create_request(
         self,
         payload: RescueRequestCreate,
         actor: DemoActor,
+        idempotency_key: str | None = None,
     ) -> RescueRequestResponse:
         self._require_role(actor, {"citizen"})
+        payload_fingerprint = _payload_fingerprint(payload)
+        if idempotency_key:
+            existing = await self._requests.get_by_idempotency_key(actor.user_id, idempotency_key)
+            if existing is not None:
+                await self._enqueue_if_pending(existing)
+                return _idempotent_response(existing, payload_fingerprint)
         recorded_at = utc_now()
         request = RescueRequest(
             id=f"request-{uuid4().hex}",
@@ -50,6 +68,9 @@ class RescueRequestService:
             medical_details=payload.medical_details,
             reported_flood_level=payload.reported_flood_level,
             situation_summary=payload.situation_summary,
+            reported_severity=payload.reported_severity,
+            idempotency_key=idempotency_key,
+            payload_fingerprint=payload_fingerprint if idempotency_key else None,
             status="pending",
             version=1,
             created_at=recorded_at,
@@ -64,9 +85,23 @@ class RescueRequestService:
         )
         try:
             created = await self._requests.create(request)
+        except DuplicateRescueRequestError as exc:
+            if not idempotency_key:
+                raise database_unavailable() from exc
+            existing = await self._requests.get_by_idempotency_key(actor.user_id, idempotency_key)
+            if existing is None:
+                raise database_unavailable() from exc
+            await self._enqueue_if_pending(existing)
+            return _idempotent_response(existing, payload_fingerprint)
         except PyMongoError as exc:
             raise database_unavailable() from exc
+
+        await self._enqueue_if_pending(created)
         return RescueRequestResponse.model_validate(created.model_dump())
+
+    async def _enqueue_if_pending(self, request: RescueRequest) -> None:
+        if self._dispatch_jobs is not None and request.status == "pending" and request.mission_id is None:
+            await self._dispatch_jobs.enqueue(request.id, request.reported_severity, request.created_at)
 
     async def list_requests(
         self,
@@ -181,6 +216,19 @@ class RescueRequestService:
                 "Only the owning citizen or a coordinator may cancel a pending request.",
             )
 
+        # A lost response can replay the original consent without releasing capacity twice.
+        if (request.status == "cancelled" and request.cancellation_actor_id == actor.user_id
+                and request.cancellation_expected_version == payload.version and request.cancellation_reason == payload.reason):
+            return RescueRequestResponse.model_validate(request.model_dump())
+        if is_owner and request.status == "assigned" and self._missions is not None:
+            try:
+                await self._missions.cancel_citizen_request(request.id, payload.version, payload.reason, actor)
+                return await self.get_request(request.id, actor)
+            except MissionServiceError as exc:
+                raise ServiceError(exc.status_code, exc.code, exc.message, exc.details) from exc
+            except PyMongoError as exc:
+                raise database_unavailable() from exc
+
         if request.version != payload.version:
             raise ServiceError(
                 409,
@@ -197,7 +245,7 @@ class RescueRequestService:
             raise ServiceError(
                 409,
                 "request_not_pending",
-                "Only a pending unassigned rescue request may be cancelled by this operation.",
+                "Cancellation is available while pending or assigned before the rescuer starts.",
             )
 
         try:
@@ -206,6 +254,8 @@ class RescueRequestService:
                 expected_version=payload.version,
                 reason=payload.reason,
                 cancelled_at=utc_now(),
+                actor_id=actor.user_id,
+                actor_role=actor.role,
             )
         except PyMongoError as exc:
             raise database_unavailable() from exc
@@ -249,6 +299,22 @@ def parse_request_status(value: str | None) -> RequestStatus | None:
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def _payload_fingerprint(payload: RescueRequestCreate) -> str:
+    serialized = json.dumps(payload.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(serialized.encode()).hexdigest()
+
+
+def _idempotent_response(request: RescueRequest, fingerprint: str) -> RescueRequestResponse:
+    if request.payload_fingerprint != fingerprint:
+        raise ServiceError(
+            409,
+            "idempotency_key_reused",
+            "This submission key was already used for different request details.",
+            [{"field": "Idempotency-Key", "reason": "generate a new key for a new request"}],
+        )
+    return RescueRequestResponse.model_validate(request.model_dump())
 
 
 def database_unavailable() -> ServiceError:

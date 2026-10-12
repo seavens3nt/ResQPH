@@ -36,7 +36,10 @@ export function RescuerView(_props: { navSection?: NavSection }) {
     isOffline,
   } = useMissions()
 
-  const offline = useOfflineMission(user?.role === 'rescuer' ? user.email : null, isOffline)
+  const offline = useOfflineMission(
+    user?.role === 'rescuer' ? (user.demoActorId ?? user.email) : null,
+    isOffline,
+  )
   const apiMission = offline.mission
   const mission = activeRescuerMission
   const targetRequest = mission ? requests.find((r: RescueRequest) => r.id === mission.requestId) : null

@@ -1,8 +1,45 @@
 # ResQPH API contract
 
+## Citizen-to-station API amendment (authorized local candidate, 2026-10-10)
+
+This amendment describes the active implementation target and supersedes the
+historical simulated-role/manual-assignment contract below. Historical examples
+remain for evidence provenance and do not describe currently registered
+coordinator endpoints.
+
+- `POST /auth/register`: create a citizen account; successful registration
+  starts a server-backed session.
+- `POST /auth/login`: validate credentials; station accounts must also provide
+  their stable `station_id`, which must equal provisioned membership.
+- `GET /auth/session`, `POST /auth/logout`, and `PATCH /auth/profile` restore,
+  invalidate, and update the authenticated account. Mutations use the CSRF
+  cookie/header pair. Session cookie is HttpOnly and expires after the
+  configured TTL.
+- `POST /rescue-requests` accepts an authenticated citizen only and requires
+  `Idempotency-Key`. Key scope is that account. Same-key/same-payload returns
+  the stored request; conflicting payload reuse returns `409`.
+- Automatic dispatch writes one linked request, station reservation, mission,
+  route, and stable `station_id` in a Mongo transaction after route evaluation.
+  Pending requests expose `assignment_reason` and are retried by durable,
+  leased queue workers. The queue is severity-first, submission-time-second.
+- Citizens read only their own requests and may cancel pending requests or assigned
+  requests before the station starts travel. They read only missions
+  linked to their requests. Station accounts list missions assigned to the
+  station derived from their server account and can read/control only those
+  missions. `X-Demo-*` headers are ignored unless an isolated test explicitly
+  enables the test adapter.
+- Manual assignment, team recommendation, and team listing routes are not
+  registered in the active API.
+
+The dispatch worker retries due jobs in bounded batches with leases and capped
+exponential backoff. Mission completion/cancellation wakes pending jobs;
+startup reconciles pending requests after a restart. The rate limiter uses
+bounded in-memory buckets per backend process, so multiple workers do not
+share counters.
+
 ## Informational Google Weather (local amendment, 2026-10-10)
 
-`GET /api/v1/weather/ubelt` requires existing demo actor headers and returns
+`GET /api/v1/weather/ubelt` requires an authenticated session and returns
 `temperature`, `high`, `low` (Celsius), `condition`, `kind` (clear/cloud/rain),
 `feelsLike` (Celsius), `windSpeed` (km/h), `rainChance` (percent), `rainAmount`
 (millimeters), and `time` (provider timestamp with timezone). The four added
@@ -24,7 +61,7 @@ No-store, fixed U-Belt point, no persistence and no live flood-routing coupling.
 
 **Status:** Completed and verified Phase 1 contract baseline
 **Base path:** `/api/v1`
-**Last updated:** 2026-09-22
+**Last updated:** 2026-10-10 (historical sections below are preserved as baseline)
 
 ## Contract rules
 
@@ -118,7 +155,12 @@ Allowed role: `citizen`.
 }
 ```
 
-Success: `201 Created` with the stored request, `status: "pending"`, `version: 1`, and server timestamps.
+Success: `201 Created` with the stored request and server timestamps. In the
+Phase 5 simulated workflow, the backend may immediately assign the closest
+eligible available team by shortest valid controlled-road distance and return the
+request as `status: "assigned"` with `assigned_team_id` and `mission_id`. If no
+eligible or reachable team is available, the request remains persisted as
+`status: "pending"` for coordinator review.
 
 ### List and retrieve rescue requests
 
@@ -127,11 +169,22 @@ Success: `201 Created` with the stored request, `status: "pending"`, `version: 1
 
 Citizens see their simulated requests. Coordinators see the queue. Rescuers see request detail only through an assigned mission.
 
-### Cancel pending request
+### Citizen cancellation before travel
 
 `POST /rescue-requests/{request_id}/cancel`
 
-Allowed role: owning `citizen` or `coordinator`. Requires `reason` and expected `version`. Returns `409` when an incompatible active transition has already occurred.
+Active allowed role: owning `citizen`. Requires sanitized `reason` and expected request
+`version`. `can_cancel` is server-derived: true while pending or assigned. The server
+rechecks the linked mission: assigned cancellation is allowed only before travel.
+En-route, arrived and completed reject cancellation with 409; foreign citizens get 404.
+Assigned cancellation transactionally updates request, mission, tracking, station
+capacity and immutable citizen history; cancelled records are retained. An exact
+retry of the same actor/version/reason returns 200 without extra writes; changed
+consent or stale versions return 409. A start/cancel race has one winner; failure
+rolls back all linked records. Pending automatic-assignment races may return 409,
+requiring refreshed state and new confirmation. Cancelled requests are never reassigned.
+The rescuer-only end-simulation endpoint remains a separate action. Coordinator
+examples below describe historical contracts, not active registered routes.
 
 ### Assign rescue team
 
@@ -147,6 +200,19 @@ Allowed role: `coordinator`.
 ```
 
 Success: `201 Created` with the mission and updated request summary. Request transition, mission creation, team availability, and history records form one consistency boundary.
+
+### Recommend simulated rescue teams
+
+`GET /rescue-requests/{request_id}/recommendations`
+
+Allowed role: `coordinator`.
+
+Returns deterministic simulated station-unit candidates backed by the shared Sampaloc station catalog. Candidates are ranked by shortest valid road distance after directed-edge eligibility, controlled flood exclusions, and bounded point-to-road snapping are applied. Equal distances use ascending stable `station_id`, then `team_id`; ETA is displayed but never selects a station. Unavailable, legacy/unmapped, missing-position, malformed-position, or unreachable teams are returned as exclusions rather than hidden. Each accepted candidate retains its route result, including original routing origin, whether it came from `current_location` or `base_location`, snapped endpoints, and snap offsets. Available canonical stations dispatch from their stored headquarters `base_location`. A missing or malformed headquarters excludes the station; `current_location` is not a dispatch fallback. Completion retains the simulated last position for history, but does not make it the next dispatch origin. Distance mode attaches to the nearest physical road segment and counts legal directed partial-edge travel; the default dispatch snap bound is 75 metres and snap offsets are not road travel. New missions persist backend-only `dispatch_provenance` with evaluated graph/scenario digests, candidates, exclusions, and chosen origin/snap evidence. Existing missions are not rerouted or rewritten.
+
+This endpoint uses controlled fixtures only. It does not contact real stations.
+Manual coordinator assignment remains available through `POST /assignment`; the
+citizen create flow may also reuse the same ranking and assignment contract for
+automatic simulated dispatch.
 
 ### Retrieve missions
 
@@ -179,6 +245,36 @@ team availability, and immutable mission event in one MongoDB transaction.
 Completion records `completed_at` and releases the team's assignment links.
 A mismatched linked request or team returns `409 lifecycle_conflict` with no
 partial writes. An identical event replay does not increment versions again.
+
+### Mission tracking
+
+- `GET /missions/{mission_id}/tracking`
+- `POST /missions/{mission_id}/tracking/control`
+
+Allowed tracking viewers: assigned `rescuer`, owning `citizen`, and `coordinator`.
+Allowed controls: assigned `rescuer` and `coordinator`.
+
+Control body:
+
+```json
+{ "action": "start" }
+```
+
+`action` may be `start`, `pause`, `resume`, or `reset`. Tracking is one backend-authoritative simulation per mission, derived from the mission route geometry and travel-time seconds. Reads do not mutate state. Arrival at the end of the route does not mark the rescue completed; lifecycle completion still requires the status endpoint.
+
+Tracking exposes position, timestamp, simulation status, remaining road distance, estimated remaining travel time in seconds, total route distance/time, route geometry, and warnings.
+
+## Rate limits
+
+Prototype limits are in-memory and single-process:
+
+- New report submissions: 5/minute per actor.
+- Route/recommendation calculations: 10/minute per actor.
+- Tracking reads: 60/minute per actor.
+- Simulation controls: 10/minute per actor.
+- Each action also has a broader client-IP bucket for shared classroom Wi-Fi.
+
+The backend uses the socket client host and does not trust arbitrary forwarding headers. `429` responses use the common error envelope and include `Retry-After`. In-memory limits are not globally enforced across multiple workers.
 
 ### Submit hazard report
 

@@ -1,5 +1,64 @@
 # Current Status
 
+Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
+account-switch recovery blocks old transports/mutations, hides the old workspace and
+requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale
+server position. Citizens can cancel pending or assigned-before-travel requests with
+confirmation; existing lifecycle transaction releases capacity once and preserves
+history. Routes raw diagnostics removed; dark request panels/flood-field alignment
+repaired. Frontend 424 checks/lint/build; backend 226 passed/38 opt-in skips; 7 new
+cookie cancellation/session, 8 product journey and 15 offline Mongo cases pass.
+Six legacy fixture failures remain; browser/screenshots/original symptom unverified.
+Demo/developer databases and queues preserved. No remote actions/commit; see report.
+
+
+Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:
+explicit dark login/register preserves dashboard preference; compact Advisory refresh;
+cookie-account assertions now protect reads and polling stops for expired/switched
+sessions. New isolated `resqph_demo_20261012` on existing localhost:27018 rs0 contains
+5 citizen and 5 canonical station accounts; all ten real API login/session/logout
+checks pass, rerun preserves them. Developer DB untouched. Frontend 409 tests/lint/build;
+backend/integration 226 passed, 31 opt-in skips; 8 current-cookie and 15 offline Mongo
+cases pass. Six legacy opt-in failures remain individually documented. Browser
+unavailable; original browser symptom and rendered acceptance pending. Ignored local
+README contains credentials/startup. No commit/push/PR; see refinement report.
+
+
+Latest 2026-10-12 landing-theme/mission recovery continuation: local feature branch
+at baseline `8ac45bf`; shared landing wordmark and persisted theme, dark base
+`#0b1324`, explicit queue reconciliation/discard and assigned-station synthetic
+mission ending implemented. 404 frontend tests; standard backend 219 passed / 31
+opt-in skips; 8 real cookie-authenticated MongoDB journey/recovery cases and 15
+real offline replay cases pass. Browser unavailable; legacy opt-in Phase5 tests
+still require retired coordinator/demo/team fixtures. See the existing refinement
+report for evidence and limitations. Uncommitted/unpushed; developer DB unchanged.
+
+
+Latest local correction (2026-10-12): the user explicitly selected the transparent
+2170×725 white ResQ / blue P / red H PNG. Shared BrandLogo now uses that unchanged
+asset for auth and expanded full-logo placements; compact branding and approved
+favicons remain unchanged. Advisory cards size naturally, with measurement-based
+suggestion explanations and a separate preparation checklist. All 400 frontend tests
+across 58 files, lint and production build pass with existing warnings. Browser
+visual acceptance remains pending; see the existing local testing report.
+
+- 2026-10-11 local UI/advisory follow-up: `feature/citizen-ui-advisory-refinement`
+  now starts from prior UI commit `e6623bc`; original base `4ffa717`. Colored auth/
+  sidebar branding, local favicon, neutral weather/account tokens, compact Home,
+  structured Advisory, original fixed HQ building icon and shared collapsed location
+  options added. 396 frontend tests and lint/build pass with existing warnings.
+  Browser unavailable; follow-up uncommitted/unpushed for manual testing. See
+  `docs/testing/CITIZEN-UI-ADVISORY-2026-10-11.md`.
+
+- 2026-10-11 navigation checkpoint: `feature/navigation-request-ux` starts at
+  `a143a18` (`origin/temporary-main`). Existing Google map now supports simulated
+  heading-up navigation and a locally drawn vehicle marker; citizen location
+  confirmation validates the pin, with keyboard adjustments and no manual coordinate
+  fields. 376 frontend tests, lint and build pass (existing warnings retained).
+  No connected browser was available: actual camera/visual and separate-session
+  acceptance remain pending. See `docs/testing/NAVIGATION-REQUEST-UX-2026-10-11.md`.
+  Older branch and test-count statements below are historical snapshots.
+
 - Release preparation (2026-10-10): see `docs/testing/LOCAL-CANDIDATE-2026-10-10.md`.
   Frontend 340 passed; backend/integration 201 passed, 28 skipped; separate real-MongoDB
   journey 5 passed. Candidate is being packaged for draft review, not merged acceptance.
@@ -25,3 +84,26 @@
 - Remaining final-quality checks: dev-only undici audit warning, existing lint/bundle warnings, whole-role final regression and submission package.
 - Unknown: exact course deadline, weekly capacity and any hosting/submission requirement. No deployment is approved by the phase opening.
 - Authority: docs/phases/TEAM-PHASE-05.md and docs/STATUS.md.
+# Weather failure repair — 2026-10-12
+
+Local temporary-main weather diagnostics: configured backend key receives Google
+HTTP 429 on current/daily/hourly endpoints; current conditions identifies a
+100-request daily quota. API quota errors now retain 429/Retry-After with a
+per-endpoint process-local cooldown; access-denied errors distinguish configuration
+from generic transport/schema failure. Home/Advisory show fixed sanitized copy.
+Ruff and frontend production build pass; automated tests not run for this repair.
+Live weather remains blocked by provider quota reset/administrator action.
+Keys, billing settings and database records preserved; changes remain local.
+See backend README troubleshooting.
+# Station-distance repair — 2026-10-13
+
+Local temporary-main baseline c95c8c3. Available stations now dispatch from stored
+headquarters; retained current_location stays simulation/history data. Controlled
+stale-position fixture reproduces Iverson -> Sampaloc without moving headquarters.
+Distance-mode nearest physical road attachment counts directed partial edges and
+uses a 75 m default coverage bound, preserving source edge IDs. New backend-only
+dispatch provenance includes evaluated graph/scenario hashes and decisions.
+See docs/testing/STATION-DISTANCE-2026-10-13.md and synthetic JSON for tests and
+limitations. Historical user's decision cannot be reconstructed; live port 8000
+is another project. No frontend/auth/offline/lifecycle implementation edits or
+catalog/graph geometry changes; no commit/push/PR/merge.

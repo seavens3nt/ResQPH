@@ -5,6 +5,7 @@ from pymongo.asynchronous.client_session import AsyncClientSession
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.models.rescuer import RescuerTeam
+from app.services.stations import load_station_catalog
 
 
 class RescuerRepository:
@@ -24,26 +25,30 @@ class RescuerRepository:
 
     async def ensure_synthetic_teams(self) -> None:
         now = datetime.now(UTC)
-        fixtures = [
-            ("team-alpha", "U-Belt Demo Team Alpha", "Rubber Boat", 4, True),
-            ("team-bravo", "U-Belt Demo Team Bravo", "High-Clearance Truck", 3, False),
-            ("team-charlie", "U-Belt Demo Team Charlie", "Amphibious Unit", 2, True),
-        ]
-        for team_id, name, unit_type, member_count, medical in fixtures:
+        for station in load_station_catalog()["stations"]:
+            point = station["point"]
             await self._collection.update_one(
-                {"id": team_id},
+                {"id": station["team_id"]},
                 {
-                    "$setOnInsert": RescuerTeam(
-                        id=team_id,
-                        team_name=name,
-                        unit_type=unit_type,
-                        member_count=member_count,
-                        has_medical_unit=medical,
-                        availability="available",
-                        version=1,
-                        created_at=now,
-                        updated_at=now,
-                    ).model_dump(mode="python")
+                    "$set": {
+                        "team_name": station["name"],
+                        "unit_type": station["unit_type"],
+                        "member_count": station["member_count"],
+                        "has_medical_unit": station["has_medical_unit"],
+                        "station_id": station["station_id"],
+                        "station_address": station["address"],
+                        "base_location": point,
+                    },
+                    "$setOnInsert": {
+                        "id": station["team_id"],
+                        "availability": "available",
+                        "version": 1,
+                        "created_at": now,
+                        "data_source": "synthetic",
+                        "current_location": point,
+                        "position_updated_at": now,
+                        "updated_at": now,
+                    },
                 },
                 upsert=True,
             )
@@ -58,6 +63,13 @@ class RescuerRepository:
             return None
         return RescuerTeam.model_validate(document)
 
+    async def list_all(
+        self,
+        session: AsyncClientSession | None = None,
+    ) -> list[RescuerTeam]:
+        cursor = self._collection.find({}, session=session).sort("id", ASCENDING)
+        return [RescuerTeam.model_validate(document) async for document in cursor]
+
     async def reserve_if_available(
         self,
         *,
@@ -66,9 +78,14 @@ class RescuerRepository:
         mission_id: str,
         assigned_at: datetime,
         session: AsyncClientSession,
+        expected_version: int | None = None,
     ) -> RescuerTeam | None:
+        query: dict[str, object] = {"id": team_id, "availability": "available",
+                                    "assigned_mission_id": None, "assigned_request_id": None}
+        if expected_version is not None:
+            query["version"] = expected_version
         document = await self._collection.find_one_and_update(
-            {"id": team_id, "availability": "available"},
+            query,
             {
                 "$set": {
                     "availability": "assigned",

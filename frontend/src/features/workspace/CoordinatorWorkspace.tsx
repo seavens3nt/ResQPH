@@ -1,11 +1,10 @@
-import { WorkspaceCard, WorkspaceTable, WorkspaceBadge, WorkspaceStatCard, WorkspaceSplit, WorkspaceFacts, WorkspaceEmpty, WorkspaceTimeline } from './WorkspaceUI'
+import { WorkspaceCard, WorkspaceTable, WorkspaceBadge, WorkspaceSplit, WorkspaceFacts, WorkspaceEmpty, WorkspaceTimeline } from './WorkspaceUI'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { requests, teams, missions, cancelMission, cancelRequest } from '../../api/workspace'
 import { assignTeam } from '../../api/assignments'
 import { updateMissionStatus } from '../../api/missions'
 import { Modal } from '../../components/ui/Modal'
-import { Icon } from '../../components/art/Icon'
 import { InteractiveFloodMap } from '../map/InteractiveFloodMap'
 import { QueryState, RecordId } from './Records'
 import { errorMessage } from './errors'
@@ -13,7 +12,7 @@ import { MissionRoute } from './MissionRoute'
 import type { RescueRequestRecord } from '../requests/types'
 import type { MissionDetail } from '../../api/missions'
 import { MissionDetails } from './MissionDetails'
-import { RequestQueuePreview } from './RequestQueuePreview'
+import { DispatcherOverview } from './DispatcherOverview'
 
 export function CoordinatorWorkspace({section, navigate}: {section: string; navigate: (section: string) => void}) {
   const client = useQueryClient()
@@ -36,29 +35,25 @@ export function CoordinatorWorkspace({section, navigate}: {section: string; navi
   }})
   if (section === 'map') return <WorkspaceCard><h2>Mission routing map</h2><p>Choose an actual mission to evaluate its location from the controlled staging point.</p><QueryState query={missionList}>{data => <><label className="workspace-picker">Select mission<select value={missionId} onChange={e => setMissionId(e.target.value)}><option value="">Choose a mission</option>{data.map(m => <option key={m.id} value={m.id}>{m.request_summary?.location.address} · {m.team_id} · {m.status}</option>)}</select></label>{data.find(m => m.id === missionId) ? <MissionRoute key={missionId} mission={data.find(m => m.id === missionId)!}/> : <><WorkspaceEmpty title={data.length ? 'Select a mission' : 'No missions yet'} icon="route">Choose a mission above to calculate its controlled route.</WorkspaceEmpty><InteractiveFloodMap activeStage="none"/></>}</>}</QueryState></WorkspaceCard>
   const available = teamList.data?.filter(t => t.availability === 'available') ?? []
-  return <div className={'workspace-stack '+(section === 'overview' ? 'coordinator-overview' : '')}>
+  return <>
     {notice && <p role="status">{notice}</p>}
     {change.isError && <p role="alert">{errorMessage(change.error)}</p>}
-    {section === 'overview' && <section className="workspace-stats">
-      <QueryState query={queue} layout="compact">{data => <WorkspaceStatCard tone="pending" icon="report" count={data.items.filter(r => r.status === 'pending').length} label="Pending requests" onClick={() => navigate('inquiries')}/>}</QueryState>
-      <QueryState query={teamList} layout="compact">{data => <WorkspaceStatCard tone="teams" icon="volunteers" count={data.filter(t => t.availability === 'available').length} label="Available teams" onClick={() => navigate('teams')}/>}</QueryState>
-      <QueryState query={missionList} layout="compact">{data => <WorkspaceStatCard tone="active" icon="boat" count={data.filter(m => !['completed', 'cancelled'].includes(m.status)).length} label="Active missions" onClick={() => navigate('missions')}/>}</QueryState>
-      <QueryState query={missionList} layout="compact">{data => <WorkspaceStatCard tone="completed" icon="check" count={data.filter(m => m.status === 'completed').length} label="Completed missions" onClick={() => navigate('missions')}/>}</QueryState>
-    </section>}
-    {(section === 'overview' || section === 'inquiries') && <WorkspaceCard className="coordinator-queue"><h3>{section === 'overview' ? 'Pending requests' : 'Rescue requests'}</h3><div className={section === 'overview' ? '' : 'workspace-split'}><div><QueryState query={queue} layout="table" label="Loading rescue requests…">{data => <>
-      {section !== 'overview' && <div className="workspace-toolbar"><label>Search requests<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Address or request ID"/></label><label>Status<select value={status} onChange={e => setStatus(e.target.value)}>{['all','pending','assigned','en-route','arrived','completed','cancelled'].map(s => <option key={s}>{s}</option>)}</select></label></div>}
-      {section === 'overview' ? <RequestQueuePreview requests={data.items} onSelect={id => {setSelectedId(id);setStatus('all');setSearch('');navigate('inquiries')}} onViewAll={() => {setStatus('pending');setSearch('');navigate('inquiries')}}/> : <>
+    <div className={'workspace-stack '+(section === 'overview' ? 'coordinator-overview' : '')}>
+    {section === 'overview' && <DispatcherOverview queue={queue} teamList={teamList} missionList={missionList} navigate={navigate}
+      onRequestSelect={id => {setSelectedId(id);setStatus('all');setSearch('');navigate('inquiries')}}
+      onViewAll={() => {setStatus('pending');setSearch('');navigate('inquiries')}}
+      onMissionSelect={id => {setMissionId(id);navigate('missions')}}/>}
+    {section === 'inquiries' && <WorkspaceCard className="coordinator-queue"><h3>Rescue requests</h3><div className="workspace-split"><div><QueryState query={queue} layout="table" label="Loading rescue requests…">{data => <>
+      <div className="workspace-toolbar"><label>Search requests<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Address or request ID"/></label><label>Status<select value={status} onChange={e => setStatus(e.target.value)}>{['all','pending','assigned','en-route','arrived','completed','cancelled'].map(s => <option key={s}>{s}</option>)}</select></label></div>
       {!data.items.length && <p>No requests found.</p>}
       {data.items.length > 0 && !data.items.some(r => (status === 'all' || r.status === status) && `${r.location.address} ${r.id}`.toLowerCase().includes(search.toLowerCase())) && <p>No requests match this queue filter.</p>}
       <WorkspaceTable headings={["Request","Location","People","Status","Action"]}>{data.items.filter(r => (status === 'all' || r.status === status) && `${r.location.address} ${r.id}`.toLowerCase().includes(search.toLowerCase())).map(r => <tr key={r.id}>
         <td><RecordId id={r.id}/></td><td>{r.location.address}</td><td>{r.headcount}</td><td><WorkspaceBadge status={r.status}>{r.status}</WorkspaceBadge></td><td><button onClick={() => setSelectedId(r.id)}>View</button></td>
       </tr>)}</WorkspaceTable>
-      </>}
       <button onClick={() => void queue.refetch()}>Refresh requests</button>
     </>}</QueryState>
-    </div>{section !== 'overview' && <WorkspaceCard as="article" >{selected ? <><h3>Request details</h3><RecordId id={selected.id}/><p><WorkspaceBadge status={selected.status}>{selected.status}</WorkspaceBadge></p><WorkspaceFacts items={[{label:'Location',value:selected.location.address},{label:'People needing help',value:selected.headcount},{label:'Reported time',value:new Date(selected.created_at).toLocaleString()},{label:'Details',value:selected.situation_summary || 'No optional situation details.'}]}/><h3>Status history</h3><WorkspaceTimeline events={(selected.status_history ?? []).map((event,i) => ({id:String(i),status:event.status,timestamp:event.occurred_at,note:event.note}))}/>{selected.status === 'pending' && <><button className="workspace-primary" onClick={() => {setAssignment(selected);setTeamId('');change.reset()}}>Assign team</button><button onClick={() => {setAction({request:selected,kind:'cancel'});setReason('');change.reset()}}>Cancel pending request</button></>}</> : <p>Select a request to inspect its details and assign a team.</p>}</WorkspaceCard>}
+    </div><WorkspaceCard as="article" >{selected ? <><h3>Request details</h3><RecordId id={selected.id}/><p><WorkspaceBadge status={selected.status}>{selected.status}</WorkspaceBadge></p><WorkspaceFacts items={[{label:'Location',value:selected.location.address},{label:'People needing help',value:selected.headcount},{label:'Reported time',value:new Date(selected.created_at).toLocaleString()},{label:'Details',value:selected.situation_summary || 'No optional situation details.'}]}/><h3>Status history</h3><WorkspaceTimeline events={(selected.status_history ?? []).map((event,i) => ({id:String(i),status:event.status,timestamp:event.occurred_at,note:event.note}))}/>{selected.status === 'pending' && <><button className="workspace-primary" onClick={() => {setAssignment(selected);setTeamId('');change.reset()}}>Assign team</button><button onClick={() => {setAction({request:selected,kind:'cancel'});setReason('');change.reset()}}>Cancel pending request</button></>}</> : <p>Select a request to inspect its details and assign a team.</p>}</WorkspaceCard>
     </div></WorkspaceCard>}
-    {section === 'overview' && <><WorkspaceCard className="coordinator-active"><h3>Active missions</h3><QueryState query={missionList}>{data => <>{!data.filter(m => !['completed','cancelled'].includes(m.status)).length && <p>No active missions. Teams are standing by.</p>}{data.filter(m => !['completed','cancelled'].includes(m.status)).map(m => <button className="workspace-record" key={m.id} onClick={() => {setMissionId(m.id); navigate('missions')}}>{m.request_summary?.location.address} · {m.team_id} · {m.status}</button>)}</>}</QueryState></WorkspaceCard><WorkspaceCard className="coordinator-teams"><h3>Team availability</h3><QueryState query={teamList}>{data => <div className="workspace-team-grid">{data.map(t => <button key={t.id} className="workspace-record" onClick={() => navigate('teams')}><Icon name="volunteers" size={24}/><span>{t.team_name}<WorkspaceBadge as="small" status={t.availability === 'available' ? 'completed' : 'assigned'}>{t.availability}</WorkspaceBadge></span></button>)}</div>}</QueryState></WorkspaceCard></>}
     {section === 'teams' && <WorkspaceCard ><h2>Rescue teams</h2><QueryState query={teamList} layout="table" label="Loading rescue teams…">{data => <WorkspaceTable headings={["Team name","Status","Current mission"]}>{data.map(t => <tr key={t.id}><td>{t.team_name}</td><td><WorkspaceBadge status={(t.availability === 'available' ? 'completed' : 'assigned')}>{t.availability}</WorkspaceBadge></td><td>{t.assigned_mission_id ? <RecordId id={t.assigned_mission_id}/> : '—'}</td></tr>)}</WorkspaceTable>}</QueryState></WorkspaceCard>}
     {section === 'missions' && <WorkspaceCard><h2>Mission records</h2><QueryState query={missionList} layout="table" label="Loading missions…">{data => <WorkspaceSplit inspector={data.find(m => m.id === missionId) ? <MissionDetails mission={data.find(m => m.id === missionId)!}/> : <WorkspaceEmpty title="Mission details" icon="boat">Choose a mission to inspect its linked request, progress, and recorded status history.</WorkspaceEmpty>}>
       {!data.length && <p>No missions found.</p>}
@@ -83,5 +78,5 @@ export function CoordinatorWorkspace({section, navigate}: {section: string; navi
         updateMissionStatus(action.mission.id, {event_id: crypto.randomUUID(), new_status:'completed', expected_mission_version:action.mission.version, client_recorded_at:new Date().toISOString(), source:'online', note:reason.trim()}) :
         cancelRequest(action.request!.id, action.request!.version, reason.trim()))}>Confirm {action?.kind === 'complete' ? 'completion' : 'cancellation'}</button>
     </Modal>
-  </div>
+  </div></>
 }

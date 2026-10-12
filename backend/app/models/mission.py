@@ -12,6 +12,7 @@ class Mission(BaseModel):
     id: str
     request_id: str
     team_id: str
+    station_id: str | None = None
     status: MissionStatus = "assigned"
     version: int = Field(ge=1)
     assigned_at: datetime
@@ -20,6 +21,8 @@ class Mission(BaseModel):
     assigned_rescuer_id: str | None = None
     request_summary: dict[str, Any] | None = None
     latest_route_result: dict[str, Any] | None = None
+    dispatch_provenance: dict[str, Any] | None = None
+    tracking_state: dict[str, Any] | None = None
     data_source: str = "synthetic"
     sync_status: str = "synced"
     completed_at: datetime | None = None

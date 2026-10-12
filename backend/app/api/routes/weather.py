@@ -1,5 +1,7 @@
 """Informational Google Weather data, isolated from flood routing."""
 import asyncio
+import math
+import time
 from typing import Annotated, Literal
 
 import httpx
@@ -8,9 +10,57 @@ from pydantic import AwareDatetime, BaseModel, Field, FiniteFloat, ValidationErr
 
 from app.api.dependencies.demo_role import get_demo_actor
 from app.core.config import settings
+from app.core.rate_limit import RateLimitExceeded
 from app.schemas.common import DemoActor, ServiceError
 
 router = APIRouter(tags=["weather"])
+
+# Process-local failure cooldown only; weather values are never persisted here.
+_quota_cooldowns: dict[str, tuple[float, bool]] = {}
+
+
+class WeatherQuotaExceeded(RateLimitExceeded):
+    def __init__(self, retry_after: int, daily: bool) -> None:
+        super().__init__(retry_after)
+        self.code = "weather_quota_exceeded"
+        self.message = (
+            "Google Weather daily quota exhausted. Wait for the quota to reset "
+            "or ask the project administrator to review Google Cloud Weather API quotas."
+            if daily else "Google Weather rate limit reached. Wait before refreshing."
+        )
+
+
+async def google_weather_request(
+    client: httpx.AsyncClient, path: str, params: dict[str, str], key: str
+) -> httpx.Response:
+    deadline, daily = _quota_cooldowns.get(path, (0.0, False))
+    remaining = math.ceil(deadline - time.monotonic())
+    if remaining > 0:
+        raise WeatherQuotaExceeded(remaining, daily)
+    upstream = await client.get(
+        f"https://weather.googleapis.com/v1/{path}", params=params,
+        headers={"X-Goog-Api-Key": key},
+    )
+    if upstream.status_code == 429:
+        # Inspect only quota identifiers; never forward provider messages/project IDs.
+        try:
+            details = upstream.json().get("error", {}).get("details", [])
+            daily = any("perday" in str(detail.get("metadata", {}).get("quota_limit", "")).lower()
+                        for detail in details if isinstance(detail, dict))
+        except (ValueError, AttributeError, TypeError):
+            daily = False
+        delay = 3600 if daily else 60
+        raw_delay = upstream.headers.get("Retry-After", "")
+        if raw_delay.isdigit():
+            delay = max(delay, min(int(raw_delay), 86400))
+        _quota_cooldowns[path] = (time.monotonic() + delay, daily)
+        raise WeatherQuotaExceeded(delay, daily)
+    if upstream.status_code in (401, 403):
+        raise ServiceError(503, "weather_configuration_error",
+                           "Google Weather access denied. Check the server API key, "
+                           "Weather API enablement, key restrictions and project billing.")
+    upstream.raise_for_status()
+    return upstream
 
 
 class Temperature(BaseModel):
@@ -143,11 +193,11 @@ async def ubelt_hourly_weather(
         raise ServiceError(503, "weather_not_configured", "Google Weather API is not configured.")
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
-            upstream = await client.get(
-                "https://weather.googleapis.com/v1/forecast/hours:lookup",
+            upstream = await google_weather_request(
+                client, "forecast/hours:lookup",
                 params={"location.latitude": "14.6042", "location.longitude": "120.9946",
                         "unitsSystem": "METRIC", "languageCode": "en", "hours": "6", "pageSize": "6"},
-                headers={"X-Goog-Api-Key": key},
+                key=key,
             )
         upstream.raise_for_status()
         forecast = HourlyForecast.model_validate(upstream.json())
@@ -180,10 +230,8 @@ async def ubelt_weather(
         # Header auth prevents the secret appearing in request URLs/logs.
         async with httpx.AsyncClient(timeout=8.0) as client:
             current_response, daily_response = await asyncio.gather(
-                client.get("https://weather.googleapis.com/v1/currentConditions:lookup",
-                           params=params, headers={"X-Goog-Api-Key": key}),
-                client.get("https://weather.googleapis.com/v1/forecast/days:lookup",
-                           params={**params, "days": "1"}, headers={"X-Goog-Api-Key": key}),
+                google_weather_request(client, "currentConditions:lookup", params, key),
+                google_weather_request(client, "forecast/days:lookup", {**params, "days": "1"}, key),
             )
         current_response.raise_for_status()
         daily_response.raise_for_status()

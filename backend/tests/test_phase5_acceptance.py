@@ -199,13 +199,14 @@ def test_phase5_openapi_cors_and_safe_boundary_contracts() -> None:
     schema = client.get("/openapi.json").json()
     paths = schema["paths"]
     assert "/api/v1/rescue-requests" in paths
-    assert "/api/v1/rescue-requests/{request_id}/assignment" in paths
+    assert "/api/v1/auth/register" in paths
+    assert "/api/v1/auth/session" in paths
+    assert "/api/v1/rescue-requests/{request_id}/assignment" not in paths
+    assert "/api/v1/teams" not in paths
     assert "/api/v1/missions/{mission_id}/status-events" in paths
     assert "/api/v1/routes/evaluate" in paths
     assert "/api/v1/ml/road-risk" in paths
 
-    assignment_responses = paths["/api/v1/rescue-requests/{request_id}/assignment"]["post"]["responses"]
-    assert {"201", "403", "404", "409", "422", "503"}.issubset(assignment_responses)
     assert "ErrorEnvelope" in schema["components"]["schemas"]
 
     road_risk_schema = paths["/api/v1/ml/road-risk"]["post"]
@@ -221,7 +222,7 @@ def test_phase5_openapi_cors_and_safe_boundary_contracts() -> None:
         headers={
             "Origin": allowed_origin,
             "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "X-Demo-User-Id,X-Demo-Role,Content-Type",
+            "Access-Control-Request-Headers": "Content-Type,X-CSRF-Token,Idempotency-Key",
         },
     )
     assert allowed_preflight.status_code == 200
