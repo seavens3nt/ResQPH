@@ -11,6 +11,7 @@ import { missions } from '../../api/workspace'
 import { RescuerMissionCard } from '../../pages/dashboard/views/rescuer/RescuerMissionCard'
 import { RescuerOfflineQueue } from '../../pages/dashboard/views/rescuer/RescuerOfflineQueue'
 import { Modal } from '../../components/ui/Modal'
+import { Icon } from '../../components/art/Icon'
 import { MissionRoute } from './MissionRoute'
 import { QueryState, RecordId } from './Records'
 import { MissionDetails } from './MissionDetails'
@@ -68,12 +69,12 @@ export function RescuerWorkspace({section}: {section: string}) {
   </div>
   if (section === 'history') return <WorkspaceCard><h2>Mission History</h2><WorkspaceFilters options={['all','completed','cancelled']} value={filter} label="Mission history filter" onChange={value => {setFilter(value);setSelected(null)}}/><QueryState query={history} layout="table" label="Loading mission history…">{items => <WorkspaceSplit inspector={items.find(m => m.id === selected) ? <MissionDetails mission={items.find(m => m.id === selected)!}/> : <WorkspaceEmpty title="Mission details" icon="clock">Select a completed or cancelled mission to view its immutable timeline.</WorkspaceEmpty>}><WorkspaceTable headings={['Mission','Location','Date','Status','Action']} caption="Completed and cancelled missions">{items.filter(m => ['completed', 'cancelled'].includes(m.status) && (filter === 'all' || m.status === filter)).map(m => <tr key={m.id} className={selected === m.id ? 'is-selected' : undefined}><td><RecordId id={m.id}/></td><td>{m.request_summary?.location.address}</td><td>{new Date(m.updated_at).toLocaleDateString()}</td><td>{m.status}</td><td><button aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}>View</button></td></tr>)}</WorkspaceTable>{!items.filter(m => ['completed', 'cancelled'].includes(m.status) && (filter === 'all' || m.status === filter)).length && <WorkspaceEmpty title="No completed or cancelled missions" icon="clock">Past missions will appear here after the server records their outcome.</WorkspaceEmpty>}</WorkspaceSplit>}</QueryState></WorkspaceCard>
   if (routeOpen && offline.mission) return <div className="workspace-stack"><button onClick={() => setRouteOpen(false)}>Back to mission</button>{missionActions}{completionDialog}{endAction}<MissionRoute mission={offline.mission} offline={offline.isOffline}/></div>
-  return <div className="workspace-stack rescuer-workspace"><div className="workspace-panel-heading"><p className="workspace-team-caption">{user?.stationName ?? 'Rescue station'} · {user?.stationAddress ?? 'Station address unavailable'}</p>
+  return <div className="workspace-stack rescuer-workspace"><div className="workspace-panel-heading"><p className="workspace-team-caption"><Icon name="pin" size={14} /> <span>{user?.stationName ?? 'Rescue station'} · {user?.stationAddress ?? 'Station address unavailable'}</span></p>
     {offline.loading && offline.mission && <p role="status">Refreshing assigned mission…</p>}
     {offline.storageError && <p role="alert">{offline.storageError}</p>}
     {offline.recoveryAvailable && <p role="note">Quarantined offline data is retained on this device. <button type="button" onClick={() => void offline.downloadRecovery()}>Download recovery file</button> Store the file privately; it can contain request details.</p>}
     {offline.networkError && <p role="alert">{offline.networkError} {offline.authenticationRequired && <a href="/login">Sign in again</a>}</p>}
-    <button onClick={() => void offline.reload()} disabled={offline.busy || offline.loading}>Refresh mission</button>
+    <button type="button" className="btn-refresh-mission" onClick={() => void offline.reload()} disabled={offline.busy || offline.loading}><Icon name="refresh" size={14} /><span>Refresh mission</span></button>
     </div>
     <RescuerOfflineQueue entry={offline.entry} isOffline={offline.isOffline} onRetrySync={offline.retry} onDismissFailed={offline.discard} currentServerMission={offline.currentServerMission} storageError={offline.storageError} onRefresh={() => void offline.reload()} />
     {offline.loading && !offline.mission && <WorkspaceCard><LoadingState layout="detail" label="Loading assigned mission…"/></WorkspaceCard>}

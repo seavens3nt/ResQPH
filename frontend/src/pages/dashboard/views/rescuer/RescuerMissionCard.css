@@ -1,31 +1,31 @@
 .rescuer-mission-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
   min-width: 0;
   margin-bottom: 1.5rem;
-  padding: 1.25rem 1.4rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  border: 0;
+  border-radius: 20px;
   background: #ffffff;
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .rescuer-mission-card__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.25rem;
+  border-bottom: 0;
   flex-wrap: wrap;
 }
 
 .rescuer-mission-card__head > div {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   flex-wrap: wrap;
 }
@@ -33,31 +33,100 @@
 .rescuer-mission-card__id {
   margin: 0;
   color: #0f172a;
-  font-family:var(--font-body);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rescuer-mission-card__id strong {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .rescuer-mission-card__meta {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   color: #475569;
   font-size: 0.82rem;
-  flex-wrap: wrap;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .rescuer-mission-card__meta {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+.rescuer-mission-card__detail {
+  background: #ffffff;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: 56px;
+  transition: all 0.15s ease-out;
+}
+
+.rescuer-mission-card__detail:hover {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.rescuer-mission-card__detail > svg:first-child {
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.rescuer-mission-card__detail--flood > svg:first-child {
+  color: #0284c7;
+}
+
+.rescuer-mission-card__detail-text {
+  color: #0f172a;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rescuer-mission-card__detail-chevron {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.rescuer-mission-card__detail--urgent {
+  background: #fff5f5;
+}
+
+.rescuer-mission-card__detail--urgent .rescuer-mission-card__detail-text {
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .rescuer-mission-card__meta > span {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   min-width: 0;
-  padding: 4px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #f8fafc;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   overflow-wrap: anywhere;
 }
 
@@ -138,20 +207,21 @@
   width: 100%;
   height: 240px;
   overflow: hidden;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #e2e8f0;
+  border: 0;
+  border-radius: 14px;
+  background: #f1f5f9;
 }
 .mission-tracking-map .google-map-wrapper { min-height: 210px; height: 210px; }
 .mission-tracking-map .google-map-canvas { height: 210px !important; }
 
 .mission-tracking-panel__metrics span {
-  padding: 4px 8px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #f8fafc;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #f1f5f9;
   color: #475569;
   font-size: 0.76rem;
+  font-weight: 500;
 }
 
 .rescuer-mission-card__history {

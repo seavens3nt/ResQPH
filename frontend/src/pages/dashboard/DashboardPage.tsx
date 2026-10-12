@@ -22,6 +22,7 @@ import '../../features/workspace/screenshotHome.css'
 import '../../features/workspace/screenshotRequests.css'
 import '../../features/workspace/sidebar.css'
 import '../../features/workspace/figmaWorkspace.css'
+import '../../features/workspace/rescuerDesign.css'
 
 const navigation: Record<UserRole, [string, string][]> = {
   citizen: [['overview', 'Home'], ['inquiries', 'My Requests'], ['map', 'Map'], ['advisory', 'Advisory'], ['account', 'Account']],

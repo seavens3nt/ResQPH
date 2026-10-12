@@ -88,7 +88,7 @@ export function WorkspaceProgress({ stages, current, label }: {
   label: string
 }) {
   const index = stages.findIndex(stage => stage.value === current)
-  return <ol className="workspace-progress" aria-label={label} style={{gridTemplateColumns:`repeat(${stages.length}, minmax(0, 1fr))`}}>{stages.map((stage, position) => <li key={stage.value} className={position <= index ? 'is-reached' : undefined} aria-current={stage.value === current ? 'step' : undefined}><Icon name={position < index ? 'check' : 'pin'} size={18}/><span>{stage.label}</span></li>)}</ol>
+  return <ol className="workspace-progress" aria-label={label} style={{gridTemplateColumns:`repeat(${stages.length}, minmax(0, 1fr))`}}>{stages.map((stage, position) => <li key={stage.value} className={position <= index ? 'is-reached' : undefined} aria-current={stage.value === current ? 'step' : undefined}><Icon name={position < index ? 'check' : stage.value === 'completed' && position !== index ? 'flag' : 'pin'} size={18}/><span>{stage.label}</span></li>)}</ol>
 }
 
 export function WorkspaceEmpty({ title, children, icon = 'report', action }: {

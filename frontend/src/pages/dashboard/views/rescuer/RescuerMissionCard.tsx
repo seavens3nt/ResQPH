@@ -86,17 +86,31 @@ export function RescuerMissionCard({
       {/* Request summary */}
       {req ? (
         <div className="rescuer-mission-card__meta">
-          <span>
-            <Icon name="pin" size={12} /> {req.location.address}
-          </span>
-          <span><Icon name="volunteers" size={16}/> {req.headcount} persons</span>
-          {req.medical_needs && (
-            <span style={{ color: 'var(--color-danger-text)', fontWeight: 600 }}>
-              <Icon name="medical" size={16}/> Medical needed
-            </span>
-          )}
-          <span>Flood level: {req.reported_flood_level}</span>
-          <span>Reported severity: {req.reported_severity ?? 'moderate'}</span>
+          <div className="rescuer-mission-card__detail">
+            <Icon name="pin" size={20} />
+            <span className="rescuer-mission-card__detail-text">{req.location.address}</span>
+            <Icon name="chevron-right" size={14} className="rescuer-mission-card__detail-chevron" />
+          </div>
+          <div className="rescuer-mission-card__detail">
+            <Icon name="volunteers" size={20} />
+            <span className="rescuer-mission-card__detail-text">{req.headcount} persons</span>
+            <Icon name="chevron-right" size={14} className="rescuer-mission-card__detail-chevron" />
+          </div>
+          <div className={`rescuer-mission-card__detail ${req.medical_needs ? 'rescuer-mission-card__detail--urgent' : ''}`}>
+            <Icon name="medical" size={20} />
+            <span className="rescuer-mission-card__detail-text">{req.medical_needs ? 'Medical needed' : 'No medical flag'}</span>
+            <Icon name="chevron-right" size={14} className="rescuer-mission-card__detail-chevron" />
+          </div>
+          <div className="rescuer-mission-card__detail rescuer-mission-card__detail--flood">
+            <Icon name="waves" size={20} />
+            <span className="rescuer-mission-card__detail-text">Flood level: {req.reported_flood_level}</span>
+            <Icon name="chevron-right" size={14} className="rescuer-mission-card__detail-chevron" />
+          </div>
+          <div className="rescuer-mission-card__detail rescuer-mission-card__detail--severity">
+            <Icon name="warning" size={20} />
+            <span className="rescuer-mission-card__detail-text">Reported severity: <strong>{req.reported_severity ?? 'moderate'}</strong></span>
+            <Icon name="chevron-right" size={14} className="rescuer-mission-card__detail-chevron" />
+          </div>
         </div>
       ) : (
         <p className="proto-notice" role="status">
