@@ -1,5 +1,22 @@
 # Local frontend visual baseline
 
+2026-10-12 card consistency: `components/ui/cardTheme.css` owns final card
+appearance across role routes. Outer cards use a 20px radius, theme-blue surface,
+thin border and subtle shadow. Nested panels use a 16px radius and no shadow;
+dialogs use a 24px radius and one overlay shadow. Empty panels retain dashed
+borders; rescue CTA and status colors retain their meaning. Page-specific rules
+continue to own layout, dimensions and spacing, not competing card appearances.
+
+2026-10-12 action consistency: `components/ui/actionTheme.css` is loaded last
+and owns action colors across roles and dialogs. All red actions, including
+destructive confirmations and the rescue CTA, use the same solid brand red
+and hover shade; secondary actions use theme-aware
+outlined pills. `data-action-tone` explicitly marks otherwise unclassified
+primary/danger actions. Map confirmation retains its approved blue treatment.
+Navigation, filters, map-provider controls, and clickable record cards are not
+ordinary action buttons. Home and My Requests reuse the same compact draft notice
+with identical typography, padding, surfaces, and Resume/Discard treatments.
+
 All future UI additions and edits must match this existing design and its theme.
 Reuse the shared typography, density, surface, border, radius and semantic-color
 tokens. This includes loading, empty, error, disabled, hover and focus states.
@@ -45,7 +62,8 @@ and rules, rather than copying the Home layout into every route.
   their own panel, never widen the entire dashboard.
 - Reuse `WorkspaceHeader` for all three roles. Keep caller-provided titles,
   identity, profile destination and connection status; do not introduce a role
-  switch. Home and My Requests retain the screenshot's Home header title.
+  switch. Citizen headers follow their page names: Home and My Requests.
+  Home has no decorative vertical divider beside its title.
 - Import `sharedVisualSystem.css` once, at the end of App's page imports, so
   older role styles cannot override shared surfaces and controls by load order.
 - Keep the sidebar outlined in both expanded and collapsed states. Preserve
@@ -67,7 +85,10 @@ All native dropdowns share `frontend/src/components/ui/Select.css`, loaded after
 page styles: Inter, pill borders, inset surfaces, consistent chevrons, reserved
 arrow spacing, and visible focus/error/disabled states. Preserve each selector's
 options, handlers, and page-specific width. Authentication keeps its dark surface.
-Expanded native option menus retain browser/operating-system rendering.
+Expanded menus use progressive `base-select` styling where supported: rounded
+theme-colored panels, padded wrapping options, blue focus/selection treatment
+and bounded scrolling. Older browsers retain their native option picker.
+Keep native select semantics, values, handlers and validation unchanged.
 
 Citizen Home now follows Figma `mxh4jCIQFEX80EzMRsRgBW`, frame `1:2`
 (1728 × 1117): 325px visible sidebar, 132px header, 215px status cards,

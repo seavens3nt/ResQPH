@@ -6,6 +6,17 @@ const state=vi.hoisted(()=>({query:{isLoading:false,isError:false,data:{items:[{
 vi.mock('../requests/hooks',()=>({useMyRescueRequests:()=>state.query}))
 afterEach(()=>{cleanup();vi.clearAllMocks();state.query.isLoading=false;state.query.isError=false})
 describe('Reference My Requests layout',()=>{
+  it('announces an empty result separately from loading and pagination',()=>{
+    const records=state.query.data.items
+    state.query.data.items=[]
+    try {
+      render(<CitizenRequests filter="all" onFilter={vi.fn()} onNew={vi.fn()} onSelect={vi.fn()} selected={null}/>)
+      expect(screen.getByRole('status')).toHaveTextContent('No rescue requests found.')
+      expect(screen.getByRole('status')).toHaveClass('requests-empty-list')
+      expect(screen.getByText('Showing the most recent 0 of 2 requests.')).toHaveClass('requests-list-caption')
+      expect(screen.queryByText('Loading your requests…')).not.toBeInTheDocument()
+    } finally { state.query.data.items=records }
+  })
   it('filters real records, keeps short labels and selects by the stored ID',()=>{
     const select=vi.fn()
     render(<CitizenRequests filter="active" onFilter={vi.fn()} onNew={vi.fn()} onSelect={select} selected={null}/>)

@@ -74,7 +74,14 @@
 .workspace-shell[data-role=citizen][data-view=inquiries] .workspace-main .requests-refresh { width:calc(281 * var(--figma-unit)); background:var(--shared-inset); color:var(--ink); border:1px solid var(--line); }
 .workspace-shell[data-role=citizen][data-view=inquiries] .workspace-main .requests-new { width:calc(295 * var(--figma-unit)); background:linear-gradient(to top,#ce5657,#c82624); color:#fff; border:1px solid #890d1d; }
 .workspace-shell[data-role=citizen][data-view=inquiries] .screenshot-requests .requests-details-card { padding:24px; }
-.requests-empty-list { font-size:16px; color:var(--muted); margin:16px 0 0; }
+.workspace-shell[data-role=citizen] .requests-empty-list {
+  display:grid; place-items:center; width:100%; box-sizing:border-box;
+  min-height:140px; padding:24px; margin:16px 0 0; text-align:center;
+  font-size:14px; line-height:1.5; color:var(--muted);
+  background:color-mix(in srgb,var(--line) 45%,var(--shared-inset)); border:1px dashed var(--line);
+  border-radius:var(--resqph-card-radius); overflow-wrap:anywhere;
+}
+.requests-list-caption { font-size:14px; line-height:1.5; color:var(--muted); margin:16px 0 0; }
 .workspace-shell[data-role=citizen][data-view=inquiries][data-theme=dark] .requests-table-scroll { background-image:none; }
 .workspace-shell[data-role=citizen][data-view=inquiries][data-theme=dark] .requests-reference-table th { background:var(--neutral-raised); color:var(--ink); }
 .workspace-shell[data-role=citizen][data-view=inquiries][data-theme=dark] .requests-selectable-row:hover td { background:var(--neutral-hover); }

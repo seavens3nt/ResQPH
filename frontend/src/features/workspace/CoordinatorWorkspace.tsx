@@ -67,13 +67,13 @@ export function CoordinatorWorkspace({section, navigate}: {section: string; navi
       {assignment && <WorkspaceFacts items={[{label:'Location',value:assignment.location.address},{label:'People needing help',value:assignment.headcount},{label:'Request',value:<RecordId id={assignment.id}/>}]}/>}
       <QueryState query={teamList}>{() => <>{!available.length && <p>No teams currently available.</p>}<label>Available team<select value={teamId} onChange={e => setTeamId(e.target.value)}><option value="">Select a team</option>{available.map(t => <option key={t.id} value={t.id}>{t.team_name}</option>)}</select></label></>}</QueryState>
       {change.isError && <p role="alert">{errorMessage(change.error)} Refresh records before retrying a conflict.</p>}
-      <button disabled={!teamId || !assignment || change.isPending} onClick={() => assignment && change.mutate(() => assignTeam(assignment.id, {team_id: teamId, expected_request_version: assignment.version}))}>{change.isPending ? 'Assigning…' : 'Confirm assignment'}</button>
+      <button data-action-tone="primary" disabled={!teamId || !assignment || change.isPending} onClick={() => assignment && change.mutate(() => assignTeam(assignment.id, {team_id: teamId, expected_request_version: assignment.version}))}>{change.isPending ? 'Assigning…' : 'Confirm assignment'}</button>
     </Modal>
     <Modal isOpen={Boolean(action)} onClose={() => !change.isPending && setAction(null)} title={action?.kind === 'complete' ? 'Review rescue completion' : 'Confirm cancellation'}>
       <p>{action?.mission?.request_summary?.location.address ?? action?.request?.location.address}</p>
       <label>{action?.kind === 'complete' ? 'Completion details' : 'Cancellation reason'}<textarea maxLength={500} value={reason} onChange={e => setReason(e.target.value)} /></label>
       {change.isError && <p role="alert">{errorMessage(change.error)}</p>}
-      <button disabled={reason.trim().length < 3 || change.isPending} onClick={() => action && change.mutate(() => action.mission ?
+      <button data-action-tone={action?.kind === 'complete' ? 'primary' : 'danger'} disabled={reason.trim().length < 3 || change.isPending} onClick={() => action && change.mutate(() => action.mission ?
         action.kind === 'cancel' ? cancelMission(action.mission.id, action.mission.version, reason.trim()) :
         updateMissionStatus(action.mission.id, {event_id: crypto.randomUUID(), new_status:'completed', expected_mission_version:action.mission.version, client_recorded_at:new Date().toISOString(), source:'online', note:reason.trim()}) :
         cancelRequest(action.request!.id, action.request!.version, reason.trim()))}>Confirm {action?.kind === 'complete' ? 'completion' : 'cancellation'}</button>

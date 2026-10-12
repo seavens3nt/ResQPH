@@ -6,8 +6,8 @@ export function UnfinishedRequestNotice({onResume,onDiscard}: {onResume:()=>void
     <p>No request has been sent. Your draft is kept in this tab only.</p>
     <h2>You have an unfinished request</h2>
     <div className="unfinished-request-actions">
-      <button onClick={onResume}>Resume draft</button>
-      <button className="unfinished-request-discard" onClick={onDiscard}>Discard draft</button>
+      <button type="button" data-action-tone="secondary" onClick={onResume}>Resume draft</button>
+      <button type="button" data-action-tone="danger" className="unfinished-request-discard" onClick={onDiscard}>Discard draft</button>
     </div>
   </WorkspaceCard>
 }

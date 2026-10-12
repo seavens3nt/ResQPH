@@ -40,9 +40,9 @@ export function Button(props: ButtonProps) {
     )
   }
 
-  const { variant: _v, size: _s, children: _c, ...rest } = props as ButtonAsButton
+  const { variant: _v, size: _s, children: _c, className: extraClassName, ...rest } = props as ButtonAsButton
   return (
-    <button className={className} {...rest}>
+    <button className={`${className}${extraClassName ? ` ${extraClassName}` : ''}`} {...rest}>
       {children}
     </button>
   )

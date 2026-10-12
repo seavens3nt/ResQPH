@@ -8,7 +8,7 @@ describe('Location options', () => {
     render(<LocationOptions source="map" disabled={false} onChooseSource={choose}/>)
     const trigger = screen.getByRole('button', {name:'Location options'})
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByText('Source: Map pin')).toBeVisible()
+    expect(screen.queryByText('Source: Map pin')).not.toBeInTheDocument()
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     fireEvent.click(trigger)
     expect(trigger).toHaveAttribute('aria-expanded', 'true')

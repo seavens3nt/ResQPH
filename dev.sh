@@ -1,7 +1,3 @@
-## If dependencies not installed use
-#cd /Users/jared/Documents/GitHub/ResQPH ./dev.sh --install
-
-
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
@@ -10,26 +6,32 @@ BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 STOP_DB_ON_EXIT="${STOP_DB_ON_EXIT:-0}"
 INSTALL_DEPS=0
+EXISTING_DB=0
 
 BACKEND_PID=""
 FRONTEND_PID=""
 CLEANED_UP=0
+MANAGED_DB=0
 
 usage() {
   cat <<USAGE
 Run ResQPH local development services.
 
 Usage:
-  ./dev.sh [--install] [--stop-db-on-exit]
+  ./dev.sh [--install] [--existing-db] [--stop-db-on-exit]
 
 Options:
   --install          Install backend/frontend dependencies before starting.
+  --existing-db      Use MongoDB settings from backend/.env, without Docker.
   --stop-db-on-exit  Run docker compose down when this script exits.
 
 Environment:
   BACKEND_PORT       Backend port. Default: 8000
   FRONTEND_PORT      Frontend port. Default: 5173
   STOP_DB_ON_EXIT    Set to 1 to stop MongoDB on exit.
+  PYTHON            Python 3.12+ executable used to create the virtual environment.
+  MONGODB_URI       Use an existing writable replica set instead of starting Docker.
+  VITE_API_URL      API URL; defaults to the selected BACKEND_PORT.
 USAGE
 }
 
@@ -41,6 +43,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --stop-db-on-exit)
       STOP_DB_ON_EXIT=1
+      shift
+      ;;
+    --existing-db)
+      EXISTING_DB=1
       shift
       ;;
     -h|--help)
@@ -94,7 +100,9 @@ ensure_backend_venv() {
   fi
 
   log "Creating backend virtual environment"
-  if command -v uv >/dev/null 2>&1; then
+  if [[ -n "${PYTHON:-}" ]]; then
+    "$PYTHON" -m venv "$ROOT_DIR/backend/.venv"
+  elif command -v uv >/dev/null 2>&1; then
     (cd "$ROOT_DIR/backend" && uv venv --python 3.12 .venv)
   elif command -v python3.12 >/dev/null 2>&1; then
     (cd "$ROOT_DIR/backend" && python3.12 -m venv .venv)
@@ -123,7 +131,7 @@ install_dependencies() {
   fi
 
   log "Installing frontend dependencies"
-  (cd "$ROOT_DIR/frontend" && npm install)
+  (cd "$ROOT_DIR/frontend" && npm ci)
 }
 
 install_local_routing_package() {
@@ -209,7 +217,7 @@ async def main() -> int:
         hello = await client.admin.command("hello")
     finally:
         await client.close()
-    if hello.get("setName") != "rs0" or not hello.get("isWritablePrimary"):
+    if not hello.get("setName") or not hello.get("isWritablePrimary"):
         return 1
     return 0
 
@@ -306,17 +314,18 @@ cleanup() {
   fi
   wait "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
 
-  if [[ "$STOP_DB_ON_EXIT" == "1" ]]; then
+  if [[ "$STOP_DB_ON_EXIT" == "1" && "$MANAGED_DB" == "1" ]]; then
     log "Stopping MongoDB"
     (cd "$ROOT_DIR" && docker compose down)
-  else
+  elif [[ "$MANAGED_DB" == "1" ]]; then
     log "MongoDB is still running. Use 'docker compose down' to stop it."
+  else
+    log "Existing MongoDB was left untouched."
   fi
 }
 
 trap cleanup EXIT INT TERM
 
-require_command docker
 require_command npm
 ensure_env_files
 
@@ -330,15 +339,33 @@ PYTHON_BIN="$(backend_python)"
 ensure_local_routing_package
 verify_backend_import
 
+if [[ "$EXISTING_DB" == "1" ]]; then
+  MONGODB_URI="$(cd "$ROOT_DIR/backend" && "$PYTHON_BIN" -c 'from app.core.config import settings; print(settings.mongodb_uri)')"
+  export MONGODB_URI
+fi
+
 if [[ ! -d "$ROOT_DIR/frontend/node_modules" ]]; then
   echo "frontend/node_modules is missing. Run './dev.sh --install' first." >&2
   exit 1
 fi
 
-log "Starting MongoDB"
-(cd "$ROOT_DIR" && docker compose up -d mongodb)
-wait_for_mongodb
-select_mongodb_uri
+if [[ -n "${MONGODB_URI:-}" ]]; then
+  log "Checking the supplied MongoDB replica set"
+  if ! mongodb_uri_is_ready "$MONGODB_URI"; then
+    echo "The supplied MongoDB connection is not a writable replica set." >&2
+    exit 1
+  fi
+else
+  require_command docker
+  log "Starting MongoDB"
+  (cd "$ROOT_DIR" && docker compose up -d mongodb)
+  MANAGED_DB=1
+  wait_for_mongodb
+  select_mongodb_uri
+fi
+
+export VITE_API_URL="${VITE_API_URL:-http://localhost:${BACKEND_PORT}/api/v1}"
+export FRONTEND_ORIGINS="${FRONTEND_ORIGINS:-http://localhost:${FRONTEND_PORT},http://127.0.0.1:${FRONTEND_PORT}}"
 
 log "Starting backend on http://localhost:${BACKEND_PORT}"
 (cd "$ROOT_DIR/backend" && "$PYTHON_BIN" -m fastapi dev app/main.py --host 127.0.0.1 --port "$BACKEND_PORT") &
@@ -348,6 +375,31 @@ wait_for_backend
 log "Starting frontend on http://localhost:${FRONTEND_PORT}"
 (cd "$ROOT_DIR/frontend" && npm run dev -- --host localhost --port "$FRONTEND_PORT" --strictPort) &
 FRONTEND_PID=$!
+
+log "Waiting for frontend"
+FRONTEND_READY=0
+for _ in {1..60}; do
+  if ! kill -0 "$FRONTEND_PID" >/dev/null 2>&1; then
+    echo "Frontend process exited before becoming ready." >&2
+    exit 1
+  fi
+  if "$PYTHON_BIN" - "$FRONTEND_PORT" <<'PY' >/dev/null 2>&1
+import sys
+import urllib.request
+
+with urllib.request.urlopen(f"http://localhost:{sys.argv[1]}/", timeout=1) as response:
+    raise SystemExit(0 if response.status == 200 else 1)
+PY
+  then
+    FRONTEND_READY=1
+    break
+  fi
+  sleep 1
+done
+if [[ "$FRONTEND_READY" != "1" ]]; then
+  echo "Frontend did not become ready within 60 seconds." >&2
+  exit 1
+fi
 
 log "Ready"
 echo "Frontend: http://localhost:${FRONTEND_PORT}"

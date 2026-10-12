@@ -100,6 +100,15 @@ function loadGoogleMaps(): Promise<GoogleLibraries> {
   return librariesPromise
 }
 
+export async function resolvePinnedAddress(lng: number, lat: number): Promise<string> {
+  await loadGoogleMaps()
+  const { Geocoder } = await importLibrary('geocoding')
+  const { results } = await new Geocoder().geocode({ location: { lat, lng } })
+  const address = results[0]?.formatted_address
+  if (!address) throw new Error('No address found for this pin')
+  return address
+}
+
 function textPopup(title: string, lines: string[]): HTMLElement {
   const root = document.createElement('div')
   root.className = 'google-map-popup'
@@ -310,6 +319,7 @@ export function InteractiveFloodMap({
         fullscreenControl: false,
         streetViewControl: false,
         mapTypeControl: true,
+        mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT },
       })
       mapRef.current = map
       const renderingListener = map.addListener('renderingtype_changed', () => setVector(map.getRenderingType() === google.maps.RenderingType.VECTOR))
@@ -386,6 +396,26 @@ export function InteractiveFloodMap({
   }, [retry])
 
   useEffect(() => setFollow(followPosition), [followPosition])
+
+  // Apply to existing maps too (including hot updates), and reserve space for
+  // the separate location picker when the map panel becomes narrow.
+  useEffect(() => {
+    const map = mapRef.current
+    const container = containerRef.current
+    if (!mapReady || !map || !container) return
+    const updateControls = () => map.setOptions({
+      mapTypeControlOptions: {
+        position: google.maps.ControlPosition.TOP_RIGHT,
+        style: container.clientWidth < 440
+          ? google.maps.MapTypeControlStyle.DROPDOWN_MENU
+          : google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+      },
+    })
+    updateControls()
+    const observer = new ResizeObserver(updateControls)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [mapReady])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !markerClassRef.current) return

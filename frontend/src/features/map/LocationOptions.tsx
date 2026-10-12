@@ -30,7 +30,6 @@ export function LocationOptions({source, disabled, onChooseSource, gpsLabel = 'U
   }, [open])
   return <div className="location-options" ref={root} onClick={event => event.stopPropagation()} onPointerDown={event => event.stopPropagation()}>
     <button ref={trigger} type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>Location options</button>
-    <span className="location-options-summary">Source: {source === 'gps' ? 'GPS' : source === 'map' ? 'Map pin' : 'Demo'}</span>
     <fieldset hidden={!open} id={id} disabled={disabled} className="location-options-panel">
       <legend>Location source</legend>
       <label><input type="radio" name={`${id}-source`} checked={source === 'gps'} onChange={() => onChooseSource('gps')}/>{gpsLabel}</label>

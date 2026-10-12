@@ -327,10 +327,6 @@
 .resq-response-vehicle img { display: block; width: 100%; height: 100%; }
 .request-location-map .request-confirm-location { background: #15803d; color: #fff; border: 2px solid #15803d; border-radius: 8px; padding: 12px 18px; min-height: 48px; font-weight: 700; cursor: pointer; }
 .request-location-map .request-confirm-location:hover:not(:disabled) { background: #166534; border-color: #166534; }
-.request-location-map .request-confirm-location:focus-visible,
-.request-pin-adjustment button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
+.request-location-map .request-confirm-location:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
 .request-location-map .request-confirm-location:disabled { background: #e2e8f0; color: #475569; border-color: #cbd5e1; cursor: not-allowed; }
-.request-pin-adjustment { display: flex; flex-wrap: wrap; gap: 6px; }
-.request-pin-adjustment p { flex-basis: 100%; font-size: .75rem; }
-.request-pin-adjustment button { min-height: 44px; padding: 8px 12px; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; color: #334155; }
 .flood-map-container .map-recenter { display:inline-flex; align-items:center; justify-content:center; width:44px; min-height:44px; padding:10px; }

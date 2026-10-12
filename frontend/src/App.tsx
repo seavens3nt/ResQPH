@@ -10,6 +10,8 @@ import './features/workspace/sharedVisualSystem.css'
 import './components/ui/Select.css'
 import './features/workspace/desktopDensity.css'
 import './features/workspace/dispatcherOverview.css'
+import './components/ui/actionTheme.css'
+import './components/ui/cardTheme.css'
 
 export default function App() {
   const [dark] = useTheme()

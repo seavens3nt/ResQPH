@@ -34,6 +34,11 @@ import { PrototypeNotice } from './PrototypeNotice'
 import type { NavSection } from '../navTypes'
 import { StatusBadge } from './StatusBadge'
 
+vi.mock('../../../../features/map/InteractiveFloodMap', () => ({
+  resolvePinnedAddress: vi.fn().mockResolvedValue('Synthetic pinned address, Sampaloc, Manila'),
+  InteractiveFloodMap: ({ onMapClick, controlsSlot }: { onMapClick?: (point: [number, number]) => void; controlsSlot?: import('react').ReactNode }) => <div>{controlsSlot}<button type="button" onClick={() => onMapClick?.([120.9948, 14.6043])}>Select test map point</button></div>,
+}))
+
 // ---------------------------------------------------------------------------
 // Sanitised fixture — aligned to data/samples/rescue-request.example.json
 // Fixture notice: Synthetic academic demonstration data; not a real emergency.
@@ -195,19 +200,36 @@ describe('RequestForm', () => {
     if (screen.getByRole('button', {name:'Location options'}).getAttribute('aria-expanded') === 'false') fireEvent.click(screen.getByRole('button', {name:'Location options'}))
     fireEvent.click(screen.getByRole('radio', { name: /Use my location/i }))
     expect(screen.getByText(message as RegExp)).toBeInTheDocument()
-    expect(screen.getByRole('button', {name:'Move pin north'})).toBeEnabled()
+    expect(screen.getByRole('button', {name:'Select test map point'})).toBeEnabled()
+    expect(screen.queryByRole('button', {name:/Move pin/i})).not.toBeInTheDocument()
     vi.unstubAllGlobals()
   })
 
   it('keeps optional responder and medical fields visible without disclosures', () => {
     renderForm()
     expect(screen.getByRole('heading', {name: /Add details for responders \(optional\)/i})).toBeInTheDocument()
-    expect(document.querySelector('.request-assistance-fields details')).toBeNull()
-    expect(screen.getByText(/Vulnerabilities \(select all that apply\)/i)).toBeInTheDocument()
+    expect(document.querySelector('.request-responder-section details')).toBeNull()
+    expect(screen.getByText('Vulnerabilities', {exact:true})).toBeInTheDocument()
     expect(screen.getByLabelText(/Medical assistance needed/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Medical details/i)).toBeVisible()
     expect(screen.getByLabelText(/What is happening right now/i)).toBeInTheDocument()
     expect(screen.getByText(/whether the water is rising, any blocked exits/i)).toBeInTheDocument()
+  })
+
+  it('keeps multiple vulnerability selections in the dropdown and closes with Escape', () => {
+    renderForm()
+    const dropdown = document.querySelector<HTMLDetailsElement>('.request-vulnerabilities-dropdown')!
+    const summary = dropdown.querySelector('summary')!
+    fireEvent.click(summary)
+    expect(dropdown.open).toBe(true)
+    fireEvent.click(screen.getByLabelText('Infant', {exact:true}))
+    fireEvent.click(screen.getByLabelText('Senior', {exact:true}))
+    expect(summary).toHaveTextContent('Infant, Senior')
+    fireEvent.keyDown(screen.getByLabelText('Senior', {exact:true}), {key:'Escape'})
+    expect(dropdown.open).toBe(false)
+    expect(summary).toHaveFocus()
+    expect(screen.getByLabelText('Infant', {exact:true})).toBeChecked()
+    expect(screen.getByLabelText('Senior', {exact:true})).toBeChecked()
   })
 
   // ── Validation error — empty address ─────────────────────────────────────
@@ -221,15 +243,14 @@ describe('RequestForm', () => {
     })
   })
 
-  it('allows keyboard-operable pin adjustment and includes confirmed longitude-first GeoJSON coordinates', async () => {
+  it('includes confirmed longitude-first GeoJSON coordinates after map selection', async () => {
     mockCreate.mockResolvedValueOnce(FIXTURE_REQUEST)
     renderForm()
-    fireEvent.click(screen.getByRole('button', {name:'Move pin east'}))
-    fireEvent.click(screen.getByRole('button', {name:'Move pin north'}))
+    fireEvent.click(screen.getByRole('button', {name:'Select test map point'}))
     submitConfirmedRequest()
     await waitFor(() => expect(mockCreate).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ location: expect.objectContaining({ point: { type: 'Point', coordinates: [120.9946 + 0.000093, 14.6042 + 0.00009] } }) }),
+      expect.objectContaining({ location: expect.objectContaining({ point: { type: 'Point', coordinates: [120.9948, 14.6043] } }) }),
       expect.any(String),
     ))
   })
@@ -239,7 +260,7 @@ describe('RequestForm', () => {
     fireEvent.change(screen.getByLabelText(/People needing assistance/i), { target: { value: '0' } })
     submitConfirmedRequest()
     expect(screen.getAllByText(/At least 1 person/i)).toHaveLength(2)
-    const move = screen.getByRole('button', { name: 'Move pin north' })
+    const move = screen.getByRole('button', { name: 'Select test map point' })
     move.focus()
     expect(move).toHaveFocus()
     fireEvent.click(move)

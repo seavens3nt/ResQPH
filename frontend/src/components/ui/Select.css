@@ -1,5 +1,6 @@
 /* Shared native selects: keep browser keyboard/touch behavior and page sizing. */
-:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select {
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select,
+.workspace-shell[data-role][data-view] .request-vulnerabilities-dropdown > summary {
   --select-surface: var(--shared-inset, #27272a);
   --select-text: var(--ink, #f4f4f5);
   --select-border: var(--line, #71717a);
@@ -31,10 +32,41 @@
   background-color: var(--shared-inset) !important;
   padding-right: 48px !important;
 }
-:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:hover:not(:disabled) {
+/* One geometry for the request's native and custom field controls. The ID scope
+   also beats the legacy modal input overrides, regardless of stylesheet order. */
+.workspace-shell[data-role][data-view] #citizen-request-form .request-assistance-fields :is(
+  .request-flood-field > select,
+  .request-people-field > input,
+  .request-vulnerabilities-dropdown > summary
+) {
+  box-sizing:border-box;
+  width:100%; max-width:100% !important;
+  height:48px !important; min-height:48px !important;
+  margin:0;
+  padding:10px 48px 10px 16px !important;
+  border:1px solid var(--muted) !important;
+  border-radius:999px !important;
+  background-color:var(--shared-inset) !important;
+  color:var(--ink) !important;
+  font-family:var(--font-body);
+  font-size:18px !important; font-weight:400 !important; line-height:26px !important;
+  box-shadow:none !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-vulnerabilities-dropdown > summary > span {
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-people-field > input[aria-invalid=true] {
+  border-color:#c52a46 !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-assistance-fields :is(.request-people-field > label,.request-vulnerabilities-field > span) {
+  line-height:1.4; margin:0;
+}
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:hover:not(:disabled),
+.workspace-shell[data-role][data-view] .request-vulnerabilities-dropdown > summary:hover {
   border-color: #648bab !important;
 }
-:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:focus-visible {
+:is(.workspace-shell[data-role][data-view], .auth-mobile-page) select:focus-visible,
+.workspace-shell[data-role][data-view] .request-vulnerabilities-dropdown > summary:focus-visible {
   outline: 3px solid #376d9c;
   outline-offset: 3px;
 }
@@ -52,7 +84,61 @@
 }
 .auth-mobile-page .auth-clean-form select { width: 100%; margin-top: 8px; }
 .workspace-shell[data-theme=dark] select { color-scheme: dark; }
-.auth-mobile-page select { color-scheme: dark; }
+:root .auth-mobile-page .auth-clean-form select {
+  --select-surface: var(--auth-inset, #e4edf5);
+  --select-text: var(--auth-text, #00265e);
+  --select-border: var(--auth-border, #8daec7);
+}
+
+/* Progressive enhancement: retain the native select's form/keyboard behavior,
+   but let the open picker share our card treatment where supported. */
+@supports (appearance: base-select) {
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select,
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select::picker(select) {
+    appearance: base-select !important;
+  }
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select::picker-icon {
+    display: none;
+  }
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select::picker(select) {
+    box-sizing: border-box;
+    margin-block: 8px;
+    padding: 6px;
+    border: 1px solid var(--select-border);
+    border-radius: 18px;
+    background: var(--select-surface);
+    color: var(--select-text);
+    box-shadow: 0 6px 18px rgb(25 61 92 / 14%);
+    max-height: min(360px, 50dvh);
+    max-width: calc(100vw - 24px);
+    width: anchor-size(width);
+    overflow-y: auto;
+    font: inherit;
+  }
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select option {
+    min-height: 44px;
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select option:is(:hover, :focus-visible) {
+    background: color-mix(in srgb, var(--select-surface), #82abc9 22%);
+    outline: 2px solid #82abc9;
+    outline-offset: -2px;
+  }
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select option:checked {
+    background: color-mix(in srgb, var(--select-surface), #82abc9 32%);
+    font-weight: 500;
+  }
+  :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select option::checkmark {
+    margin-inline-start: auto;
+    order: 1;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   :is(.workspace-shell[data-role][data-view], .auth-mobile-page) select { transition: none; }
 }

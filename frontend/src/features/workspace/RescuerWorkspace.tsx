@@ -39,7 +39,7 @@ export function RescuerWorkspace({section}: {section: string}) {
     <label>Reason<textarea maxLength={500} value={endReason} disabled={ending || Boolean(endAttempt)} onChange={event => setEndReason(event.target.value)}/></label>
     {endError && <p role="alert">{endError}</p>}
     <div className="workspace-actions"><button disabled={ending} onClick={() => setEndOpen(false)}>Back to mission</button>
-    <button disabled={ending || endReason.trim().length < 3 || Boolean(offline.entry) || offline.isOffline} onClick={async () => {
+    <button data-action-tone="danger" disabled={ending || endReason.trim().length < 3 || Boolean(offline.entry) || offline.isOffline} onClick={async () => {
       if (!offline.mission || offline.entry) return
       const attempt = endAttempt ?? {event_id:crypto.randomUUID(),expected_mission_version:offline.mission.version,reason:endReason.trim(),missionId:offline.mission.id}
       setEndAttempt(attempt);setEnding(true);setEndError(null)

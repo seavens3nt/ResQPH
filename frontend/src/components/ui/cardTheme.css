@@ -1,0 +1,167 @@
+/* Card appearance is independent of role, route, sidebar and viewport scale.
+   Page styles still own card dimensions, padding, placement and content. */
+.workspace-shell[data-role][data-view] {
+  --card-surface:#e4ecf4;
+  --card-inset:#fbfcfe;
+  --card-border:#7da4c0;
+  --card-ink:#052354;
+  --card-radius:20px;
+  --card-inset-radius:16px;
+  --card-shadow:0 2px 6px rgb(5 35 84 / 8%);
+  --card-dialog-shadow:0 12px 32px rgb(5 35 84 / 18%);
+  --table-header:#b0cadd;
+  --table-body:#e4ecf4;
+  --table-text:#405677;
+}
+.workspace-shell[data-role][data-view][data-theme=dark] {
+  --card-surface:#101b30;
+  --card-inset:#0f1a2e;
+  --card-border:#274263;
+  --card-ink:#f4f8ff;
+  --card-shadow:0 2px 6px rgb(0 0 0 / 16%);
+  --card-dialog-shadow:0 12px 32px rgb(0 0 0 / 32%);
+  --table-header:#152744;
+  --table-body:#101b30;
+  --table-text:#a9bbd4;
+}
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .workspace-card:not(.home-rescue-card),.rescuer-mission-card,.workspace-inspector,
+  .workspace-stats > button,.workspace-route-result
+) {
+  background:var(--card-surface) !important;
+  color:var(--card-ink);
+  border:1px solid var(--card-border) !important;
+  border-radius:var(--card-radius) !important;
+  box-shadow:var(--card-shadow) !important;
+}
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .account-profile fieldset,.requests-inset-panel,.citizen-map-inset,
+  .home-live-weather-surface,.live-hourly-panel,.home-weather-metric,
+  .request-location-fields > div:first-child,.request-responder-panel,
+  .workspace-record,.citizen-map-summary
+) {
+  background:var(--card-inset) !important;
+  color:var(--card-ink);
+  border:1px solid var(--card-border) !important;
+  border-radius:var(--card-inset-radius) !important;
+  box-shadow:none !important;
+}
+/* Remove decorative exported fills/shadows behind the real review card. */
+.workspace-shell[data-role][data-view] .request-review-summary::before { content:none; }
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .request-review-summary h3,.citizen-map-summary > header
+) { border-radius:15px 15px 0 0 !important; }
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .request-review-summary dl > div:last-child,.citizen-map-summary dl > div:last-child
+) { border-radius:0 0 15px 15px; }
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) .home-rescue-card {
+  border-radius:var(--card-radius) !important;
+  box-shadow:var(--card-shadow) !important;
+}
+.workspace-shell[data-role][data-view] .modal-backdrop .modal-card {
+  background:var(--card-surface) !important;
+  border:1px solid var(--card-border) !important;
+  border-radius:24px !important;
+  box-shadow:var(--card-dialog-shadow) !important;
+}
+.workspace-shell[data-role][data-view] .modal-card :is(.modal-header,.modal-body,.modal-footer) {
+  background:var(--card-surface) !important;
+}
+/* Empty panels remain dashed; do not turn their border into a solid card. */
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .workspace-empty,.requests-details-empty,.citizen-map-empty
+) {
+  background:var(--card-surface) !important;
+  border:1px dashed var(--card-border) !important;
+  border-radius:var(--card-inset-radius) !important;
+  box-shadow:none !important;
+}
+
+/* The rescue review and My Requests share one table surface. No exported
+   artwork: the real container owns the outline and rounded corners. */
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-figma .request-review-summary {
+  background:var(--table-body) !important;
+}
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .requests-table-scroll,.request-review-summary
+) {
+  background:var(--table-body) !important;
+  border:1px solid var(--card-border) !important;
+  border-radius:var(--card-inset-radius) !important;
+  box-shadow:none !important;
+  min-width:0;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary::before,
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary::after { content:none !important; }
+.workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
+  .requests-reference-table th,.request-review-summary h3
+) {
+  background:var(--table-header) !important;
+  color:var(--card-ink) !important;
+  font-weight:550;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary h3 {
+  margin:0; min-height:0; padding:14px 24px;
+  font-size:18px; line-height:1.4; border:0;
+  border-radius:15px 15px 0 0 !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary dl {
+  margin:0; min-width:0;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary dl > div {
+  margin:0; min-height:0; padding:11px 24px; gap:20px;
+  background:none !important; border:0;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary dl > div + div {
+  border-top:1px solid var(--card-border) !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary :is(dt,dd) {
+  min-width:0; margin:0; font-size:15px; line-height:1.5;
+  color:var(--table-text) !important; overflow-wrap:anywhere;
+}
+@media(max-width:700px) {
+  .workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary h3,
+  .workspace-shell[data-role][data-view] #citizen-request-form .request-review-summary dl > div { padding:11px 16px; }
+}
+
+/* Review is read-only and does not inherit the edit form's decorated map,
+   input artwork, or oversized labels. Both cards use the same border geometry. */
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-location-card {
+  display:flex; flex-direction:column; gap:12px !important;
+  padding:16px; min-width:0;
+  background:var(--card-inset) !important;
+  border:1px solid var(--card-border) !important;
+  border-radius:var(--card-inset-radius) !important; box-shadow:none !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-location-card .flood-map-container {
+  border:1px solid var(--card-border) !important;
+  border-radius:12px !important; box-shadow:none !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-address {
+  display:grid; gap:8px; min-width:0;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-address label {
+  font-size:15px !important; font-weight:550 !important; line-height:1.5;
+  color:var(--card-ink) !important; margin:0;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-address input[readonly] {
+  box-sizing:border-box; width:100%; min-width:0; height:44px; min-height:44px;
+  padding:10px 16px !important; font-size:15px !important; line-height:22px;
+  background:var(--card-surface) !important;
+  border:1px solid var(--card-border) !important; border-radius:999px !important;
+  color:var(--card-ink) !important; box-shadow:none !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review :is(.workspace-caption,#review-pin-lookup) {
+  display:block; margin:0; padding:0; font-size:13px !important; line-height:1.5;
+  color:var(--table-text) !important; background:none !important;
+  border:0 !important; border-radius:0 !important; box-shadow:none !important;
+}
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-location > .workspace-caption { padding:0 16px; }
+.workspace-shell[data-role][data-view] .request-rescue-modal .modal-draft-note {
+  color:var(--table-text); font-size:13px; line-height:1.5; margin:0 0 6px;
+}
+.workspace-shell[data-role][data-view] .request-rescue-modal .modal-title { color:var(--card-ink); font-size:26px; line-height:1.25; }
+.workspace-shell[data-role][data-view] #citizen-request-form .request-review-figma {
+  column-gap:24px; row-gap:8px;
+}

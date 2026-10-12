@@ -5,7 +5,7 @@ export function HelpLimitations() {
   return <div className="workspace-stack citizen-information-page">
     <WorkspaceSectionHeading icon="shield">Help &amp; Limitations</WorkspaceSectionHeading>
     <WorkspaceCard><h3>Request help at a pinned location</h3>
-      <p>Choose Request rescue, click or drag a pin, or use the pin adjustment buttons with Tab and Enter. Browser location is optional. Add the number of people; an address or nearby landmark is optional and does not move the pin.</p>
+      <p>Choose Request rescue, then click the map or drag a pin. Browser location is optional. Add the number of people; an address or nearby landmark is optional and does not move the pin.</p>
       <p>Confirm the location so the request refers to the point you reviewed. Moving the pin or replacing it with GPS requires confirmation again. Review your details, then submit.</p>
       <h3>Assignment and progress</h3>
       <p>The app automatically considers available stations and admissible routes through the stored road graph. Assignment reserves a station; simulated travel begins when the station accepts the mission. My Requests shows the station response and server-confirmed progress.</p>

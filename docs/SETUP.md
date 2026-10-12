@@ -2,6 +2,29 @@
 
 This guide establishes a consistent Windows development environment for ResQPH.
 
+## One-command development runner
+
+From the repository root in Git Bash, run `./dev.sh --install` on first setup,
+then `./dev.sh` on later runs. Keep that terminal open; Ctrl+C stops the
+frontend/backend. The default frontend is `http://localhost:5173` and the API
+is `http://localhost:8000/api/v1`. The runner uses `npm ci` to respect the lockfile.
+
+If a writable local replica set is already running, configure `MONGODB_URI`
+and `MONGODB_DATABASE` in ignored `backend/.env`, then use it without Docker:
+
+```bash
+./dev.sh --existing-db
+```
+
+On Windows, use Git Bash (not the Windows WSL `bash.exe` shim). If Python is not
+on PATH, set `PYTHON` to the Python 3.12+ executable for initial `--install`.
+`BACKEND_PORT` and `FRONTEND_PORT` can select unused ports; the runner derives
+the frontend API URL and allowed local frontend origins from those ports.
+Explicit `VITE_API_URL` and `FRONTEND_ORIGINS` environment values take precedence.
+An externally supplied MongoDB connection is never stopped by the runner.
+Google Maps and Weather keys remain optional local configuration; the script
+does not copy keys from another checkout or fabricate provider data.
+
 ## Required software
 
 - Git
