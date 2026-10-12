@@ -88,7 +88,7 @@
 .workspace-shell[data-role=citizen][data-nav-collapsed=true] .workspace-brand img { width:calc(44 * var(--home-unit)); object-fit:contain; filter:brightness(0) saturate(100%) invert(26%) sepia(91%) saturate(3056%) hue-rotate(335deg) brightness(99%) contrast(91%); }
 .workspace-shell[data-role=citizen][data-nav-collapsed=true] .workspace-nav nav button { width:calc(44 * var(--home-unit)); padding:calc(12 * var(--home-unit)); border-radius:50%; }
 .workspace-shell[data-role=citizen][data-theme=dark] { --home-page:#101d31; --home-surface:#20354c; --ink:#edf5ff; --muted:#c4d6e9; --line:#55728e; --home-selected:#3d6889; --home-shadow:0 calc(3 * var(--home-unit)) calc(5 * var(--home-unit)) #0005; }
-.workspace-shell[data-role=citizen][data-theme=dark] :is(.home-weather-metric,.home-hourly-row) { background:#172a40; }
+.workspace-shell[data-role=citizen][data-theme=dark] :is(.home-weather-metric,.home-hourly-row) { background:var(--shared-inset); }
 
 /* Scale SVG viewboxes with their surrounding type, not just the cards. */
 .workspace-shell[data-role=citizen][data-nav-collapsed=true] .workspace-nav :is(nav,.workspace-brand) { width:calc(44 * var(--home-unit)); }

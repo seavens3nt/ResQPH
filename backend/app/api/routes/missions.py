@@ -6,15 +6,20 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.dependencies.demo_role import get_demo_actor
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
 from app.repositories.mission_status_events import MissionStatusEventRepository
 from app.repositories.missions import MissionRepository
+from app.repositories.rescue_requests import RescueRequestRepository
 from app.schemas.missions import (
     DemoActor,
     ErrorEnvelope,
-    MissionCancel,
     MissionResponse,
+    MissionSimulationEnd,
     MissionStatusEventCreate,
+    MissionTrackingControl,
+    MissionTrackingResponse,
     parse_status_filter,
 )
 from app.services.missions import MissionService, MissionServiceError
@@ -27,22 +32,24 @@ def get_mission_service() -> MissionService:
     return MissionService(
         MissionRepository(database),
         MissionStatusEventRepository(database),
+        RescueRequestRepository(database),
     )
 
 
-@router.post("/{mission_id}/cancel", response_model=MissionResponse)
-async def cancel_mission(
+@router.post("/{mission_id}/end-simulation", response_model=MissionResponse)
+async def end_simulation(
     mission_id: str,
-    payload: MissionCancel,
+    payload: MissionSimulationEnd,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[MissionService, Depends(get_mission_service)],
 ) -> MissionResponse | JSONResponse:
     try:
-        return await service.cancel_mission(
-            mission_id, payload.expected_mission_version, payload.reason, actor
-        )
+        check_rate_limit(request, actor_id=actor.user_id, action="end-simulation", limit=settings.simulation_control_rate_limit_per_minute)
+        return await service.end_simulation(mission_id, payload, actor)
     except MissionServiceError as exc:
         return error_response(exc)
+
 
 
 @router.get("", response_model=list[MissionResponse])
@@ -84,11 +91,57 @@ async def get_mission(
 async def create_status_event(
     mission_id: str,
     payload: MissionStatusEventCreate,
+    request: Request,
     actor: Annotated[DemoActor, Depends(get_demo_actor)],
     service: Annotated[MissionService, Depends(get_mission_service)],
 ) -> MissionResponse | JSONResponse:
     try:
+        check_rate_limit(
+            request,
+            actor_id=actor.user_id,
+            action="mission-status-update",
+            limit=settings.simulation_control_rate_limit_per_minute,
+        )
         return await service.create_status_event(mission_id, payload, actor)
+    except MissionServiceError as exc:
+        return error_response(exc)
+
+
+@router.get("/{mission_id}/tracking", response_model=MissionTrackingResponse)
+async def get_tracking(
+    mission_id: str,
+    request: Request,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[MissionService, Depends(get_mission_service)],
+) -> MissionTrackingResponse | JSONResponse:
+    try:
+        check_rate_limit(
+            request,
+            actor_id=actor.user_id,
+            action="tracking-read",
+            limit=settings.tracking_rate_limit_per_minute,
+        )
+        return await service.get_tracking(mission_id, actor)
+    except MissionServiceError as exc:
+        return error_response(exc)
+
+
+@router.post("/{mission_id}/tracking/control", response_model=MissionTrackingResponse)
+async def control_tracking(
+    mission_id: str,
+    payload: MissionTrackingControl,
+    request: Request,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[MissionService, Depends(get_mission_service)],
+) -> MissionTrackingResponse | JSONResponse:
+    try:
+        check_rate_limit(
+            request,
+            actor_id=actor.user_id,
+            action="tracking-control",
+            limit=settings.simulation_control_rate_limit_per_minute,
+        )
+        return await service.control_tracking(mission_id, payload.action, actor)
     except MissionServiceError as exc:
         return error_response(exc)
 

@@ -1,3 +1,4 @@
+import { BrandLogo } from '../brand/BrandLogo'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -18,8 +19,7 @@ export function SiteHeader() {
     <header className="site-header" id="top">
       <div className="site-header__inner">
         <Link to="/" className="site-header__brand" aria-label="ResQPH home">
-          <img src="/resqph-logo.png" alt="ResQPH logo" className="site-header__logo-img" />
-          <span>ResQPH</span>
+          <BrandLogo className="site-header__logo-img"/>
         </Link>
 
         <nav className="site-header__nav" aria-label="Primary">

@@ -1,5 +1,67 @@
 # Context Sync History
 
+## 2026-10-12 — Shared journey and citizen cancellation before travel
+
+Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
+account-switch recovery blocks old transports/mutations, hides the old workspace and
+requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale
+server position. Citizens can cancel pending or assigned-before-travel requests with
+confirmation; existing lifecycle transaction releases capacity once and preserves
+history. Routes raw diagnostics removed; dark request panels/flood-field alignment
+repaired. Frontend 424 checks/lint/build; backend 226 passed/38 opt-in skips; 7 new
+cookie cancellation/session, 8 product journey and 15 offline Mongo cases pass.
+Six legacy fixture failures remain; browser/screenshots/original symptom unverified.
+Demo/developer databases and queues preserved. No remote actions/commit; see report.
+
+
+## 2026-10-12 — Dark auth, read isolation and dedicated demo
+
+Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:
+explicit dark login/register preserves dashboard preference; compact Advisory refresh;
+cookie-account assertions now protect reads and polling stops for expired/switched
+sessions. New isolated `resqph_demo_20261012` on existing localhost:27018 rs0 contains
+5 citizen and 5 canonical station accounts; all ten real API login/session/logout
+checks pass, rerun preserves them. Developer DB untouched. Frontend 409 tests/lint/build;
+backend/integration 226 passed, 31 opt-in skips; 8 current-cookie and 15 offline Mongo
+cases pass. Six legacy opt-in failures remain individually documented. Browser
+unavailable; original browser symptom and rendered acceptance pending. Ignored local
+README contains credentials/startup. No commit/push/PR; see refinement report.
+
+
+## 2026-10-12 — Landing theme and station simulation recovery
+
+Shared landing-brand extraction/theme preference replaces independent dashboard
+state. Cookie-account assertion prevents stale-tab writes. Local queued attempts
+require evidence review/confirmed discard; station-authorized synthetic mission
+ending reuses versioned lifecycle transactions and retains history/account audit.
+404 frontend / 219 standard backend checks; 8 current-cookie MongoDB and 15 offline
+MongoDB acceptance cases pass. Legacy retired-flow tests remain incompatible;
+browser pending. Feature baseline 8ac45bf; no remote actions or developer mutations.
+
+## 2026-10-12 — Selected wordmark and compact Advisory tips
+
+User explicitly selected the transparent PNG; shared full-logo source now uses its
+unchanged copy. Approved favicons remain unchanged. Natural Advisory card sizing,
+measurement explanations and general preparation checklist preserve weather rules
+and cache/state behavior. 400 frontend tests, lint and build pass with existing
+warnings; browser unavailable. Local dirty work preserved, no remote actions.
+
+## 2026-10-11 — Local citizen UI and weather Advisory
+
+Audited frontend callers, existing weather adapter/cache behavior, pending-only
+cancellation and project polygon. Updated local visual rules and status for the
+user-authorized auth background/road toggle changes. Shared cached weather now
+survives page changes; no backend provider/cache rewrite. No changes to dispatch,
+auth rules, station IDs, mission transitions, offline identity or database records.
+Local branch only; browser visual acceptance pending and no delivery authorized.
+
+## 2026-10-11 — Navigation/request presentation checkpoint
+
+Audited frontend diff against `a143a18`; status and verification now distinguish
+implemented/tested presentation from browser acceptance pending. No backend,
+station catalog, dispatch, polling cadence, offline persistence or database changes.
+Feature push authorized; no main/temporary-main push, PR or merge for this task.
+
 ## 2026-10-10 — Candidate packaging
 
 Current status links fresh candidate evidence. Account desktop sizing was consolidated,
@@ -166,3 +228,29 @@ not authorize runtime ML or change the prototype safety boundary.
   run, U-Belt-compatible ML artifact, limited offline synchronization, and exact deadline.
 
 This sync does not enable the external model or claim live/guaranteed-safe routing.
+
+- 2026-10-11: Audited presentation follow-up against clean local commit `e6623bc`.
+  Updated current-status, STATUS, visual rules and existing UI/advisory report for brand,
+  scoped neutral surfaces, structured Advisory, HQ icon and location options. Backend,
+  station catalog, weather rules, auth/session and mission contracts are unchanged.
+  Follow-up local/uncommitted; browser unavailable. Earlier baseline notes are historical.
+
+- 2026-10-11 focused correction: source-specific Home/weather/Requests/role dark CSS,
+  theme SVG sizing, Account copy and Advisory hierarchy corrected; transparent PNG
+  favicons verified. Shared brand source wired; supplied exact wordmark original-file
+  conversion blocked, failed generated edits excluded. 396 tests pass; browser pending.
+
+- 2026-10-12 continuation: preserved dirty branch; neutralized legacy dark-table rules,
+  checked shared logo source/compact variant, removed forced auth square ratio, and
+  documented favicon origin. 398 tests / 58 files, lint/build/diff pass. Original logo
+  file/exact transparent PNG still needed; browser unavailable. No remote actions.
+# 2026-10-13 — station distance selection
+
+Baseline c95c8c3, clean temporary-main at start. Synced fixed-headquarters dispatch,
+nearest-road directed partial distance, 75 m coverage guard and backend-only decision
+provenance with API/routing/workflow docs. Synthetic before/after and disposable
+MongoDB evidence are in docs/testing/STATION-DISTANCE-2026-10-13.md and JSON.
+No catalog/graph coordinate edits, frontend/auth/offline/lifecycle implementation
+changes, historical rewrites or Git remote actions. Original reported historical
+decision unresolved without provenance; six obsolete Phase 5 acceptance failures
+remain explicitly recorded. All changes local for review.

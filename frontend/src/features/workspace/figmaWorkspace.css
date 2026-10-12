@@ -87,7 +87,7 @@
 .workspace-shell[data-role][data-view] .home-status-grid { grid-template-columns:636fr 599fr; gap:calc(25 * var(--figma-unit)); }
 .workspace-shell[data-role][data-view] .screenshot-home .workspace-card {
   border-radius:calc(30 * var(--figma-unit)); border:1px solid var(--line);
-  background:var(--home-surface); box-shadow:0 calc(6 * var(--figma-unit)) calc(9.8 * var(--figma-unit)) #7da4c080;
+  background:var(--home-surface); box-shadow:var(--surface-shadow);
 }
 .workspace-shell[data-role][data-view] .screenshot-home .home-rescue-card {
   height:calc(215 * var(--figma-unit)); padding:0; border-color:#890d1d;
@@ -95,7 +95,7 @@
   box-shadow:0 calc(6 * var(--figma-unit)) calc(9.8 * var(--figma-unit)) #890d1d60;
 }
 .workspace-shell[data-role][data-view] .workspace-main .home-rescue-card button {
-  gap:calc(55 * var(--figma-unit)); padding:calc(38 * var(--figma-unit));
+  gap:calc(44 * var(--figma-unit)); padding:calc(30 * var(--figma-unit));
   border-radius:calc(30 * var(--figma-unit));
 }
 .workspace-shell[data-role][data-view] .home-rescue-card strong {

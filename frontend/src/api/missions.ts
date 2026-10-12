@@ -36,6 +36,7 @@ function normalizeError(err: unknown): never {
       envelope?.message ?? err.message,
       envelope?.details ?? [],
       envelope?.request_id,
+      Number(err.response.headers?.['retry-after']) || undefined,
     )
   }
   if (isAxiosError(err) && !err.response) {
@@ -67,6 +68,7 @@ export interface MissionDetail {
   id: string
   request_id: string
   team_id: string
+  station_id?: string | null
   assigned_rescuer_id?: string | null
   status: MissionApiStatus
   version: number
@@ -78,16 +80,35 @@ export interface MissionDetail {
     medical_needs: boolean
     medical_details?: string | null
     reported_flood_level: string
+    reported_severity?: string
     situation_summary: string | null
     fixture_notice?: string
   } | null
   status_history: MissionStatusHistoryItem[]
   latest_route_result?: Record<string, unknown> | null
+  tracking_state?: Record<string, unknown> | null
   data_source: string
   sync_status: string
   completed_at?: string | null
   created_at: string
   updated_at: string
+}
+
+export interface MissionTracking {
+  mission_id: string
+  request_id: string
+  team_id: string
+  simulation_status: string
+  position: GeoPoint | null
+  timestamp: string
+  route_id?: string | null
+  route_geometry?: { type: 'LineString'; coordinates: [number, number][] } | null
+  progress_ratio: number
+  remaining_distance_m: number
+  estimated_remaining_time_s: number
+  total_distance_m: number
+  total_travel_time_s: number
+  warnings: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +141,7 @@ export interface OfflineQueueEntry {
   body: StatusEventBody
   syncState: SyncState
   failureReason?: string
+  failureCode?: string
   enqueuedAt: string
 }
 
@@ -200,4 +222,33 @@ export async function updateMissionStatus(
   } catch (err) {
     return normalizeError(err)
   }
+}
+
+export async function getMissionTracking(missionId: string): Promise<MissionTracking> {
+  try {
+    const res = await apiClient.get<MissionTracking>(`/missions/${missionId}/tracking`)
+    return res.data
+  } catch (err) {
+    return normalizeError(err)
+  }
+}
+
+export async function controlMissionTracking(
+  missionId: string,
+  action: 'start' | 'pause' | 'resume' | 'reset',
+): Promise<MissionTracking> {
+  try {
+    const res = await apiClient.post<MissionTracking>(
+      `/missions/${missionId}/tracking/control`,
+      { action },
+    )
+    return res.data
+  } catch (err) {
+    return normalizeError(err)
+  }
+}
+
+export async function endSimulatedMission(missionId: string, body: {event_id:string;expected_mission_version:number;reason:string}): Promise<MissionDetail> {
+  try { return (await apiClient.post<MissionDetail>(`/missions/${missionId}/end-simulation`, body)).data }
+  catch (error) { return normalizeError(error) }
 }

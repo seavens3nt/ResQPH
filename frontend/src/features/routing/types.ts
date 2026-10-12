@@ -62,6 +62,6 @@ export type RouteState =
       retryable: boolean
     }
 
-export function toLeafletRouteCoordinates(result: RouteFoundResult): [number, number][] {
+export function toMapRouteCoordinates(result: RouteFoundResult): [number, number][] {
   return result.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude])
 }

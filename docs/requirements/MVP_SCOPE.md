@@ -18,7 +18,7 @@ ResQPH is not an official emergency-response, flood-forecasting, or guaranteed r
 
 ## Geographic boundary
 
-The approved study area is the **U-Belt pilot area, City of Manila**. Its WGS 84 bounding box is west `120.982000`, south `14.596000`, east `121.004000`, and north `14.617500`. The authoritative machine-readable fixture is [`../../data/samples/study-area.geojson`](../../data/samples/study-area.geojson), with rationale and limitations in [`../../data/metadata/study-area.md`](../../data/metadata/study-area.md).
+The approved study area is the **U-Belt pilot area with a local Sampaloc simulation expansion, City of Manila**. Its WGS 84 bounding box is west `120.982000`, south `14.596000`, east `121.004000`, and north `14.621000`. The authoritative machine-readable fixture is [`../../data/samples/study-area.geojson`](../../data/samples/study-area.geojson), with rationale and limitations in [`../../data/metadata/study-area.md`](../../data/metadata/study-area.md).
 
 This rectangle is a project-controlled scope boundary. It is not an official administrative, hazard, emergency-service, or University Belt boundary.
 

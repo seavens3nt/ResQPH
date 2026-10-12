@@ -30,7 +30,7 @@ from app.schemas.geospatial import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ROAD_FIXTURE = (
-    REPOSITORY_ROOT / "data" / "samples" / "ubelt-v1-preview.geojson"
+    REPOSITORY_ROOT / "data" / "samples" / "ubelt-station-network.geojson"
 )
 DEFAULT_FLOOD_FIXTURE = (
     REPOSITORY_ROOT / "data" / "samples" / "ubelt-v1-flood-join.geojson"
@@ -51,7 +51,7 @@ STUDY_AREA_BOUNDS = {
     "west": 120.982,
     "south": 14.596,
     "east": 121.004,
-    "north": 14.6175,
+    "north": 14.621,
 }
 FLOOD_LEVELS = {"none", "low", "moderate", "high", "severe"}
 PASSABILITY_VALUES = {"passable", "restricted", "impassable"}

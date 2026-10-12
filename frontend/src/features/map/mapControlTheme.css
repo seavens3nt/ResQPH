@@ -1,0 +1,98 @@
+/* Shared by full-page, request, tracking and mission maps in every role. */
+.workspace-shell[data-role][data-view] {
+.google-map-wrapper {
+  --map-journey-bottom:34px;
+  --map-control-surface:var(--shared-inset,var(--surface-overlay,#fbfcfe));
+  --map-control-ink:var(--ink,var(--text-primary,#052354));
+  --map-control-border:var(--line,var(--border-default,#7da4c0));
+  --map-control-selected:color-mix(in srgb,var(--map-control-surface),#82abc9 24%);
+  --map-control-hover:color-mix(in srgb,var(--map-control-surface),#82abc9 18%);
+  --map-control-shadow:0 6px 18px rgb(25 61 92 / 14%);
+}
+.google-map-wrapper .location-options > button,
+.google-map-wrapper .map-location-controls > .map-recenter,
+.google-map-wrapper .map-journey-controls > button,
+.google-map-wrapper .google-map-canvas .gm-style-mtc > button {
+  display:inline-flex !important; align-items:center; justify-content:center;
+  min-height:40px !important; height:auto !important;
+  padding:8px 14px !important; border:1px solid var(--map-control-border) !important;
+  border-radius:999px !important; background:var(--map-control-surface) !important;
+  color:var(--map-control-ink) !important; box-shadow:none !important;
+  font-family:var(--font-body,Inter,sans-serif) !important;
+  font-size:14px !important; font-weight:550 !important; line-height:22px !important;
+  text-align:center;
+}
+.google-map-wrapper .map-location-controls {
+  position:absolute; top:10px; left:10px; z-index:5;
+  display:flex; align-items:center; gap:8px; max-width:calc(100% - 110px);
+}
+.google-map-wrapper .map-journey-controls {
+  position:absolute; left:10px; right:auto; bottom:var(--map-journey-bottom); z-index:5;
+  display:flex; justify-content:flex-start; flex-wrap:wrap; gap:8px;
+  max-width:calc(100% - 80px);
+}
+.google-map-wrapper:has(.map-journey-controls) .gm-bundled-control-on-bottom {
+  /* Google anchors the zero-height bundle above its 44px camera button
+     and adds a 10px margin. Align its bottom with our tracking controls. */
+  bottom:calc(var(--map-journey-bottom) + 44px - 10px) !important;
+}
+.google-map-wrapper:has(.map-journey-controls) button[aria-label="Map camera controls"] {
+  width:44px !important; height:44px !important; min-height:44px !important;
+}
+.google-map-wrapper .map-journey-controls > button {
+  margin:0 !important; white-space:nowrap;
+  box-shadow:0 2px 6px rgb(5 35 84 / 12%) !important;
+}
+.google-map-wrapper .map-journey-controls > button.is-active {
+  background:var(--map-control-selected) !important;
+}
+.google-map-wrapper .map-location-controls .location-options {
+  position:relative; top:auto; left:auto; max-width:none; min-width:0;
+}
+.google-map-wrapper .map-location-controls > .map-recenter {
+  box-sizing:border-box; flex:0 0 40px; width:40px; height:40px !important;
+  min-height:40px !important; margin:0 !important; padding:9px !important;
+}
+.google-map-wrapper .map-location-controls > .map-recenter svg {
+  flex-shrink:0; width:20px; height:20px;
+}
+.google-map-wrapper .location-options > button:focus-visible {
+  outline:2px solid #2688ff; outline-offset:3px;
+}
+.google-map-wrapper .location-options-panel,
+.google-map-wrapper .google-map-canvas .gm-style-mtc > ul {
+  box-sizing:border-box; padding:8px !important;
+  border:1px solid var(--map-control-border) !important; border-radius:16px !important;
+  background:var(--map-control-surface) !important; color:var(--map-control-ink) !important;
+  box-shadow:var(--map-control-shadow) !important;
+}
+.google-map-wrapper .location-options-panel {
+  top:calc(100% + 8px) !important; left:0 !important; margin:0 !important;
+}
+.google-map-wrapper .location-options-panel legend {
+  position:absolute !important; float:none !important; width:1px !important;
+  height:1px !important; padding:0 !important; margin:-1px !important;
+  overflow:hidden; clip-path:inset(50%); white-space:nowrap;
+}
+.google-map-wrapper .location-options-panel label,
+.google-map-wrapper .google-map-canvas .gm-style-mtc > ul > li {
+  box-sizing:border-box; display:flex !important; flex-direction:row !important;
+  align-items:center !important; gap:10px !important; min-height:44px !important;
+  margin:0 !important; padding:10px 12px !important; border-radius:10px !important;
+  font-family:var(--font-body,Inter,sans-serif) !important;
+  font-size:14px !important; font-weight:500 !important; line-height:20px !important;
+  color:var(--map-control-ink) !important;
+}
+.google-map-wrapper .location-options-panel label:has(input:checked),
+.google-map-wrapper .google-map-canvas .gm-style-mtc > ul > li[aria-checked=true] {
+  background:var(--map-control-selected) !important;
+}
+.google-map-wrapper .location-options-panel label:is(:hover,:focus-within),
+.google-map-wrapper .google-map-canvas .gm-style-mtc > ul > li:is(:hover,:focus-visible) {
+  background:var(--map-control-hover) !important;
+}
+.google-map-wrapper .location-options-panel input[type=radio] {
+  flex:0 0 16px !important; width:16px !important; height:16px !important;
+  min-height:0 !important; margin:0 !important; padding:0 !important; accent-color:#2688ff;
+}
+}

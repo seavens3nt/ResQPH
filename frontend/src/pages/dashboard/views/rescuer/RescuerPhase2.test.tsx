@@ -1,9 +1,18 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactElement } from 'react'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
 import { RescuerOfflineQueue } from './RescuerOfflineQueue'
 import { RescuerMissionCard } from './RescuerMissionCard'
 import type { OfflineQueueEntry, MissionDetail } from '../../../../api/missions'
+
+function renderMissionCard(ui: ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
+}
 
 describe('Rescuer Phase 2 UI States', () => {
   describe('SyncStatusBadge', () => {
@@ -113,6 +122,8 @@ describe('Rescuer Phase 2 UI States', () => {
       expect(screen.getAllByText(/version conflict/i).length).toBeGreaterThan(0)
       const dismissBtn = screen.getByRole('button', { name: /Dismiss Failed Event/i })
       fireEvent.click(dismissBtn)
+    expect(screen.getByRole('dialog')).toHaveTextContent('does not delete or cancel')
+    fireEvent.click(screen.getByRole('button',{name:'Confirm discard local attempt'}))
       expect(onDismiss).toHaveBeenCalled()
     })
   })
@@ -154,9 +165,9 @@ describe('Rescuer Phase 2 UI States', () => {
       updated_at: '2026-09-23T11:05:00Z',
     }
 
-    it('renders mission card with TAP EN ROUTE button when status is assigned', () => {
+    it('renders mission card with an explicit accept and start action when status is assigned', () => {
       const onAdvance = vi.fn()
-      render(
+      renderMissionCard(
         <RescuerMissionCard
           mission={mockMission}
           lastSyncedAt="2026-09-23T11:05:00Z"
@@ -168,13 +179,13 @@ describe('Rescuer Phase 2 UI States', () => {
 
       expect(screen.getByText('MSN-303')).toBeInTheDocument()
       expect(screen.getByText(/Legarda St, Manila/i)).toBeInTheDocument()
-      const advanceBtn = screen.getByRole('button', { name: /TAP EN ROUTE/i })
+      const advanceBtn = screen.getByRole('button', { name: /ACCEPT MISSION & START TRAVEL/i })
       fireEvent.click(advanceBtn)
       expect(onAdvance).toHaveBeenCalled()
     })
 
     it('renders collapsible status history with events', () => {
-      render(
+      renderMissionCard(
         <RescuerMissionCard
           mission={mockMission}
           lastSyncedAt="2026-09-23T11:05:00Z"

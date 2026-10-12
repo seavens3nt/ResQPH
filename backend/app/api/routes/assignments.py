@@ -1,13 +1,19 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.api.dependencies.demo_role import get_demo_actor
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.db.mongodb import get_database
 from app.repositories.assignments import AssignmentRepository
 from app.repositories.rescue_requests import RescueRequestRepository
 from app.repositories.rescuers import RescuerRepository
-from app.schemas.assignments import AssignmentCreate, AssignmentResponse
+from app.schemas.assignments import (
+    AssignmentCreate,
+    AssignmentResponse,
+    TeamRecommendationResponse,
+)
 from app.schemas.common import DemoActor, ErrorEnvelope
 from app.services.assignments import AssignmentService
 
@@ -43,3 +49,23 @@ async def assign_rescue_team(
     service: Annotated[AssignmentService, Depends(get_assignment_service)],
 ) -> AssignmentResponse:
     return await service.assign_team(request_id, payload, actor)
+
+
+@router.get(
+    "/{request_id}/recommendations",
+    response_model=TeamRecommendationResponse,
+    responses=ERROR_RESPONSES,
+)
+async def recommend_rescue_teams(
+    request_id: str,
+    request: Request,
+    actor: Annotated[DemoActor, Depends(get_demo_actor)],
+    service: Annotated[AssignmentService, Depends(get_assignment_service)],
+) -> TeamRecommendationResponse:
+    check_rate_limit(
+        request,
+        actor_id=actor.user_id,
+        action="route-recommendation",
+        limit=settings.route_rate_limit_per_minute,
+    )
+    return await service.recommend_teams(request_id, actor)

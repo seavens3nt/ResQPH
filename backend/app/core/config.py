@@ -1,6 +1,7 @@
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,6 +12,20 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://localhost:27017/?replicaSet=rs0"
     mongodb_database: str = "resqph"
     frontend_origins: str = "http://localhost:5173"
+    auth_cookie_name: str = "resqph_session"
+    auth_csrf_cookie_name: str = "resqph_csrf"
+    auth_cookie_secure: bool = True
+    auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    auth_session_ttl_hours: int = Field(default=12, ge=1, le=168)
+    auth_allow_demo_headers: bool = False
+    route_snap_max_distance_m: float = 900.0
+    station_dispatch_snap_max_distance_m: float = Field(default=75.0, gt=0, le=900)
+    simulation_speed_mps: float = 5.0
+    report_rate_limit_per_minute: int = 5
+    route_rate_limit_per_minute: int = 10
+    tracking_rate_limit_per_minute: int = 60
+    simulation_control_rate_limit_per_minute: int = 10
+    broad_ip_rate_limit_per_minute: int = 180
     google_weather_api_key: SecretStr = SecretStr("")
 
     # -----------------------------------------------------------------------

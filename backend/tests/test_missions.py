@@ -55,6 +55,8 @@ class InMemoryMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: Any = None,
     ) -> Mission | None:
         mission = self.missions.get(mission_id)
@@ -68,6 +70,8 @@ class InMemoryMissionRepository:
         }
         if new_status == "completed":
             update["completed_at"] = recorded_at
+        if tracking_state is not None:
+            update["tracking_state"] = tracking_state
         self.missions[mission_id] = mission.model_copy(update=update)
         return self.missions[mission_id]
 
@@ -237,11 +241,25 @@ def test_every_allowed_rescuer_transition_updates_once_and_appends_ordered_histo
     assert first.status_code == 200
     assert first.json()["status"] == "en-route"
     assert first.json()["version"] == 2
+    assert mission_store["mission-1"].tracking_state["status"] == "running"
+    assert mission_store["mission-1"].tracking_state["started_at"]
 
     second = post_status(client, "event-2", "arrived", 2, source="offline-sync")
     assert second.status_code == 200
     assert second.json()["status"] == "arrived"
     assert second.json()["version"] == 3
+    arrival_tracking = client.get(
+        "/api/v1/missions/mission-1/tracking", headers=rescuer_headers()
+    )
+    assert arrival_tracking.status_code == 200
+    assert mission_store["mission-1"].tracking_state["status"] == "arrived"
+    terminal_control = client.post(
+        "/api/v1/missions/mission-1/tracking/control",
+        json={"action": "pause"},
+        headers=rescuer_headers(),
+    )
+    assert terminal_control.status_code == 409
+    assert terminal_control.json()["error"]["code"] == "tracking_terminal"
 
     third = post_status(client, "event-3", "completed", 3)
     assert third.status_code == 200

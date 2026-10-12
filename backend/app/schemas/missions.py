@@ -6,14 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from app.models.mission import MissionStatus
 from app.models.mission_status_event import DemoRole, EventSource
-from app.schemas.common import DemoRole as ActiveDemoRole
+from app.schemas.common import DemoActor as SessionActor
 
 WritableMissionStatus = Literal["assigned", "en-route", "arrived", "completed"]
-
-
-class DemoActor(BaseModel):
-    user_id: str
-    role: ActiveDemoRole
+DemoActor = SessionActor
 
 
 class ErrorDetail(BaseModel):
@@ -70,6 +66,24 @@ class MissionCancel(BaseModel):
         return value
 
 
+class MissionSimulationEnd(MissionCancel):
+    event_id: str = Field(min_length=1, max_length=128)
+
+    @field_validator("reason")
+    @classmethod
+    def bounded_sanitized_reason(cls, value: str) -> str:
+        if len(value) > 500:
+            raise ValueError("sanitized reason must be at most 500 characters")
+        return value
+
+    @field_validator("event_id")
+    @classmethod
+    def nonblank_event_id(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("event_id must not be blank")
+        return value.strip()
+
+
 class MissionStatusEventResponse(BaseModel):
     event_id: str
     mission_id: str
@@ -93,6 +107,7 @@ class MissionResponse(BaseModel):
     id: str
     request_id: str
     team_id: str
+    station_id: str | None = None
     assigned_rescuer_id: str | None = None
     status: MissionStatus
     version: int
@@ -101,6 +116,7 @@ class MissionResponse(BaseModel):
     updated_at: datetime
     request_summary: dict[str, Any] | None = None
     latest_route_result: dict[str, Any] | None = None
+    tracking_state: dict[str, Any] | None = None
     data_source: str = "synthetic"
     sync_status: str = "synced"
     completed_at: datetime | None = None
@@ -137,3 +153,24 @@ def serialize_utc(value: datetime | None) -> str | None:
     if value.tzinfo is None:
         value = value.replace(tzinfo=UTC)
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+class MissionTrackingResponse(BaseModel):
+    mission_id: str
+    request_id: str
+    team_id: str
+    simulation_status: str
+    position: dict[str, Any] | None
+    timestamp: str
+    route_id: str | None = None
+    route_geometry: dict[str, Any] | None = None
+    progress_ratio: float = Field(ge=0.0, le=1.0)
+    remaining_distance_m: float = Field(ge=0.0)
+    estimated_remaining_time_s: float = Field(ge=0.0)
+    total_distance_m: float = Field(ge=0.0)
+    total_travel_time_s: float = Field(ge=0.0)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class MissionTrackingControl(BaseModel):
+    action: Literal["start", "pause", "resume", "reset"]

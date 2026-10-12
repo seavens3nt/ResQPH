@@ -2,19 +2,21 @@
 
 **Decision owner:** Ranee
 **Status:** Approved project boundary
-**Approved:** 2026-09-22
+**Approved:** 2026-09-22; expanded for simulated Sampaloc recommendation workflow on 2026-10-07
 **CRS:** WGS 84 (`EPSG:4326`)
 
 ## Operational definition
 
 ResQPH uses a project-defined rectangular pilot boundary around the core University Belt area in the City of Manila. “U-Belt” is a commonly used, de facto place name rather than an official administrative unit, so the rectangle below is the authoritative application boundary for extraction, validation, routing, fixtures, and demonstrations.
 
+The 2026-10-07 local feature branch expands the northern edge to include the supplied simulated Sampaloc station coordinates. This remains a project-controlled academic rectangle, not an administrative Sampaloc boundary.
+
 | Edge | Decimal degrees |
 |---|---:|
 | West longitude | `120.982000` |
 | South latitude | `14.596000` |
 | East longitude | `121.004000` |
-| North latitude | `14.617500` |
+| North latitude | `14.621000` |
 
 GeoJSON coordinate order is longitude, latitude. The machine-readable fixture is [`../samples/study-area.geojson`](../samples/study-area.geojson).
 

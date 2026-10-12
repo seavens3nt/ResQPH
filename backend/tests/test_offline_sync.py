@@ -56,6 +56,8 @@ class InMemoryMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: Any = None,
     ) -> Mission | None:
         mission = self.missions.get(mission_id)
@@ -69,6 +71,10 @@ class InMemoryMissionRepository:
         }
         if new_status == "completed":
             update["completed_at"] = recorded_at
+        if tracking_state is not None:
+            update["tracking_state"] = tracking_state
+        if team_position is not None:
+            update["team_position"] = team_position
         self.missions[mission_id] = mission.model_copy(update=update)
         return self.missions[mission_id]
 

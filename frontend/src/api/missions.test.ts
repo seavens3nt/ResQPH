@@ -3,6 +3,7 @@ import { apiClient } from './client'
 import {
   listMyMissions,
   updateMissionStatus,
+  getMissionTracking,
   nextValidStatus,
   ApiError,
   type MissionDetail,
@@ -97,6 +98,14 @@ describe('missions API client', () => {
         expect(apiErr.isForbidden).toBe(true)
       }
     })
+  })
+
+  it('preserves Retry-After from a rate-limited tracking response', async () => {
+    vi.mocked(apiClient.get).mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 429, headers: { 'retry-after': '19' }, data: { error: { code: 'rate_limit_exceeded', message: 'Wait.' } } },
+    })
+    await expect(getMissionTracking('mission-1')).rejects.toMatchObject({ httpStatus: 429, retryAfterSeconds: 19 })
   })
 
   describe('updateMissionStatus', () => {

@@ -17,6 +17,7 @@ class MissionRepository:
         self._collection = database["missions"]
         self._requests = database["rescue_requests"]
         self._teams = database["rescuers"]
+        self._dispatch_jobs = database["dispatch_jobs"]
 
     async def list_for_rescuer(
         self,
@@ -40,8 +41,33 @@ class MissionRepository:
         cursor = self._collection.find(query).sort("assigned_at", -1)
         return [Mission.model_validate(document) async for document in cursor]
 
-    async def get_by_id(self, mission_id: str) -> Mission | None:
-        document = await self._collection.find_one({"id": mission_id})
+    async def get_by_id(self, mission_id: str, session: AsyncClientSession | None = None) -> Mission | None:
+        document = await self._collection.find_one({"id": mission_id}, session=session)
+        if document is None:
+            return None
+        return Mission.model_validate(document)
+
+    async def update_tracking_state(
+        self,
+        mission_id: str,
+        tracking_state: dict[str, Any],
+        updated_at: datetime,
+        *,
+        start_if_not_running: bool = False,
+    ) -> Mission | None:
+        query: dict[str, Any] = {"id": mission_id, "status": {"$in": ["assigned", "en-route"]}}
+        if start_if_not_running:
+            query.update({"status": "en-route", "tracking_state.status": {"$ne": "running"}})
+        document = await self._collection.find_one_and_update(
+            query,
+            {
+                "$set": {
+                    "tracking_state": tracking_state,
+                    "updated_at": updated_at,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
         if document is None:
             return None
         return Mission.model_validate(document)
@@ -53,7 +79,10 @@ class MissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: AsyncClientSession | None = None,
+        expected_request_version: int | None = None,
     ) -> Mission | None:
         if session is None or not session.in_transaction:
             raise RuntimeError("Mission lifecycle updates require an active transaction.")
@@ -66,6 +95,8 @@ class MissionRepository:
         }
         if new_status == "completed":
             update["$set"]["completed_at"] = recorded_at
+        if tracking_state is not None:
+            update["$set"]["tracking_state"] = tracking_state
 
         document = await self._collection.find_one_and_update(
             {
@@ -79,8 +110,11 @@ class MissionRepository:
         )
         if document is None:
             return None
+        request_filter: dict[str, Any] = {"id": document["request_id"], "mission_id": mission_id, "status": prior_status}
+        if expected_request_version is not None:
+            request_filter["version"] = expected_request_version
         request_result = await self._requests.update_one(
-            {"id": document["request_id"], "mission_id": mission_id, "status": prior_status},
+            request_filter,
             {
                 "$set": {"status": new_status, "updated_at": recorded_at},
                 "$inc": {"version": 1},
@@ -95,6 +129,8 @@ class MissionRepository:
         }
         if new_status in {"completed", "cancelled"}:
             team_update["$set"].update({"assigned_request_id": None, "assigned_mission_id": None})
+            if team_position is not None:
+                team_update["$set"].update({"current_location": team_position, "position_updated_at": recorded_at})
         team_result = await self._teams.update_one(
             {
                 "id": document["team_id"],
@@ -106,14 +142,26 @@ class MissionRepository:
         )
         if request_result.modified_count != 1 or team_result.modified_count != 1:
             raise MissionLifecycleConflictError("Linked mission lifecycle records no longer match.")
+        if new_status in {"completed", "cancelled"}:
+            await self._dispatch_jobs.update_many(
+                {},
+                {"$set": {"next_attempt_at": recorded_at}},
+                session=session,
+            )
         return Mission.model_validate(document)
 
     async def record_cancellation_reason(
         self, request_id: str, reason: str, recorded_at: datetime,
         session: AsyncClientSession,
+        actor_id: str | None = None,
+        expected_version: int | None = None,
     ) -> None:
+        values: dict[str, Any] = {"cancellation_reason": reason, "cancelled_at": recorded_at}
+        if actor_id is not None:
+            values.update({"cancellation_actor_id": actor_id, "cancellation_expected_version": expected_version, "status_history.$[cancelled].actor_id": actor_id, "status_history.$[cancelled].actor_role": "citizen", "status_history.$[cancelled].note": reason})
         await self._requests.update_one(
             {"id": request_id, "status": "cancelled"},
-            {"$set": {"cancellation_reason": reason, "cancelled_at": recorded_at}},
+            {"$set": values},
             session=session,
+            **({"array_filters": [{"cancelled.status": "cancelled"}]} if actor_id is not None else {}),
         )

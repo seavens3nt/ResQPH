@@ -29,6 +29,7 @@ export class ApiError extends Error {
   readonly details: ApiErrorDetail[]
   readonly requestId: string | undefined
   readonly httpStatus: number
+  readonly retryAfterSeconds: number | undefined
 
   constructor(
     httpStatus: number,
@@ -36,6 +37,7 @@ export class ApiError extends Error {
     message: string,
     details: ApiErrorDetail[] = [],
     requestId?: string,
+    retryAfterSeconds?: number,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -43,6 +45,7 @@ export class ApiError extends Error {
     this.code = code
     this.details = details
     this.requestId = requestId
+    this.retryAfterSeconds = retryAfterSeconds
   }
 
   get isConflict(): boolean {
@@ -69,6 +72,7 @@ function normalizeError(err: unknown): never {
       envelope?.message ?? err.message,
       envelope?.details ?? [],
       envelope?.request_id,
+      Number(err.response.headers?.['retry-after']) || undefined,
     )
   }
   // Network timeout / no response — treat as 503
@@ -141,6 +145,36 @@ export interface AssignmentResult {
   request: ApiRescueRequestSummary
 }
 
+export interface TeamRecommendationCandidate {
+  team_id: string
+  station_id?: string | null
+  team_name: string
+  station_name?: string | null
+  station_address?: string | null
+  availability: string
+  road_distance_m: number
+  estimated_travel_time_s: number
+  route_id: string
+  route: Record<string, unknown>
+  warnings: string[]
+}
+
+export interface TeamRecommendationExclusion {
+  team_id: string
+  team_name: string
+  reason: string
+  details: string[]
+}
+
+export interface TeamRecommendationResponse {
+  request_id: string
+  scenario_id: string
+  selection_mode: string
+  fixture_notice: string
+  candidates: TeamRecommendationCandidate[]
+  exclusions: TeamRecommendationExclusion[]
+}
+
 // ---------------------------------------------------------------------------
 // API functions
 // ---------------------------------------------------------------------------
@@ -180,6 +214,19 @@ export async function assignTeam(
     const res = await apiClient.post<AssignmentResult>(
       `/rescue-requests/${requestId}/assignment`,
       body,
+    )
+    return res.data
+  } catch (err) {
+    return normalizeError(err)
+  }
+}
+
+export async function getTeamRecommendations(
+  requestId: string,
+): Promise<TeamRecommendationResponse> {
+  try {
+    const res = await apiClient.get<TeamRecommendationResponse>(
+      `/rescue-requests/${requestId}/recommendations`,
     )
     return res.data
   } catch (err) {

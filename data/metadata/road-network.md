@@ -18,7 +18,7 @@
 |---|---:|
 | South | `14.596000` |
 | West | `120.982000` |
-| North | `14.617500` |
+| North | `14.621000` |
 | East | `121.004000` |
 
 The authoritative polygon is [`../samples/study-area.geojson`](../samples/study-area.geojson). GeoJSON remains longitude, latitude; the Overpass bounding-box order is south, west, north, east.
@@ -130,3 +130,26 @@ Application maps, documentation, and demonstrations using OSM-derived data must 
 - `data/samples/ubelt-v1-flood-join.geojson` — 10-record sample controlled scenario (checked into Git)
 
 Full graph and full joined edges are regenerable via the build script and are gitignored. Because OpenStreetMap changes over time, a later forced download is a new source snapshot and may produce different counts. The committed fixtures and their checksums are the reviewed Team Phase 1 snapshot.
+
+## Sampaloc simulation coverage note (2026-10-07)
+
+The study-area validation boundary was expanded locally to include the supplied simulated Sampaloc station points. The committed `ubelt-v1-preview.geojson` remains a 30-edge reviewed preview subset. It is retained for historical pipeline checks and is no longer the runtime station-route fixture. See the 2026-10-10 expanded snapshot below.
+
+## Expanded station-network snapshot (2026-10-10)
+
+To verify the five catalog headquarters under the configured 900 m snap limit,
+the bounded network was regenerated from the approved study-area polygon using
+the existing OSMnx drive extraction pipeline. The extraction completed on
+2026-10-10; it produced 1,050 nodes and 2,535 directed edges. After removing
+two edges whose full geometries exceeded the approved rectangle, the committed
+`data/samples/ubelt-station-network.geojson` contains 2,533 edges. The source
+graph had zero self loops and one weakly connected component. Geometry is
+exported in EPSG:4326, `[longitude, latitude]`; routing distances use EPSG:32651.
+
+All five headquarters snapped within 27 m, and all five produced a route to a
+controlled incident at `[120.9946, 14.6042]`. Computed route distances ranged
+from 552 m to 2,065 m. This confirms graph coverage and routing connectivity
+for that fixture and incident, not road safety or real-time accessibility.
+The existing 10-record flood join remains a controlled sample; this expanded
+OSM snapshot does not add live or complete flood information. Attribute maps
+and demonstrations with `© OpenStreetMap contributors` under the ODbL.

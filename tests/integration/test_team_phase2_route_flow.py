@@ -23,7 +23,7 @@ ROUTE_REQUEST = {
 
 NO_ROUTE_REQUEST = {
     **ROUTE_REQUEST,
-    "destination": {"type": "Point", "coordinates": [121.0036128, 14.6117538]},
+    "destination": {"type": "Point", "coordinates": [120.9821, 14.5961]},
 }
 
 
@@ -36,7 +36,7 @@ def make_client() -> TestClient:
 
 
 def headers() -> dict[str, str]:
-    return {"X-Demo-User-Id": "coordinator-gate", "X-Demo-Role": "coordinator"}
+    return {"X-Demo-User-Id": "team-sampaloc-fire-station", "X-Demo-Role": "rescuer"}
 
 
 def test_real_engine_response_survives_the_api_contract_deterministically() -> None:

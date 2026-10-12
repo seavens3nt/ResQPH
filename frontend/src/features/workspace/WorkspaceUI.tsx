@@ -3,8 +3,8 @@ import { Icon, type IconName } from '../../components/art/Icon'
 import { FigmaHomeAsset } from './FigmaHomeAsset'
 
 /** Same section hierarchy as Citizen Home, with each workspace's own label. */
-export function WorkspaceSectionHeading({children, icon}: {children: ReactNode; icon?: IconName}) {
-  return <h2 className="workspace-section-heading">{icon ? <Icon name={icon} size={26}/> : <FigmaHomeAsset name="star"/>}<span>{children}</span></h2>
+export function WorkspaceSectionHeading({children, icon, artwork}: {children: ReactNode; icon?: IconName; artwork?: ReactNode}) {
+  return <h2 className="workspace-section-heading">{artwork ?? (icon ? <Icon name={icon} size={26}/> : <FigmaHomeAsset name="star"/>)}<span>{children}</span></h2>
 }
 
 type CardProps = HTMLAttributes<HTMLElement> & {
@@ -36,15 +36,16 @@ export function WorkspaceFilters<T extends string>({ options, value, onChange, l
   </div>
 }
 
-export function WorkspaceStatCard({ count, label, icon, tone, onClick }: {
+export function WorkspaceStatCard({ count, label, icon, artwork, tone, onClick }: {
   count: number
   label: string
   icon: IconName
+  artwork?: ReactNode
   tone: 'pending' | 'teams' | 'active' | 'completed'
   onClick: () => void
 }) {
   return <button type="button" className={`stat-${tone}`} aria-label={`${count} ${label}`} onClick={onClick}>
-    <Icon name={icon} size={28}/><span><strong>{count}</strong><small>{label}</small></span>
+    {artwork ?? <Icon name={icon} size={28}/>}<span><strong>{count}</strong><small>{label}</small></span>
   </button>
 }
 
@@ -87,7 +88,7 @@ export function WorkspaceProgress({ stages, current, label }: {
   label: string
 }) {
   const index = stages.findIndex(stage => stage.value === current)
-  return <ol className="workspace-progress" aria-label={label} style={{gridTemplateColumns:`repeat(${stages.length}, minmax(0, 1fr))`}}>{stages.map((stage, position) => <li key={stage.value} className={position <= index ? 'is-reached' : undefined} aria-current={stage.value === current ? 'step' : undefined}><Icon name={position < index ? 'check' : 'pin'} size={18}/><span>{stage.label}</span></li>)}</ol>
+  return <ol className="workspace-progress" aria-label={label} style={{gridTemplateColumns:`repeat(${stages.length}, minmax(0, 1fr))`}}>{stages.map((stage, position) => <li key={stage.value} className={position <= index ? 'is-reached' : undefined} aria-current={stage.value === current ? 'step' : undefined}><Icon name={position < index ? 'check' : stage.value === 'completed' && position !== index ? 'flag' : 'pin'} size={18}/><span>{stage.label}</span></li>)}</ol>
 }
 
 export function WorkspaceEmpty({ title, children, icon = 'report', action }: {

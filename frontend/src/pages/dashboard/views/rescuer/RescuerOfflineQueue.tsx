@@ -6,7 +6,8 @@
  *   - Sync failed: event preserved + failure reason + current server state shown
  *   - Offline: network-dependent actions blocked except this one queued transition
  */
-import { useId } from 'react'
+import { useId, useState } from 'react'
+import { Modal } from '../../../../components/ui/Modal'
 import type { MissionDetail, OfflineQueueEntry } from '../../../../api/missions'
 import { Button } from '../../../../components/ui/Button'
 import { SyncStatusBadge } from '../../../../components/ui/SyncStatusBadge'
@@ -19,6 +20,7 @@ export interface RescuerOfflineQueueProps {
   onDismissFailed: () => void
   currentServerMission?: MissionDetail | null
   storageError?: string | null
+  onRefresh?: () => void
 }
 
 function formatTimestamp(value: string) {
@@ -50,9 +52,11 @@ export function RescuerOfflineQueue({
   onDismissFailed,
   currentServerMission,
   storageError,
+  onRefresh,
 }: RescuerOfflineQueueProps) {
   const titleId = useId()
   const retryHelpId = useId()
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   if (!entry && !isOffline && !storageError) return null
 
@@ -146,7 +150,7 @@ export function RescuerOfflineQueue({
 
           {entry.syncState === 'pending' && (
             <p className="offline-queue-panel__pending-note" role="status">
-              This status remains pending and has not been accepted by the server.
+              Acceptance is not yet verified. This local attempt remains pending until server history or a response confirms it.
             </p>
           )}
 
@@ -167,13 +171,15 @@ export function RescuerOfflineQueue({
             <div className="offline-queue-panel__failure" role="alert" aria-live="assertive">
               <h3>Sync Failed: event preserved for review</h3>
               <p>
-                This attempted status has not been accepted. Review the event details above before
-                discarding it.
+                {verifiedServerMission && !verifiedServerMission.status_history.some(item => item.event_id === entry.localId)
+                  ? 'Rejected attempt: the latest retrieved server history does not contain this event.'
+                  : 'Acceptance cannot yet be verified. This may be a preserved earlier failure; refresh server state before deciding.'}
               </p>
               <p>
                 <strong>Failure reason:</strong>{' '}
                 {entry.failureReason || 'No failure details were provided.'}
               </p>
+              {entry.failureReason?.includes('Simulated role') && <p>The earlier response rejected the signed-in role. Sign in as the assigned station and use separate browser profiles for citizen and rescuer testing.</p>}
               {verifiedServerMission ? (
                 <p className="offline-queue-panel__server-state">
                   <strong>Current server state:</strong> {verifiedServerMission.status}, version{' '}
@@ -211,11 +217,17 @@ export function RescuerOfflineQueue({
 
           {entry.syncState === 'failed' && (
             <div className="offline-queue-panel__actions">
+              {onRefresh && <Button type="button" variant="outline" size="sm" disabled={isOffline || syncing} onClick={onRefresh}>Refresh server state</Button>}
+              {(entry.failureCode === 'forbidden' || entry.failureReason?.includes('Simulated role')) && <a href="/login">Sign in as the assigned station</a>}
+              {['authentication_required','session_identity_changed','csrf_validation_failed'].includes(entry.failureCode ?? '') && <>
+                <a href="/login">Sign in again as this station</a>
+                <Button type="button" variant="outline" size="sm" disabled={isOffline} onClick={onRetrySync}>Retry after signing in</Button>
+              </>}
               <Button
                 variant="danger"
                 size="sm"
                 type="button"
-                onClick={onDismissFailed}
+                onClick={() => setConfirmDiscard(true)}
                 disabled={syncing}
                 aria-label={`Dismiss Failed Event — Discard Failed Event After Review, event ${entry.body.event_id}`}
               >
@@ -223,6 +235,12 @@ export function RescuerOfflineQueue({
               </Button>
             </div>
           )}
+          <Modal isOpen={confirmDiscard} onClose={() => setConfirmDiscard(false)} title="Discard local queued attempt?">
+            <p>This removes only this local queued attempt. It does not delete or cancel the server mission. A private recovery record is retained for this account.</p>
+            <p>{isOffline ? 'You are offline: acceptance cannot be checked. The server may already have accepted this exact event.' : 'Server history will be checked first. If this exact event was accepted, it will be reconciled instead of discarded.'}</p>
+            <Button type="button" variant="outline" onClick={() => setConfirmDiscard(false)}>Keep attempt</Button>
+            <Button type="button" variant="danger" onClick={() => {setConfirmDiscard(false);onDismissFailed()}}>Confirm discard local attempt</Button>
+          </Modal>
         </div>
       )}
     </section>

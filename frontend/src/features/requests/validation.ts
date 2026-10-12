@@ -9,6 +9,7 @@
 
 import { z } from 'zod'
 import { FLOOD_LEVEL_OPTIONS, VULNERABILITY_OPTIONS } from './types'
+import { isInsideStudyAreaPolygon } from '../map/mapData'
 
 // ---------------------------------------------------------------------------
 // Study-area boundary constants
@@ -19,16 +20,11 @@ export const UBELT_BOUNDS = {
   west: 120.982,
   south: 14.596,
   east: 121.004,
-  north: 14.6175,
+  north: 14.621,
 } as const
 
 export function isInsideUBeltBoundary(lng: number, lat: number): boolean {
-  return (
-    lng >= UBELT_BOUNDS.west &&
-    lng <= UBELT_BOUNDS.east &&
-    lat >= UBELT_BOUNDS.south &&
-    lat <= UBELT_BOUNDS.north
-  )
+  return isInsideStudyAreaPolygon(lng, lat)
 }
 
 // ---------------------------------------------------------------------------
@@ -46,9 +42,7 @@ export const GeoPointSchema = z.object({
       ([lng, lat]) => isInsideUBeltBoundary(lng, lat),
       {
         message:
-          'Location must be inside the U-Belt pilot area ' +
-          '(controlled scenario boundary). ' +
-          'Longitude 120.982–121.004, Latitude 14.596–14.6175.',
+          'Choose a rescue location inside the U-Belt pilot area (controlled scenario boundary).',
       },
     ),
 })
@@ -58,11 +52,7 @@ export const GeoPointSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const RequestLocationSchema = z.object({
-  address: z
-    .string()
-    .trim()
-    .min(5, 'Enter a street address (at least 5 characters).')
-    .max(200, 'Address is too long (200 characters maximum).'),
+  address: z.string().trim().min(1).max(200).default('Pinned location'),
   point: GeoPointSchema,
   landmark: z.string().trim().max(200).optional(),
   description: z.string().trim().max(500).optional(),
@@ -87,6 +77,7 @@ export const CreateRequestSchema = z.object({
     .max(500, 'Medical details cannot exceed 500 characters.')
     .optional(),
   reported_flood_level: z.enum(FLOOD_LEVEL_OPTIONS, 'Select a flood level.'),
+  reported_severity: z.enum(['low', 'moderate', 'high', 'critical'], 'Select reported urgency.').default('moderate'),
   situation_summary: z
     .string()
     .trim()

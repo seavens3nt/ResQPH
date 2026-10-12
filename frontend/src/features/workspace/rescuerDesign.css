@@ -1,0 +1,1620 @@
+/* Rescuer-only visual consistency pass.
+   Matches the citizen dashboard's soft, no-border surface language without
+   changing component structure, data flow, or grid layouts. */
+.workspace-shell[data-role=rescuer] {
+  --ink: #20242b;
+  --muted: #535e6d;
+  --line: #dde2e8;
+  --accent: #d92642;
+  --home-page: #eef1f6;
+  --shared-surface: #ffffff;
+  --shared-inset: #f5f6f8;
+  --rescuer-radius: 25px;
+  --rescuer-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(148, 161, 180, .2), 0 10px 30px rgba(29, 40, 57, .06);
+  --surface-shadow: var(--rescuer-shadow);
+  --resqph-card-shadow: var(--rescuer-shadow);
+  background: #eef1f6;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  grid-template-columns: 224px minmax(0, 1fr);
+  transition: grid-template-columns 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.workspace-shell[data-role=rescuer] :is(h1, h2, h3, .workspace-brand) {
+  font-family: var(--font-body);
+}
+
+.workspace-shell[data-role=rescuer] ::selection {
+  background: #fbd5dc;
+  color: #20242b;
+}
+
+.workspace-shell[data-role=rescuer] :is(input, textarea) {
+  caret-color: var(--accent);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav,
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav {
+  background: rgba(255, 255, 255, .82) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 30px 30px 0 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(148, 161, 180, .15), 0 10px 30px rgba(29, 40, 57, .06) !important;
+  cursor: pointer;
+  gap: 24px;
+  padding: 32px 18px;
+  transition: margin 320ms cubic-bezier(.22, 1, .36, 1), padding 320ms cubic-bezier(.22, 1, .36, 1), border-radius 320ms cubic-bezier(.22, 1, .36, 1), gap 320ms cubic-bezier(.22, 1, .36, 1), height 320ms cubic-bezier(.22, 1, .36, 1), top 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-brand {
+  font-weight: 700;
+  transition: gap 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-brand span {
+  font-size: .7rem;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav > p {
+  font-size: .8rem;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav > button,
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav > button,
+.workspace-shell[data-role=rescuer] .workspace-nav nav button,
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav nav button {
+  align-items: center;
+  border: 0 !important;
+  border-radius: 8px 22px 22px 8px !important;
+  display: flex;
+  font-size: .9rem;
+  font-weight: 600;
+  gap: 12px;
+  min-height: 44px;
+  background: transparent !important;
+  color: var(--ink) !important;
+  transition: all 0.15s ease-out;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav button:hover,
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav button:hover {
+  background: #eef2f7 !important;
+  color: var(--ink) !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav button[aria-current],
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav button[aria-current],
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav button[aria-current]:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, .28) !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav button[aria-current] svg,
+.workspace-shell[data-role=rescuer][data-view] .workspace-nav button[aria-current] svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav :is(.workspace-nav-label, .workspace-brand > div) {
+  max-width: 180px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-width 320ms cubic-bezier(.22, 1, .36, 1), opacity 160ms ease-out;
+  white-space: nowrap;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-nav svg,
+.workspace-shell[data-role=rescuer] .workspace-brand img {
+  flex-shrink: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-nav-collapsed=true] {
+  grid-template-columns: 100px minmax(0, 1fr);
+}
+
+.workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav {
+  border: 0;
+  border-radius: 38px;
+  box-shadow: var(--rescuer-shadow);
+  gap: 18px;
+  height: calc(100dvh - 32px);
+  margin: 16px 12px;
+  padding: 16px 10px;
+  top: 16px;
+}
+
+.workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav :is(.workspace-nav-label, .workspace-brand > div) {
+  max-width: 0;
+  opacity: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-brand {
+  gap: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav button {
+  border-radius: 50%;
+  gap: 0;
+  padding: 12px;
+  position: relative;
+}
+
+.workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav button:not(.workspace-nav-toggle):is(:hover, :focus-visible)::after {
+  background: #20242b;
+  border-radius: 8px;
+  color: #fff;
+  content: attr(aria-label);
+  font-size: .8rem;
+  left: calc(100% + 16px);
+  padding: 8px 12px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+.workspace-shell[data-role=rescuer][data-view] .workspace-main {
+  max-width: none;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-main {
+  padding: 36px clamp(24px, 4vw, 64px);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-header,
+.workspace-shell[data-role=rescuer] .workspace-topbar {
+  border-color: transparent;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-topbar {
+  margin-bottom: 28px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-header h1,
+.workspace-shell[data-role=rescuer] .workspace-topbar h1 {
+  font-size: clamp(1.7rem, 2.7vw, 2.3rem);
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-eyebrow {
+  display: none;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-subtitle,
+.workspace-shell[data-role=rescuer] .workspace-team-caption {
+  color: var(--muted);
+  font-size: .95rem;
+  line-height: 1.5;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-section-heading {
+  color: var(--ink);
+  font-weight: 650;
+  margin-bottom: 22px;
+}
+
+.workspace-shell[data-role=rescuer] :is(.workspace-card, .workspace-inspector, .rescuer-mission-card, .offline-queue-panel, .workspace-table-wrap, .request-tracker > section) {
+  background: #fff;
+  border: 0;
+  border-radius: var(--rescuer-radius);
+  box-shadow: var(--rescuer-shadow);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-card {
+  padding: 28px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-card p {
+  font-size: .92rem;
+  line-height: 1.6;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-inspector {
+  padding: 22px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-stack,
+.workspace-shell[data-role=rescuer][data-view] .workspace-main > .workspace-stack {
+  gap: 24px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-section-heading,
+.workspace-shell[data-role=rescuer][data-view] .workspace-section-heading {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  font-size: 1.65rem !important;
+  font-weight: 750 !important;
+  color: #0f172a !important;
+  margin-bottom: 6px !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-panel-heading,
+.workspace-shell[data-role=rescuer][data-view] .workspace-panel-heading {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+  margin-bottom: 20px !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-team-caption,
+.workspace-shell[data-role=rescuer][data-view] .workspace-team-caption {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: #64748b !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-team-caption svg {
+  color: #dc2626 !important;
+  flex-shrink: 0 !important;
+}
+
+.workspace-shell[data-role=rescuer] .btn-refresh-mission,
+.workspace-shell[data-role=rescuer][data-view] .btn-refresh-mission,
+.workspace-shell[data-role=rescuer] .workspace-panel-heading > button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border: 1px solid #bae6fd !important;
+  background: #ffffff !important;
+  color: #0284c7 !important;
+  border-radius: 999px !important;
+  padding: 7px 18px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease-out !important;
+}
+
+.workspace-shell[data-role=rescuer] .btn-refresh-mission:hover,
+.workspace-shell[data-role=rescuer][data-view] .btn-refresh-mission:hover,
+.workspace-shell[data-role=rescuer] .workspace-panel-heading > button:hover {
+  background: #f0f9ff !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card {
+  gap: 16px;
+  margin-bottom: 0;
+  padding: 28px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__head {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0 0 16px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__id {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__meta {
+  color: var(--muted);
+  gap: 10px;
+  padding: 0;
+}
+
+.workspace-shell[data-role=rescuer] :is(.rescuer-mission-card__meta > span, .mission-tracking-panel__metrics span, .rescuer-mission-card .proto-notice) {
+  background: #f5f6f8;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__meta > span {
+  font-size: .82rem;
+  padding: 10px 12px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card .proto-notice {
+  padding: 8px 12px;
+}
+
+.workspace-shell[data-role=rescuer] :is(.rescuer-mission-card__cache-note, .rescuer-mission-card__queue-note) {
+  background: #fff3dc;
+  border: 0;
+  border-left: 3px solid #d97706;
+  border-radius: 10px;
+  color: #6d4800;
+}
+
+.workspace-shell[data-role=rescuer] :is(.mission-tracking-map, .flood-map-container, .mission-map-preview) {
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.workspace-shell[data-role=rescuer] :is(.mission-tracking-map, .flood-map-container) {
+  box-shadow: 0 2px 10px rgba(29, 40, 57, .08);
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__history {
+  border-top: 1px solid var(--line);
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__history summary {
+  color: var(--muted);
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__history summary:hover {
+  color: var(--ink);
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__history ol {
+  border-left-color: var(--line);
+}
+
+.workspace-shell[data-role=rescuer] .mission-completed-tag,
+.workspace-shell[data-role=rescuer] .offline-queue-panel__success {
+  background: #edfbf3;
+  border: 0;
+  border-radius: 10px;
+  color: #166534;
+}
+
+.workspace-shell[data-role=rescuer] .offline-queue-panel {
+  background: #fffbeb;
+  border: 0;
+  border-left: 4px solid #d97706;
+  color: #78350f;
+  padding: 22px 24px;
+}
+
+.workspace-shell[data-role=rescuer] .offline-queue-panel__title {
+  color: #78350f;
+}
+
+.workspace-shell[data-role=rescuer] .offline-queue-panel__body,
+.workspace-shell[data-role=rescuer] .offline-queue-panel__details dt,
+.workspace-shell[data-role=rescuer] .offline-queue-panel__details dd {
+  color: #6d4800;
+}
+
+.workspace-shell[data-role=rescuer] .offline-queue-panel__entry {
+  border-top-color: rgba(217, 119, 6, .28);
+}
+
+.workspace-shell[data-role=rescuer] .offline-queue-panel__label,
+.workspace-shell[data-role=rescuer] .offline-queue-panel__details > div {
+  background: rgba(255, 255, 255, .72);
+  border: 0;
+  border-radius: 10px;
+}
+
+.workspace-shell[data-role=rescuer] :is(.offline-queue-panel__failure, .offline-queue-panel__storage-error) {
+  background: #fff0f2;
+  border: 0;
+  border-left: 3px solid #dc2626;
+  border-radius: 10px;
+  color: #7f1d1d;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-main button,
+.workspace-shell[data-role=rescuer] .modal-body button:not(.map-toggle-btn) {
+  border-color: transparent;
+  border-radius: 10px;
+  font-size: .875rem;
+  min-height: 44px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-main button:not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn),
+.workspace-shell[data-role=rescuer] .modal-body button:not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn) {
+  background: #f5f6f8;
+  color: var(--ink);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-main button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn):hover,
+.workspace-shell[data-role=rescuer] .modal-body button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn):hover {
+  background: #e9edf3;
+  color: var(--ink);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-main :is(.workspace-primary, .btn--primary),
+.workspace-shell[data-role=rescuer] .modal-body :is(.workspace-primary, .btn--primary) {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  color: #fff;
+  font-weight: 650;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-main :is(.workspace-primary, .btn--primary):hover,
+.workspace-shell[data-role=rescuer] .modal-body :is(.workspace-primary, .btn--primary):hover {
+  background: #bf1f38;
+  border-color: #bf1f38;
+}
+
+.workspace-shell[data-role=rescuer] :is(button, a.workspace-profile) {
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out, transform 120ms ease-out, gap 320ms cubic-bezier(.22, 1, .36, 1), border-radius 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.workspace-shell[data-role=rescuer] button:not(:disabled):active {
+  transform: scale(.985);
+  transition-duration: 60ms;
+}
+
+.workspace-shell[data-role=rescuer] :focus-visible {
+  outline: 3px solid #ac1e38;
+  outline-offset: 4px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-facts {
+  font-variant-numeric: tabular-nums;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-facts > div {
+  border-bottom-color: var(--line);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress li.is-reached {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-table-wrap {
+  overflow: hidden;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-table th {
+  background: #f5f6f8;
+  color: var(--muted);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-table td {
+  background: #fff;
+  border-bottom-color: var(--line);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-table tr.is-selected td,
+.workspace-shell[data-role=rescuer] .workspace-table tr.is-selected {
+  background: #fff0f3;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-tabs button {
+  background: #f5f6f8;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-tabs button:hover {
+  background: #e9edf3;
+  color: var(--ink);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-tabs button[aria-pressed=true] {
+  background: #fff0f3;
+  border-color: transparent;
+  color: var(--accent);
+}
+
+.workspace-shell[data-role=rescuer] .workspace-badge {
+  border-radius: 999px;
+  font-size: .75rem;
+}
+
+.workspace-shell[data-role=rescuer] .stat-card,
+.workspace-shell[data-role=rescuer] .item-card {
+  border: 0;
+  box-shadow: var(--rescuer-shadow);
+}
+
+.workspace-shell[data-role=rescuer] .item-card:hover {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(29, 40, 57, .09);
+}
+
+.workspace-shell[data-role=rescuer] .role-workspace {
+  gap: 22px;
+}
+
+.workspace-shell[data-role=rescuer] .role-workspace > .workspace-section-heading {
+  align-items: center;
+  color: #07142c;
+  display: flex;
+  font-size: clamp(1.75rem, 2.25vw, 2.45rem);
+  gap: 12px;
+  letter-spacing: -0.03em;
+  margin: 0 0 4px;
+}
+
+.workspace-shell[data-role=rescuer] .role-workspace > .workspace-section-heading > :first-child {
+  color: #07142c;
+  height: 34px;
+  width: 34px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-workspace {
+  gap: 26px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-workspace > .workspace-panel-heading {
+  margin-bottom: 10px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-team-caption {
+  color: #263d62;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-panel-heading > button {
+  border: 1px solid #a9caf6;
+  border-radius: 999px;
+  color: #096ad9;
+  font-size: 1rem;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 20px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-panel-heading > button:hover {
+  background: #eff6ff;
+  border-color: #7cb4f6;
+  color: #075fc3;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  gap: 24px;
+  padding: 0;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__head {
+  align-items: center;
+  background: rgba(255, 255, 255, .92);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: var(--rescuer-shadow);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  min-height: 106px;
+  padding: 20px 24px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__mission {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  min-width: 0;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__id {
+  align-items: flex-start;
+  color: #0c1b3a;
+  display: flex;
+  flex-direction: column;
+  font-size: .95rem;
+  font-weight: 700;
+  gap: 9px;
+  letter-spacing: 0;
+  min-width: 0;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__id > span:first-child {
+  align-items: center;
+  color: #091a38;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__id > span:first-child svg {
+  color: #40577b;
+  fill: currentColor;
+  stroke-width: 0;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__id .record-id summary {
+  color: #40577b;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.workspace-shell[data-role=rescuer] .status-badge {
+  align-items: center;
+  background: #dcfbef !important;
+  border: 1px solid #bdf0dc !important;
+  border-radius: 999px;
+  color: #009b69 !important;
+  display: inline-flex;
+  font-size: .95rem;
+  font-weight: 800;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.workspace-shell[data-role=rescuer] .status-badge::before {
+  background: currentColor;
+  border-radius: 50%;
+  content: "";
+  height: 10px;
+  width: 10px;
+}
+
+.workspace-shell[data-role=rescuer] .sync-badge {
+  align-items: center;
+  background: #e5fbf2;
+  border: 0;
+  border-radius: 12px;
+  color: #007f5c;
+  display: grid;
+  gap: 2px 14px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  justify-self: end;
+  min-height: 74px;
+  padding: 14px 20px;
+  width: 100%;
+}
+
+.workspace-shell[data-role=rescuer] .sync-badge::before {
+  align-items: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  content: "\2713";
+  display: flex;
+  font-size: 18px;
+  font-weight: 800;
+  grid-row: 1 / span 2;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.workspace-shell[data-role=rescuer] .sync-badge__label {
+  color: #008060;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.workspace-shell[data-role=rescuer] .sync-badge__time {
+  color: #1f3458;
+  font-size: .8rem;
+}
+
+.workspace-shell[data-role=rescuer] .sync-badge__note {
+  display: none;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__meta {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1.18fr .78fr 1fr 1.02fr 1fr;
+  padding: 0;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail {
+  align-items: center;
+  background: rgba(255, 255, 255, .92);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--rescuer-shadow);
+  color: #0b1b3b;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  min-height: 84px;
+  padding: 16px 20px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail > svg:first-child {
+  color: #e31b35;
+  height: 28px;
+  width: 28px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail > svg:last-child {
+  color: #49658d;
+  justify-self: end;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail strong {
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail--urgent {
+  background: linear-gradient(90deg, #fff6fb 0%, #fff 100%);
+  color: #d51228;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail--flood > svg:first-child {
+  color: #0878e8;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card__detail--severity > svg:first-child {
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #eef2f7, 0 8px 20px rgba(15, 23, 42, .04);
+  color: #e31b35;
+  padding: 10px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress {
+  align-items: start;
+  display: grid;
+  gap: 0;
+  margin: 12px 0 6px;
+  padding: 12px 0 10px;
+  position: relative;
+  border: 0 !important;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress::before {
+  background: linear-gradient(90deg, #dc2626 0%, #dc2626 72%, #cbd5e1 72%, #cbd5e1 100%);
+  content: "";
+  height: 3px;
+  left: 12.5%;
+  position: absolute;
+  right: 12.5%;
+  top: 28px;
+  z-index: 0;
+  border-radius: 999px;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress li {
+  align-items: center;
+  border: 0 !important;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.88rem;
+  font-weight: 600;
+  gap: 10px;
+  padding: 0;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress li > svg {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  color: #64748b;
+  height: 34px;
+  width: 34px;
+  padding: 7px;
+  transition: all 0.2s ease-out;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress li.is-reached {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.workspace-shell[data-role=rescuer] .workspace-progress li.is-reached > svg {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.35);
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel {
+  display: grid;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__header {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__header > strong {
+  color: #07142c;
+  display: block;
+  font-size: clamp(1.45rem, 1.8vw, 1.9rem);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__tools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__tools button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d5e3f3;
+  border-radius: 999px;
+  color: #1c355c;
+  display: inline-flex;
+  font-size: .95rem;
+  font-weight: 650;
+  gap: 8px;
+  margin: 0;
+  min-height: 48px;
+  padding: 10px 18px;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__tools button.is-active {
+  background: #ffe4e8;
+  border-color: transparent;
+  color: #d51228;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__tools button:last-child {
+  aspect-ratio: 1;
+  justify-content: center;
+  padding: 0;
+  width: 48px;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-map {
+  background: #eaf2fb;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: none;
+  height: 156px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-map::before {
+  background:
+    linear-gradient(12deg, transparent 46%, rgba(255, 255, 255, .9) 47% 49%, transparent 50%),
+    linear-gradient(-18deg, transparent 44%, rgba(255, 255, 255, .88) 45% 47%, transparent 48%),
+    linear-gradient(88deg, transparent 47%, rgba(255, 255, 255, .86) 48% 50%, transparent 51%),
+    linear-gradient(#eaf2fb, #eaf2fb);
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  opacity: .36;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-map .google-map-wrapper,
+.workspace-shell[data-role=rescuer] .mission-tracking-map .google-map-canvas {
+  height: 156px !important;
+  min-height: 156px;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__metrics {
+  gap: 10px;
+}
+
+.workspace-shell[data-role=rescuer] .mission-tracking-panel__metrics span {
+  background: #fff;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  color: #425a7d;
+  font-size: .8rem;
+  padding: 7px 12px;
+}
+
+.workspace-shell[data-role=rescuer] .rescuer-mission-card > .btn {
+  align-self: flex-start;
+  border-radius: 999px;
+  margin: 0;
+  min-height: 50px;
+  padding-inline: 22px;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] {
+  --ink: #f4f8ff;
+  --muted: #a9bbd4;
+  --line: #274263;
+  --home-page: #0b1324;
+  --shared-surface: #101b30;
+  --shared-inset: #0f1a2e;
+  --rescuer-shadow: 0 16px 38px rgba(0, 0, 0, .22);
+  background: #0b1324;
+  color: var(--ink);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-nav {
+  background: linear-gradient(180deg, rgba(16, 29, 51, .88), rgba(10, 21, 39, .9));
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .22);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.workspace-card, .workspace-inspector, .rescuer-mission-card, .workspace-table-wrap, .request-tracker > section) {
+  background: linear-gradient(180deg, #101d33 0%, #0d1a2f 100%);
+  box-shadow: var(--rescuer-shadow);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .rescuer-mission-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.rescuer-mission-card__head, .rescuer-mission-card__detail) {
+  background: linear-gradient(180deg, #101d33 0%, #0d1a2f 100%);
+  box-shadow: var(--rescuer-shadow);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.role-workspace > .workspace-section-heading, .role-workspace > .workspace-section-heading > :first-child, .mission-tracking-panel__header > strong, .rescuer-mission-card__id, .rescuer-mission-card__detail strong) {
+  color: #f4f8ff;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.rescuer-mission-card__meta > span, .mission-tracking-panel__metrics span, .rescuer-mission-card .proto-notice, .workspace-panel-heading > button, .workspace-tabs button, .workspace-table th) {
+  background: #0f1a2e;
+  color: var(--muted);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-table td {
+  background: #101b30;
+  border-bottom-color: var(--line);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-table tbody tr:hover td,
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-main button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn):hover,
+.workspace-shell[data-role=rescuer][data-theme=dark] .modal-body button:not(:disabled):not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn):hover,
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-nav button:not([aria-current]):hover {
+  background: #1d3252;
+  color: #fff;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-main button:not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn),
+.workspace-shell[data-role=rescuer][data-theme=dark] .modal-body button:not(.workspace-primary):not(.btn--primary):not(.map-toggle-btn) {
+  background: #101b30;
+  color: var(--ink);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.offline-queue-panel, .rescuer-mission-card__cache-note, .rescuer-mission-card__queue-note) {
+  background: #241e11;
+  color: #f5d58a;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.offline-queue-panel__label, .offline-queue-panel__details > div) {
+  background: rgba(255, 255, 255, .06);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.offline-queue-panel__title, .offline-queue-panel__body, .offline-queue-panel__details dt, .offline-queue-panel__details dd) {
+  color: #f5d58a;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] :is(.offline-queue-panel__failure, .offline-queue-panel__storage-error) {
+  background: #3a1520;
+  color: #ff9aad;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .sync-badge {
+  background: #0f362b;
+  color: #91e3bd;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .sync-badge__label,
+.workspace-shell[data-role=rescuer][data-theme=dark] .sync-badge__time {
+  color: #91e3bd;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-progress::before {
+  background: linear-gradient(90deg, #ef334f 0 64%, #345d87 64% 100%);
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .workspace-progress li:not(.is-reached) > svg,
+.workspace-shell[data-role=rescuer][data-theme=dark] .mission-tracking-panel__tools button,
+.workspace-shell[data-role=rescuer][data-theme=dark] .mission-tracking-panel__metrics span {
+  background: #0f1a2e;
+  border-color: #274263;
+  color: #d8e4f4;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .mission-tracking-panel__tools button.is-active {
+  background: #3a1520;
+  color: #ff9aad;
+}
+
+.workspace-shell[data-role=rescuer][data-theme=dark] .mission-tracking-map {
+  background: #0f1a2e;
+}
+
+@media (max-width: 850px) {
+  .workspace-shell[data-role=rescuer] {
+    display: block;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-nav {
+    border-radius: 0 0 25px 25px;
+    gap: 12px;
+    padding: 20px 16px;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-nav nav {
+    gap: 4px;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-main {
+    padding: 24px 16px;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-card,
+  .workspace-shell[data-role=rescuer] .workspace-inspector,
+  .workspace-shell[data-role=rescuer] .offline-queue-panel {
+    padding: 22px;
+  }
+
+  .workspace-shell[data-role=rescuer] .rescuer-mission-card {
+    padding: 0;
+  }
+
+  .workspace-shell[data-role=rescuer] .rescuer-mission-card__head,
+  .workspace-shell[data-role=rescuer] .rescuer-mission-card__meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-shell[data-role=rescuer] .rescuer-mission-card__head {
+    align-items: stretch;
+    padding: 18px;
+  }
+
+  .workspace-shell[data-role=rescuer] .sync-badge {
+    justify-self: stretch;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-progress {
+    gap: 14px;
+    margin-inline: 0;
+    padding: 0;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-progress::before {
+    bottom: 28px;
+    height: auto;
+    left: 23px;
+    right: auto;
+    top: 28px;
+    width: 4px;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-progress li {
+    align-items: center;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 50px minmax(0, 1fr);
+    justify-items: start;
+    text-align: left;
+  }
+
+  .workspace-shell[data-role=rescuer] .workspace-progress li > svg {
+    height: 18px;
+    padding: 10px;
+    width: 18px;
+  }
+
+  .workspace-shell[data-role=rescuer] .mission-tracking-panel__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workspace-shell[data-role=rescuer] .mission-tracking-panel__tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 48px;
+  }
+
+  .workspace-shell[data-role=rescuer] .mission-tracking-panel__tools button {
+    justify-content: center;
+    padding-inline: 12px;
+  }
+
+  .workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav {
+    align-items: center;
+    border-radius: 32px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    height: auto;
+    margin: 12px;
+    position: static;
+  }
+
+  .workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav nav {
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
+  .workspace-shell[data-role=rescuer][data-nav-collapsed=true] .workspace-nav button:not(.workspace-nav-toggle):is(:hover, :focus-visible)::after {
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell[data-role=rescuer],
+  .workspace-shell[data-role=rescuer] .workspace-nav,
+  .workspace-shell[data-role=rescuer] .workspace-nav :is(.workspace-nav-label, .workspace-brand > div) {
+    transition: none;
+  }
+
+  .workspace-shell[data-role=rescuer] :is(button, a.workspace-profile, .workspace-brand) {
+    transition: none;
+  }
+
+  .workspace-shell[data-role=rescuer] button:not(:disabled):active {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .workspace-shell[data-role=rescuer] .workspace-nav {
+    background: #eff2f6;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .workspace-shell[data-role=rescuer] {
+    --muted: #303b49;
+  }
+
+  .workspace-shell[data-role=rescuer] :is(.workspace-card, .rescuer-mission-card, .workspace-inspector) {
+    outline: 1px solid #697583;
+  }
+}
+
+/* Literal My Mission screen treatment from the supplied reference image. */
+.workspace-shell[data-role=rescuer][data-view=overview] {
+  --rescuer-page-x: clamp(22px, 2.1vw, 36px);
+  --rescuer-topbar-h: 68px;
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  min-height: 100dvh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .9) 0%, rgba(247, 251, 255, .95) 48%, #f4f8fd 100%);
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-nav {
+  display: flex;
+  background: rgba(255, 255, 255, .75);
+  backdrop-filter: blur(18px);
+  border: 0;
+  border-radius: 0 30px 30px 0;
+  box-shadow: var(--rescuer-shadow);
+  cursor: pointer;
+  gap: 24px;
+  height: 100dvh;
+  margin: 0;
+  padding: 32px 18px;
+  position: sticky;
+  top: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-main {
+  max-width: none;
+  padding: 0 var(--rescuer-page-x) 48px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar {
+  align-items: center;
+  background: rgba(255, 255, 255, .78);
+  border-bottom: 1px solid #d6e0ec;
+  height: var(--rescuer-topbar-h);
+  margin: 0 calc(-1 * var(--rescuer-page-x)) 27px;
+  padding: 0 var(--rescuer-page-x);
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar::after {
+  display: none;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar h1 {
+  color: #040b18;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar h1::before {
+  background: #c6d6e9;
+  border-radius: 2px;
+  content: "";
+  display: inline-block;
+  height: 28px;
+  margin-right: 20px;
+  vertical-align: -5px;
+  width: 3px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar > div {
+  gap: 10px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar .citizen-theme-toggle {
+  background: #fff;
+  border: 1px solid #d9e4f1;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  color: #006ee6;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  width: 48px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar .citizen-theme-toggle::before {
+  display: none;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar .citizen-theme-toggle[aria-pressed=true] {
+  background: #086bdc;
+  color: #fff;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-topbar .citizen-role-pill {
+  align-items: center;
+  background: rgba(255, 255, 255, .82);
+  border: 1px solid #d9e4f1;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  color: #101827;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 750;
+  gap: 12px;
+  height: 48px;
+  justify-content: center;
+  min-width: 156px;
+  padding: 0 18px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .role-workspace {
+  display: block;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .role-workspace > .workspace-section-heading {
+  align-items: center;
+  color: #061126;
+  display: flex;
+  font-size: 34px;
+  font-weight: 850;
+  gap: 12px;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 0 0 8px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .role-workspace > .workspace-section-heading > :first-child {
+  color: #061126;
+  height: 34px;
+  width: 34px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-workspace {
+  display: grid;
+  gap: 20px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-workspace > .workspace-panel-heading {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin: -2px 0 15px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-team-caption {
+  color: #20395f;
+  font-size: 18px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-team-caption::before {
+  color: #061126;
+  content: "\25CC";
+  display: inline-block;
+  font-size: 15px;
+  margin-right: 6px;
+  transform: translateY(-1px);
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-panel-heading > button {
+  background: rgba(255, 255, 255, .86);
+  border: 1px solid #a8caf6;
+  border-radius: 999px;
+  box-shadow: none;
+  color: #0671e9;
+  font-size: 18px;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 8px 20px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card {
+  gap: 20px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__head {
+  background: rgba(255, 255, 255, .88);
+  border: 1px solid rgba(205, 220, 237, .72);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(34, 78, 121, .06), inset 0 1px 0 rgba(255, 255, 255, .95);
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: 104px;
+  padding: 12px 12px 12px 18px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__mission {
+  gap: 112px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__id {
+  gap: 10px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__id > span:first-child {
+  color: #07142c;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__id .record-id summary {
+  color: #38527b;
+  font-size: 17px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .status-badge {
+  font-size: 16px;
+  min-height: 40px;
+  padding: 0 20px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .sync-badge {
+  align-self: stretch;
+  background: linear-gradient(90deg, #e6fbf1 0%, #effdf7 100%);
+  border-radius: 10px;
+  min-height: 74px;
+  padding: 12px 18px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .sync-badge__label {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #16a34a;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .sync-badge__time {
+  color: #166534;
+  font-size: 0.75rem;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__meta {
+  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail {
+  background: #ffffff;
+  border: 0 !important;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 54px;
+  padding: 10px 14px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail-text,
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail strong {
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail > svg:first-child {
+  color: #dc2626;
+  height: 20px;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail--urgent {
+  background: linear-gradient(90deg, #fff6fb 0%, rgba(255, 255, 255, .95) 100%);
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail--urgent strong {
+  color: #d51228;
+  font-weight: 750;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__detail--flood > svg:first-child {
+  color: #0878e8;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: start;
+  margin: 12px 0 6px;
+  padding: 12px 0 10px;
+  position: relative;
+  border: 0 !important;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-progress::before {
+  background: linear-gradient(90deg, #dc2626 0%, #dc2626 72%, #cbd5e1 72%, #cbd5e1 100%);
+  height: 3px;
+  left: 12.5%;
+  right: 12.5%;
+  top: 28px;
+  border-radius: 999px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-progress li {
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 600;
+  gap: 10px;
+  border: 0 !important;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-progress li > svg {
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  height: 34px;
+  width: 34px;
+  padding: 7px;
+  box-sizing: border-box;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-progress li.is-reached {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .workspace-progress li.is-reached > svg {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel {
+  gap: 17px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__header {
+  align-items: start;
+  display: grid;
+  gap: 17px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__header > strong {
+  color: #0f172a;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__tools {
+  background: #ffffff;
+  border: 0 !important;
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  gap: 10px;
+  padding: 10px 14px;
+  width: 100%;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__tools button {
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+  box-shadow: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 38px;
+  padding: 6px 16px;
+  transition: all 0.15s ease-out;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__tools button.is-active {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: transparent !important;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map {
+  border-radius: 0 0 14px 14px;
+  border: 0 !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  height: 180px;
+  margin-top: 0;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map .google-map-wrapper,
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map .google-map-canvas {
+  height: 180px !important;
+  min-height: 180px;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-map::before {
+  opacity: 0.2;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__metrics,
+.workspace-shell[data-role=rescuer][data-view=overview] .mission-tracking-panel__actions {
+  display: none;
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card > .btn,
+.workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__history {
+  align-self: flex-start;
+  margin-top: -2px;
+}
+
+@media (min-width: 1300px) {
+  .workspace-shell[data-role=rescuer][data-view=overview] .rescuer-mission-card__meta {
+    grid-template-columns: minmax(285px, 1.18fr) minmax(190px, .78fr) minmax(245px, 1fr) minmax(245px, 1.02fr) minmax(245px, 1fr);
+  }
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview][data-nav-collapsed=true] {
+  grid-template-columns: 100px minmax(0, 1fr);
+}
+
+.workspace-shell[data-role=rescuer][data-view=overview][data-nav-collapsed=true] .workspace-nav {
+  border-radius: 38px;
+  gap: 18px;
+  height: calc(100dvh - 32px);
+  margin: 16px 12px;
+  padding: 16px 10px;
+  top: 16px;
+}
+
+@media (max-width: 850px) {
+  .workspace-shell[data-role=rescuer][data-view=overview] {
+    display: block;
+  }
+
+  .workspace-shell[data-role=rescuer][data-view=overview] .workspace-nav {
+    border-radius: 0 0 25px 25px;
+    height: auto;
+    margin: 0;
+    padding: 20px 16px;
+    position: static;
+  }
+}

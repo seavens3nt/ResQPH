@@ -40,7 +40,8 @@ class GeoPointInput(BaseModel):
 
 
 class RequestLocationInput(BaseModel):
-    address: str = Field(min_length=5, max_length=200)
+    # Older documents retain their stored addresses; new pin-only submissions use this explicit label.
+    address: str = Field(default="Pinned location", min_length=1, max_length=200)
     point: GeoPointInput
     landmark: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=500)
@@ -49,9 +50,9 @@ class RequestLocationInput(BaseModel):
     @classmethod
     def sanitize_required_text(cls, value: str) -> str:
         sanitized = sanitize_text(value)
-        if sanitized is None or len(sanitized) < 5:
+        if sanitized is None:
             raise ValueError(
-                "address must contain at least 5 non-whitespace characters"
+                "address must contain a non-whitespace character"
             )
         return sanitized
 
@@ -68,6 +69,7 @@ class RescueRequestCreate(BaseModel):
     medical_needs: bool
     medical_details: str | None = Field(default=None, max_length=500)
     reported_flood_level: FloodLevel
+    reported_severity: str = Field(default="moderate", pattern="^(low|moderate|high|critical)$")
     situation_summary: str | None = Field(default=None, max_length=1000)
 
     @field_validator("vulnerabilities")
@@ -112,6 +114,8 @@ class RequestLocationResponse(BaseModel):
 
 
 class RequestStatusHistoryResponse(BaseModel):
+    actor_id: str | None = None
+    actor_role: str | None = None
     status: RequestStatus
     occurred_at: datetime
     note: str | None = None
@@ -132,14 +136,22 @@ class RescueRequestResponse(BaseModel):
     medical_needs: bool
     medical_details: str | None = None
     reported_flood_level: FloodLevel
+    reported_severity: str = "moderate"
+    assignment_reason: str = "queued"
     situation_summary: str | None = None
     status: RequestStatus
     version: int
     created_at: datetime
     updated_at: datetime
     assigned_team_id: str | None = None
+    assigned_station_id: str | None = None
     mission_id: str | None = None
     status_history: list[RequestStatusHistoryResponse] = Field(default_factory=list)
+
+    @computed_field
+    @property
+    def can_cancel(self) -> bool:
+        return self.status in {"pending", "assigned"}
 
     @computed_field
     @property

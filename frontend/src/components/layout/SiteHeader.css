@@ -64,3 +64,4 @@
 
 @media (max-width: 900px)  { .site-header__nav { display: none; } }
 @media (max-width: 520px)  { .site-header__actions .btn--outline { display: none; } }
+.site-header__brand .site-header__logo-img { width:140px; max-width:100%; height:auto; object-fit:contain; }

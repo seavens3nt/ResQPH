@@ -18,7 +18,7 @@
  *   - Color is never the only indicator (shape + text used alongside).
  */
 
-import { type FormEvent, useEffect, useId, useRef, useState } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useCreateRescueRequest } from '../../../../features/requests/hooks'
 import {
@@ -28,7 +28,7 @@ import {
   type VulnerabilityTag,
 } from '../../../../features/requests/types'
 import {
-  CreateRequestSchema,
+  CreateRequestSchema, GeoPointSchema,
 } from '../../../../features/requests/validation'
 import { RequestLocationMap } from './RequestLocationMap'
 import { RequestReview } from './RequestReview'
@@ -39,6 +39,10 @@ import { useCitizenDraft } from '../../../../features/workspace/CitizenDraftCont
 // ---------------------------------------------------------------------------
 const DEMO_LNG = 120.9946
 const DEMO_LAT = 14.6042
+
+function RequestFormContent({ modal, children }: { modal: boolean; children: ReactNode }) {
+  return modal ? <div className="request-form-content">{children}</div> : <>{children}</>
+}
 
 interface FieldError {
   [field: string]: string
@@ -63,17 +67,21 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   const formRef = useRef<HTMLFormElement>(null)
 
   // Form field state (kept across validation failures — "preserve safe input")
-  const [address, setAddress] = useState(draft?.address ?? 'Sanitized demonstration address, Sampaloc, Manila')
+  const [address, setAddress] = useState(draft?.address ?? '')
+  const [landmark, setLandmark] = useState(draft?.landmark ?? '')
   const [lngStr, setLngStr] = useState(draft?.lngStr ?? String(DEMO_LNG))
   const [latStr, setLatStr] = useState(draft?.latStr ?? String(DEMO_LAT))
   const [locationSource, setLocationSource] = useState<'gps' | 'demo' | 'map'>(draft?.locationSource ?? 'demo')
+  const [locationConfirmed, setLocationConfirmed] = useState(draft?.locationConfirmed ?? false)
   const [isLocating, setIsLocating] = useState(false)
   const [gpsError, setGpsError] = useState('')
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [headcountStr, setHeadcountStr] = useState(draft?.headcountStr ?? '1')
   const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityTag[]>(draft?.vulnerabilities ?? [])
   const [medicalNeeds, setMedicalNeeds] = useState(draft?.medicalNeeds ?? false)
   const [medicalDetails, setMedicalDetails] = useState(draft?.medicalDetails ?? '')
   const [situationSummary, setSituationSummary] = useState(draft?.situationSummary ?? '')
+  const [reportedSeverity, setReportedSeverity] = useState<'low' | 'moderate' | 'high' | 'critical'>(draft?.reportedSeverity ?? 'moderate')
 
   // UI state
   const [fieldErrors, setFieldErrors] = useState<FieldError>({})
@@ -83,18 +91,20 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   const [floodLevel, setFloodLevel] = useState<FloodLevel>(draft?.floodLevel ?? initialFloodLevel)
 
   useEffect(() => {
-    const dirty = address !== 'Sanitized demonstration address, Sampaloc, Manila' ||
+    const dirty = address !== '' || landmark !== '' || locationConfirmed ||
       lngStr !== String(DEMO_LNG) || latStr !== String(DEMO_LAT) || locationSource !== 'demo' ||
       headcountStr !== '1' || vulnerabilities.length > 0 || medicalNeeds || medicalDetails !== '' ||
-      situationSummary !== '' || floodLevel !== initialFloodLevel
-    saveDraft?.(dirty ? { address, lngStr, latStr, locationSource, headcountStr, vulnerabilities,
-      medicalNeeds, medicalDetails, situationSummary, floodLevel } : null)
-  }, [address, lngStr, latStr, locationSource, headcountStr, vulnerabilities, medicalNeeds,
-    medicalDetails, situationSummary, floodLevel, initialFloodLevel, saveDraft])
+      situationSummary !== '' || floodLevel !== initialFloodLevel || reportedSeverity !== 'moderate' || locationConfirmed
+    saveDraft?.(dirty ? { address, landmark, lngStr, latStr, locationSource, locationConfirmed, headcountStr, vulnerabilities,
+      medicalNeeds, medicalDetails, situationSummary, floodLevel, reportedSeverity } : null)
+  }, [address, landmark, lngStr, latStr, locationSource, headcountStr, vulnerabilities, medicalNeeds,
+    medicalDetails, situationSummary, floodLevel, reportedSeverity, initialFloodLevel, locationConfirmed, saveDraft])
 
   useEffect(() => {
     if (Object.keys(fieldErrors).length) {
-      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      const error = formRef.current?.querySelector<HTMLElement>(fieldErrors['location.point.coordinates'] ? '[data-location-error]' : '[aria-invalid="true"]')
+      error?.focus()
+      error?.scrollIntoView?.({ block: 'nearest', behavior: 'auto' })
     }
   }, [fieldErrors])
 
@@ -110,29 +120,37 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
   function chooseLocationSource(source: 'gps' | 'demo') {
     setGpsError('')
     if (source === 'demo') {
-      setAddress('Sanitized demonstration address, Sampaloc, Manila')
+      setAddress('')
+      setGpsAccuracy(null)
       setLngStr(String(DEMO_LNG))
       setLatStr(String(DEMO_LAT))
       setLocationSource('demo')
+      setLocationConfirmed(false)
       return
     }
 
     if (!navigator.geolocation) {
-      setGpsError('GPS is not available in this browser. Choose your saved or demonstration location instead.')
+      setGpsError('GPS is not available in this browser. Choose a point on the map instead.')
       return
     }
 
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setAddress('')
+        ({ coords }) => {
+          setAddress('')
         setLngStr(String(coords.longitude))
         setLatStr(String(coords.latitude))
         setLocationSource('gps')
+          setLocationConfirmed(false)
+          setGpsAccuracy(Number.isFinite(coords.accuracy) ? coords.accuracy : null)
         setIsLocating(false)
       },
-      () => {
-        setGpsError('Could not get your GPS location. Allow location access or choose another location source.')
+      (error) => {
+        setGpsError(error.code === 1
+          ? 'Location permission was denied. Choose a point on the map instead.'
+          : error.code === 3
+            ? 'Location lookup timed out. Choose a point on the map instead.'
+            : 'Your location is unavailable. Choose a point on the map instead.')
         setIsLocating(false)
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
@@ -144,7 +162,20 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setLatStr(String(coordinates[1]))
     setAddress('')
     setLocationSource('map')
+    setLocationConfirmed(false)
     setGpsError('')
+    setGpsAccuracy(null)
+  }
+
+  function confirmLocation() {
+    const valid = GeoPointSchema.safeParse({ type: 'Point', coordinates: [lngStr.trim() ? Number(lngStr) : NaN, latStr.trim() ? Number(latStr) : NaN] }).success
+    setLocationConfirmed(valid)
+    setFieldErrors(previous => {
+      const next = { ...previous }
+      if (valid) delete next['location.point.coordinates']
+      else next['location.point.coordinates'] = 'Choose a rescue location inside the U-Belt pilot area, then confirm the pin.'
+      return next
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -165,13 +196,19 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
     setSubmitError(null)
     setSubmitErrorCode(null)
 
+    if (!locationConfirmed) {
+      setFieldErrors({ ...fieldErrors, 'location.point.coordinates': fieldErrors['location.point.coordinates'] ?? 'Confirm the selected rescue location before continuing.' })
+      return
+    }
+
     const lng = lngStr.trim() ? Number(lngStr) : NaN
     const lat = latStr.trim() ? Number(latStr) : NaN
     const headcount = headcountStr.trim() ? Number(headcountStr) : NaN
 
     const raw = {
       location: {
-        address,
+        address: address.trim() || 'Pinned location',
+        landmark: landmark || undefined,
         point: {
           type: 'Point' as const,
           coordinates: [lng, lat] as [number, number],
@@ -183,6 +220,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       medical_details: medicalDetails || undefined,
       // Flood depth is collected once in SOS triage and carried into the API request.
       reported_flood_level: floodLevel,
+      reported_severity: reportedSeverity,
       situation_summary: situationSummary || undefined,
     }
 
@@ -194,11 +232,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         const path = issue.path.join('.')
         const key = path.startsWith('location.point.coordinates') ? 'location.point.coordinates' : path
         // Surface the outside-boundary error on the coordinates field
-        errs[key || 'general'] = path.endsWith('coordinates.0')
-          ? 'Enter a valid longitude between -180 and 180, then check the U-Belt location.'
-          : path.endsWith('coordinates.1')
-            ? 'Enter a valid latitude between -90 and 90, then check the U-Belt location.'
-            : issue.message
+        errs[key || 'general'] = key === 'location.point.coordinates' ? 'Choose a rescue location inside the U-Belt pilot area, then confirm the pin.' : issue.message
       }
       setFieldErrors(errs)
       return
@@ -267,12 +301,13 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       aria-label="Citizen rescue request form"
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
     >
-      {Object.keys(fieldErrors).length > 0 && <div className="request-error-summary" role="alert">
+      <RequestFormContent modal={modalLayout}>
+      {Object.keys(fieldErrors).length > 0 && <div className="request-error-summary" role="alert" tabIndex={-1} data-location-error={fieldErrors['location.point.coordinates'] ? '' : undefined}>
         <strong>Check your request before continuing</strong>
         <ul>{[...new Set(Object.values(fieldErrors))].map(message => <li key={message}>{message}</li>)}</ul>
         <p>Your details are still here. Correct the highlighted fields, then try again.</p>
       </div>}
-      {review && <RequestReview coordinates={[Number(lngStr),Number(latStr)]} source={locationSource} address={address} headcount={headcountStr} floodLevel={floodLevel} situation={situationSummary} accessibility={vulnerabilities.join(', ')} medical={medicalNeeds ? medicalDetails || 'Medical assistance requested' : ''}/>}
+      {review && <RequestReview coordinates={[Number(lngStr),Number(latStr)]} source={locationSource} address={address} landmark={landmark} headcount={headcountStr} floodLevel={floodLevel} severity={reportedSeverity} situation={situationSummary} accessibility={vulnerabilities.join(', ')} medical={medicalNeeds ? medicalDetails || 'Medical assistance requested' : ''}/>}
       <fieldset className="request-edit-fields" disabled={isPending || review} style={{border: 0, padding: 0, display: review ? 'none' : 'contents'}}>
 
       <div className="request-essentials" style={{ padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
@@ -320,27 +355,26 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             Number.isFinite(parseFloat(latStr)) ? parseFloat(latStr) : DEMO_LAT,
           ]}
           source={locationSource}
-          showInstruction={!modalLayout}
           isLocating={isLocating}
           disabled={isPending}
           gpsError={gpsError}
           onChooseSource={chooseLocationSource}
           onChooseCoordinates={chooseMapCoordinates}
+          locationConfirmed={locationConfirmed}
+          onConfirmLocation={confirmLocation}
         />
         <label
           htmlFor={`${uid}-address`}
           style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}
         >
-          Location — street address
-          <span aria-hidden="true" style={{ color: '#dc2626' }}> *</span>
+          Optional address or location description
         </label>
         <input
           id={`${uid}-address`}
           type="text"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder={locationSource === 'gps' || locationSource === 'map' ? 'Enter street name, barangay, or landmark' : 'Street name, barangay, landmark'}
-          aria-required="true"
+          placeholder="Optional street, barangay, or location note"
           aria-describedby={fieldErrors['location.address'] ? `${uid}-address-err` : undefined}
           aria-invalid={!!fieldErrors['location.address']}
           disabled={isPending}
@@ -351,6 +385,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             fontSize: '0.88rem',
           }}
         />
+        {gpsAccuracy !== null && <p role="status" className="workspace-caption">Reported GPS accuracy: approximately {Math.round(gpsAccuracy)} m. Confirm the pin location before continuing.</p>}
         {fieldErrors['location.address'] && (
           <span
             id={`${uid}-address-err`}
@@ -360,12 +395,18 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             {fieldErrors['location.address']}
           </span>
         )}
+        <label htmlFor={`${uid}-landmark`} style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>Nearby landmark (optional)
+          <input id={`${uid}-landmark`} type="text" value={landmark} maxLength={200} onChange={event => setLandmark(event.target.value)} placeholder="Nearest school, corner, or visible landmark" disabled={isPending}/>
+        </label>
       </div>
-      {modalLayout && <p className="workspace-caption">Controlled U-Belt pilot map. Click the map to place the request marker; coordinates outside the pilot boundary cannot be submitted.</p>}
 
-      {fieldErrors['location.point.coordinates'] && <p id={`${uid}-coords-err`} role="alert" tabIndex={-1} aria-invalid="true" style={{color:'#dc2626'}}>{fieldErrors['location.point.coordinates']} Choose a location inside the pilot area using the map or demonstration location.</p>}
       </div>
       <div className="request-assistance-fields" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+      <label className="request-flood-field">Reported severity
+        <select value={reportedSeverity} onChange={event => setReportedSeverity(event.target.value as typeof reportedSeverity)}>
+          {['low', 'moderate', 'high', 'critical'].map(value => <option key={value} value={value}>{value[0].toUpperCase() + value.slice(1)}</option>)}
+        </select>
+      </label>
       {requireReview && <label className="request-flood-field">Reported flood level<select value={floodLevel} onChange={e => setFloodLevel(e.target.value as FloodLevel)}>{['none','low','moderate','high','unknown'].map(v => <option key={v}>{v}</option>)}</select></label>}
 
       {/* ── Headcount ───────────────────────────────────────────────── */}
@@ -407,7 +448,31 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
         )}
       </div>
 
-      {/* ── Vulnerabilities ─────────────────────────────────────────── */}
+      <div className="request-vulnerabilities-field">
+        <span id={`${uid}-vulnerabilities-label`}>Vulnerabilities</span>
+        <details className="request-vulnerabilities-dropdown"
+          onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false }}
+          onKeyDown={event => {
+            if (event.key === 'Escape' && event.currentTarget.open) {
+              event.stopPropagation()
+              event.currentTarget.open = false
+              event.currentTarget.querySelector('summary')?.focus()
+            }
+          }}>
+          <summary aria-labelledby={`${uid}-vulnerabilities-label ${uid}-vulnerabilities-value`}>
+            <span id={`${uid}-vulnerabilities-value`}>{vulnerabilities.length ? vulnerabilities.map(tag => tag.charAt(0).toUpperCase() + tag.slice(1)).join(', ') : 'Select vulnerabilities'}</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </summary>
+          <div className="request-vulnerabilities-options" role="group" aria-labelledby={`${uid}-vulnerabilities-label`}>
+            {VULNERABILITY_OPTIONS.map(tag => <label key={tag}>
+              <input type="checkbox" checked={vulnerabilities.includes(tag)} onChange={() => toggleVulnerability(tag)} disabled={isPending}/>
+              {tag.charAt(0).toUpperCase() + tag.slice(1)}
+            </label>)}
+          </div>
+        </details>
+      </div>
+
+      {/* ── Responder details ───────────────────────────────────────── */}
       <section className="request-responder-section" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
         <h3 style={{ color: '#334155', fontWeight: 600, fontSize: '0.84rem' }}>
           Add details for responders (optional)
@@ -416,50 +481,6 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
           </span>
         </h3>
         <div className="request-responder-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.9rem' }}>
-      <fieldset style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem' }}>
-        <legend style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', padding: '0 4px' }}>
-          Vulnerabilities (select all that apply)
-        </legend>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.75rem' }}>
-          {VULNERABILITY_OPTIONS.map((tag) => {
-            const checked = vulnerabilities.includes(tag)
-            const inputId = `${uid}-vuln-${tag}`
-            return (
-              <label
-                key={tag}
-                htmlFor={inputId}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  minHeight: '40px',
-                  boxSizing: 'border-box',
-                  borderRadius: '9999px',
-                  border: `1px solid ${checked ? '#dc2626' : '#e2e8f0'}`,
-                  background: checked ? 'rgba(220,38,38,0.06)' : '#fff',
-                  cursor: 'pointer',
-                  fontSize: '0.82rem',
-                  color: checked ? '#991b1b' : '#475569',
-                  fontWeight: checked ? 700 : 400,
-                }}
-              >
-                <input
-                  id={inputId}
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleVulnerability(tag)}
-                  disabled={isPending}
-                  style={{ width: '14px', height: '14px' }}
-                />
-                {tag.charAt(0).toUpperCase() + tag.slice(1)}
-              </label>
-            )
-          })}
-        </div>
-      </fieldset>
-
       {/* ── Medical needs ───────────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label
@@ -482,19 +503,20 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             >
               Medical details (sanitized — no personal health records)
             </label>
-            <input
+            <textarea
               id={`${uid}-medical-details`}
-              type="text"
+              rows={3}
               value={medicalDetails}
               onChange={(e) => setMedicalDetails(e.target.value)}
               placeholder="e.g. mobility impairment, oxygen equipment"
               disabled={isPending}
               maxLength={500}
               style={{
-                padding: '0.45rem 0.7rem',
+                padding: '0.55rem 0.75rem',
                 borderRadius: '6px',
                 border: '1px solid #cbd5e1',
                 fontSize: '0.85rem',
+                resize: 'vertical',
               }}
             />
           </div>
@@ -542,6 +564,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
       </section>
       </div>
       </fieldset>
+      </RequestFormContent>
       {/* ── Actions ─────────────────────────────────────────────────── */}
       <div className="request-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '0.25rem' }}>
         <button
@@ -552,7 +575,7 @@ export function RequestForm({ onSuccess, onCancel, initialFloodLevel = 'unknown'
             padding: '0.55rem 1.1rem',
             borderRadius: '7px',
             border: '1px solid #e2e8f0',
-            background: '#fff',
+            background: 'var(--shared-inset, var(--surface-overlay))',
             color: '#475569',
             fontWeight: 600,
             fontSize: '0.85rem',

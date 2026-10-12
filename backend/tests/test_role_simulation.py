@@ -60,6 +60,8 @@ class RoleMissionRepository:
         prior_status: MissionStatus,
         new_status: MissionStatus,
         recorded_at: datetime,
+        tracking_state: dict[str, Any] | None = None,
+        team_position: dict[str, Any] | None = None,
         session: Any = None,
     ) -> Mission | None:
         if (
@@ -69,7 +71,12 @@ class RoleMissionRepository:
         ):
             return None
         self.mission = self.mission.model_copy(
-            update={"status": new_status, "version": self.mission.version + 1, "updated_at": recorded_at}
+            update={
+                "status": new_status,
+                "version": self.mission.version + 1,
+                "updated_at": recorded_at,
+                **({"tracking_state": tracking_state} if tracking_state is not None else {}),
+            }
         )
         return self.mission
 

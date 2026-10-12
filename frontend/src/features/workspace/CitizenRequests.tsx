@@ -27,9 +27,9 @@ export function CitizenRequests({filter,onFilter,onNew,onSelect,selected}: {
                 <td title={record.location.address}>{record.location.address}</td><td>{record.headcount}</td><td>{record.status.replaceAll('_',' ').replace(/^./,s=>s.toUpperCase())}</td>
               </tr>)}</tbody>
             </table></div>
-            {!data.items.length && <p className="requests-empty-list">No rescue requests found.</p>}
+            {!data.items.length && <p className="requests-empty-list" role="status">No rescue requests found.</p>}
             {data.items.length > 0 && !data.items.some(record=>filter==='all'||(filter==='history')===['completed','cancelled'].includes(record.status)) && <p className="requests-empty-list" role="status">No requests match this filter.</p>}
-            {(data.total??0)>data.items.length && <p className="requests-empty-list">Showing the most recent {data.items.length} of {data.total} requests.</p>}
+            {(data.total??0)>data.items.length && <p className="requests-list-caption">Showing the most recent {data.items.length} of {data.total} requests.</p>}
           </>}</QueryState>
         </div>
         <div className="requests-actions">

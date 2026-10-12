@@ -22,3 +22,5 @@ class MissionStatusEvent(BaseModel):
     server_recorded_at: datetime
     client_recorded_at: datetime | None = None
     note: str | None = Field(default=None, max_length=500)
+    recovery_account_id: str | None = None
+    recovery_expected_version: int | None = None

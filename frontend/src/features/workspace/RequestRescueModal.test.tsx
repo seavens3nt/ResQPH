@@ -10,8 +10,9 @@ vi.mock('../requests/hooks', () => ({
   useCreateRescueRequest: () => ({mutate,isPending:false}),
   useCancelRescueRequest: () => ({mutate:vi.fn(),isPending:false}),
 }))
-vi.mock('../../pages/dashboard/views/citizen/RequestLocationMap', () => ({RequestLocationMap: () => <div>Location map</div>}))
+vi.mock('../../pages/dashboard/views/citizen/RequestLocationMap', () => ({RequestLocationMap: ({onConfirmLocation}:{onConfirmLocation:()=>void}) => <div>Location map<button type="button" onClick={onConfirmLocation}>Use this rescue location</button></div>}))
 vi.mock('./useUbeltWeather', () => ({
+  useWeatherClock: () => Date.now(),
   useUbeltWeather: () => ({isError:true,isFetching:false}),
   useUbeltHourlyWeather: () => ({isError:true,fetchStatus:'idle'}),
 }))
@@ -31,7 +32,7 @@ it('opens on the dashboard, traps focus, ignores backdrop clicks, and retains th
   const close = within(dialog).getByRole('button',{name:'Close dialog'})
   expect(close).toHaveFocus()
   expect(screen.getByLabelText('Current route')).toHaveTextContent('?view=overview')
-  fireEvent.change(screen.getByLabelText(/Location — street address/),{target:{value:'Synthetic retained address'}})
+  fireEvent.change(screen.getByLabelText(/Optional address or location description/),{target:{value:'Synthetic retained address'}})
   expect(screen.queryByRole('region',{name:'Unsubmitted request draft'})).not.toBeInTheDocument()
   fireEvent.click(dialog.parentElement!)
   expect(dialog).toBeInTheDocument()
@@ -45,7 +46,7 @@ it('opens on the dashboard, traps focus, ignores backdrop clicks, and retains th
   expect(mutate).not.toHaveBeenCalled()
   fireEvent.click(trigger)
   expect(screen.queryByRole('region',{name:'Unsubmitted request draft'})).not.toBeInTheDocument()
-  expect(screen.getByLabelText(/Location — street address/)).toHaveValue('Synthetic retained address')
+  expect(screen.getByLabelText(/Optional address or location description/)).toHaveValue('Synthetic retained address')
   fireEvent.click(screen.getByRole('button',{name:'Cancel'}))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(trigger).toHaveFocus()
@@ -72,6 +73,17 @@ it('resumes the draft and discards it directly without extra confirmation', () =
   expect(screen.queryByRole('region',{name:'Unsubmitted request draft'})).not.toBeInTheDocument()
 })
 
+it('shows the unconfirmed-location error only in the focused validation summary', () => {
+  renderWorkspace()
+  fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
+  fireEvent.click(screen.getByRole('button',{name:'Review request'}))
+  expect(screen.getAllByText('Confirm the selected rescue location before continuing.')).toHaveLength(1)
+  expect(screen.getByText('Check your request before continuing').closest('[role="alert"]')).toHaveFocus()
+  expect(screen.getByText('Your details are still here. Correct the highlighted fields, then try again.')).toBeVisible()
+  expect(screen.queryByText(/Choose a location inside the pilot area using the map or demonstration location/)).not.toBeInTheDocument()
+  expect(mutate).not.toHaveBeenCalled()
+})
+
 it('validates and reviews without submission, supports editing, and uses the existing payload on final submit', () => {
   renderWorkspace()
   fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
@@ -80,12 +92,13 @@ it('validates and reviews without submission, supports editing, and uses the exi
   expect(screen.getByText('Check your request before continuing')).toBeVisible()
   expect(mutate).not.toHaveBeenCalled()
   fireEvent.change(screen.getByLabelText(/People needing assistance/),{target:{value:'2'}})
+  fireEvent.click(screen.getByRole('button',{name:'Use this rescue location'}))
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))
   expect(screen.getByRole('heading',{name:'Review rescue request'})).toHaveFocus()
   expect(mutate).not.toHaveBeenCalled()
-  expect(screen.getByLabelText('Reviewed street address')).toHaveValue('Sanitized demonstration address, Sampaloc, Manila')
-  expect(within(screen.getByRole('region',{name:'Request summary'})).getAllByRole('term')).toHaveLength(5)
-  expect(screen.queryByText('Coordinates')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Reviewed pinned location')).toHaveValue('14.604200, 120.994600')
+  expect(within(screen.getByRole('region',{name:'Request summary'})).getAllByRole('term')).toHaveLength(7)
+  expect(screen.queryByText('Location confirmed.')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Back'}))
   expect(screen.getByLabelText(/People needing assistance/)).toHaveValue(2)
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))
@@ -98,6 +111,7 @@ it('validates and reviews without submission, supports editing, and uses the exi
 it('shows the temporary success notice only after server confirmation, without opening tracking over it', () => {
   renderWorkspace()
   fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
+  fireEvent.click(screen.getByRole('button',{name:'Use this rescue location'}))
   fireEvent.click(screen.getByRole('button',{name:'Review request'}))
   fireEvent.click(screen.getByRole('button',{name:'Submit Request'}))
   expect(screen.queryByText('Your request has successfully been submitted!')).not.toBeInTheDocument()
@@ -105,4 +119,14 @@ it('shows the temporary success notice only after server confirmation, without o
   expect(screen.getByText('Your request has successfully been submitted!')).toHaveAttribute('role','status')
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(screen.getByLabelText('Current route')).toHaveTextContent('?view=inquiries')
+})
+
+it('propagates the saved dark theme into the request dialog without changing preference',()=>{
+  localStorage.setItem('resqph-theme','dark')
+  renderWorkspace();fireEvent.click(screen.getByRole('button',{name:'Request rescue'}))
+  const dialog=screen.getByRole('dialog',{name:'Where is help needed?'})
+  expect(dialog.parentElement).toHaveAttribute('data-app-theme','dark')
+  expect(localStorage.getItem('resqph-theme')).toBe('dark')
+  expect(dialog.querySelector('.request-flood-field')).toBeInTheDocument()
+  localStorage.removeItem('resqph-theme')
 })
