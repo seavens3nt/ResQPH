@@ -21,7 +21,9 @@ export const config = {
   installCommand: 'npm ci --prefix frontend',
   buildCommand: 'npm run build --prefix frontend',
   outputDirectory: 'frontend/dist',
-  git: { deploymentEnabled: environment === 'staging' ? { '**': false, main: true } : false },
+  // Vercel evaluates Git properties statically before environment resolution.
+  git: { deploymentEnabled: { '**': false, main: true } },
+  ignoreCommand: 'node deployment/ignore-vercel-build.mjs',
   rewrites: [
     { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` },
     { source: '/((?!api(?:/|$)|assets/|offline-shell\\.js$).*)', destination: '/index.html' },

@@ -31,6 +31,11 @@ acceptance or a completed end-to-end deployment.
   continues to disable separate production Git releases. It needs normal PR
   review/merge, successful main CI and a verified automatic deployment before
   frontend automation is called complete.
+- Follow-up: Vercel rejected dynamic `git.deploymentEnabled`. Git branch rules
+  are now static, with an ignored-build command allowing only staging/main at
+  the production target; production/unknown environments skip automatic builds.
+  The owner explicitly authorized bypassing the missing PR review, not failed CI
+  or production acceptance. Re-run CI on the corrected head before any override.
 - No GitHub deployment secrets are configured. Do not retrieve login tokens or
   print credentials; any needed secret must be entered directly by the user.
 - Production resources, a separate production database credential, hosted

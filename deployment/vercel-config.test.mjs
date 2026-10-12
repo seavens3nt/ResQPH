@@ -24,11 +24,29 @@ test('API proxy precedes SPA fallback and private endpoints cannot be cached', (
   assert.equal(config.outputDirectory, 'frontend/dist')
   assert.equal(config.headers[0].headers[0].value, 'private, no-store')
 })
-test('separate production configuration still disables automatic Git releases', () => {
+test('Git settings are static and identical across deployment environments', () => {
   const result = evaluate({ RESQPH_DEPLOY_ENVIRONMENT: 'production', VERCEL_ENV: 'production' })
   assert.equal(result.status, 0, result.stderr)
-  assert.equal(JSON.parse(result.stdout).git.deploymentEnabled, false)
+  const production = JSON.parse(result.stdout)
+  assert.deepEqual(production.git, JSON.parse(evaluate().stdout).git)
+  assert.equal(production.ignoreCommand, 'node deployment/ignore-vercel-build.mjs')
 })
+for (const [environment, branch, target, status] of [
+  ['staging', 'main', 'production', 1],
+  ['production', 'main', 'production', 0],
+  ['staging', 'setup/example', 'preview', 0],
+  ['', 'main', 'production', 0],
+  ['staging', 'main', 'preview', 0],
+]) {
+  test(`automatic build gate: ${environment}/${branch}/${target}`, () => {
+    const result = spawnSync(process.execPath, ['deployment/ignore-vercel-build.mjs'], {
+      cwd: new URL('../', import.meta.url), encoding: 'utf8',
+      env: { ...safe, RESQPH_DEPLOY_ENVIRONMENT: environment,
+        VERCEL_GIT_COMMIT_REF: branch, VERCEL_ENV: target },
+    })
+    assert.equal(result.status, status, result.stderr)
+  })
+}
 for (const overrides of [
   { RENDER_API_ORIGIN: '' }, { RENDER_API_ORIGIN: 'http://localhost:8000' },
   { RENDER_API_ORIGIN: 'https://example.com/path' }, { VITE_API_URL: 'https://example.com/api/v1' },
