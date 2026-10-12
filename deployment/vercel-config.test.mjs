@@ -20,9 +20,14 @@ test('API proxy precedes SPA fallback and private endpoints cannot be cached', (
   assert.equal(result.status, 0, result.stderr)
   const config = JSON.parse(result.stdout)
   assert.equal(config.rewrites[0].destination, `${safe.RENDER_API_ORIGIN}/api/:path*`)
-  assert.equal(config.git.deploymentEnabled, false)
+  assert.deepEqual(config.git.deploymentEnabled, { '**': false, main: true })
   assert.equal(config.outputDirectory, 'frontend/dist')
   assert.equal(config.headers[0].headers[0].value, 'private, no-store')
+})
+test('separate production configuration still disables automatic Git releases', () => {
+  const result = evaluate({ RESQPH_DEPLOY_ENVIRONMENT: 'production', VERCEL_ENV: 'production' })
+  assert.equal(result.status, 0, result.stderr)
+  assert.equal(JSON.parse(result.stdout).git.deploymentEnabled, false)
 })
 for (const overrides of [
   { RENDER_API_ORIGIN: '' }, { RENDER_API_ORIGIN: 'http://localhost:8000' },
