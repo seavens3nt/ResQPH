@@ -1,4 +1,5 @@
 import { LoadingState } from '../../components/ui/LoadingState'
+import { weatherErrorMessage } from '../../api/weather'
 import { FigmaHomeAsset } from './FigmaHomeAsset'
 import { UnfinishedRequestNotice } from './UnfinishedRequestNotice'
 import { useMyRescueRequests } from '../requests/hooks'
@@ -41,13 +42,13 @@ export function CitizenHome({hasDraft,onView,onDiscard,onRequest}: {hasDraft:boo
       <h2 className="home-section-title home-weather-title"><FigmaHomeAsset name="rain"/>Weather &amp; Hourly Forecast</h2>
       <div className="home-weather-grid">
         <WorkspaceCard className="home-scenario-card"><div className="home-live-weather-surface"><span className="home-card-caption">Current Weather · Google Weather</span><h3>U-belt Pilot Area</h3>
-          {weather.data ? <WeatherSummary {...weather.data} source={`${weather.isError || weather.fetchStatus==='paused' || weatherIsStale(weather.data.time, now) ? 'Last received weather · may be outdated' : 'Current weather'} · ${new Date(weather.data.time).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} PHT`}/> : !weather.isError && weather.fetchStatus!=='paused' ? <LoadingState layout="weather" label="Loading current weather…"/> : <div className="weather-summary" role="status"><p>{weather.isError ? 'Weather unavailable. Please retry or check the API setup.' : weather.fetchStatus==='paused' ? 'Weather unavailable while offline.' : 'Loading current weather…'}</p></div>}
+          {weather.data ? <WeatherSummary {...weather.data} source={`${weather.isError || weather.fetchStatus==='paused' || weatherIsStale(weather.data.time, now) ? 'Last received weather · may be outdated' : 'Current weather'} · ${new Date(weather.data.time).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} PHT`}/> : !weather.isError && weather.fetchStatus!=='paused' ? <LoadingState layout="weather" label="Loading current weather…"/> : <div className="weather-summary" role="status"><p>{weather.isError ? weatherErrorMessage(weather.error) : weather.fetchStatus==='paused' ? 'Weather unavailable while offline.' : 'Loading current weather…'}</p></div>}
           <div className="weather-summary-attribution"><span className="google-weather-attribution" translate="no">Google Maps</span></div>
           </div>
         </WorkspaceCard>
         <WorkspaceCard className="home-hourly-card"><span className="home-card-caption">Google Weather · U-Belt</span><h3>Hourly Forecast</h3>
           <div className="home-weather-metrics"><WeatherMetric label="Rainfall · first forecast hour" value={rainfall==null ? '—' : `${Number(rainfall.toFixed(2))} mm`}/><WeatherMetric label="Current wind" value={wind==null ? '—' : `${Math.round(wind)} km/h${direction ? ` ${direction}` : ''}`}/><WeatherMetric label="Current humidity" value={humidity==null ? '—' : `${humidity}%`}/></div>
-          {hourly.data ? <><HourlyWeather hours={hourly.data}/>{(hourly.isError || hourly.fetchStatus==='paused') && <p role="status">Last received forecast — may be outdated.</p>}</> : !hourly.isError && hourly.fetchStatus!=='paused' ? <LoadingState layout="forecast" label="Loading hourly forecast…"/> : <p role="status">{hourly.isError ? 'Hourly forecast unavailable. Reload to try again.' : hourly.fetchStatus==='paused' ? 'Hourly forecast unavailable while offline.' : 'Loading hourly forecast…'}</p>}
+          {hourly.data ? <><HourlyWeather hours={hourly.data}/>{(hourly.isError || hourly.fetchStatus==='paused') && <p role="status">Last received forecast — may be outdated.</p>}</> : !hourly.isError && hourly.fetchStatus!=='paused' ? <LoadingState layout="forecast" label="Loading hourly forecast…"/> : <p role="status">{hourly.isError ? weatherErrorMessage(hourly.error, 'Hourly forecast unavailable. Please try again later.') : hourly.fetchStatus==='paused' ? 'Hourly forecast unavailable while offline.' : 'Loading hourly forecast…'}</p>}
         </WorkspaceCard>
       </div>
     </section>

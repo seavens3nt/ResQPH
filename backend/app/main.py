@@ -80,6 +80,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "HEAD", "POST", "PATCH", "OPTIONS"],
     allow_headers=["Content-Type", "X-CSRF-Token", "X-Expected-Account-Id", "Idempotency-Key", "X-Request-Id"],
+    expose_headers=["Retry-After"],
     max_age=600,
 )
 

@@ -22,7 +22,8 @@ coordinator endpoints.
   route, and stable `station_id` in a Mongo transaction after route evaluation.
   Pending requests expose `assignment_reason` and are retried by durable,
   leased queue workers. The queue is severity-first, submission-time-second.
-- Citizens read/cancel only their own pending requests and read only missions
+- Citizens read only their own requests and may cancel pending requests or assigned
+  requests before the station starts travel. They read only missions
   linked to their requests. Station accounts list missions assigned to the
   station derived from their server account and can read/control only those
   missions. `X-Demo-*` headers are ignored unless an isolated test explicitly
@@ -168,11 +169,22 @@ eligible or reachable team is available, the request remains persisted as
 
 Citizens see their simulated requests. Coordinators see the queue. Rescuers see request detail only through an assigned mission.
 
-### Cancel pending request
+### Citizen cancellation before travel
 
 `POST /rescue-requests/{request_id}/cancel`
 
-Allowed role: owning `citizen` or `coordinator`. Requires `reason` and expected `version`. Returns `409` when an incompatible active transition has already occurred.
+Active allowed role: owning `citizen`. Requires sanitized `reason` and expected request
+`version`. `can_cancel` is server-derived: true while pending or assigned. The server
+rechecks the linked mission: assigned cancellation is allowed only before travel.
+En-route, arrived and completed reject cancellation with 409; foreign citizens get 404.
+Assigned cancellation transactionally updates request, mission, tracking, station
+capacity and immutable citizen history; cancelled records are retained. An exact
+retry of the same actor/version/reason returns 200 without extra writes; changed
+consent or stale versions return 409. A start/cancel race has one winner; failure
+rolls back all linked records. Pending automatic-assignment races may return 409,
+requiring refreshed state and new confirmation. Cancelled requests are never reassigned.
+The rescuer-only end-simulation endpoint remains a separate action. Coordinator
+examples below describe historical contracts, not active registered routes.
 
 ### Assign rescue team
 

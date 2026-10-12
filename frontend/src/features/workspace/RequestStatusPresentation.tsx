@@ -1,3 +1,4 @@
+import { citizenCanCancel } from '../requests/cancellationPolicy'
 import type { CSSProperties } from 'react'
 import type { useRescueRequest } from '../requests/hooks'
 
@@ -32,6 +33,6 @@ export function RequestStatusPresentation({data,isFetching,isCancelling=false,on
     </ol></div>}
     {data.status==='pending' && <p className="status-popup-assignment-reason" role="status">{data.assignment_reason==='no_station_available' ? 'All simulated station units are assigned. The system will retry when a station becomes available.' : data.assignment_reason==='no_reachable_station' ? 'No available station currently has an admissible route. Automatic matching will retry as conditions change.' : 'Queued for automatic station matching; no dispatcher action is required.'}</p>}
     <section className="status-popup-summary" aria-labelledby="status-summary-title"><h4 id="status-summary-title">Review rescue request</h4><dl>{facts.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
-    <div className="status-popup-actions"><button aria-label="Refresh request status" onClick={onRefresh} disabled={isFetching}>{isFetching?'Refreshing…':'Refresh'}</button>{data.status==='pending' && <button className="status-popup-cancel" disabled={isCancelling} aria-busy={isCancelling} onClick={onCancel}>{isCancelling?'Cancelling…':'Cancel Request'}</button>}</div>
+    <div className="status-popup-actions"><button aria-label="Refresh request status" onClick={onRefresh} disabled={isFetching}>{isFetching?'Refreshing…':'Refresh'}</button>{citizenCanCancel(data) && <button className="status-popup-cancel" disabled={isCancelling} aria-busy={isCancelling} onClick={onCancel}>{isCancelling?'Cancelling…':'Cancel Request'}</button>}</div>
   </>
 }

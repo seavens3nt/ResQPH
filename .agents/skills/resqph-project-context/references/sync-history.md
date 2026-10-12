@@ -1,5 +1,19 @@
 # Context Sync History
 
+## 2026-10-12 — Shared journey and citizen cancellation before travel
+
+Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
+account-switch recovery blocks old transports/mutations, hides the old workspace and
+requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale
+server position. Citizens can cancel pending or assigned-before-travel requests with
+confirmation; existing lifecycle transaction releases capacity once and preserves
+history. Routes raw diagnostics removed; dark request panels/flood-field alignment
+repaired. Frontend 424 checks/lint/build; backend 226 passed/38 opt-in skips; 7 new
+cookie cancellation/session, 8 product journey and 15 offline Mongo cases pass.
+Six legacy fixture failures remain; browser/screenshots/original symptom unverified.
+Demo/developer databases and queues preserved. No remote actions/commit; see report.
+
+
 ## 2026-10-12 — Dark auth, read isolation and dedicated demo
 
 Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:

@@ -1,5 +1,17 @@
 # Current Status
 
+Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
+account-switch recovery blocks old transports/mutations, hides the old workspace and
+requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale
+server position. Citizens can cancel pending or assigned-before-travel requests with
+confirmation; existing lifecycle transaction releases capacity once and preserves
+history. Routes raw diagnostics removed; dark request panels/flood-field alignment
+repaired. Frontend 424 checks/lint/build; backend 226 passed/38 opt-in skips; 7 new
+cookie cancellation/session, 8 product journey and 15 offline Mongo cases pass.
+Six legacy fixture failures remain; browser/screenshots/original symptom unverified.
+Demo/developer databases and queues preserved. No remote actions/commit; see report.
+
+
 Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:
 explicit dark login/register preserves dashboard preference; compact Advisory refresh;
 cookie-account assertions now protect reads and polling stops for expired/switched
@@ -72,3 +84,14 @@ visual acceptance remains pending; see the existing local testing report.
 - Remaining final-quality checks: dev-only undici audit warning, existing lint/bundle warnings, whole-role final regression and submission package.
 - Unknown: exact course deadline, weekly capacity and any hosting/submission requirement. No deployment is approved by the phase opening.
 - Authority: docs/phases/TEAM-PHASE-05.md and docs/STATUS.md.
+# Weather failure repair — 2026-10-12
+
+Local temporary-main weather diagnostics: configured backend key receives Google
+HTTP 429 on current/daily/hourly endpoints; current conditions identifies a
+100-request daily quota. API quota errors now retain 429/Retry-After with a
+per-endpoint process-local cooldown; access-denied errors distinguish configuration
+from generic transport/schema failure. Home/Advisory show fixed sanitized copy.
+Ruff and frontend production build pass; automated tests not run for this repair.
+Live weather remains blocked by provider quota reset/administrator action.
+Keys, billing settings and database records preserved; changes remain local.
+See backend README troubleshooting.

@@ -53,8 +53,9 @@ export function RescuerWorkspace({section}: {section: string}) {
     {endDialog}
   </>
   const missionActions = offline.mission && <RescuerMissionCard showTracking={section !== 'routes' && !routeOpen} mission={offline.mission} lastSyncedAt={offline.lastSyncedAt} isStale={offline.isStale} isCached={offline.isOffline && offline.isCached} isQueueLocked={Boolean(offline.entry)} isAdvancing={offline.busy || offline.loading} onAdvanceStatus={() => offline.mission?.status === 'arrived' ? setConfirm(true) : void offline.advance()} />
+  if (offline.authenticationRequired || [journey.mission.error,journey.tracking.error,history.error].some(sessionReadBlocked)) return <p role="alert">Your session needs recovery. <a href="/login">Sign in again to restore this account</a>. Tabs share cookies; use separate browser profiles for simultaneous roles. Offline events remain under their original owner.</p>
   if (section === 'routes') return <div className="workspace-stack rescuer-routes-page">
-    <p className="workspace-team-caption">{user?.stationName ?? 'Rescue station'} · simulated route guidance and shared mission tracking</p>
+    <p className="workspace-team-caption">{user?.stationName ?? 'Rescue station'} · Simulated navigation</p>
     {offline.loading && <p role="status">Loading the station’s active route…</p>}
     {offline.storageError && <p role="alert">{offline.storageError}</p>}
     {offline.recoveryAvailable && <p role="note">Quarantined offline data is retained on this device. <button type="button" onClick={() => void offline.downloadRecovery()}>Download recovery file</button> Store the file privately; it can contain request details.</p>}

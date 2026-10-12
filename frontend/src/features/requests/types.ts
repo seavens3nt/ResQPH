@@ -70,6 +70,7 @@ export interface RequestLocation {
 // ---------------------------------------------------------------------------
 
 export interface StatusHistoryEntry {
+  can_cancel?: boolean
   status: RequestStatus
   /** ISO 8601 UTC timestamp ending in Z */
   occurred_at: string
@@ -105,6 +106,7 @@ export interface RescueRequestRecord {
   reported_severity?: 'low' | 'moderate' | 'high' | 'critical'
   situation_summary?: string
   assignment_reason?: 'queued' | 'no_station_available' | 'no_reachable_station' | 'assigned'
+  can_cancel?: boolean
   status: RequestStatus
   /** Optimistic-lock version; required for cancel */
   version: number

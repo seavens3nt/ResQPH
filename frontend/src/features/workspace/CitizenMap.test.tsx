@@ -1,15 +1,15 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { CitizenMap } from './CitizenMap'
-const {refetch,detailRefetch} = vi.hoisted(()=>({refetch:vi.fn(),detailRefetch:vi.fn()}))
+const {refetch,detailRefetch,journey} = vi.hoisted(()=>({refetch:vi.fn(),detailRefetch:vi.fn(),journey:{mission:{data:undefined,isError:false},tracking:{data:undefined as any,isError:false}}}))
 vi.mock('../requests/hooks',()=>({useRescueRequest:(id:string)=>({isLoading:false,isError:false,isFetching:false,refetch:detailRefetch,data:id?{id,status:id==='stored-cancelled'?'cancelled':id==='stored-assigned'?'assigned':'pending',headcount:2,reported_flood_level:'unknown',situation_summary:null,vulnerabilities:[],medical_needs:false}:undefined}),useMyRescueRequests:()=>({isLoading:false,isError:false,isFetching:false,refetch,data:{items:[
   {id:'stored-pending',status:'pending',headcount:2,location:{address:'Synthetic address',point:{coordinates:[120.9946,14.6042]}}},
   {id:'stored-assigned',status:'assigned',headcount:1,location:{address:'Other synthetic address',point:null}},
   {id:'stored-cancelled',status:'cancelled',headcount:2,location:{address:'Cancelled synthetic address',point:null}},
 ]}})}))
-vi.mock('../missions/useMissionJourney',()=>({useMissionJourney:()=>({mission:{data:undefined,isError:false},tracking:{data:undefined,isError:false}}),journeyRoute:()=>[]}))
-vi.mock('../map/InteractiveFloodMap',()=>({InteractiveFloodMap:({records,controlsSlot}:any)=><div aria-label="Map records">{records.map((r:any)=><span key={r.id}>{r.label}</span>)}{controlsSlot}</div>}))
-afterEach(()=>{cleanup();vi.clearAllMocks()})
+vi.mock('../missions/useMissionJourney',()=>({useMissionJourney:()=>journey,journeyRoute:()=>[]}))
+vi.mock('../map/InteractiveFloodMap',()=>({InteractiveFloodMap:({records,controlsSlot,trackingFrozen,trackingPosition}:any)=><div aria-label="Map records" data-frozen={trackingFrozen} data-position={JSON.stringify(trackingPosition)}>{records.map((r:any)=><span key={r.id}>{r.label}</span>)}{controlsSlot}</div>}))
+afterEach(()=>{cleanup();vi.clearAllMocks();journey.tracking.isError=false;journey.tracking.data=undefined})
 it('preserves stored IDs for selection and existing refresh/cancel callbacks',()=>{
   const select=vi.fn(),cancel=vi.fn()
   const {rerender}=render(<CitizenMap selected={null} onSelect={select} onCancel={cancel}/>)
@@ -29,7 +29,7 @@ it('preserves stored IDs for selection and existing refresh/cancel callbacks',()
   fireEvent.click(screen.getByRole('button',{name:'Cancel Request'}))
   expect(cancel).toHaveBeenCalledOnce()
   rerender(<CitizenMap selected="stored-assigned" onSelect={select} onCancel={cancel}/>)
-  expect(screen.getByRole('button',{name:'Cancel Request'})).toBeDisabled()
+  expect(screen.getByRole('button',{name:'Cancel Request'})).toBeEnabled()
 })
 it('shows cancelled request details inline and prevents another cancellation',()=>{
   const cancel=vi.fn()
@@ -60,4 +60,13 @@ it('locks cancellation while pending and presents failures inline',()=>{
   expect(screen.getByRole('button',{name:'Cancelling…'})).toBeDisabled()
   expect(screen.getByRole('alert')).toHaveTextContent('Cancellation failed')
   expect(screen.queryByText('Request cancelled',{exact:true})).not.toBeInTheDocument()
+})
+
+it('freezes the last server position and labels it stale during tracking failure',()=>{
+  journey.tracking.isError=true
+  journey.tracking.data={position:{type:'Point',coordinates:[120.995,14.605]},timestamp:'2026-10-12T00:00:00Z'}
+  render(<CitizenMap selected="stored-assigned" onSelect={()=>{}} onCancel={()=>{}}/>)
+  expect(screen.getByLabelText('Map records')).toHaveAttribute('data-frozen','true')
+  expect(screen.getByLabelText('Map records')).toHaveAttribute('data-position',JSON.stringify(journey.tracking.data.position))
+  expect(screen.getByText(/last server position is stale/)).toBeVisible()
 })

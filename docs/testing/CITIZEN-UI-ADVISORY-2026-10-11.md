@@ -9,6 +9,250 @@ uncommitted and unpushed. No fetch/pull/commit/push/PR/merge/deployment was perf
 in this follow-up; `temporary-main` and `main` were not modified. Environment values,
 credential files, accounts, missions, station catalog and database are unchanged.
 
+## Shared journey, session recovery and citizen cancellation — 2026-10-12
+
+Latest local checkpoint; supersedes pending-only cancellation and the earlier
+session-recovery presentation. Start: clean tree on `temporary-main`, HEAD
+`feb037d2915779aa94534a3ed7ab2b1689afdebb`. The requested existing feature branch
+pointed to that same HEAD and was selected without resetting or pulling. Existing
+implementation/local credentials preserved. `main` remains `de0fc954` and
+`temporary-main` remains `feb037d`; no commits, pushes, PRs, merges or remote changes.
+Current implementation is local/uncommitted, not browser-accepted or merged delivery.
+
+Attachment inspection: the new attachment directory contains only Pasted text.txt;
+the three screenshots are unavailable. Written requirements guided these changes.
+Browser skill connection returned `No browser is available`; discovery returned an
+empty list. No cookies, tokens, passwords, browser queues or storage were logged,
+inspected or cleared. Original browser messages and rendered acceptance remain pending.
+
+### Diagnosis by issue — confirmed versus uncertain
+
+| Report / workflow issue | Reproduced or inspected cause | Repair / limit |
+|---|---|---|
+| HTTP 409 session changed accounts | Existing expected-account guard correctly rejects stale tab identity under another account cookie; real API checks reproduce 409 on request, mission and tracking reads | Guard retained. Central recovery blocks old requests/mutations, aborts outstanding transports, clears query visibility, removes authenticated workspace and requires explicit login |
+| Multiple tracking/mission/sign-in banners | Each panel previously rendered its own generic error while cached records/controls remained visible | AuthProvider receives one recovery event; login displays one explanation. Local forbidden-read fallback exits citizen/rescuer panels with one sign-in notice |
+| Valid citizen mission/tracking reads | Current cookie API returns 200 for the owner and assigned station; foreign citizen/station get 404 mission_not_found | No backend authorization bypass or inferred station membership introduced. No demonstrated ownership or response-schema defect in valid reads |
+| Duplicate/unbounded tracking concerns | Rescuer card used a different tracking key and separate policy from the shared journey; same mission could have independent observers with differing error behavior | Card reuses account/station journey keys; short freshness windows prevent mount refetches; in-flight fetches deduplicate; shared auth blocking and bounded Retry-After behavior retained |
+| Brief transport failure | Query regression reproduces a 503; last authoritative data remains cached. Citizen Map lacked explicit frozen/timestamp/stopped props and stale feedback | Map now freezes the last server position and marks it stale. Recovery uses backend tracking, retains monotonic timestamps; no new independent simulation |
+| Terminal/arrival polling | Assigned stationary tracking was unnecessarily polled; status still needs updates after arrival | Movement polls run only en-route. Arrival fetches the frozen position with bounded recovery/429 cooldown; mission status keeps its 5-second cadence until terminal. Completion/cancellation stop tracking/status polls |
+| Cancellation disappears after submission | Confirmed existing pending-only server/UI policy plus automatic assignment | Updated policy below: pending or assigned before travel, explicit confirmation, transaction/replay/race checks |
+| White dark-mode request panels | Hard-coded white/light fills and exported SVG review backgrounds override inherited dark variables | Scoped token surfaces/fields/borders/text and dark review-art overrides; Modal carries shared theme identity. Approved auth-dark rules remain |
+| “Report flooded…” alignment | No literal active Report flooded control or accessible screenshot; actual request severity/flood labels share layout selectors and supporting text | Corrected those fields with a normal-flow grid, full-width controls, wrapping and consistent gaps; exact screenshot match and rendered desktop/mobile acceptance remain unverified |
+| Raw Routes diagnostics | MissionRoute exposed origin coordinates/route ID in details, and route popup could display technical ID | Removed user-facing details/ID and redundant explanation. Stored backend geometry, map polyline, ETA/distance/status, Follow/Recenter/Show Full Route, lifecycle controls, HQ markers and Google attribution retained |
+
+The exact historical browser failure URL/timing or a browser response-validation
+failure was not captured; generic unavailable banners do not prove one shared cause.
+Frontend API types match the exercised FastAPI mission/tracking shapes. Backend
+response-model validation and real returned route/position comparisons pass. 429 and
+transport recovery regressions are controlled frontend tests, not a captured live
+browser outage. Cookie credentials remain enabled; CSRF still protects mutations.
+Account assertion is now also sent to profile/logout; login/register/session restore
+remain explicit session-entry operations. Assertions never select the backend actor.
+
+### Session and cache safety
+
+A central API request generation changes on account switch or session invalidation.
+Outstanding authenticated transports are aborted; responses from older generations
+are rejected even if they arrive late. Requests are blocked until explicit sign-in.
+AuthProvider cancels/clears query cache and removes the old user from the visible
+workspace. A non-secret per-tab recovery flag in sessionStorage prevents refresh
+from silently adopting a replacement cookie session; explicit login clears it. Late
+auth/session restoration responses are also generation-checked. Remount/isolation
+regressions verify one notice, hidden old workspace and cleared query cache. Login has one recovery explanation; separate tabs share cookies, so
+simultaneous citizen/rescuer testing needs separate browser profiles.
+
+Mission/detail/tracking caches remain scoped to authenticated account plus station;
+request caches use account IDs. 401, 403 and session mismatch block affected journey
+polling; Retry-After governs 429 cooldowns. Current user data can stay visibly stale
+through transport failures; the previous account's data is not a recovery fallback.
+Actor-owned Dexie queues and event evidence are preserved. Aborting transport cannot
+undo an already accepted server mutation; the existing version/event/history-based
+reconciliation must verify any uncertain queued outcome under its original owner.
+No session secrets were moved into localStorage, no event ownership was rewritten,
+and ordinary API auth still rejects demo-header impersonation.
+
+### Cancellation policy and consistency boundary
+
+Owning citizen can cancel pending requests and assigned requests only while the linked
+mission is still assigned. Server `can_cancel` reflects request state; transactional
+confirmation rechecks request version, ownership, mission status/version and linked
+station reservation. Once travel starts, cancellation is rejected with clear feedback.
+Citizens never receive the rescuer End simulated mission action.
+
+Both request-status and map views ask for explicit confirmation. Consent captures
+the server version visible when the dialog opens (map uses current detail version).
+A conflicting server transition causes 409, refresh and new confirmation. Mutation
+success updates request detail and invalidates request list/journey/tracking/history;
+other profiles observe the same versioned state through existing bounded polling.
+
+Assigned cancellation reuses MissionRepository.update_status_if_current inside the
+existing mission-event transaction runner. It atomically cancels request/mission,
+stops tracking, appends immutable citizen event/history (actor/time/reason), records
+consent identity/version, clears the exact station reservation and releases capacity.
+Pending dispatch jobs are awakened; cancelled requests cannot be reassigned. Records
+remain readable in history and disappear from active station listings.
+
+Exact same actor/version/reason retry returns the cancelled request with no second
+capacity release/history entry. Changed consent or stale version returns 409. Pending
+cancellation retains its conditional atomic request update; racing assignment can
+return conflict and requires current-state confirmation. Cancellation/start races
+have one winner: if cancellation commits, starting fails; if start commits, cancellation
+fails. History-write injection returns 503 database_unavailable and rolls back request,
+mission and station together. Historical records are retained, not migrated/reassigned.
+Contract amendments are confined to API_CONTRACT.md and RESCUE_LIFECYCLE.md.
+
+### Verification commands / latest results
+
+From frontend:
+
+```sh
+npm run lint
+npm run test -- --run
+npm run build
+```
+
+**424 passed in 63 files**; lint passes with 5 existing warnings; production build
+passes with existing bundle-size warning. Tests also emit the existing Node experimental
+storage warning. Added regressions cover late account responses, one session-recovery
+notification/blocked mutation, profile/logout assertions, shared query observers,
+transport recovery, auth failure polling, Retry-After, arrival/terminal status policy,
+account-scope changes, dark request-dialog identity, map stale/frozen position and
+raw route diagnostics removal. Old immediate-cancel assertions were updated to require
+confirmation; rejection/conflict/history/accessibility assertions remain meaningful.
+
+From backend:
+
+```sh
+.venv/bin/ruff check app tests
+.venv/bin/python -m pytest tests ../tests/integration
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' .venv/bin/python -m pytest tests/test_citizen_cancellation_mongodb.py
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' .venv/bin/python -m pytest tests/test_product_journey_mongodb.py
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' MONGODB_INTEGRATION_DATABASE=resqph_issue62_offline_tracking_20261012_d17f .venv/bin/python -m pytest tests/test_offline_sync_mongodb.py
+RUN_MONGODB_INTEGRATION=1 MONGODB_INTEGRATION_URI='mongodb://localhost:27018/?replicaSet=rs0&directConnection=true' MONGODB_INTEGRATION_DATABASE=resqph_issue73_backend_tracking_20261012_d17f .venv/bin/python -m pytest tests/test_phase5_acceptance.py
+```
+
+Ruff passes. Standard/integration: **226 passed, 38 opt-in skipped**, existing
+Starlette/httpx warning. New real Mongo cancellation/session suite: **7 passed**.
+Current-cookie product journey: **8 passed**. Offline replay: **15 passed**.
+All writes/failure injections use NEW guarded disposable databases; fixtures drop
+only their own generated DB. Reusable `resqph_demo_20261012` and original developer
+DB were never reset or used for these failure tests. Accounts, environments,
+local credential README and offline queues are unchanged; README remains ignored,
+untracked and 0600. No new accounts were provisioned in reusable databases.
+
+The combined run initially caught a fixture error: expiry injection targeted
+`sessions` instead of the actual `auth_sessions` collection. Corrected the fixture,
+asserted an existing session was modified, then all seven focused cases passed.
+The current-cookie journey was rerun separately after correction. No production
+session implementation was weakened to fix the harness.
+
+Sanitized real API/database evidence:
+
+- `GET /rescue-requests/{id}`, `GET /missions/{id}` and `GET /missions/{id}/tracking`:
+  expected-account disagreement -> 409 session_identity_changed; expired persisted
+  auth session -> 401 authentication_required.
+- Owner and assigned station mission/tracking reads -> 200, same route/position;
+  foreign citizen and foreign station -> 404 mission_not_found. En-route reads share
+  monotonically progressing backend state; arrival fixes the same position for both.
+- `POST /rescue-requests/{id}/cancel`: valid pending/assigned-before-start -> 200;
+  exact consent replay -> 200 without more writes; foreign owner -> 404; stale consent
+  -> 409 stale_request_version; started request -> 409 request_not_pending with the
+  updated before-travel explanation. Failure injection -> 503 database_unavailable.
+- Cancel/start race -> one 200 and one 409; request/mission status agrees and capacity
+  is either released or still reserved by the winning en-route mission.
+
+### Remaining legacy failures — separate from current acceptance
+
+Explicit legacy run: **6 failed, 1 passed**. These remain obsolete fixture/contract
+failures; no assertions were skipped or retired endpoints/demo actor bypass enabled.
+
+1. test_phase5_invalid_inputs_and_roles_leave_database_unchanged — missing cookie
+   returns 401; fixture expects retired demo-role 403.
+2. test_phase5_real_mongodb_lifecycle_updates_request_mission_and_history — retired
+   manual assignment endpoint returns 404; fixture expects 201.
+3. test_phase5_retry_conflict_stale_actor_and_transition_rejections_do_not_write —
+   same retired manual-assignment setup fails before its assertions.
+4. test_phase5_linked_lifecycle_conflict_rolls_back_all_records[request] — same
+   retired setup fails before its specific linked-request conflict injection.
+5. test_phase5_linked_lifecycle_conflict_rolls_back_all_records[team] — same retired
+   setup fails before its specific team-conflict injection.
+6. test_phase5_assignment_dependency_failure_returns_envelope_and_rolls_back —
+   fixture expects team-alpha seed absent from canonical station initialization.
+
+Current cookie, cancellation and offline suites retain ownership/station denial,
+retry/stale-version/invalid-transition/no-write, concurrency and transaction rollback
+coverage. The exact old linked-request/team/manual-dependency injections remain
+unexecuted and require migration to current fixtures. Six failures are not claimed
+resolved. The active product journey's old pending-only rejection setup now tests
+stale assigned cancellation consent; new real tests cover permitted assigned cancel.
+
+### Pending manual acceptance checklist
+
+1. Use fresh separate citizen/rescuer browser profiles against the unchanged demo
+   environment. Submit one synthetic U-Belt request; verify automatic assignment and
+   identical station/route/tracking in both profiles.
+2. Start, arrive, complete; verify frozen arrival, stopped terminal tracking, immutable
+   history and capacity release.
+3. Submit another request; cancel while assigned before start, confirm the dialog,
+   and verify both profiles update and the station returns to available.
+4. In a single profile switch accounts across tabs. Verify one explicit login recovery,
+   no old data/controls flashing and original-owner offline events retained.
+5. Exercise brief network outage/recovery and 429 cooldown; verify stale last position,
+   bounded retries and no movement restart. Inspect dark request edit/review/confirmation
+   and flood/severity field alignment at desktop/mobile widths.
+
+Browser visual acceptance, screenshots and the original browser symptom remain
+unverified. No separate retired hazard-report workflow was added to match an unavailable
+image. A teammate can test the local candidate; no publish/delivery was authorized.
+
+### Exact changed files in this checkpoint
+
+- `.agents/skills/resqph-project-context/references/current-status.md`
+- `.agents/skills/resqph-project-context/references/sync-history.md`
+- `backend/app/api/routes/rescue_requests.py`
+- `backend/app/models/rescue_request.py`
+- `backend/app/repositories/missions.py`
+- `backend/app/repositories/rescue_requests.py`
+- `backend/app/schemas/rescue_requests.py`
+- `backend/app/services/missions.py`
+- `backend/app/services/rescue_requests.py`
+- `backend/tests/test_citizen_cancellation_mongodb.py`
+- `backend/tests/test_product_journey_mongodb.py`
+- `backend/tests/test_rescue_requests.py`
+- `docs/STATUS.md`
+- `docs/api/API_CONTRACT.md`
+- `docs/testing/CITIZEN-UI-ADVISORY-2026-10-11.md`
+- `docs/ui/LOCAL_VISUAL_RULES.md`
+- `docs/workflows/RESCUE_LIFECYCLE.md`
+- `frontend/src/api/client.test.ts`
+- `frontend/src/api/client.ts`
+- `frontend/src/components/ui/Modal.tsx`
+- `frontend/src/features/auth/AuthContext.tsx`
+- `frontend/src/features/auth/AuthContextIsolation.test.tsx`
+- `frontend/src/features/map/InteractiveFloodMap.tsx`
+- `frontend/src/features/missions/useMissionJourney.test.ts`
+- `frontend/src/features/missions/useMissionJourney.test.tsx`
+- `frontend/src/features/missions/useMissionJourney.ts`
+- `frontend/src/features/requests/CancelRequestDialog.tsx`
+- `frontend/src/features/requests/cancellationPolicy.ts`
+- `frontend/src/features/requests/hooks.ts`
+- `frontend/src/features/requests/types.ts`
+- `frontend/src/features/workspace/CitizenMap.test.tsx`
+- `frontend/src/features/workspace/CitizenMap.tsx`
+- `frontend/src/features/workspace/CitizenWorkspace.tsx`
+- `frontend/src/features/workspace/MissionRoute.test.tsx`
+- `frontend/src/features/workspace/MissionRoute.tsx`
+- `frontend/src/features/workspace/RequestRescueModal.test.tsx`
+- `frontend/src/features/workspace/RequestStatusModal.test.tsx`
+- `frontend/src/features/workspace/RequestStatusPresentation.tsx`
+- `frontend/src/features/workspace/RescuerWorkspace.tsx`
+- `frontend/src/features/workspace/requestRescueModal.css`
+- `frontend/src/pages/auth/LoginPage.tsx`
+- `frontend/src/pages/dashboard/views/citizen/CitizenRequestFlow.test.tsx`
+- `frontend/src/pages/dashboard/views/citizen/RequestForm.tsx`
+- `frontend/src/pages/dashboard/views/citizen/RequestStatusView.tsx`
+- `frontend/src/pages/dashboard/views/rescuer/RescuerMissionCard.tsx`
+
 ## Dark auth, refresh isolation and fresh demo — 2026-10-12
 
 This is the latest checkpoint and supersedes earlier statements that auth follows

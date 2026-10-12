@@ -626,7 +626,7 @@ describe('RequestStatusView', () => {
     })
   })
 
-  it('cancels immediately without an extra confirmation dialog', async () => {
+  it('requires explicit cancellation confirmation', async () => {
     mockGet.mockResolvedValueOnce(FIXTURE_REQUEST)
 
     renderWithProviders(
@@ -637,7 +637,9 @@ describe('RequestStatusView', () => {
       expect(screen.getByRole('button', { name: /Cancel request/i })).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /Cancel request/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Cancel request$/i }))
+    expect(mockCancel).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /Yes, cancel request/i }))
 
     await waitFor(() => expect(mockCancel).toHaveBeenCalledOnce())
     expect(screen.queryByRole('dialog', { name: /Cancel request confirmation/i })).not.toBeInTheDocument()
@@ -661,7 +663,9 @@ describe('RequestStatusView', () => {
       expect(screen.getByRole('button', { name: /Cancel request/i })).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /Cancel request/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Cancel request$/i }))
+    expect(mockCancel).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /Yes, cancel request/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/Conflict: the request state changed/i)).toBeInTheDocument()

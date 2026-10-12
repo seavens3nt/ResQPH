@@ -26,6 +26,8 @@ class RequestStatusHistory(BaseModel):
     status: RequestStatus
     occurred_at: datetime
     note: str | None = None
+    actor_id: str | None = None
+    actor_role: str | None = None
 
 
 class RescueRequest(BaseModel):
@@ -49,6 +51,8 @@ class RescueRequest(BaseModel):
     mission_id: str | None = None
     cancellation_reason: str | None = None
     cancelled_at: datetime | None = None
+    cancellation_actor_id: str | None = None
+    cancellation_expected_version: int | None = None
     status_history: list[RequestStatusHistory] = Field(default_factory=list)
     data_source: Literal["synthetic"] = "synthetic"
     idempotency_key: str | None = None

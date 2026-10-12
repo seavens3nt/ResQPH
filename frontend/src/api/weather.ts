@@ -1,5 +1,17 @@
 import { z } from 'zod'
+import { isAxiosError } from 'axios'
 import { apiClient } from './client'
+
+/** Fixed local copy: never render arbitrary provider error details. */
+export function weatherErrorMessage(error: unknown, fallback = 'Weather unavailable. Please try again later.'): string {
+  if (!isAxiosError(error)) return fallback
+  const code = error.response?.data?.error?.code
+  if (code === 'weather_quota_exceeded') return 'Google Weather quota reached. Wait before refreshing; the project administrator may need to review the Google Cloud quota.'
+  if (code === 'weather_not_configured') return 'Weather unavailable. The server weather API key is not configured.'
+  if (code === 'weather_configuration_error') return 'Weather unavailable. The project administrator needs to check Google Weather access and billing.'
+  if (error.response?.status === 429) return 'Weather requests are rate-limited. Wait before trying again.'
+  return fallback
+}
 const weatherSchema=z.object({temperature:z.number().finite(),high:z.number().finite(),low:z.number().finite(),
   condition:z.string().min(1),kind:z.enum(['clear','cloud','rain']),time:z.string().datetime({offset:true}),
   feelsLike:z.number().finite().nullish(),windSpeed:z.number().finite().nonnegative().nullish(),

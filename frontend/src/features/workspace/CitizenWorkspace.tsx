@@ -1,3 +1,5 @@
+import { citizenCanCancel } from '../requests/cancellationPolicy'
+import { CancelRequestDialog } from '../requests/CancelRequestDialog'
 import { WorkspaceCard } from './WorkspaceUI'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -20,11 +22,13 @@ export function CitizenWorkspace({section}: {section: string}) {
   const [tracking, setTracking] = useState(false)
   const cancellation = useCancelRescueRequest()
   const [mapCancelError,setMapCancelError] = useState<string|null>(null)
+  const [mapCancelVersion,setMapCancelVersion] = useState<number|null>(null)
   function cancelFromMap() {
     const request = list.data?.items.find(r=>r.id===selected)
-    if (!request || request.status!=='pending' || cancellation.isPending) return
+    if (!request || !citizenCanCancel(request) || cancellation.isPending || mapCancelVersion === null) return
     setMapCancelError(null)
-    cancellation.mutate({requestId:request.id,payload:{reason:'Citizen cancelled via prototype UI',version:request.version}}, {
+    setMapCancelVersion(null)
+    cancellation.mutate({requestId:request.id,payload:{reason:'Citizen cancelled via prototype UI',version:mapCancelVersion}}, {
       onSuccess:()=>{setCancelled(null);setSuccess(null)},
       onError:err=>{
         if ((err as {response?:{status?:number}}).response?.status===409) {
@@ -49,7 +53,7 @@ export function CitizenWorkspace({section}: {section: string}) {
     <RequestForm requireReview modalLayout onBusyChange={setSubmitting} onCancel={closeRequest} onSuccess={r => {setRequestOpen(false);setSelected(r.id);setSuccess(r.id);setTracking(false);navigate('/dashboard?view=inquiries')}}/>
   </Modal>{statusModal}{success && <RequestSubmittedNotice key={success} onExpire={()=>setSuccess(null)}/>} {cancelled && <RequestSubmittedNotice key={`cancelled-${cancelled}`} variant="cancelled" onExpire={()=>setCancelled(null)}/>}</>
   if (['overview'].includes(section)) return <><CitizenHome onRequest={openRequest} hasDraft={Boolean(draftContext?.draft) && !requestOpen} onDiscard={()=>draftContext?.saveDraft(null)} onView={id=>{setSelected(id);setTracking(true)}}/>{requestModal}</>
-  if (section === 'map') return <CitizenMap selected={selected} onSelect={id=>{setSelected(id||null);setMapCancelError(null);setTracking(false)}} onCancel={cancelFromMap} isCancelling={cancellation.isPending} cancelError={mapCancelError}/>
+  if (section === 'map') return <><CancelRequestDialog open={mapCancelVersion !== null} busy={cancellation.isPending} onClose={()=>setMapCancelVersion(null)} onConfirm={cancelFromMap}/><CitizenMap selected={selected} onSelect={id=>{setSelected(id||null);setMapCancelError(null);setTracking(false)}} onCancel={version=>setMapCancelVersion(version ?? list.data?.items.find(r=>r.id===selected)?.version ?? null)} isCancelling={cancellation.isPending} cancelError={mapCancelError}/></>
   if (section === 'request') return <WorkspaceCard className="workspace-editor"><h2>Where is help needed?</h2><p>Use synthetic details only. Confirm the location and number of people before sending. Changes stay in this tab while you navigate; signing out or reloading clears the draft.</p><RequestForm requireReview onCancel={() => navigate('/dashboard?view=inquiries')} onSuccess={r => {setSelected(r.id); setSuccess(r.id); setTracking(false); navigate('/dashboard?view=inquiries')}} /></WorkspaceCard>
   return <>{requestModal}<div className="workspace-stack">
     {draftContext?.draft && !requestOpen && <UnfinishedRequestNotice onResume={openRequest} onDiscard={()=>draftContext.saveDraft(null)}/>}

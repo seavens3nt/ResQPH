@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { isAxiosError } from 'axios'
 import { QueryClientContext } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { apiClient, setExpectedAccountId } from '../../api/client'
+import { apiClient, onSessionRecovery, setExpectedAccountId } from '../../api/client'
 import { readSession } from './session'
 import type { AuthUser, EmergencyContact, MedicalInfo, ProfileUpdate, UserRole } from './types'
 import { isUserRole } from './types'
@@ -25,6 +25,7 @@ interface AuthApiUser {
 
 interface AuthContextValue {
   user: AuthUser | null
+  recoveryMessage?: string | null
   loading: boolean
   login: (input: { email: string; password: string; stationId?: string }) => Promise<void>
   signup: (input: ProfileUpdate & { password: string; locationPermission?: boolean }) => Promise<void>
@@ -68,9 +69,15 @@ function readApiMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'The request could not be completed.'
 }
 
+const recoveryKey = 'resqph.auth.recoveryRequired'
+function savedRecovery(): string | null {
+  try {return sessionStorage.getItem(recoveryKey)} catch {return null}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => readSession())
+  const [user, setUser] = useState<AuthUser | null>(() => savedRecovery() ? null : readSession())
   const [loading, setLoading] = useState(true)
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(savedRecovery)
   const queryClient = useContext(QueryClientContext)
 
   const accept = useCallback((next: AuthUser | null) => {
@@ -78,14 +85,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Actor-keyed queues must survive logout so a pending status event can be
     // reviewed by the same account later. A different account has a distinct
     // cache key and cannot read or replay that event.
+    void queryClient?.cancelQueries()
     queryClient?.clear()
+    setRecoveryMessage(null)
+    try {sessionStorage.removeItem(recoveryKey)} catch { /* Storage is optional. */ }
     setExpectedAccountId(next?.id)
     setUser(next)
   }, [queryClient])
 
+  useEffect(() => onSessionRecovery(message => {
+    void queryClient?.cancelQueries()
+    queryClient?.clear()
+    try {sessionStorage.setItem(recoveryKey,message)} catch { /* Keep in-memory recovery when storage is unavailable. */ }
+    setUser(null)
+    setRecoveryMessage(message)
+  }), [queryClient])
+
   useEffect(() => {
     let active = true
-    if (import.meta.env.MODE === 'test') {
+    if (savedRecovery() || import.meta.env.MODE === 'test') {
       setLoading(false)
       return () => { active = false }
     }
@@ -130,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     accept(null)
   }, [accept])
 
-  const value = useMemo(() => ({ user, loading, login, signup, updateProfile, logout }), [user, loading, login, signup, updateProfile, logout])
+  const value = useMemo(() => ({ user, loading, recoveryMessage, login, signup, updateProfile, logout }), [user, loading, recoveryMessage, login, signup, updateProfile, logout])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

@@ -1,3 +1,6 @@
+import { citizenCanCancel } from '../../../../features/requests/cancellationPolicy'
+import { CancelRequestDialog } from '../../../../features/requests/CancelRequestDialog'
+import { sessionReadBlocked } from '../../../../api/queryRecovery'
 import { useCallback, useState } from 'react'
 import { LoadingState } from '../../../../components/ui/LoadingState'
 import { useRescueRequest, useCancelRescueRequest } from '../../../../features/requests/hooks'
@@ -20,17 +23,20 @@ const STAGES = [
 export function RequestStatusView({requestId, onCancelled, compact = false, popup = false}: {requestId: string; onCancelled?: () => void; compact?: boolean; popup?: boolean}) {
   const {data, isLoading, isError, error, dataUpdatedAt, isFetching, refetch} = useRescueRequest(requestId)
   const {mutate:cancel,isPending:isCancelling} = useCancelRescueRequest()
+  const [cancelVersion,setCancelVersion] = useState<number | null>(null)
   const [cancelError,setCancelError] = useState<string|null>(null)
   const [followRescuer, setFollowRescuer] = useState(true)
   const suspendFollow = useCallback(() => setFollowRescuer(false), [])
   const journey = useMissionJourney(data?.mission_id)
+  if ([error,journey.mission.error,journey.tracking.error].some(sessionReadBlocked)) return <p role="alert">Your session needs recovery. <a href="/login">Sign in again to restore this account</a>. Tabs share cookies; use separate browser profiles for simultaneous roles.</p>
   if(isLoading) return <div data-testid="status-loading"><LoadingState layout="detail" label="Loading request status…"/></div>
-  if(isError || !data) return <div role="alert" data-testid="status-error"><strong>Could not load request status</strong><p>{error instanceof Error ? error.message : 'Unable to load request status.'}</p><button onClick={() => void refetch()}>Retry</button></div>
+  if(!data) return <div role="alert" data-testid="status-error"><strong>Could not load request status</strong><p>{error instanceof Error ? error.message : 'Unable to load request status.'}</p><button onClick={() => void refetch()}>Retry</button></div>
   const {id,status,location,headcount,reported_flood_level,updated_at,status_history,version} = data
   function handleCancel() {
-    if (status !== 'pending' || isCancelling) return
+    if (!citizenCanCancel(data) || isCancelling || cancelVersion === null) return
     setCancelError(null)
-    cancel({requestId:id,payload:{reason:'Citizen cancelled via prototype UI',version}},{
+    setCancelVersion(null)
+    cancel({requestId:id,payload:{reason:'Citizen cancelled via prototype UI',version:cancelVersion}},{
       onSuccess:() => {onCancelled?.()},
       onError:err => {
         const responseStatus = err instanceof ApiError ? err.httpStatus : typeof err === 'object' && err !== null && 'response' in err
@@ -57,7 +63,8 @@ export function RequestStatusView({requestId, onCancelled, compact = false, popu
     {journey.mission.data && journeyRoute(journey.mission.data).length < 2 && <p role="status">No supported route is available for this pinned location. No route is being shown.</p>}
   </section>
   return <div className={`request-tracker ${compact ? 'is-compact' : 'is-full'}`} data-testid="status-view">
-    {popup ? <><RequestStatusPresentation data={data} isFetching={isFetching} isCancelling={isCancelling} onRefresh={()=>void refetch()} onCancel={handleCancel}/>{journeyPanel}</> : <>
+    {isError && <p role="status">Request refresh failed. Showing your last loaded request as stale.</p>}
+    {popup ? <><RequestStatusPresentation data={data} isFetching={isFetching} isCancelling={isCancelling} onRefresh={()=>void refetch()} onCancel={()=>setCancelVersion(version)}/>{journeyPanel}</> : <>
     <div className="workspace-panel-heading"><h3 aria-label={`Request ${id}`}>Request status</h3><StatusBadge status={status} large/></div>
     <RecordId id={id}/>
     <p className="workspace-caption">Controlled/historical information only — not live or official dispatch data</p>
@@ -74,8 +81,10 @@ export function RequestStatusView({requestId, onCancelled, compact = false, popu
     {status_history && status_history.length > 0 && <details className="request-history" open={!compact}><summary>Status history</summary><WorkspaceTimeline events={status_history.map((entry,index) => ({id:String(index),status:entry.status,timestamp:entry.occurred_at,note:entry.note}))}/></details>}
     <details className="workspace-technical"><summary>Data freshness and limitations</summary><p>Last updated (server): {updated_at ? new Date(updated_at).toLocaleString() : '—'}</p><p>Last fetched: {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'unknown'}</p><PrototypeNotice variant="status"/></details>
     <button aria-label="Refresh request status" onClick={() => void refetch()} disabled={isFetching}>{isFetching ? 'Refreshing…' : 'Refresh'}</button>
-    {status === 'pending' && <div className="workspace-cancel-panel"><strong>Automatic station assignment</strong><p>{data.assignment_reason === 'no_station_available' ? 'All simulated station units are currently assigned. The system will retry when capacity is released.' : data.assignment_reason === 'no_reachable_station' ? 'No available station currently has an admissible route. The system will retry as conditions change.' : 'Your request is queued for automatic station matching. No dispatcher action is required.'}</p><button disabled={isCancelling} aria-busy={isCancelling} onClick={handleCancel}>{isCancelling ? 'Cancelling…' : 'Cancel request'}</button></div>}
+    {citizenCanCancel(data) && <div className="workspace-cancel-panel"><strong>Automatic station assignment</strong><p>{data.assignment_reason === 'no_station_available' ? 'All simulated station units are currently assigned. The system will retry when capacity is released.' : data.assignment_reason === 'no_reachable_station' ? 'No available station currently has an admissible route. The system will retry as conditions change.' : 'Your request is queued for automatic station matching. No dispatcher action is required.'}</p><button disabled={isCancelling} aria-busy={isCancelling} onClick={()=>setCancelVersion(version)}>{isCancelling ? 'Cancelling…' : 'Cancel request'}</button></div>}
     </>}
+    {!citizenCanCancel(data) && ['en-route','arrived','completed'].includes(status) && <p>Cancellation is unavailable because the rescuer has started or completed the mission.</p>}
+    <CancelRequestDialog open={cancelVersion !== null} busy={isCancelling} onClose={()=>setCancelVersion(null)} onConfirm={handleCancel}/>
     {cancelError && <p role="alert">{cancelError}</p>}
   </div>
 }

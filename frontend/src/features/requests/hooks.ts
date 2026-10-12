@@ -25,7 +25,7 @@ import type {
   RescueRequestRecord,
 } from './types'
 import { retryAfterDelay } from '../../api/retryAfter'
-import { recordRefreshInterval, sessionReadBlocked } from '../../api/queryRecovery'
+import { readFailure, recordRefreshInterval, sessionReadBlocked } from '../../api/queryRecovery'
 
 // ---------------------------------------------------------------------------
 // Query-key factory
@@ -173,7 +173,16 @@ export function useCancelRescueRequest() {
       if (!user) throw new Error('Not authenticated')
         return cancelRescueRequest(user.id ?? user.email, requestId, payload)
     },
+    onError: error => {
+      if (readFailure(error).status === 409) {
+        void queryClient.invalidateQueries({queryKey:rescueRequestKeys.all})
+        void queryClient.invalidateQueries({queryKey:['mission-journey']})
+      }
+    },
     onSuccess: (data) => {
+      void queryClient.invalidateQueries({queryKey:['mission-journey']})
+      void queryClient.invalidateQueries({queryKey:['mission-tracking']})
+      void queryClient.invalidateQueries({queryKey:['mission-history']})
       // Update both the detail and list caches with the authoritative response
       if (user) {
         queryClient.setQueryData(rescueRequestKeys.detail(user.id ?? user.email, data.id), data)

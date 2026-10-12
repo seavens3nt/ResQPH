@@ -133,6 +133,8 @@ class RescueRequestRepository:
         expected_version: int,
         reason: str,
         cancelled_at: datetime,
+        actor_id: str | None = None,
+        actor_role: str | None = None,
         session: AsyncClientSession | None = None,
     ) -> RescueRequest | None:
         document = await self._collection.find_one_and_update(
@@ -146,6 +148,8 @@ class RescueRequestRepository:
                 "$set": {
                     "status": "cancelled",
                     "cancellation_reason": reason,
+                    "cancellation_actor_id": actor_id,
+                    "cancellation_expected_version": expected_version,
                     "cancelled_at": cancelled_at,
                     "updated_at": cancelled_at,
                 },
@@ -155,6 +159,8 @@ class RescueRequestRepository:
                         "status": "cancelled",
                         "occurred_at": cancelled_at,
                         "note": reason,
+                        "actor_id": actor_id,
+                        "actor_role": actor_role,
                     }
                 },
             },

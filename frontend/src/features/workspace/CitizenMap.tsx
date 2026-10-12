@@ -1,3 +1,5 @@
+import { sessionReadBlocked } from '../../api/queryRecovery'
+import { citizenCanCancel } from '../requests/cancellationPolicy'
 import { LocationOptions } from '../map/LocationOptions'
 import { useState } from 'react'
 import { useMyRescueRequests, useRescueRequest } from '../requests/hooks'
@@ -11,7 +13,7 @@ import { formatDuration } from '../routing/presentation/formatDuration'
 import { useMissionJourney, journeyRoute } from '../missions/useMissionJourney'
 import './citizenMap.css'
 
-export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancelError=null}: {selected:string|null;onSelect:(id:string)=>void;onCancel:()=>void;isCancelling?:boolean;cancelError?:string|null}) {
+export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancelError=null}: {selected:string|null;onSelect:(id:string)=>void;onCancel:(version?:number)=>void;isCancelling?:boolean;cancelError?:string|null}) {
   const query = useMyRescueRequests()
   const detail = useRescueRequest(selected ?? '')
   const [source,setSource] = useState<'demo'|'gps'>('demo')
@@ -32,12 +34,14 @@ export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancel
     },()=>{setLocationError('Could not get your location. Use demo location or retry.');setLocating(false)}, {timeout:10000,enableHighAccuracy:false})
   }
   const sourceControl = <LocationOptions source={source} disabled={locating} onChooseSource={chooseSource} gpsLabel="Use current location"/>
+  if ([query.error,detail.error,journey.mission.error,journey.tracking.error].some(sessionReadBlocked)) return <p role="alert">Your session needs recovery. <a href="/login">Sign in again to restore this account</a>. Use separate browser profiles for simultaneous roles.</p>
   return <section className="citizen-map-page" aria-labelledby="citizen-map-title">
     <h2 id="citizen-map-title"><FigmaHomeAsset name="mapTitle"/>Map View</h2>
     <WorkspaceCard className="citizen-map-panel">
       <QueryState query={query} layout="map" label="Loading request locations…">{data=><div className="citizen-map-inset citizen-map-layout">
         <div className="citizen-map-viewport">
-        <InteractiveFloodMap activeStage="none" showRouteStatus={false} center={center} controlsSlot={sourceControl} assignedStationId={mission?.station_id ?? selectedRequest?.assigned_station_id ?? stationIdForTeamId(selectedRequest?.assigned_team_id)} routeGeometry={route} trackingPosition={journey.tracking.data?.position ?? null} followPosition records={data.items.filter(r=>r.location.point).map(r=>({id:r.id,label:`${r.location.address} · ${r.status}`,coordinates:r.location.point!.coordinates}))}/>
+        <InteractiveFloodMap activeStage="none" showRouteStatus={false} center={center} controlsSlot={sourceControl} assignedStationId={mission?.station_id ?? selectedRequest?.assigned_station_id ?? stationIdForTeamId(selectedRequest?.assigned_team_id)} routeGeometry={route} trackingPosition={journey.tracking.data?.position ?? null} trackingFrozen={journey.tracking.isError || journey.mission.isError} trackingStopped={['arrived','completed','cancelled'].includes(selectedRequest?.status ?? '')} trackingTimestamp={journey.tracking.data?.timestamp} followPosition records={data.items.filter(r=>r.location.point).map(r=>({id:r.id,label:`${r.location.address} · ${r.status}`,coordinates:r.location.point!.coordinates}))}/>
+        {(journey.tracking.isError || journey.mission.isError) && <p role="status">Station response updates are unavailable. The last server position is stale; movement is paused until recovery.</p>}
         {locating && <p role="status">Getting your location…</p>}
         {locationError && <p role="alert">{locationError}</p>}
         </div>
@@ -73,7 +77,7 @@ export function CitizenMap({selected,onSelect,onCancel,isCancelling=false,cancel
         {!data.items.length && <p className="citizen-map-no-requests">No rescue requests found.</p>}
       <div className="citizen-map-actions">
         <button disabled={query.isFetching || detail.isFetching} onClick={()=>{void query.refetch();if(selected) void detail.refetch()}}>Refresh</button>
-        <button className="citizen-map-cancel" disabled={selectedRequest?.status!=='pending' || isCancelling} aria-busy={isCancelling} onClick={onCancel}>{isCancelling?'Cancelling…':'Cancel Request'}</button>
+        <button className="citizen-map-cancel" disabled={!citizenCanCancel(selectedRequest) || isCancelling} aria-busy={isCancelling} onClick={()=>onCancel(selectedRequest?.version)}>{isCancelling?'Cancelling…':'Cancel Request'}</button>
       </div>
       {cancelError && <p role="alert">{cancelError}</p>}
         </aside>

@@ -1,5 +1,26 @@
 # ResQPH project status
 
+2026-10-12 weather repair on local `temporary-main`: configured server key
+reaches Google, but current/daily/hourly calls return provider HTTP 429.
+Current conditions identifies a daily quota of 100 requests. Sanitized quota and
+access-denied errors, per-endpoint failure cooldown, cross-origin Retry-After
+exposure and Home/Advisory feedback implemented. Live weather remains blocked
+until the Google Cloud quota resets or the project administrator changes it.
+No keys, billing settings, database records or remote branches changed.
+See backend README troubleshooting; no automated tests run for this repair.
+
+Latest 2026-10-12 shared-journey/cancellation checkpoint, baseline `feb037d`:
+account-switch recovery blocks old transports/mutations, hides the old workspace and
+requires explicit login across refresh; shared journey keys bound tracking polling and preserve stale
+server position. Citizens can cancel pending or assigned-before-travel requests with
+confirmation; existing lifecycle transaction releases capacity once and preserves
+history. Routes raw diagnostics removed; dark request panels/flood-field alignment
+repaired. Frontend 424 checks/lint/build; backend 226 passed/38 opt-in skips; 7 new
+cookie cancellation/session, 8 product journey and 15 offline Mongo cases pass.
+Six legacy fixture failures remain; browser/screenshots/original symptom unverified.
+Demo/developer databases and queues preserved. No remote actions/commit; see report.
+
+
 Latest 2026-10-12 dark-auth/refresh/demo checkpoint supersedes prior auth theme notes:
 explicit dark login/register preserves dashboard preference; compact Advisory refresh;
 cookie-account assertions now protect reads and polling stops for expired/switched

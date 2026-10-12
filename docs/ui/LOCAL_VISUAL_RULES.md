@@ -270,3 +270,13 @@ preference. Other placements remain theme-aware; approved favicon is unchanged.
 Advisory removes the separate Data status card; compact refresh action retains
 last-updated/stale/loading/offline/error/cooldown feedback below content. Natural
 card heights/shared padding/responsive columns remain. Rendered acceptance pending.
+
+2026-10-12 request/Routes continuation: request edit/review/confirmation use inherited
+semantic dark/light surfaces, field/foreground/border tokens; exported light review
+fills are replaced with dark surfaces when dark. Modal carries shared theme identity;
+auth remains explicitly dark. Flood/severity labels, dropdowns and supporting text
+use normal-flow grid spacing/full width/wrapping. Permitted citizen cancellation now
+requires confirmation and is available pending or assigned before travel. Routes
+retain map/navigation/status/lifecycle but omit raw IDs/coordinates and redundant
+technical prose. Session-invalid workspaces show one recovery message and hide old
+mission content. Screenshots/browser unavailable; rendered acceptance remains pending.
