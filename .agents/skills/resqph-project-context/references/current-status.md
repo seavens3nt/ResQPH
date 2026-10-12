@@ -95,3 +95,15 @@ Ruff and frontend production build pass; automated tests not run for this repair
 Live weather remains blocked by provider quota reset/administrator action.
 Keys, billing settings and database records preserved; changes remain local.
 See backend README troubleshooting.
+# Station-distance repair — 2026-10-13
+
+Local temporary-main baseline c95c8c3. Available stations now dispatch from stored
+headquarters; retained current_location stays simulation/history data. Controlled
+stale-position fixture reproduces Iverson -> Sampaloc without moving headquarters.
+Distance-mode nearest physical road attachment counts directed partial edges and
+uses a 75 m default coverage bound, preserving source edge IDs. New backend-only
+dispatch provenance includes evaluated graph/scenario hashes and decisions.
+See docs/testing/STATION-DISTANCE-2026-10-13.md and synthetic JSON for tests and
+limitations. Historical user's decision cannot be reconstructed; live port 8000
+is another project. No frontend/auth/offline/lifecycle implementation edits or
+catalog/graph geometry changes; no commit/push/PR/merge.

@@ -88,7 +88,11 @@ CORS requires an explicit `FRONTEND_ORIGINS` allowlist.
 Each catalog station has one seeded simulated unit. Its fixed headquarters is
 stored separately from `current_location`; startup may seed the current
 position on insert but never resets position, availability, or active
-assignment. A request is stored before dispatch and has a citizen-scoped
+assignment. Available stations dispatch from `base_location`, never a retained
+completed simulation position. No return-to-headquarters journey is simulated;
+this is a fixed-station prototype policy. Active and historical mission routes
+remain unchanged. Missing headquarters/coverage excludes a candidate.
+A request is stored before dispatch and has a citizen-scoped
 `Idempotency-Key` plus a canonical payload fingerprint. Matching retries
 return the same request; reuse with different content returns `409`.
 

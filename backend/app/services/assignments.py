@@ -40,8 +40,12 @@ class AssignmentService:
 
     async def pending_assignment_reason(self) -> str:
         teams = await self._rescuers.list_all()
-        stations = [team for team in teams if team.station_id]
-        return "no_station_available" if not any(team.availability == "available" for team in stations) else "no_reachable_station"
+        stations = [team for team in teams if (station := station_by_team_id(team.id))
+                    and team.station_id == station["station_id"]]
+        return "no_station_available" if not any(
+            team.availability == "available" and not team.assigned_mission_id
+            and not team.assigned_request_id for team in stations
+        ) else "no_reachable_station"
 
     async def recommend_teams(
         self,
@@ -103,7 +107,7 @@ class AssignmentService:
             )
 
         for _attempt in range(3):
-            candidates, _ = await self._rank_eligible_teams(request)
+            candidates, exclusions = await self._rank_eligible_teams(request)
             if not candidates:
                 return None
             best = candidates[0]
@@ -116,6 +120,19 @@ class AssignmentService:
                     ),
                     precomputed_route=best.route,
                     expected_team_version=best.team_version,
+                    decision_evidence={
+                        "ranked_candidates": [{"station_id": candidate.station_id,
+                                               "road_distance_m": candidate.road_distance_m,
+                                               "origin_source": candidate.origin_source,
+                                               "routing_origin": candidate.routing_origin,
+                                               "availability": candidate.availability,
+                                               "snapped_origin": candidate.route.get("snapped_origin"),
+                                               "snapped_destination": candidate.route.get("snapped_destination"),
+                                               "team_version": candidate.team_version}
+                                              for candidate in candidates],
+                        "exclusions": [{"team_id": exclusion.team_id, "reason": exclusion.reason}
+                                       for exclusion in exclusions],
+                    },
                 )
             except ServiceError as exc:
                 if exc.code != "team_unavailable":
@@ -140,7 +157,7 @@ class AssignmentService:
                     )
                 )
                 continue
-            if team.availability != "available":
+            if team.availability != "available" or team.assigned_mission_id or team.assigned_request_id:
                 exclusions.append(
                     TeamRecommendationExclusion(
                         team_id=team.id,
@@ -151,7 +168,7 @@ class AssignmentService:
                 continue
             origin = _team_point(team)
             if origin is None:
-                location = team.current_location or team.base_location
+                location = team.base_location
                 exclusions.append(
                     TeamRecommendationExclusion(
                         team_id=team.id,
@@ -160,7 +177,7 @@ class AssignmentService:
                     )
                 )
                 continue
-            origin_source = "current_location" if team.current_location else "base_location"
+            origin_source = "base_location"
             route = self._with_origin_metadata(
                 self._evaluate_team_route(origin, request.location.point.coordinates),
                 origin,
@@ -223,12 +240,12 @@ class AssignmentService:
         team = await self._rescuers.get_by_id(payload.team_id)
         if request is None:
             raise ServiceError(404, "request_not_found", "Rescue request is unavailable.")
-        if team is None or team.availability != "available":
+        if team is None or team.availability != "available" or team.assigned_mission_id or team.assigned_request_id:
             raise ServiceError(409, "team_unavailable", "The selected station is unavailable.")
         origin = _team_point(team)
         if origin is None:
             raise ServiceError(409, "team_unreachable", "The selected station has no valid simulated position.")
-        origin_source = "current_location" if team.current_location else "base_location"
+        origin_source = "base_location"
         route = self._with_origin_metadata(
             self._evaluate_team_route(origin, request.location.point.coordinates),
             origin,
@@ -249,10 +266,14 @@ class AssignmentService:
         payload: AssignmentCreate,
         precomputed_route: dict | None = None,
         expected_team_version: int | None = None,
+        decision_evidence: dict | None = None,
     ) -> AssignmentResponse:
 
         assigned_at = datetime.now(UTC)
         mission_id = f"mission-{uuid4().hex}"
+        # Capture evaluated content before awaiting the transaction. Custom
+        # controlled fixtures must not be mislabeled as the default scenario.
+        graph_revision = dict(getattr(self._routing, "fixture_revision", {}))
 
         async def persist_assignment(
             session: AsyncClientSession,
@@ -282,7 +303,7 @@ class AssignmentService:
                 )
 
             team = await self._rescuers.get_by_id(payload.team_id, session=session)
-            if team is None or team.availability != "available":
+            if team is None or team.availability != "available" or team.assigned_mission_id or team.assigned_request_id:
                 raise ServiceError(
                     409,
                     "team_unavailable",
@@ -292,6 +313,9 @@ class AssignmentService:
 
             if not precomputed_route or precomputed_route.get("status") != "route-found":
                 raise ServiceError(409, "route_not_available", "Assignment requires a precomputed reachable station route.")
+            if (precomputed_route.get("routing_origin") is not None
+                    and precomputed_route["routing_origin"] != list(_team_point(team) or ())):
+                raise ServiceError(409, "team_unavailable", "Station origin changed; recommendations must be recalculated.")
 
             mission = Mission(
                 id=mission_id,
@@ -316,6 +340,18 @@ class AssignmentService:
                 },
                 latest_route_result=precomputed_route,
                 station_id=team.station_id,
+                dispatch_provenance={
+                    **(decision_evidence or {}),
+                    "chosen_station_id": team.station_id,
+                    "selection_mode": "distance",
+                    "origin_source": precomputed_route.get("origin_source"),
+                    "routing_origin": precomputed_route.get("routing_origin"),
+                    "road_distance_m": precomputed_route.get("distance_m"),
+                    "snapped_origin": precomputed_route.get("snapped_origin"),
+                    "snapped_destination": precomputed_route.get("snapped_destination"),
+                    "scenario_id": "scenario-controlled-ubelt-001",
+                    "graph_revision": graph_revision,
+                },
                 data_source="synthetic",
             )
 
@@ -418,7 +454,8 @@ class AssignmentService:
 
 
 def _team_point(team: object) -> tuple[float, float] | None:
-    location = getattr(team, "current_location", None) or getattr(team, "base_location", None)
+    from app.integrations.geospatial import STUDY_AREA_BOUNDS
+    location = getattr(team, "base_location", None)
     if not isinstance(location, dict):
         return None
     coordinates = location.get("coordinates")
@@ -432,5 +469,8 @@ def _team_point(team: object) -> tuple[float, float] | None:
     if not (-180 <= longitude <= 180 and -90 <= latitude <= 90):
         return None
     if not isfinite(longitude) or not isfinite(latitude):
+        return None
+    if not (STUDY_AREA_BOUNDS["west"] <= longitude <= STUDY_AREA_BOUNDS["east"]
+            and STUDY_AREA_BOUNDS["south"] <= latitude <= STUDY_AREA_BOUNDS["north"]):
         return None
     return longitude, latitude

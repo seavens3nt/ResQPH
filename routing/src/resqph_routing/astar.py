@@ -9,11 +9,12 @@ Tie-breaking order: (total_cost, insertion counter) to ensure stable ordering.
 from __future__ import annotations
 
 import heapq
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
 from resqph_routing.costs import ML_FALLBACK_WARNING, compute_edge_cost
-from resqph_routing.graph import RoutingGraph
+from resqph_routing.graph import GraphValidationError, RoutingGraph
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,10 @@ def find_shortest_distance_route(
     destination: str,
 ) -> RouteResult | NoRouteResult:
     """Find the shortest admissible route by road length."""
+    for edge in graph.edge_index.values():
+        if (isinstance(edge.length_m, bool) or not isinstance(edge.length_m, int | float)
+                or not math.isfinite(edge.length_m) or edge.length_m < 0):
+            raise GraphValidationError(f"edge {edge.edge_id} needs a finite nonnegative road length")
     return _search(graph, origin, destination, weight_mode="distance")
 
 

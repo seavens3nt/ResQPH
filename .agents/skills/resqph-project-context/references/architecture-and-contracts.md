@@ -57,6 +57,15 @@ load on mount/reload only, and retain explicit unavailable/stale states.
 
 ## Integration constraints
 
+- Available canonical station dispatch uses stored `base_location`, not a completed
+  simulation's `current_location`. Distance-mode routing attaches nearest physical
+  road segments before flood filtering and counts legal directed partial-edge
+  lengths; default station coverage bound is 75 m. Source edge IDs remain stable.
+  New missions persist backend-only `dispatch_provenance` with normalized evaluated
+  graph/scenario digests, candidates/exclusions and chosen origin/snap evidence.
+  Existing missions, station catalog coordinates, standalone cost-mode endpoint,
+  authentication and offline/lifecycle behavior are unchanged by this repair.
+
 - The core lifecycle must work while routing and ML adapters are unavailable.
 - PR #80 verifies mission status, linked request status/history, team availability,
   and immutable event persistence within one transaction. Completion releases the

@@ -1,5 +1,16 @@
 # ResQPH project status
 
+2026-10-13 local station-distance repair, baseline `c95c8c3` on temporary-main:
+controlled retained-position reproduction selects Iverson before and Sampaloc after
+headquarters-only dispatch. Distance routing now uses nearest physical segments,
+directed partial-edge travel, a 75 m coverage guard, finite road-length validation,
+and persisted backend decision provenance. All five headquarters comparisons and
+capacity race pass in disposable MongoDB; catalog/road geometry unchanged.
+Historical reported decision remains unproven; port 8000 belongs to another project.
+See [station evidence report](testing/STATION-DISTANCE-2026-10-13.md) for exact checks
+and six retained legacy acceptance failures. No frontend/auth/offline/lifecycle
+implementation changes; no commit, push, PR or merge.
+
 2026-10-12 weather repair on local `temporary-main`: configured server key
 reaches Google, but current/daily/hourly calls return provider HTTP 429.
 Current conditions identifies a daily quota of 100 requests. Sanitized quota and

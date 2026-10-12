@@ -80,7 +80,8 @@ class RescuerRepository:
         session: AsyncClientSession,
         expected_version: int | None = None,
     ) -> RescuerTeam | None:
-        query: dict[str, object] = {"id": team_id, "availability": "available"}
+        query: dict[str, object] = {"id": team_id, "availability": "available",
+                                    "assigned_mission_id": None, "assigned_request_id": None}
         if expected_version is not None:
             query["version"] = expected_version
         document = await self._collection.find_one_and_update(
