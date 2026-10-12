@@ -101,7 +101,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: bash .github/scripts/start-ci-mongo.sh
-      - run: python -m pip install -r backend/requirements-dev.txt 'networkx>=3.4,<4.0'
+      - run: python -m pip install -r requirements-dev.txt 'networkx>=3.4,<4.0'
+        working-directory: backend
       - name: Real transaction, durable assignment, cookie lifecycle, offline and cancellation acceptance
         working-directory: backend
         run: >-
@@ -133,7 +134,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: bash .github/scripts/start-ci-mongo.sh
-      - run: python -m pip install -r backend/requirements.txt
+      - run: python -m pip install -r requirements.txt
+        working-directory: backend
       - run: npm ci --prefix frontend
       - run: npm run build --prefix frontend
       - run: npx --prefix frontend playwright install --with-deps chromium
