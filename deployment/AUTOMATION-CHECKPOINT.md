@@ -21,6 +21,16 @@ acceptance or a completed end-to-end deployment.
 
 ## Not yet complete
 
+- PR #94 merged as `a08f6ef` after all seven PR checks passed, using the owner's
+  one-time missing-review override. Branch review requirements were not changed.
+  Its Git-triggered Vercel build then failed: `rewrites[0]` lacked `destination`
+  in the statically extracted configuration. The existing live staging build
+  was not replaced. The follow-up defers the entire environment-dependent
+  `rewrites` assignment to build-time, keeping the exported Git settings static.
+  Regression tests enforce a fully literal exported configuration as well
+  as runtime checks for distinct staging/production destinations. Hosted success
+  and normal review/merge of this follow-up are still required.
+
 - The owner approved the specific Vercel connection, and `resqph-staging` is now
   connected to `seavens3nt/ResQPH`. No other repository was connected.
 - Seven GitHub checks are saved in Vercel for blocking domain promotion:
