@@ -1,5 +1,12 @@
 # ResQPH deployment checkpoint — 2026-10-13
 
+**Later automation update:** see [AUTOMATION-CHECKPOINT.md](AUTOMATION-CHECKPOINT.md)
+for the currently provisioned staging resources, approved repository connection,
+CI-gated Render setting and Vercel checks. The initial preparation snapshot below
+is historical. The staging automation patch enables `main` Git builds only for
+the staging configuration; separate production releases remain manually gated.
+The latest UI/routing and persistent data are unchanged by this patch.
+
 Related release work: Issue #70. Baseline: main
 `5131e45a0890e5a84b93c59afa184b8a1a6ef295` (PR #92, recent UI and routing).
 Changes are a review candidate on `setup/production-deployment`, not a deployed release.

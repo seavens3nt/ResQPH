@@ -1,5 +1,6 @@
 // Project root must be the repository root: maps import ../data/samples.
-// Production promotion is manual after main CI and staging acceptance, not Git auto-deploy.
+// Staging main builds are held by the project's seven blocking GitHub checks.
+// Separate production promotion still requires exact-SHA staging acceptance.
 const apiOrigin = process.env.RENDER_API_ORIGIN
 const environment = process.env.RESQPH_DEPLOY_ENVIRONMENT
 if (!['staging', 'production'].includes(environment)) {
@@ -20,7 +21,9 @@ export const config = {
   installCommand: 'npm ci --prefix frontend',
   buildCommand: 'npm run build --prefix frontend',
   outputDirectory: 'frontend/dist',
-  git: { deploymentEnabled: false },
+  // Vercel evaluates Git properties statically before environment resolution.
+  git: { deploymentEnabled: { '**': false, main: true } },
+  ignoreCommand: 'node deployment/ignore-vercel-build.mjs',
   rewrites: [
     { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` },
     { source: '/((?!api(?:/|$)|assets/|offline-shell\\.js$).*)', destination: '/index.html' },
