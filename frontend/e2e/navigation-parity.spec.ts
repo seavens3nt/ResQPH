@@ -33,7 +33,11 @@ for (const view of ['overview', 'account']) {
             snapshots.push(await sidebar.evaluate((node, desktop) => {
               const read = (element: Element, geometry = false, pseudo?: string) => {
                 const style = getComputedStyle(element, pseudo)
-                const properties = ['backgroundColor', 'color', 'borderTop', 'borderRight', 'borderBottom', 'borderLeft', 'borderRadius', 'boxShadow', 'padding', 'gap', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'alignItems', 'justifyContent', 'flexDirection', 'opacity', 'filter']
+                const properties = ['backgroundColor', 'color', 'borderTop', 'borderRight', 'borderBottom', 'borderLeft', 'borderRadius', 'boxShadow', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'opacity', 'filter']
+                // Rescuer-only responsive density may compact narrow chrome.
+                // Appearance stays shared; its per-page geometry is checked in
+                // rescuer-sizing.spec.ts at all six required viewports.
+                if (desktop) properties.push('padding', 'gap', 'alignItems', 'justifyContent', 'flexDirection')
                 if (geometry) properties.push('width', 'height', 'minHeight', 'margin', 'top')
                 return Object.fromEntries(properties.map(key => [key, style[key as keyof CSSStyleDeclaration]]))
               }
@@ -41,7 +45,7 @@ for (const view of ['overview', 'account']) {
               const inactive = node.querySelector('nav button:not([aria-current])')!
               return {
                 sidebar: read(node, desktop),
-                brand: read(node.querySelector('.workspace-brand')!, true),
+                brand: read(node.querySelector('.workspace-brand')!, desktop),
                 nav: read(node.querySelector('nav')!),
                 active: read(active, desktop),
                 marker: read(active, false, '::before'),

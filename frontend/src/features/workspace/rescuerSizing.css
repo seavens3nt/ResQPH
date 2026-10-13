@@ -1,0 +1,296 @@
+/* Rescuer-only density tokens. Citizen remains the visual reference, unchanged.
+   This final layer owns sizing/layout, never domain content or action colors. */
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] {
+  --rescuer-body: .9375rem;
+  --rescuer-small: .8125rem;
+  --rescuer-title: clamp(1.375rem, 1.6vw, 1.75rem);
+  --rescuer-section: clamp(1.25rem, 1.4vw, 1.5rem);
+  --rescuer-gap: clamp(12px, 1.2vw, 20px);
+  --rescuer-inset: 12px;
+  --rescuer-padding: clamp(16px, 1.3vw, 24px);
+  --rescuer-gutter: clamp(16px, 2vw, 32px);
+  --rescuer-control: 40px;
+  --rescuer-map: clamp(240px, 32dvh, 360px);
+  font-family: var(--font-body);
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-main {
+  font-size: var(--rescuer-body);
+  line-height: 1.5;
+  min-width: 0;
+  padding: 0 var(--rescuer-gutter) 32px;
+}
+/* A global max-width:100% squeezed SVG width inside 44px collapsed buttons
+   without reducing height. Match the square shared icon slot instead. */
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-nav button > svg { max-width: none; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-main .workspace-topbar {
+  height: auto;
+  min-height: 64px;
+  margin: 0 calc(-1 * var(--rescuer-gutter)) var(--rescuer-gap);
+  padding: 10px var(--rescuer-gutter);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar h1 {
+  margin: 0;
+  font-size: var(--rescuer-title);
+  font-weight: 550;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar h1::before { content: none; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed][data-theme=dark] .workspace-topbar {
+  background: var(--shared-surface);
+  border-color: var(--line);
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed][data-theme=dark] .workspace-section-heading,
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed][data-theme=dark] .workspace-section-heading > :first-child { color: var(--card-ink, var(--ink)) !important; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar > div {
+  min-width: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar .citizen-theme-toggle {
+  width: var(--rescuer-control);
+  height: var(--rescuer-control);
+  min-height: var(--rescuer-control);
+  flex: 0 0 var(--rescuer-control);
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar .citizen-role-pill {
+  min-width: 0;
+  min-height: var(--rescuer-control);
+  height: auto;
+  padding: 7px 12px;
+  gap: 8px;
+  font-size: var(--rescuer-small);
+  font-weight: 500;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-section-heading,
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-page > h2 {
+  font-size: var(--rescuer-section) !important;
+  font-weight: 550 !important;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  gap: 10px !important;
+  margin: 0 0 var(--rescuer-gap) !important;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-section-heading > :first-child {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-section-heading .figma-home-asset > img {
+  width: 100% !important;
+  height: 100% !important;
+  transform: none;
+  object-fit: contain;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.workspace-stack, .rescuer-workspace, .rescuer-routes-page) {
+  gap: var(--rescuer-gap);
+  min-width: 0;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.workspace-card, .rescuer-mission-card, .workspace-inspector, .offline-queue-panel) {
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  padding: var(--rescuer-padding);
+  margin-bottom: 0;
+  gap: var(--rescuer-gap);
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-main :is(h2, h3, h4) { overflow-wrap: anywhere; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.workspace-card, .workspace-inspector, .mission-tracking-panel) h3 {
+  font-size: 1.0625rem !important;
+  font-weight: 550 !important;
+  line-height: 1.3;
+  margin: 0 0 10px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-card > h2 {
+  font-size: var(--rescuer-section);
+  font-weight: 550;
+  margin: 0 0 var(--rescuer-gap);
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.workspace-card p, .workspace-team-caption, .workspace-facts, .workspace-timeline) {
+  font-size: var(--rescuer-body) !important;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-panel-heading {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 0 var(--rescuer-gap) !important;
+  min-width: 0;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-team-caption { min-width: 0; margin: 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-team-caption::before { content: none; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-main button:not(:where(.citizen-theme-toggle, .modal-close, .map-toggle-btn, .google-map-wrapper button, .gm-style button)),
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-tabs button {
+  min-height: var(--rescuer-control);
+  height: auto;
+  padding: 8px 16px !important;
+  font-size: .875rem !important;
+  font-weight: 550 !important;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.workspace-actions, .workspace-tabs, .mission-tracking-panel__actions) { gap: 10px; flex-wrap: wrap; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  flex-wrap: wrap;
+  min-height: 0;
+  padding: var(--rescuer-inset);
+  gap: 12px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__id,
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__id :is(strong, summary) {
+  font-size: var(--rescuer-body);
+  font-weight: 550;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .status-badge {
+  min-height: 28px;
+  font-size: var(--rescuer-small);
+  padding: 4px 10px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .sync-badge {
+  width: auto;
+  align-self: auto;
+  min-height: 0;
+  padding: 8px 12px;
+  gap: 6px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .sync-badge__label { font-size: var(--rescuer-small); font-weight: 550; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .sync-badge__time { font-size: var(--rescuer-small); }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__meta {
+  align-items: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__meta > :first-child { grid-column: 1 / -1; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__detail {
+  min-height: 44px;
+  padding: 10px 12px;
+  gap: 8px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__detail-text {
+  font-size: .875rem;
+  font-weight: 500;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-progress {
+  margin: 4px 0;
+  padding: 8px 0;
+  gap: 8px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-progress li { font-size: var(--rescuer-small); gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-progress li > svg { width: 28px; height: 28px; flex-shrink: 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-progress::before { top: 22px; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.mission-tracking-map, .mission-map-preview) {
+  --workspace-map-height: var(--rescuer-map);
+  height: var(--rescuer-map);
+  min-height: 240px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.mission-tracking-map, .mission-map-preview) :is(.google-map-wrapper, .google-map-canvas) {
+  height: 100% !important;
+  min-height: 100%;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.mission-tracking-panel__metrics, .mission-tracking-panel__actions) { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .mission-tracking-panel { gap: 12px; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .mission-tracking-panel__actions:empty { display: none; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card > .btn { margin: 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .mission-tracking-panel__header > strong { font-size: 1.0625rem; font-weight: 550; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--rescuer-gap); align-items: start; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.workspace-split-content, .workspace-table-panel, .workspace-table-wrap, .workspace-facts > div, .workspace-facts dd, .mission-details) { min-width: 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-table :is(th, td) { padding: 11px 12px; font-size: .875rem; line-height: 1.45; vertical-align: middle; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-table td { overflow-wrap: anywhere; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-table { min-width: 640px; width: 100%; table-layout: auto; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-table td button { min-width: 72px; white-space: nowrap; overflow-wrap: normal; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-empty { width: 100%; min-height: 0; padding: 24px 16px; text-align: center; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-profile .account-form { gap: var(--rescuer-gap); }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-profile fieldset { min-width: 0; padding: var(--rescuer-padding); gap: 12px; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-profile legend { font-size: 1.125rem; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-form label { font-size: .875rem; gap: 6px; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-form :is(input:not([type=file]), textarea) {
+  font-size: .875rem;
+  height: auto;
+  min-height: var(--rescuer-control);
+  padding: 8px 12px;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-profile .account-form textarea { height: auto; min-height: 72px; resize: vertical; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-feedback { grid-column: 1 / -1; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-backdrop { padding: 16px; place-items: center; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-card {
+  width: 100%;
+  max-width: min(560px, 100%) !important;
+  max-height: calc(100dvh - 32px);
+  min-height: 0;
+  overflow: visible;
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] :is(.modal-header, .modal-footer) { padding: 16px var(--rescuer-padding); flex-shrink: 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-header { border-radius: 24px 24px 0 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-body:last-child { border-radius: 0 0 24px 24px; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-title { font-size: 1.25rem !important; line-height: 1.3; font-weight: 550; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-header > div { min-width: 0; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-body { min-height: 0; overflow-y: auto; padding: var(--rescuer-padding); gap: 12px; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-body textarea { width: 100%; min-height: 88px; padding: 10px 12px; font-size: var(--rescuer-body); resize: vertical; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .modal-body > .workspace-actions:last-child { position: sticky; bottom: calc(-1 * var(--rescuer-padding)); padding: 12px 0; background: var(--card-surface, var(--shared-surface)); }
+@media (max-width: 1200px) {
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1600px) {
+  .workspace-shell[data-role=rescuer][data-view=history][data-nav-collapsed] .workspace-split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1000px) {
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-profile .account-form {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'personal' 'medical' 'emergency' 'actions' 'feedback';
+  }
+}
+@media (max-width: 850px) {
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] { --rescuer-control: 44px; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-nav nav {
+    /* Beats legacy collapsed :is(nav,.workspace-brand) specificity. */
+    width: 100% !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed=true] .workspace-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed=true] .workspace-brand {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    margin: 0;
+  }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed=true] .workspace-nav nav { width: auto !important; flex: 1 1 200px; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-nav button[aria-current]::before { left: 0; height: 24px; min-height: 24px; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-main .workspace-topbar { margin-top: 0; }
+}
+@media (max-width: 559px) {
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__meta { grid-template-columns: minmax(0, 1fr); }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-main .workspace-topbar { align-items: flex-start; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar > :is(h1, div) { flex-basis: 100%; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar > div { justify-content: flex-end; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .rescuer-mission-card__head { grid-template-columns: minmax(0, 1fr); }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-personal-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-avatar { width: 80px; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .account-personal-inputs { grid-template-columns: minmax(0, 1fr); }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-progress { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-progress::before { display: none; }
+  .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-facts > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}

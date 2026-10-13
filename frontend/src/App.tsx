@@ -14,6 +14,7 @@ import './components/ui/actionTheme.css'
 import './components/ui/cardTheme.css'
 import './features/map/mapControlTheme.css'
 import './features/workspace/sharedNavigation.css'
+import './features/workspace/rescuerSizing.css'
 
 export default function App() {
   const [dark] = useTheme()
