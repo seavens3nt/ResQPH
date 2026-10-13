@@ -1,5 +1,16 @@
 # Local frontend visual baseline
 
+2026-10-13 Rescuer-only responsive density: `rescuerSizing.css` is the final,
+role-scoped sizing layer, after shared navigation. Reuse its typography, gap,
+padding, gutter, control and map tokens across My Mission, Routes, History,
+Account, Help and Rescuer dialogs. Citizen styling remains unchanged. Retain
+shared sidebar geometry; keep native SVG icon slots square. Mission location
+details wrap in a full-width row; other facts use responsive columns without
+equal-height stretching. History tables scroll within their own panel and
+stack their inspector at laptop widths. Long pages scroll naturally. Dialogs
+remain viewport-centered with a scrollable body and reachable actions.
+See RESCUER-SIZING-2026-10-13.md for verification scope and limitations.
+
 2026-10-13 local preview recovery: retain the UI from `temp-main-UI` alongside
 the backend/routing integration. Vite development serves a retiring worker at
 `/offline-shell.js` so a production offline shell previously opened on the same
