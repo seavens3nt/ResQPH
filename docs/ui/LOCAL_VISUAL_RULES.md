@@ -315,6 +315,12 @@ destinations, session/permission checks and mission content are unchanged.
 Remove the introductory Google Weather study-area paragraph from Advisory;
 keep weather attribution and the existing limitations/help content.
 
+Navigation follow-up: remove legacy Rescuer-only sidebar/brand selectors rather
+than relying on a later stylesheet to beat their specificity. Shared navigation
+owns both roles. Built-browser regression compares computed sidebar, logo, menu,
+active marker, icons, label and Help styles at desktop/mobile widths in light/dark
+themes and expanded/collapsed states, using isolated synthetic sessions.
+
 2026-10-13 forecast-card reference: Current weather and Practical tips share the
 Hourly Forecast card surface, border, elevation, padding and heading typography
 through weather-reference-card. Weather measurements, tip entries and preparation
