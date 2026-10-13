@@ -827,7 +827,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   display:none;
 }
 .workspace-shell[data-role=citizen][data-view]:not([data-view=overview]) .workspace-topbar h1,
-.workspace-shell[data-role=citizen][data-view]:not([data-view=overview]) :is(.requests-page-title,.citizen-map-page > h2,.account-page > h2,.citizen-information-page > h2) {
+.workspace-shell[data-role=citizen][data-view]:not([data-view=overview]) :is(.requests-page-title,.citizen-map-page > h2,.account-page > h2,.citizen-information-page > h2:not(.workspace-section-heading)) {
   color:var(--ink);
   font-weight:700;
   letter-spacing:-.02em;
