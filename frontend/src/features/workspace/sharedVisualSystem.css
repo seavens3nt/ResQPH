@@ -1453,6 +1453,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   gap:16px;
   margin:16px 0 18px;
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .weather-reference-inset,
 .workspace-shell[data-role=citizen][data-view=overview] .home-weather-metric {
   height:auto;
   min-height:70px;
@@ -1462,6 +1463,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   background:#fff;
   box-shadow:0 8px 22px rgba(49,88,119,.06);
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-weather-metrics dt,
 .workspace-shell[data-role=citizen][data-view=overview] .home-weather-metric > span {
   color:#6c7e96;
   font-size:12px;
@@ -1469,6 +1471,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   font-weight:500;
   text-transform:uppercase;
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-weather-metrics dd,
 .workspace-shell[data-role=citizen][data-view=overview] .home-weather-metric strong {
   color:#071a32;
   font-size:19px;
@@ -1651,6 +1654,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
 .workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .live-hourly-panel {
   background:transparent;
 }
+.workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .weather-reference-inset,
 .workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .home-weather-metric,
 .workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] .live-hourly-scroll {
   background:#0d1a2f;
@@ -2158,4 +2162,45 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
 [data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-grid > .workspace-card {
   border:1px solid #274263;
   box-shadow:var(--home-shadow);
+}
+
+/* One forecast-card surface and heading treatment for Home and Advisory. */
+.workspace-shell[data-role=citizen][data-view] .workspace-card.weather-reference-card {
+  background:var(--neutral-surface);
+  border:1px solid var(--neutral-line);
+  border-radius:var(--surface-radius);
+  box-shadow:var(--surface-shadow);
+  padding:var(--citizen-card-padding);
+  color:var(--neutral-ink);
+  font-family:inherit;
+}
+.workspace-shell[data-role=citizen][data-view] .workspace-card.weather-reference-card > h3 {
+  margin:4px 0 0;
+  color:var(--neutral-ink);
+  font-size:clamp(24px,1.65vw,32px);
+  font-weight:var(--citizen-heading-weight);
+  line-height:1.15;
+  letter-spacing:-.025em;
+}
+.advisory-weather-metrics {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  margin:16px 0 18px;
+}
+.advisory-weather-metrics > :first-child { grid-column:1 / -1; }
+.advisory-weather-metrics dt { margin:0 0 4px; }
+.advisory-weather-metrics dd { margin:0; overflow-wrap:anywhere; }
+.workspace-shell[data-role=citizen][data-view=advisory] .weather-reference-inset {
+  min-width:0;
+  height:auto;
+}
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-preparation.weather-reference-inset {
+  border-top:0;
+}
+.workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-weather-metrics :is(dt,dd) {
+  color:var(--neutral-ink);
+}
+@media (max-width:420px) {
+  .advisory-weather-metrics { grid-template-columns:minmax(0,1fr); }
 }

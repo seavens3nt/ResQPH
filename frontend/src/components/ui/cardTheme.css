@@ -36,7 +36,7 @@
 }
 .workspace-shell[data-role][data-view] :is(.workspace-main,#citizen-request-form) :is(
   .account-profile fieldset,.requests-inset-panel,.citizen-map-inset,
-  .live-hourly-panel,.home-weather-metric,
+  .live-hourly-panel,.home-weather-metric,.weather-reference-inset,
   .request-location-fields > div:first-child,.request-responder-panel,
   .workspace-record,.citizen-map-summary
 ) {
