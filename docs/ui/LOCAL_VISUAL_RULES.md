@@ -308,6 +308,13 @@ Last updated and Google Maps attribution stay below Practical tips. Advisory sha
 Home's card padding, radius, elevation, heading weight/size, column proportions and
 narrow-screen stacking. Keep real weather values and stale/offline/error feedback.
 
+2026-10-13 navigation alignment: Citizen and Rescuer share a final navigation
+stylesheet for sidebar surface, outline, elevation, active navy pill/red marker,
+typography, expanded/collapsed controls and narrow-screen wrapping. Role menu
+destinations, session/permission checks and mission content are unchanged.
+Remove the introductory Google Weather study-area paragraph from Advisory;
+keep weather attribution and the existing limitations/help content.
+
 2026-10-13 forecast-card reference: Current weather and Practical tips share the
 Hourly Forecast card surface, border, elevation, padding and heading typography
 through weather-reference-card. Weather measurements, tip entries and preparation

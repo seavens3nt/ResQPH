@@ -26,7 +26,6 @@ export function CitizenAdvisory() {
   const missingRain = data && data.rainChance == null && data.rainAmount == null
   return <div className="workspace-stack citizen-information-page">
     <h2>Weather advisory</h2>
-    <p>Google Weather at the fixed U-Belt study-area location. Practical app suggestions, not official alerts or flood advice.</p>
     <div className="advisory-grid">
     <WorkspaceCard className="weather-reference-card" aria-labelledby="advisory-current-weather-title">
       <h3 id="advisory-current-weather-title">Current weather</h3>
