@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { apiClient } from '../../api/client'
 import { AuthProvider } from '../../features/auth/AuthContext'
+import { RESCUE_STATIONS } from '../../features/map/stations'
 import { LoginPage } from './LoginPage'
 import { SignupPage } from './SignupPage'
 
@@ -31,6 +32,42 @@ function advanceToLocation() {
 }
 
 describe('Accessible prototype entry', () => {
+  it('clears credentials when the station changes and still submits a manually entered station login', async () => {
+    const oldPassword = ['Old', 'Station', 'Password', '55'].join('-')
+    const manualPassword = ['Manual', 'Station', 'Password', '55'].join('-')
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({data:{user:{
+      id:'station-account-test', email:'manual.station@example.test', name:'Station Tester',
+      role:'rescuer', station_id:'iverson-fire-rescue', station_name:'Iverson Fire and Rescue Volunteer',
+      station_address:'622 Sobriedad St.',
+    }}} as never)
+    entry(<LoginPage />)
+    fireEvent.click(screen.getByRole('radio', {name:'Rescuer'}))
+    const station = screen.getByRole('combobox', {name:'Which rescue station are you from?'})
+    const email = screen.getByLabelText('Email')
+    const password = screen.getByLabelText('Password')
+    fireEvent.change(station, {target:{value:'sampaloc-fire-station'}})
+    fireEvent.change(email, {target:{value:'old.station@example.test'}})
+    fireEvent.change(password, {target:{value:oldPassword}})
+    fireEvent.change(station, {target:{value:'iverson-fire-rescue'}})
+    expect(email).toHaveValue('')
+    expect(password).toHaveValue('')
+
+    fireEvent.change(email, {target:{value:'manual.station@example.test'}})
+    fireEvent.change(password, {target:{value:manualPassword}})
+    const form = screen.getByRole('button', {name:'Log In'}).closest('form')
+    expect(form).toHaveAttribute('id','resqph-login-form')
+    expect(email).toHaveAttribute('name','username')
+    expect(email).toHaveAttribute('autocomplete','username')
+    expect(password).toHaveAttribute('name','password')
+    expect(password).toHaveAttribute('autocomplete','current-password')
+    fireEvent.submit(form!)
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/login', {
+      email:'manual.station@example.test', password:manualPassword, station_id:'iverson-fire-rescue',
+    }))
+    await waitFor(() => expect(screen.getByLabelText('current route')).toHaveTextContent('/dashboard'))
+    post.mockRestore()
+  })
+
   it('offers citizen and rescuer roles with visible login labels', () => {
     entry(<LoginPage/>)
     expect(screen.queryByRole('navigation', {name:'Account access'})).not.toBeInTheDocument()
@@ -62,6 +99,18 @@ describe('Accessible prototype entry', () => {
     fireEvent.change(station, { target: { value: 'iverson-fire-rescue' } })
     expect(screen.getByText('622 Sobriedad St.')).toBeVisible()
     expect(screen.queryByText(/team-alpha|team-bravo|team-charlie/i)).not.toBeInTheDocument()
+  })
+
+  it('keeps station account identifiers and passwords out of public station metadata', () => {
+    expect(RESCUE_STATIONS).toHaveLength(5)
+    expect(RESCUE_STATIONS.every((station) => !('email' in station) && !('password' in station))).toBe(true)
+    entry(<LoginPage />)
+    fireEvent.click(screen.getByRole('radio', { name: 'Rescuer' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Which rescue station are you from?' }), {
+      target: { value: 'sampaloc-fire-station' },
+    })
+    expect(screen.getByLabelText('Email')).toHaveValue('')
+    expect(screen.getByLabelText('Password')).toHaveValue('')
   })
 
   it('keeps signup fields labeled and names the optional final step after 5/5', () => {

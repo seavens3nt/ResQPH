@@ -68,13 +68,22 @@ export function LoginPage() {
       }
     >
       {recoveryMessage && <p role="alert">{recoveryMessage}</p>}
-      <form className="auth-clean-form" onSubmit={handleSubmit} noValidate>
+      <form id="resqph-login-form" name="resqph-login" className="auth-clean-form" onSubmit={handleSubmit} noValidate>
         {/* Segmented Portal Role Chooser */}
-        <RoleChooser value={role} onChange={setRole} />
+        <RoleChooser value={role} onChange={(nextRole) => {
+          setRole(nextRole)
+          setEmail('')
+          setPassword('')
+          setStationId('')
+        }} />
         {role === 'rescuer' && <div className="auth-station-field">
           <p className="auth-station-guidance">Station accounts are provided by the project administrator.</p>
           <label className="auth-field-label" htmlFor="rescue-station">Which rescue station are you from?</label>
-          <select id="rescue-station" aria-label="Which rescue station are you from?" value={stationId} onChange={(event) => setStationId(event.target.value)} required>
+          <select id="rescue-station" aria-label="Which rescue station are you from?" value={stationId} onChange={(event) => {
+            setStationId(event.target.value)
+            setEmail('')
+            setPassword('')
+          }} required>
             <option value="">Select your station</option>
             {RESCUE_STATIONS.map((station) => <option key={station.station_id} value={station.station_id}>{station.name}</option>)}
           </select>
@@ -89,11 +98,12 @@ export function LoginPage() {
           </span>
           <input
             id="login-email"
+            name="username"
             type="email"
             className="auth-pill-input"
             placeholder="citizen@example.test"
             aria-label="Email"
-            autoComplete="email"
+            autoComplete="username"
             disabled={submitting}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -108,6 +118,7 @@ export function LoginPage() {
           </span>
           <input
             id="login-password"
+            name="password"
             type={showPassword ? 'text' : 'password'}
             className="auth-pill-input"
             placeholder="Enter your password"
