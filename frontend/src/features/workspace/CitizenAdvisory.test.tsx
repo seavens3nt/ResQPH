@@ -27,6 +27,7 @@ it('renders metric weather, missing precipitation and practical tips, sharing ca
   expect(screen.getByText(/Precipitation measurements are missing/)).toBeInTheDocument()
   expect(screen.getAllByRole('heading',{name:'Weather advisory'})).toHaveLength(1)
   expect(screen.getByRole('heading',{name:'Weather advisory',level:2})).toBeVisible()
+  expect(screen.queryByText('Google Weather at the fixed U-Belt study-area location. Practical app suggestions, not official alerts or flood advice.')).not.toBeInTheDocument()
   expect(screen.queryByRole('heading',{name:'Advisory'})).not.toBeInTheDocument()
   expect(screen.getByRole('heading',{name:'Current weather'})).toBeVisible()
   expect(screen.getByRole('heading',{name:'Prepare for heat'})).toBeVisible()

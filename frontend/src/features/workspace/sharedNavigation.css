@@ -1,0 +1,153 @@
+/* Citizen is the navigation reference. Both roles share this final layer;
+   mission content and role-specific destinations remain independently styled. */
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] {
+  --nav-surface:rgba(255,255,255,.86);
+  --nav-border:#d6e4f2;
+  --nav-ink:#071a32;
+  --nav-hover:#eaf0f7;
+  --nav-selected:#071a32;
+  --nav-shadow:0 16px 40px rgba(58,103,143,.08);
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-theme=dark] {
+  --nav-surface:#101b30;
+  --nav-border:#274263;
+  --nav-ink:#f4f8ff;
+  --nav-hover:#1d3252;
+  --nav-selected:#1c3558;
+  --nav-shadow:0 16px 38px rgba(0,0,0,.22);
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav {
+  --home-unit:var(--nav-unit,1px);
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:calc(15 * var(--home-unit));
+  height:calc(100dvh - 27 * var(--home-unit));
+  margin:calc(15 * var(--home-unit)) 0 calc(12 * var(--home-unit));
+  padding:calc(29 * var(--home-unit)) calc(20 * var(--home-unit)) calc(28 * var(--home-unit));
+  gap:calc(20 * var(--home-unit));
+  background:var(--nav-surface) !important;
+  border:1px solid var(--nav-border) !important;
+  border-left:0 !important;
+  border-radius:0 calc(25 * var(--home-unit)) calc(25 * var(--home-unit)) 0 !important;
+  box-shadow:var(--nav-shadow) !important;
+  backdrop-filter:none !important;
+  color:var(--nav-ink);
+  cursor:pointer;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-brand {
+  height:calc(40 * var(--home-unit));
+  margin:0 0 0 calc(-3 * var(--home-unit));
+  flex-shrink:0;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav nav {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  gap:calc(19 * var(--home-unit));
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button {
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:calc(10 * var(--home-unit));
+  min-height:calc(39 * var(--home-unit));
+  padding:calc(9 * var(--home-unit)) calc(14 * var(--home-unit));
+  border:0 !important;
+  border-radius:calc(9 * var(--home-unit)) calc(22 * var(--home-unit)) calc(22 * var(--home-unit)) calc(9 * var(--home-unit)) !important;
+  background:transparent !important;
+  color:var(--nav-ink) !important;
+  font-family:var(--font-body);
+  font-size:calc(13 * var(--home-unit));
+  font-weight:500;
+  box-shadow:none !important;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button:hover {
+  background:var(--nav-hover) !important;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button[aria-current],
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button[aria-current]:hover {
+  background:var(--nav-selected) !important;
+  color:#fff !important;
+  box-shadow:0 8px 18px rgba(7,26,50,.14) !important;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button[aria-current]::before {
+  content:'';
+  position:absolute;
+  left:calc(-20 * var(--home-unit));
+  top:50%;
+  width:2px;
+  height:calc(32 * var(--home-unit));
+  min-height:28px;
+  border-radius:999px;
+  background:#e52438;
+  transform:translateY(-50%);
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button > svg {
+  color:inherit !important;
+  stroke:currentColor !important;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button:focus-visible {
+  outline:2px solid #2688ff;
+  outline-offset:3px;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav > button {
+  font-size:calc(10 * var(--home-unit));
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed=true] .workspace-nav {
+  margin:calc(15 * var(--home-unit)) calc(10 * var(--home-unit)) calc(12 * var(--home-unit));
+  padding:calc(29 * var(--home-unit)) calc(8 * var(--home-unit));
+  border-left:1px solid var(--nav-border) !important;
+  border-radius:calc(40 * var(--home-unit)) !important;
+  align-items:center;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed=true] .workspace-nav button {
+  justify-content:center;
+  width:44px;
+  min-width:44px;
+  height:44px;
+  padding:12px;
+  border-radius:50% !important;
+  gap:0;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed=true] .workspace-nav-label {
+  max-width:0;
+  opacity:0;
+  overflow:hidden;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed=false] .workspace-nav-label {
+  max-width:none;
+  opacity:1;
+  white-space:normal;
+}
+.workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] .workspace-nav button::after {
+  content:none !important;
+}
+@media (min-width:851px) {
+  .workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] {
+    grid-template-columns:calc(325 * var(--sidebar-unit)) minmax(0,1fr);
+  }
+  .workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed=true] {
+    grid-template-columns:calc(150 * var(--sidebar-unit)) minmax(0,1fr);
+  }
+}
+@media (max-width:850px) {
+  .workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view] { display:block; }
+  .workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed] .workspace-nav {
+    position:relative;
+    top:0;
+    height:auto;
+    margin:8px;
+    padding:16px;
+    border:1px solid var(--nav-border) !important;
+    border-radius:20px !important;
+    gap:16px;
+    align-items:stretch;
+  }
+  .workspace-shell:is([data-role=citizen],[data-role=rescuer])[data-view][data-nav-collapsed] .workspace-nav nav {
+    flex-direction:row;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+}
