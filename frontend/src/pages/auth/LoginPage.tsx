@@ -67,7 +67,7 @@ export function LoginPage() {
         </div>
       }
     >
-      {recoveryMessage && <p role="alert">{recoveryMessage}</p>}
+      {recoveryMessage && !recoveryMessage.startsWith('This browser profile changed accounts.') && <p role="alert">{recoveryMessage}</p>}
       <form className="auth-clean-form" onSubmit={handleSubmit} noValidate>
         {/* Segmented Portal Role Chooser */}
         <RoleChooser value={role} onChange={setRole} />
