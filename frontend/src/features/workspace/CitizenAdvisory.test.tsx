@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { AxiosError } from 'axios'
 import { apiClient } from '../../api/client'
@@ -32,6 +32,14 @@ it('renders metric weather, missing precipitation and practical tips, sharing ca
   expect(screen.getByRole('heading',{name:'Prepare for heat'})).toBeVisible()
   expect(screen.queryByRole('heading',{name:'Data status'})).not.toBeInTheDocument()
   expect(screen.getByRole('region',{name:'Weather refresh'})).toBeVisible()
+  const practicalTips = screen.getByRole('region',{name:'Practical tips'})
+  const footer = within(practicalTips).getByRole('region',{name:'Weather refresh'})
+  expect(within(footer).getByText(/Last updated:/)).toHaveTextContent('PHT')
+  expect(within(footer).getByRole('button',{name:'Refresh weather'})).toBeVisible()
+  expect(within(footer).getByText('Google Maps')).toBeVisible()
+  expect(practicalTips.lastElementChild).toBe(footer)
+  expect(screen.getByRole('region',{name:'Current weather'})).toHaveClass('workspace-card')
+  expect(practicalTips).toHaveClass('workspace-card')
   expect(screen.getByText(/Carry drinking water/)).toBeInTheDocument()
   expect(screen.getByText(/Reported temperature is 33.2/)).toBeInTheDocument()
   expect(screen.getByRole('heading',{name:'Before heading out'})).toBeVisible()

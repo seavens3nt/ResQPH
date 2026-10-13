@@ -595,7 +595,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home :is(.home-scenario-card,.home-hourly-card) { padding:14px; }
   .workspace-shell[data-role][data-view] .role-workspace .rescuer-mission-card { padding:20px; }
 }
-.advisory-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:18px; }
+.advisory-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:18px; }
 .advisory-grid > * { min-width:0; overflow-wrap:anywhere; }
 .advisory-advice-list { list-style:none; margin:0; padding:0 !important; display:grid; gap:12px; }
 .advisory-advice-list li { display:flex; align-items:flex-start; gap:12px; }
@@ -754,6 +754,10 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
 }
 .advisory-refresh { display:grid; gap:8px; padding:0 2px; font-size:.875rem; color:var(--muted); }
 .advisory-refresh p { margin:0; }
+.advisory-weather-footer { display:grid; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:.875rem; }
+.advisory-weather-footer p { margin:0; }
+.advisory-weather-footer .workspace-actions { margin-top:0; gap:12px; }
+.advisory-weather-footer .workspace-actions button { margin:0; }
 .advisory-grid > .workspace-card { padding:20px; }
 
 /* Image 5 visual refresh for secondary Citizen screens.
@@ -1931,12 +1935,12 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   box-shadow:var(--resqph-inner-shadow);
 }
 
-[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-refresh [role=alert] {
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] :is(.advisory-refresh,.advisory-weather-footer) [role=alert] {
   background:#3a1520;
   color:#ff9aad;
 }
 
-[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-refresh [role=status]:not(.loading-state) {
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] :is(.advisory-refresh,.advisory-weather-footer) [role=status]:not(.loading-state) {
   background:#102f29;
   color:#9ee6c5;
 }

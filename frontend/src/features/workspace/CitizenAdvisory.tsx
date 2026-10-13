@@ -28,8 +28,8 @@ export function CitizenAdvisory() {
     <h2>Weather advisory</h2>
     <p>Google Weather at the fixed U-Belt study-area location. Practical app suggestions, not official alerts or flood advice.</p>
     <div className="advisory-grid">
-    <WorkspaceCard>
-      <h3>Current weather</h3>
+    <WorkspaceCard aria-labelledby="advisory-current-weather-title">
+      <h3 id="advisory-current-weather-title">Current weather</h3>
       <p>U-Belt pilot area, Manila</p>
       {data && <>
         <p className="advisory-temperature">{temperatureC == null ? 'Unavailable' : `${temperatureC} °C`}</p>
@@ -44,8 +44,8 @@ export function CitizenAdvisory() {
         ]}/>
       </>}
     </WorkspaceCard>
-    <WorkspaceCard>
-      <h3>Practical tips</h3>
+    <WorkspaceCard aria-labelledby="advisory-practical-tips-title">
+      <h3 id="advisory-practical-tips-title">Practical tips</h3>
       {tips.length ? <ul className="advisory-advice-list" aria-label="Current weather suggestions">{tips.map(tip =>
         <li key={tip.id}><Icon name={tip.id === 'heat' ? 'droplet' : 'waves'} size={22}/><div><h4>{tip.title}</h4><p>{tip.text}</p><p className="advisory-tip-reason"><strong>Why this appears:</strong> {tip.why}</p></div></li>
       )}</ul> : data && !stale && <p>No special advisory conditions detected in the available measurements.</p>}
@@ -59,9 +59,7 @@ export function CitizenAdvisory() {
           {!tips.some(tip => tip.id === 'heat') && <li>Bring drinking water for your outing.</li>}
         </ul>
       </section>
-    </WorkspaceCard>
-    </div>
-    <section className="advisory-refresh" aria-label="Weather refresh">
+    <section className="advisory-weather-footer" aria-label="Weather refresh">
       {data && <p>Last updated: <time dateTime={data.time}>{new Date(data.time).toLocaleString('en-PH',{timeZone:'Asia/Manila'})} PHT</time>{stale ? ' · Stale cached measurements' : ''}</p>}
       {!data && weather.isPending && online && weather.fetchStatus !== 'paused' && <LoadingState layout="weather" label="Loading advisory weather…"/>}
       {(!online || weather.fetchStatus === 'paused') && <p role="status">Offline. Weather cannot be refreshed until you reconnect.</p>}
@@ -73,5 +71,7 @@ export function CitizenAdvisory() {
       }}>{weather.isFetching ? 'Refreshing weather…' : 'Refresh weather'}</button>{wait > 0 && <span role="status">Refresh available in {wait}s.</span>}</div>
       <p className="weather-summary-attribution"><span className="google-weather-attribution" translate="no">Google Maps</span></p>
     </section>
+    </WorkspaceCard>
+    </div>
   </div>
 }

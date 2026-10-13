@@ -302,6 +302,13 @@ Advisory removes the separate Data status card; compact refresh action retains
 last-updated/stale/loading/offline/error/cooldown feedback below content. Natural
 card heights/shared padding/responsive columns remain. Rendered acceptance pending.
 
+2026-10-13 Advisory refinement: the live PHT last-updated timestamp, bounded manual
+Refresh weather control, feedback and Google Maps attribution sit below the content
+inside Practical tips, separated by a light divider rather than a third surface.
+Current weather and Practical tips reuse the same shared card padding, corners,
+border and elevation, align their desktop outer edges and stack on narrow screens.
+Refresh limits, stale/offline feedback, real weather values and routing are unchanged.
+
 2026-10-12 request/Routes continuation: request edit/review/confirmation use inherited
 semantic dark/light surfaces, field/foreground/border tokens; exported light review
 fills are replaced with dark surfaces when dark. Modal carries shared theme identity;
