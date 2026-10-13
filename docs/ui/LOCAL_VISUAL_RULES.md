@@ -315,6 +315,10 @@ destinations, session/permission checks and mission content are unchanged.
 Remove the introductory Google Weather study-area paragraph from Advisory;
 keep weather attribution and the existing limitations/help content.
 
+Weather advisory uses WorkspaceSectionHeading with a left-side decorative SVG
+weather icon. Shared section-heading typography owns its size, weight, line
+height and spacing; older plain information-page heading rules must not override it.
+
 Navigation follow-up: remove legacy Rescuer-only sidebar/brand selectors rather
 than relying on a later stylesheet to beat their specificity. Shared navigation
 owns both roles. Built-browser regression compares computed sidebar, logo, menu,

@@ -3,7 +3,7 @@ import { weatherErrorMessage } from '../../api/weather'
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { LoadingState } from '../../components/ui/LoadingState'
-import { WorkspaceCard } from './WorkspaceUI'
+import { WorkspaceCard, WorkspaceSectionHeading } from './WorkspaceUI'
 import { useUbeltWeather, weatherRefreshAllowedAt, useWeatherClock } from './useUbeltWeather'
 import { weatherAdviceDetails, weatherIsStale } from './weatherAdvisories'
 
@@ -25,7 +25,7 @@ export function CitizenAdvisory() {
   const tips = data && !stale ? weatherAdviceDetails({...data, temperatureC}) : []
   const missingRain = data && data.rainChance == null && data.rainAmount == null
   return <div className="workspace-stack citizen-information-page">
-    <h2>Weather advisory</h2>
+    <WorkspaceSectionHeading icon="droplet">Weather advisory</WorkspaceSectionHeading>
     <div className="advisory-grid">
     <WorkspaceCard className="weather-reference-card" aria-labelledby="advisory-current-weather-title">
       <h3 id="advisory-current-weather-title">Current weather</h3>
