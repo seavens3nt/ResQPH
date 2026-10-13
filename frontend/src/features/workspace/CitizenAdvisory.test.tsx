@@ -50,6 +50,7 @@ it('renders metric weather, missing precipitation and practical tips, sharing ca
   expect(screen.getByText(/Carry drinking water/)).toBeInTheDocument()
   expect(screen.getByText(/Reported temperature is 33.2/)).toBeInTheDocument()
   expect(screen.getByRole('heading',{name:'Before heading out'})).toBeVisible()
+  expect(within(practicalTips).getByText('Keep essential items together in an easy-to-carry bag.')).toBeVisible()
   expect(screen.queryByText('Bring drinking water for your outing.')).not.toBeInTheDocument()
   expect(screen.queryByText(/Bring an umbrella/)).not.toBeInTheDocument()
   expect(get).toHaveBeenCalledTimes(1)

@@ -15,19 +15,17 @@ const number=(value:number|null,suffix:string)=>value==null ? '—' : `${Number(
 /** Forecast intervals, not historical observations or flood predictions. */
 export function HourlyWeather({hours}:{hours:WeatherHour[]}) {
   return <div className="live-hourly-panel">
-    <div className="live-hourly-panel-heading"><span>°C</span></div>
     <div className="live-hourly-scroll" tabIndex={0} role="region" aria-label="Hourly weather forecast">
       <ol className="live-hourly-list">
         {hours.map(hour=><li key={hour.time}>
           <time dateTime={hour.time}>{hourFormat.format(new Date(hour.time))}</time>
           <HourIcon hour={hour}/>
           <span className="live-hourly-condition">{hour.condition}</span>
-          <strong>{Math.round(hour.temperature)}°</strong>
+          <strong aria-label={`${Math.round(hour.temperature)} degrees Celsius`}>{Math.round(hour.temperature)}°</strong>
           <span title="Forecast precipitation">{hour.rainAmount==null ? '—' : `${Number(hour.rainAmount.toFixed(2))} mm`}</span>
           <span title="Chance of precipitation">Rain {number(hour.rainChance,'%')}</span>
         </li>)}
       </ol>
     </div>
-    <span className="google-weather-attribution" translate="no">Google Maps</span>
   </div>
 }

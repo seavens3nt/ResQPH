@@ -59,6 +59,7 @@ export function CitizenAdvisory() {
         <ul>
           <li>Check the latest weather update time before leaving.</li>
           <li>Keep your phone charged and essential contacts available.</li>
+          <li>Keep essential items together in an easy-to-carry bag.</li>
           {!tips.some(tip => tip.id === 'heat') && <li>Bring drinking water for your outing.</li>}
         </ul>
       </section>

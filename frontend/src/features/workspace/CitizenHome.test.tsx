@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CitizenHome } from './CitizenHome'
@@ -23,6 +23,13 @@ describe('Screenshot-based citizen Home',()=>{
     expect(screen.queryByText('request-synthetic-001')).not.toBeInTheDocument()
     expect(screen.getByRole('region',{name:'Current weather and hourly forecast'})).toBeVisible()
     expect(screen.getByRole('heading',{name:'Hourly Forecast (Next 1 hour · PHT)'})).toBeVisible()
+    const hourlyCard=screen.getByRole('heading',{name:'Hourly Forecast (Next 1 hour · PHT)'}).closest('section')!
+    const attribution=within(hourlyCard).getByText('Google Maps',{exact:true})
+    expect(attribution).toBeVisible()
+    expect(hourlyCard.firstElementChild).toBe(attribution)
+    expect(within(hourlyCard).queryByText('Google Weather · U-Belt')).not.toBeInTheDocument()
+    expect(within(hourlyCard).queryByText('°C',{exact:true})).not.toBeInTheDocument()
+    expect(hourlyCard.querySelector('.live-hourly-panel-heading')).toBeNull()
     expect(screen.queryByText(/^Next \d+ hours? · PHT$/)).not.toBeInTheDocument()
     expect(screen.getAllByText('0.3 mm').length).toBeGreaterThan(0)
     expect(screen.queryByText('18 mm/hr')).not.toBeInTheDocument()
