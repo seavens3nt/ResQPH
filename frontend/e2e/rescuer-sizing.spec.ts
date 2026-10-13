@@ -86,6 +86,23 @@ for (const viewport of viewports) {
           expect(parseFloat(padding)).toBeLessThanOrEqual(12)
         }
         await layout(page, view)
+        if (viewport.theme === 'dark') {
+          const contrast = await page.locator('.workspace-topbar h1').evaluate(node => {
+            const luminance = (value: string) => {
+              const rgb = value.match(/[\d.]+/g)!.slice(0, 3).map(Number).map(v => { const s = v / 255; return s <= .04045 ? s / 12.92 : ((s + .055) / 1.055) ** 2.4 })
+              return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722
+            }
+            const ink = luminance(getComputedStyle(node).color)
+            const surface = luminance(getComputedStyle(node.closest('.workspace-topbar')!).backgroundColor)
+            return (Math.max(ink, surface) + .05) / (Math.min(ink, surface) + .05)
+          })
+          expect(contrast, `${view} dark header contrast`).toBeGreaterThanOrEqual(4.5)
+          const heading = page.locator('.workspace-section-heading').first()
+          if (await heading.count()) {
+            const channels = await heading.evaluate(node => getComputedStyle(node).color.match(/[\d.]+/g)!.slice(0, 3).map(Number))
+            expect(Math.min(...channels), 'dark heading must not inherit legacy navy ink').toBeGreaterThan(160)
+          }
+        }
         if (view === 'account') {
           await page.getByRole('textbox', { name: 'First name', exact: true }).fill('')
           await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('')

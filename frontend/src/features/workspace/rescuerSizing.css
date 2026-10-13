@@ -38,6 +38,12 @@
   overflow-wrap: anywhere;
 }
 .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar h1::before { content: none; }
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed][data-theme=dark] .workspace-topbar {
+  background: var(--shared-surface);
+  border-color: var(--line);
+}
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed][data-theme=dark] .workspace-section-heading,
+.workspace-shell[data-role=rescuer][data-view][data-nav-collapsed][data-theme=dark] .workspace-section-heading > :first-child { color: var(--card-ink, var(--ink)) !important; }
 .workspace-shell[data-role=rescuer][data-view][data-nav-collapsed] .workspace-topbar > div {
   min-width: 0;
   gap: 10px;

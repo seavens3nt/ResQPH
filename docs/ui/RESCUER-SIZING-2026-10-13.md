@@ -25,6 +25,9 @@ transitions, offline persistence, records, wording or features change.
   legacy overflow rule and narrow side-by-side inspector needed an explicit
   table-local scrolling and responsive stacking policy.
 - Dialogs and account forms inherited unrelated size rules from the same cascade.
+- Legacy overview overrides retained a light header fill and navy section ink
+  in dark mode. The existing dark surface/ink tokens now win for Rescuer chrome;
+  a browser contrast assertion guards the correction.
 
 ## Shared rules changed
 
