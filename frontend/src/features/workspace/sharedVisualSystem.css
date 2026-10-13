@@ -756,8 +756,8 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
 .advisory-refresh p { margin:0; }
 .advisory-weather-footer { display:grid; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:.875rem; }
 .advisory-weather-footer p { margin:0; }
-.advisory-weather-footer .workspace-actions { margin-top:0; gap:12px; }
-.advisory-weather-footer .workspace-actions button { margin:0; }
+.advisory-current-actions { margin-top:auto; padding-top:16px; }
+.advisory-current-actions button { margin:0; }
 .advisory-grid > .workspace-card { padding:20px; }
 
 /* Image 5 visual refresh for secondary Citizen screens.
@@ -1042,8 +1042,9 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   }
 }
 
-/* Exact Home dashboard reference pass. This intentionally applies only to
-   Citizen overview so auth and non-home tabs keep their scoped styling. */
+/* Home's approved card tokens also serve Advisory; other tabs and auth
+   retain their scoped styling. */
+.workspace-shell[data-role=citizen][data-view=advisory],
 .workspace-shell[data-role=citizen][data-view=overview] {
   --citizen-heading-weight:550;
   --citizen-control-height:40px;
@@ -1252,10 +1253,12 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
 .workspace-shell[data-role=citizen][data-view=overview] :is(.home-status-grid,.home-weather-grid) > * {
   min-width:0;
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid,
 .workspace-shell[data-role=citizen][data-view=overview] .home-weather-grid {
   grid-template-columns:minmax(360px,.62fr) minmax(0,1fr);
   gap:24px;
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid > .workspace-card,
 .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .workspace-card {
   background:#fff;
   border:0;
@@ -1390,6 +1393,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   margin-top:2px;
   margin-bottom:18px;
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid > .workspace-card,
 .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-scenario-card,
 .workspace-shell[data-role=citizen][data-view=overview] .screenshot-home .home-hourly-card {
   height:auto;
@@ -1408,6 +1412,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   line-height:1.35;
   font-weight:500;
 }
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid > .workspace-card h3,
 .workspace-shell[data-role=citizen][data-view=overview] .home-scenario-card h3,
 .workspace-shell[data-role=citizen][data-view=overview] .home-hourly-card h3 {
   margin:4px 0 0;
@@ -1529,6 +1534,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   font-weight:500;
 }
 @media (max-width:1100px) {
+  .workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid,
   .workspace-shell[data-role=citizen][data-view=overview] .home-status-grid,
   .workspace-shell[data-role=citizen][data-view=overview] .home-weather-grid {
     grid-template-columns:1fr;
@@ -1557,6 +1563,7 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   }
 }
 
+.workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark],
 .workspace-shell[data-role=citizen][data-view=overview][data-theme=dark] {
   --home-page:#0b1324;
   --home-surface:#101b30;
@@ -2130,4 +2137,25 @@ html, body, #root, [data-app-theme], [data-app-theme] *, .workspace-shell[data-r
   background:var(--shared-inset,#0f1a2e);
   border-color:var(--line,#274263);
   color:var(--ink,#f4f8ff);
+}
+
+/* Match Home's readable supporting type without changing other workspace tabs. */
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid > .workspace-card {
+  font-size:14px;
+  line-height:1.5;
+}
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid h3 {
+  color:var(--ink);
+}
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-grid h4 {
+  font-size:16px;
+  line-height:1.35;
+  font-weight:var(--citizen-heading-weight);
+}
+.workspace-shell[data-role=citizen][data-view=advisory] .advisory-temperature {
+  font-weight:var(--citizen-heading-weight);
+}
+[data-app-theme=dark] .workspace-shell[data-role=citizen][data-view=advisory][data-theme=dark] .advisory-grid > .workspace-card {
+  border:1px solid #274263;
+  box-shadow:var(--home-shadow);
 }

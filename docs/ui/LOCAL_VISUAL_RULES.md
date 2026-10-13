@@ -302,6 +302,12 @@ Advisory removes the separate Data status card; compact refresh action retains
 last-updated/stale/loading/offline/error/cooldown feedback below content. Natural
 card heights/shared padding/responsive columns remain. Rendered acceptance pending.
 
+2026-10-13 Advisory alignment: Refresh weather belongs inside Current weather.
+The visible refresh countdown is removed; cooldown and rate-limit protection remain.
+Last updated and Google Maps attribution stay below Practical tips. Advisory shares
+Home's card padding, radius, elevation, heading weight/size, column proportions and
+narrow-screen stacking. Keep real weather values and stale/offline/error feedback.
+
 2026-10-13 Advisory refinement: the live PHT last-updated timestamp, bounded manual
 Refresh weather control, feedback and Google Maps attribution sit below the content
 inside Practical tips, separated by a light divider rather than a third surface.
