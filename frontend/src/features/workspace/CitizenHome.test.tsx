@@ -10,7 +10,7 @@ const state = vi.hoisted(()=>({
 vi.mock('../requests/hooks',()=>({useMyRescueRequests:()=>state.query}))
 vi.mock('./useUbeltWeather',()=>({useWeatherClock:()=>Date.now(),useUbeltWeather:()=>({data:{temperature:29,high:31,low:25,condition:'Rain',kind:'rain',time:'2026-10-10T04:00:00Z',windSpeed:5,windDirection:'SOUTHWEST',humidity:80},isError:false,isFetching:false,refetch:vi.fn()}),useUbeltHourlyWeather:()=>state.hourly}))
 function RouteEvidence() { return <output>{useLocation().search}</output> }
-afterEach(()=>{cleanup();state.query.isLoading=false;state.query.isError=false;state.hourly.isError=false})
+afterEach(()=>{cleanup();state.query.isLoading=false;state.query.isError=false;state.hourly.isError=false;state.hourly.data=state.hourly.data.slice(0,1)})
 describe('Screenshot-based citizen Home',()=>{
   it('keeps the assigned request server-backed and opens its tracking',()=>{
     const view=vi.fn()
@@ -22,7 +22,8 @@ describe('Screenshot-based citizen Home',()=>{
     expect(screen.queryByText('Request reference')).not.toBeInTheDocument()
     expect(screen.queryByText('request-synthetic-001')).not.toBeInTheDocument()
     expect(screen.getByRole('region',{name:'Current weather and hourly forecast'})).toBeVisible()
-    expect(screen.getByText('Hourly Forecast')).toBeVisible()
+    expect(screen.getByRole('heading',{name:'Hourly Forecast (Next 1 hour · PHT)'})).toBeVisible()
+    expect(screen.queryByText(/^Next \d+ hours? · PHT$/)).not.toBeInTheDocument()
     expect(screen.getAllByText('0.3 mm').length).toBeGreaterThan(0)
     expect(screen.queryByText('18 mm/hr')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Weather summary')).toHaveTextContent('29°Rainfeels like: —low: 25°high: 31°')
@@ -38,6 +39,13 @@ describe('Screenshot-based citizen Home',()=>{
     render(<MemoryRouter><CitizenHome hasDraft={false} onView={vi.fn()} onRequest={vi.fn()}/></MemoryRouter>)
     expect(screen.getByText('Last received forecast — may be outdated.')).toBeVisible()
     expect(screen.queryByText('Controlled Rainfall Scenario')).not.toBeInTheDocument()
+  })
+  it('places the six-hour range in the forecast heading without a separate label',()=>{
+    const hour=state.hourly.data[0]
+    state.hourly.data=Array.from({length:6},(_,index)=>({...hour,time:new Date(Date.parse(hour.time)+index*3600000).toISOString(),endTime:new Date(Date.parse(hour.endTime)+index*3600000).toISOString()}))
+    render(<MemoryRouter><CitizenHome hasDraft={false} onView={vi.fn()} onRequest={vi.fn()}/></MemoryRouter>)
+    expect(screen.getByRole('heading',{name:'Hourly Forecast (Next 6 hours · PHT)'})).toBeVisible()
+    expect(screen.queryByText('Next 6 hours · PHT',{exact:true})).not.toBeInTheDocument()
   })
   it('opens the existing draft without navigating away',()=>{
     const open = vi.fn()

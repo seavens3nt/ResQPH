@@ -46,7 +46,7 @@ export function CitizenHome({hasDraft,onView,onDiscard,onRequest}: {hasDraft:boo
           <div className="weather-summary-attribution"><span className="google-weather-attribution" translate="no">Google Maps</span></div>
           </div>
         </WorkspaceCard>
-        <WorkspaceCard className="home-hourly-card"><span className="home-card-caption">Google Weather · U-Belt</span><h3>Hourly Forecast</h3>
+        <WorkspaceCard className="home-hourly-card"><span className="home-card-caption">Google Weather · U-Belt</span><h3>Hourly Forecast{hourly.data && <> (Next {hourly.data.length} {hourly.data.length === 1 ? 'hour' : 'hours'} · PHT)</>}</h3>
           <div className="home-weather-metrics"><WeatherMetric label="Rainfall · first forecast hour" value={rainfall==null ? '—' : `${Number(rainfall.toFixed(2))} mm`}/><WeatherMetric label="Current wind" value={wind==null ? '—' : `${Math.round(wind)} km/h${direction ? ` ${direction}` : ''}`}/><WeatherMetric label="Current humidity" value={humidity==null ? '—' : `${humidity}%`}/></div>
           {hourly.data ? <><HourlyWeather hours={hourly.data}/>{(hourly.isError || hourly.fetchStatus==='paused') && <p role="status">Last received forecast — may be outdated.</p>}</> : !hourly.isError && hourly.fetchStatus!=='paused' ? <LoadingState layout="forecast" label="Loading hourly forecast…"/> : <p role="status">{hourly.isError ? weatherErrorMessage(hourly.error, 'Hourly forecast unavailable. Please try again later.') : hourly.fetchStatus==='paused' ? 'Hourly forecast unavailable while offline.' : 'Loading hourly forecast…'}</p>}
         </WorkspaceCard>

@@ -15,7 +15,7 @@ const number=(value:number|null,suffix:string)=>value==null ? '—' : `${Number(
 /** Forecast intervals, not historical observations or flood predictions. */
 export function HourlyWeather({hours}:{hours:WeatherHour[]}) {
   return <div className="live-hourly-panel">
-    <div className="live-hourly-panel-heading"><span>Next {hours.length} hours · PHT</span><span>°C</span></div>
+    <div className="live-hourly-panel-heading"><span>°C</span></div>
     <div className="live-hourly-scroll" tabIndex={0} role="region" aria-label="Hourly weather forecast">
       <ol className="live-hourly-list">
         {hours.map(hour=><li key={hour.time}>
