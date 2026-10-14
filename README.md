@@ -120,7 +120,10 @@ Open `http://localhost:5173` for the interface or
 
 ## Quick verification
 
-Run these checks after completing [Development setup](docs/SETUP.md). Run each block from the repository root in its own PowerShell terminal. Passing these checks does not replace final end-to-end acceptance testing.
+Run these checks after completing [Development setup](docs/SETUP.md).
+Start each block from the repository root in a separate PowerShell terminal.
+These checks cover local components; they do not replace the final end-to-end
+acceptance tests.
 
 Frontend:
 
