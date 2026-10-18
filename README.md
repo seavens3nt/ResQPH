@@ -115,8 +115,9 @@ Set-Location frontend
 npm run dev
 ```
 
-Open `http://localhost:5173` for the interface or
-`http://localhost:8000/docs` for the API documentation.
+Open `http://localhost:5173` for the frontend interface and
+`http://localhost:8000/docs` for the FastAPI interactive API documentation.
+Both addresses refer to services running on your own computer.
 
 ## Quick verification
 
